@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, ScrollView } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useClientsController } from '../../features/clients/controllers/clients.controller';
+import { useClientsController } from '@/features/clients/controllers/clients.controller';
 import {
   VStack,
   HStack,

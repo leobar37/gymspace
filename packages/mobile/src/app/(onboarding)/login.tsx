@@ -23,7 +23,7 @@ import {
   zodResolver,
   FormCheckbox
 } from '../../components/forms';
-import { useGymSdk } from '../../providers/GymSdkProvider';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'lucide-react-native';
 

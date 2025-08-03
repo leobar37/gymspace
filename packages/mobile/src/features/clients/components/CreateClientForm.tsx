@@ -7,7 +7,7 @@ import {
   FormProvider,
   useForm,
   zodResolver,
-} from '../../../components/forms';
+} from '@/components/forms';
 import {
   VStack,
   Heading,
@@ -16,10 +16,10 @@ import {
   ButtonText,
   ButtonSpinner,
   Divider,
-} from '../../../components/ui';
+} from '@/components/ui';
 import { useClientsController, ClientFormData } from '../controllers/clients.controller';
 import { router } from 'expo-router';
-import { showToast } from '../../../components/ui/toast';
+import { showToast } from '@/components/ui/toast';
 
 // Validation schema
 const clientSchema = z.object({

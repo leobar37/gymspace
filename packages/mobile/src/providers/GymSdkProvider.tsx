@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { GymSpaceSdk } from '@gymspace/sdk';
-import { useSecureStorage } from '../hooks/useSecureStorage';
+import { useSecureStorage } from '@/hooks/useSecureStorage';
 import Constants from 'expo-constants';
 
 interface GymSdkContextValue {

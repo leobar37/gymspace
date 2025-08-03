@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useGymSdk } from '../../../providers/GymSdkProvider';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { router } from 'expo-router';
 import { useAtom } from 'jotai';
-import { currentGymAtom } from '../../../store/atoms';
+import { currentGymAtom } from '@/store/atoms';
 
 // Query keys
 export const onboardingKeys = {

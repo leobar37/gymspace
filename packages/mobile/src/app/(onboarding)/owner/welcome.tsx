@@ -12,11 +12,11 @@ import {
   Icon,
   Card,
   Box
-} from '../../../components/ui';
+} from '@/components/ui';
 import { StatusBar } from 'expo-status-bar';
 import { CheckCircleIcon, RocketIcon, BookOpenIcon, HeadphonesIcon, ChevronRightIcon } from 'lucide-react-native';
-import { useOnboardingStore } from '../../../store/onboarding';
-import { useGymSdk } from '../../../providers/GymSdkProvider';
+import { useOnboardingStore } from '@/store/onboarding';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useMutation } from '@tanstack/react-query';
 
 // Welcome checklist items

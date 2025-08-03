@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import { AuthRedirect } from '../../components/AuthRedirect';
+import { AuthRedirect } from '@/components/AuthRedirect';
 
 export default function OnboardingLayout() {
   return (

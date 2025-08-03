@@ -2,7 +2,7 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider as JotaiProvider } from "jotai";
 import { GluestackUIProvider } from "@gluestack-ui/themed";
-import { config } from "../lib/gluestack-ui-config";
+import { config } from "@/lib/gluestack-ui-config";
 import { GymSdkProvider } from "./GymSdkProvider";
 
 const queryClient = new QueryClient({

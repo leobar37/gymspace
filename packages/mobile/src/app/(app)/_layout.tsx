@@ -7,10 +7,10 @@ import {
   FileTextIcon,
   MenuIcon,
 } from 'lucide-react-native';
-import { Icon } from '../../components/ui';
+import { Icon } from '@/components/ui';
 import { useAtom } from 'jotai';
-import { currentTabAtom } from '../../store/atoms';
-import { useGymSdk } from '../../providers/GymSdkProvider';
+import { currentTabAtom } from '@/store/atoms';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { Redirect } from 'expo-router';
 
 export default function AppLayout() {

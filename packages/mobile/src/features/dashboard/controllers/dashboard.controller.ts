@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useGymSdk } from '../../../providers/GymSdkProvider';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 
 // Query keys
 export const dashboardKeys = {

@@ -13,11 +13,11 @@ import {
   Progress,
   ProgressFilledTrack,
   Box
-} from '../../../components/ui';
+} from '@/components/ui';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon, MailIcon, RefreshCwIcon } from 'lucide-react-native';
-import { useOnboardingStore } from '../../../store/onboarding';
-import { useGymSdk } from '../../../providers/GymSdkProvider';
+import { useOnboardingStore } from '@/store/onboarding';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useMutation } from '@tanstack/react-query';
 
 // Custom OTP Input component

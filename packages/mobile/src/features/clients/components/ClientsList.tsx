@@ -17,10 +17,10 @@ import {
   InputField,
   InputSlot,
   InputIcon,
-} from '../../../components/ui';
+} from '@/components/ui';
 import { SearchIcon, UserPlusIcon, PhoneIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { useDebounce } from '../../../hooks/useDebounce';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface ClientCardProps {
   client: any;

@@ -22,7 +22,7 @@ import {
   Text,
   VStack
 } from '../../../components/ui';
-import { useOnboardingStore } from '../../../store/onboarding';
+import { useOnboardingStore } from '@/store/onboarding';
 
 // Validation schema
 const contactInfoSchema = z.object({

@@ -24,7 +24,7 @@ import {
   Text,
   VStack
 } from '../../components/ui';
-import { useGymSdk } from '../../providers/GymSdkProvider';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 
 // Registration schema
 const registerSchema = z.object({

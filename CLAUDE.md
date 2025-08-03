@@ -518,3 +518,26 @@ Remember: **Favor composition over complexity, and reusability over repetition.*
 - Always take a look to the case studies before add a new feature
 - not use space property, use tailwind classes
 - not use size property, use nativewind features instead
+
+## Import Pattern Guide
+
+- **Import Alias Strategy**: 
+  - ALWAYS use `@/` alias for internal imports
+  - Follow these patterns:
+    - `@/components/ui/[component-name]` for UI components
+    - `@/features/[feature-name]` for features
+    - `@/shared/[category]` for utilities
+  - Use `type` keyword for TypeScript type imports
+  
+**Example**:
+```typescript
+// ✅ CORRECT
+import { Button, ButtonGroup } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ClientForm } from "@/features/clients";
+import type { Client } from "@/shared/types";
+
+// ❌ WRONG  
+import { Button } from "../../../components/ui/button";
+import { Button } from "components/ui/button";
+```

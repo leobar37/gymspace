@@ -18,7 +18,7 @@ import {
   Text,
   VStack
 } from '../../../components/ui';
-import { useOnboardingStore } from '../../../store/onboarding';
+import { useOnboardingStore } from '@/store/onboarding';
 
 // Mock subscription plans
 const SUBSCRIPTION_PLANS = [

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { VStack, Text, Icon, Button, ButtonText } from '../../components/ui';
+import { VStack, Text, Icon, Button, ButtonText } from '@/components/ui';
 import { FileTextIcon } from 'lucide-react-native';
 
 export default function ContractsScreen() {

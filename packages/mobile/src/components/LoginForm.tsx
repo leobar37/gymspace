@@ -11,9 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSecureStorage } from "../hooks/useSecureStorage";
-import { LoginFormData, loginSchema } from "../schemas/userSchema";
-import { userAtom } from "../store/atoms";
+import { useSecureStorage } from "@/hooks/useSecureStorage";
+import { LoginFormData, loginSchema } from "@/schemas/userSchema";
+import { userAtom } from "@/store/atoms";
 
 export function LoginForm() {
   const setUser = useSetAtom(userAtom);

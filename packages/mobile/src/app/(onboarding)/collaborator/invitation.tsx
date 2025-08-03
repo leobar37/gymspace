@@ -15,11 +15,11 @@ import {
   Avatar,
   AvatarImage,
   AvatarFallbackText
-} from '../../../components/ui';
+} from '@/components/ui';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon, BuildingIcon, UserIcon, CalendarIcon, XCircleIcon, CheckIcon } from 'lucide-react-native';
-import { useOnboardingStore } from '../../../store/onboarding';
-import { useGymSdk } from '../../../providers/GymSdkProvider';
+import { useOnboardingStore } from '@/store/onboarding';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useQuery } from '@tanstack/react-query';
 
 export default function InvitationValidationScreen() {

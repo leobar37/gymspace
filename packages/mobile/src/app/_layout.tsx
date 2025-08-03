@@ -2,7 +2,7 @@ import "../../global.css"; // Import global styles
 import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { AppProviders } from "../providers/AppProviders";
+import { AppProviders } from "@/providers/AppProviders";
 
 export default function RootLayout() {
   useEffect(() => {

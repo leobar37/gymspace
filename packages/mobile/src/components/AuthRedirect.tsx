@@ -1,7 +1,6 @@
 import React from 'react';
 import { Redirect } from 'expo-router';
-import { useGymSdk } from '../providers/GymSdkProvider';
-
+import { useGymSdk } from '@/providers/GymSdkProvider';
 interface AuthRedirectProps {
   children: React.ReactNode;
 }

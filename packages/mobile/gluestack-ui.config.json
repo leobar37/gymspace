@@ -1,15 +1,10 @@
 {
-  "project": {
-    "type": "expo",
-    "framework": "react-native",
-    "styling": "nativewind"
+  "tailwind": {
+    "config": "tailwind.config.js",
+    "css": "global.css"
   },
-  "components": {
-    "path": "./src/components/ui",
-    "library": "@gluestack-ui/components"
-  },
-  "theme": {
-    "tokens": true,
-    "components": true
+  "app": {
+    "entry": "App.tsx",
+    "components": "components/ui"
   }
 }

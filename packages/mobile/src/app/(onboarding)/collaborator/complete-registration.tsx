@@ -2,27 +2,24 @@ import React from 'react';
 import { SafeAreaView, View, ScrollView, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { z } from 'zod';
-import { 
-  VStack, 
-  HStack,
-  Heading, 
-  Text, 
-  GluestackButton as Button, 
-  ButtonText,
-  Icon,
-  Box,
-  Card
-} from '../../../components/ui';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
+import { Box } from '@/components/ui/box';
+import { Card } from '@/components/ui/card';
 import { 
   useForm, 
   FormProvider, 
   FormInput,
   zodResolver
-} from '../../../components/forms';
+} from '@/components/forms';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon, UserIcon } from 'lucide-react-native';
-import { useOnboardingStore } from '../../../store/onboarding';
-import { useGymSdk } from '../../../providers/GymSdkProvider';
+import { useOnboardingStore } from '@/store/onboarding';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useMutation } from '@tanstack/react-query';
 
 // Validation schema
@@ -175,8 +172,7 @@ export default function CompleteRegistrationScreen() {
                 <Button
                   onPress={methods.handleSubmit(onSubmit)}
                   disabled={registerMutation.isPending}
-                  className="py-3 px-6"
-                  className="w-full"
+                  className="w-full py-3 px-6"
                 >
                   <ButtonText>
                     {registerMutation.isPending ? 'Registrando...' : 'Completar registro'}

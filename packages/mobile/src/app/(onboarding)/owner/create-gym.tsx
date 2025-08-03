@@ -10,7 +10,7 @@ import {
   Progress,
   ProgressFilledTrack,
 } from '../../../components/ui';
-import { CreateGymForm } from '../../../features/onboarding/components/CreateGymForm';
+import { CreateGymForm } from '@/features/onboarding/components/CreateGymForm';
 
 export default function CreateGymScreen() {
   const handleComplete = () => {

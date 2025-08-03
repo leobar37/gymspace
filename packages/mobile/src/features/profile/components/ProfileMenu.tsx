@@ -10,7 +10,7 @@ import {
   Divider,
   Button,
   ButtonText,
-} from '../../../components/ui';
+} from '@/components/ui';
 import {
   UserIcon,
   BuildingIcon,
@@ -22,11 +22,11 @@ import {
   ChevronRightIcon,
   SettingsIcon,
 } from 'lucide-react-native';
-import { useGymSdk } from '../../../providers/GymSdkProvider';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useAtom } from 'jotai';
-import { userAtom, currentGymAtom } from '../../../store/atoms';
+import { userAtom, currentGymAtom } from '@/store/atoms';
 import { router } from 'expo-router';
-import { showToast } from '../../../components/ui/toast';
+import { showToast } from '@/components/ui/toast';
 
 interface MenuItemProps {
   icon: any;
