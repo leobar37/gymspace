@@ -1,0 +1,52 @@
+{
+  "name": "@gymspace/mobile",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@gluestack-style/react": "^1.0.57",
+    "@gluestack-ui/nativewind-utils": "1.0.26",
+    "@gluestack-ui/overlay": "0.1.14",
+    "@gluestack-ui/themed": "^1.1.73",
+    "@gluestack-ui/toast": "1.0.4",
+    "@hookform/resolvers": "^5.2.1",
+    "@tanstack/react-query": "^5.84.1",
+    "clsx": "^2.1.1",
+    "expo": "~53.0.20",
+    "expo-constants": "~17.1.7",
+    "expo-image-picker": "~16.1.4",
+    "expo-linear-gradient": "^14.1.5",
+    "expo-linking": "~7.1.7",
+    "expo-router": "~5.1.4",
+    "expo-secure-store": "~14.2.3",
+    "expo-status-bar": "~2.2.3",
+    "jotai": "^2.12.5",
+    "lucide-react-native": "^0.536.0",
+    "nativewind": "4.1.23",
+    "react": "19.0.0",
+    "react-hook-form": "^7.62.0",
+    "react-native": "0.79.5",
+    "react-native-css-interop": "^0.1.22",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-svg": "15.11.2",
+    "react-native-web": "^0.21.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^3.4.17",
+    "zod": "^4.0.14"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@expo/webpack-config": "^19.0.1",
+    "@types/react": "~19.0.10",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "babel-preset-expo": "^13.0.0",
+    "typescript": "~5.8.3"
+  },
+  "private": true
+}

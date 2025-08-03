@@ -1,0 +1,52 @@
+{
+  "name": "gymspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gym Management System - Monorepo",
+  "author": "GymSpace Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel -r run dev",
+    "dev:api": "pnpm --filter @gymspace/api run dev",
+    "dev:mobile": "pnpm --filter @gymspace/mobile run start",
+    "dev:docker": "docker-compose -f docker/docker-compose.yml up -d",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint",
+    "format": "pnpm -r run format",
+    "clean": "pnpm -r run clean && rm -rf node_modules",
+    "prepare": "husky install",
+    "generate:api": "pnpm --filter @gymspace/api run openapi:generate && pnpm generate:client",
+    "generate:client": "pnpm --filter @gymspace/api-client run generate"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.1.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml}": [
+      "prettier --write"
+    ]
+  },
+  "pnpm": {
+    "overrides": {
+      "nativewind": "4.1.23"
+    }
+  }
+}

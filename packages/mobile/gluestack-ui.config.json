@@ -1,0 +1,15 @@
+{
+  "project": {
+    "type": "expo",
+    "framework": "react-native",
+    "styling": "nativewind"
+  },
+  "components": {
+    "path": "./src/components/ui",
+    "library": "@gluestack-ui/components"
+  },
+  "theme": {
+    "tokens": true,
+    "components": true
+  }
+}

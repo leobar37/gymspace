@@ -1,0 +1,30 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@gymspace/shared": [
+        "../shared/src"
+      ],
+      "@gymspace/shared/*": [
+        "../shared/src/*"
+      ],
+      "@gymspace/sdk": [
+        "../sdk/src"
+      ],
+      "@gymspace/sdk/*": [
+        "../sdk/src/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js"
+  ]
+}

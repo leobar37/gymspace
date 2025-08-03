@@ -1,0 +1,25 @@
+{
+  "include": ["./src/**/*.ts", "jest.config.js"],
+  "compilerOptions": {
+    "module": "nodenext",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "outDir": "./build",
+    "moduleResolution": "nodenext",
+    "incremental": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
+    "resolveJsonModule": true,
+    "customConditions": ["source"],
+    "paths": {
+      "~/*": ["./src/*"]
+    },
+    "types": ["@types/jest"]
+  }
+}

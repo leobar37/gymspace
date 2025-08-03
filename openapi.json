@@ -1,0 +1,3525 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/v1/health": {
+      "get": {
+        "operationId": "HealthController_health",
+        "summary": "Health check endpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "summary": "Readiness check endpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/v1/auth/register/owner": {
+      "post": {
+        "operationId": "AuthController_registerOwner",
+        "summary": "Register a new gym owner",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterOwnerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Owner registered successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "409": {
+            "description": "Email already exists"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "User login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refreshToken",
+        "summary": "Refresh access token",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully"
+          },
+          "401": {
+            "description": "Invalid refresh token"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/v1/invitations": {
+      "post": {
+        "operationId": "InvitationsController_createInvitation",
+        "summary": "Create invitation for collaborator",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvitationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "tags": [
+          "Invitations"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "InvitationsController_getGymInvitations",
+        "summary": "Get pending invitations for gym",
+        "parameters": [
+          {
+            "name": "gymId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of pending invitations"
+          }
+        },
+        "tags": [
+          "Invitations"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/invitations/{token}/accept": {
+      "post": {
+        "operationId": "InvitationsController_acceptInvitation",
+        "summary": "Accept invitation",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invitation accepted successfully"
+          },
+          "400": {
+            "description": "Invalid or expired invitation"
+          },
+          "404": {
+            "description": "Invitation not found"
+          }
+        },
+        "tags": [
+          "Invitations"
+        ]
+      }
+    },
+    "/api/v1/v1/invitations/{id}/cancel": {
+      "put": {
+        "operationId": "InvitationsController_cancelInvitation",
+        "summary": "Cancel pending invitation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation cancelled successfully"
+          },
+          "400": {
+            "description": "Cannot cancel this invitation"
+          },
+          "404": {
+            "description": "Invitation not found"
+          }
+        },
+        "tags": [
+          "Invitations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/organizations/{id}": {
+      "get": {
+        "operationId": "OrganizationsController_getOrganization",
+        "summary": "Get organization details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization details"
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        },
+        "tags": [
+          "Organizations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "OrganizationsController_updateOrganization",
+        "summary": "Update organization settings",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Organization updated successfully"
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        },
+        "tags": [
+          "Organizations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/organizations/{id}/stats": {
+      "get": {
+        "operationId": "OrganizationsController_getOrganizationStats",
+        "summary": "Get organization statistics and usage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization statistics"
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        },
+        "tags": [
+          "Organizations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/gyms": {
+      "post": {
+        "operationId": "GymsController_createGym",
+        "summary": "Create a new gym",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGymDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Gym created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "403": {
+            "description": "Forbidden - Gym limit reached"
+          }
+        },
+        "tags": [
+          "Gyms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "GymsController_getOrganizationGyms",
+        "summary": "Get gyms for organization",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of gyms"
+          }
+        },
+        "tags": [
+          "Gyms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/gyms/{id}": {
+      "get": {
+        "operationId": "GymsController_getGym",
+        "summary": "Get gym details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gym details"
+          },
+          "404": {
+            "description": "Gym not found"
+          }
+        },
+        "tags": [
+          "Gyms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "gym-id": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "GymsController_updateGym",
+        "summary": "Update gym details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGymDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Gym updated successfully"
+          },
+          "404": {
+            "description": "Gym not found"
+          }
+        },
+        "tags": [
+          "Gyms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "gym-id": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/gyms/{id}/stats": {
+      "get": {
+        "operationId": "GymsController_getGymStats",
+        "summary": "Get gym statistics",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gym statistics"
+          },
+          "404": {
+            "description": "Gym not found"
+          }
+        },
+        "tags": [
+          "Gyms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "gym-id": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/gyms/{id}/toggle-status": {
+      "put": {
+        "operationId": "GymsController_toggleGymStatus",
+        "summary": "Toggle gym active status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gym status toggled successfully"
+          },
+          "404": {
+            "description": "Gym not found"
+          }
+        },
+        "tags": [
+          "Gyms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/clients": {
+      "post": {
+        "operationId": "ClientsController_createClient",
+        "summary": "Create a new client",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Client created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "403": {
+            "description": "Forbidden - Client limit reached"
+          }
+        },
+        "tags": [
+          "Clients"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "ClientsController_searchClients",
+        "summary": "Search clients in gym",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of clients"
+          }
+        },
+        "tags": [
+          "Clients"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/clients/{id}": {
+      "get": {
+        "operationId": "ClientsController_getClient",
+        "summary": "Get client details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client details"
+          },
+          "404": {
+            "description": "Client not found"
+          }
+        },
+        "tags": [
+          "Clients"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "ClientsController_updateClient",
+        "summary": "Update client information",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateClientDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Client updated successfully"
+          },
+          "404": {
+            "description": "Client not found"
+          }
+        },
+        "tags": [
+          "Clients"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/clients/{id}/toggle-status": {
+      "put": {
+        "operationId": "ClientsController_toggleClientStatus",
+        "summary": "Toggle client active/inactive status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client status toggled successfully"
+          },
+          "404": {
+            "description": "Client not found"
+          }
+        },
+        "tags": [
+          "Clients"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/clients/{id}/stats": {
+      "get": {
+        "operationId": "ClientsController_getClientStats",
+        "summary": "Get client statistics",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client statistics"
+          },
+          "404": {
+            "description": "Client not found"
+          }
+        },
+        "tags": [
+          "Clients"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/membership-plans": {
+      "post": {
+        "operationId": "MembershipPlansController_createMembershipPlan",
+        "summary": "Create a new membership plan",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMembershipPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Membership plan created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        },
+        "tags": [
+          "Membership Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "MembershipPlansController_getGymMembershipPlans",
+        "summary": "Get all membership plans for gym",
+        "parameters": [
+          {
+            "name": "activeOnly",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of membership plans"
+          }
+        },
+        "tags": [
+          "Membership Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/membership-plans/{id}": {
+      "get": {
+        "operationId": "MembershipPlansController_getMembershipPlan",
+        "summary": "Get membership plan details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Membership plan details"
+          },
+          "404": {
+            "description": "Membership plan not found"
+          }
+        },
+        "tags": [
+          "Membership Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "MembershipPlansController_updateMembershipPlan",
+        "summary": "Update membership plan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMembershipPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Membership plan updated successfully"
+          },
+          "404": {
+            "description": "Membership plan not found"
+          }
+        },
+        "tags": [
+          "Membership Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "MembershipPlansController_deleteMembershipPlan",
+        "summary": "Delete membership plan (soft delete)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Membership plan deleted successfully"
+          },
+          "400": {
+            "description": "Cannot delete plan with active contracts"
+          },
+          "404": {
+            "description": "Membership plan not found"
+          }
+        },
+        "tags": [
+          "Membership Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/membership-plans/{id}/stats": {
+      "get": {
+        "operationId": "MembershipPlansController_getMembershipPlanStats",
+        "summary": "Get membership plan statistics",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Membership plan statistics"
+          },
+          "404": {
+            "description": "Membership plan not found"
+          }
+        },
+        "tags": [
+          "Membership Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/contracts": {
+      "post": {
+        "operationId": "ContractsController_createContract",
+        "summary": "Create a new contract",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContractDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Contract created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "ContractsController_getGymContracts",
+        "summary": "Get contracts for gym",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "pending",
+                "active",
+                "expiring_soon",
+                "expired",
+                "cancelled"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of contracts"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/contracts/{id}/renew": {
+      "post": {
+        "operationId": "ContractsController_renewContract",
+        "summary": "Renew an existing contract",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenewContractDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contract renewed successfully"
+          },
+          "404": {
+            "description": "Contract not found"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/contracts/{id}/freeze": {
+      "post": {
+        "operationId": "ContractsController_freezeContract",
+        "summary": "Freeze a contract",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FreezeContractDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contract frozen successfully"
+          },
+          "404": {
+            "description": "Contract not found"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/contracts/{id}/cancel": {
+      "put": {
+        "operationId": "ContractsController_cancelContract",
+        "summary": "Cancel a contract",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contract cancelled successfully"
+          },
+          "404": {
+            "description": "Contract not found"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/contracts/{id}": {
+      "get": {
+        "operationId": "ContractsController_getContract",
+        "summary": "Get contract details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contract details"
+          },
+          "404": {
+            "description": "Contract not found"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/contracts/client/{clientId}": {
+      "get": {
+        "operationId": "ContractsController_getClientContracts",
+        "summary": "Get client contract history",
+        "parameters": [
+          {
+            "name": "clientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of client contracts"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/evaluations": {
+      "post": {
+        "operationId": "EvaluationsController_createEvaluation",
+        "summary": "Create a new evaluation for a client",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEvaluationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Evaluation created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        },
+        "tags": [
+          "Evaluations"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/evaluations/{id}": {
+      "get": {
+        "operationId": "EvaluationsController_getEvaluation",
+        "summary": "Get evaluation details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation details"
+          },
+          "404": {
+            "description": "Evaluation not found"
+          }
+        },
+        "tags": [
+          "Evaluations"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "EvaluationsController_updateEvaluation",
+        "summary": "Update evaluation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEvaluationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evaluation updated successfully"
+          },
+          "404": {
+            "description": "Evaluation not found"
+          }
+        },
+        "tags": [
+          "Evaluations"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "EvaluationsController_deleteEvaluation",
+        "summary": "Delete evaluation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation deleted successfully"
+          },
+          "404": {
+            "description": "Evaluation not found"
+          }
+        },
+        "tags": [
+          "Evaluations"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/evaluations/client/{clientId}": {
+      "get": {
+        "operationId": "EvaluationsController_getClientEvaluations",
+        "summary": "Get client evaluation history",
+        "parameters": [
+          {
+            "name": "clientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client evaluation history with evolution metrics"
+          }
+        },
+        "tags": [
+          "Evaluations"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/evaluations/gym/stats": {
+      "get": {
+        "operationId": "EvaluationsController_getGymEvaluationStats",
+        "summary": "Get gym evaluation statistics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Gym evaluation statistics"
+          }
+        },
+        "tags": [
+          "Evaluations"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/evaluations/{id}/report": {
+      "get": {
+        "operationId": "EvaluationsController_generateEvaluationReport",
+        "summary": "Generate evaluation report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluation report data"
+          }
+        },
+        "tags": [
+          "Evaluations"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/check-ins": {
+      "post": {
+        "operationId": "CheckInsController_createCheckIn",
+        "summary": "Create a check-in for a client",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCheckInDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Check-in created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        },
+        "tags": [
+          "Check-ins"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "CheckInsController_searchCheckIns",
+        "summary": "Search check-ins",
+        "parameters": [
+          {
+            "name": "clientId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2024-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2024-01-31",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "10",
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "0",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of check-ins"
+          }
+        },
+        "tags": [
+          "Check-ins"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/check-ins/{id}": {
+      "get": {
+        "operationId": "CheckInsController_getCheckIn",
+        "summary": "Get check-in details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Check-in details"
+          },
+          "404": {
+            "description": "Check-in not found"
+          }
+        },
+        "tags": [
+          "Check-ins"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "CheckInsController_deleteCheckIn",
+        "summary": "Delete a check-in (today only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Check-in deleted successfully"
+          },
+          "400": {
+            "description": "Can only delete today's check-ins"
+          },
+          "404": {
+            "description": "Check-in not found"
+          }
+        },
+        "tags": [
+          "Check-ins"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/check-ins/stats/{period}": {
+      "get": {
+        "operationId": "CheckInsController_getGymCheckInStats",
+        "summary": "Get gym check-in statistics",
+        "parameters": [
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Check-in statistics"
+          }
+        },
+        "tags": [
+          "Check-ins"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/check-ins/client/{clientId}/history": {
+      "get": {
+        "operationId": "CheckInsController_getClientCheckInHistory",
+        "summary": "Get client check-in history",
+        "parameters": [
+          {
+            "name": "clientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client check-in history"
+          }
+        },
+        "tags": [
+          "Check-ins"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/catalog/search": {
+      "get": {
+        "operationId": "PublicCatalogController_searchCatalog",
+        "summary": "Search gyms in public catalog",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "crossfit",
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "New York",
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "NY",
+              "type": "string"
+            }
+          },
+          {
+            "name": "latitude",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "40.7128",
+              "type": "string"
+            }
+          },
+          {
+            "name": "longitude",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "-74.0060",
+              "type": "string"
+            }
+          },
+          {
+            "name": "radius",
+            "required": false,
+            "in": "query",
+            "description": "Radius in kilometers",
+            "schema": {
+              "example": "10",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "10",
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "0",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of gyms matching search criteria"
+          }
+        },
+        "tags": [
+          "Public Catalog"
+        ]
+      }
+    },
+    "/api/v1/v1/catalog/featured": {
+      "get": {
+        "operationId": "PublicCatalogController_getFeaturedGyms",
+        "summary": "Get featured gyms",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of featured gyms"
+          }
+        },
+        "tags": [
+          "Public Catalog"
+        ]
+      }
+    },
+    "/api/v1/v1/catalog/cities": {
+      "get": {
+        "operationId": "PublicCatalogController_getCitiesWithGyms",
+        "summary": "Get cities with available gyms",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of cities with gym count"
+          }
+        },
+        "tags": [
+          "Public Catalog"
+        ]
+      }
+    },
+    "/api/v1/v1/catalog/{slug}": {
+      "get": {
+        "operationId": "PublicCatalogController_getGymBySlug",
+        "summary": "Get gym public details by slug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gym public details"
+          },
+          "404": {
+            "description": "Gym not found"
+          }
+        },
+        "tags": [
+          "Public Catalog"
+        ]
+      }
+    },
+    "/api/v1/v1/leads": {
+      "post": {
+        "operationId": "LeadsController_createLead",
+        "summary": "Create a new lead from public catalog",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLeadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lead created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        },
+        "tags": [
+          "Leads"
+        ]
+      },
+      "get": {
+        "operationId": "LeadsController_searchLeads",
+        "summary": "Search leads",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "NEW",
+                "CONTACTED",
+                "INTERESTED",
+                "CONVERTED",
+                "LOST"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignedToUserId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "123e4567-e89b-12d3-a456-426614174000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2024-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2024-01-31",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "10",
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "0",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of leads"
+          }
+        },
+        "tags": [
+          "Leads"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/leads/{id}": {
+      "get": {
+        "operationId": "LeadsController_getLead",
+        "summary": "Get lead details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lead details"
+          },
+          "404": {
+            "description": "Lead not found"
+          }
+        },
+        "tags": [
+          "Leads"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "LeadsController_updateLead",
+        "summary": "Update lead status and information",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLeadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead updated successfully"
+          },
+          "404": {
+            "description": "Lead not found"
+          }
+        },
+        "tags": [
+          "Leads"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/leads/stats/gym": {
+      "get": {
+        "operationId": "LeadsController_getLeadStats",
+        "summary": "Get lead statistics for gym",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lead statistics"
+          }
+        },
+        "tags": [
+          "Leads"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/leads/{id}/convert": {
+      "post": {
+        "operationId": "LeadsController_convertLead",
+        "summary": "Convert lead to client",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lead converted successfully"
+          },
+          "400": {
+            "description": "Lead already converted"
+          },
+          "404": {
+            "description": "Lead not found"
+          }
+        },
+        "tags": [
+          "Leads"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/assets/upload": {
+      "post": {
+        "operationId": "AssetsController_upload",
+        "summary": "Upload a new asset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "entityType": {
+                    "type": "string",
+                    "enum": [
+                      "gym",
+                      "user",
+                      "contract",
+                      "evaluation",
+                      "client",
+                      "collaborator"
+                    ]
+                  },
+                  "entityId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "file",
+                  "entityType",
+                  "entityId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Asset uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/assets/{id}": {
+      "get": {
+        "operationId": "AssetsController_findOne",
+        "summary": "Get asset by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Asset details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "AssetsController_delete",
+        "summary": "Soft delete an asset",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Asset deleted successfully"
+          }
+        },
+        "tags": [
+          "Assets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/assets/{id}/download-url": {
+      "get": {
+        "operationId": "AssetsController_getDownloadUrl",
+        "summary": "Get signed download URL for an asset",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Download URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "filename": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/assets/{id}/download": {
+      "get": {
+        "operationId": "AssetsController_download",
+        "summary": "Download asset file",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File stream"
+          }
+        },
+        "tags": [
+          "Assets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/v1/assets/entity/{entityType}/{entityId}": {
+      "get": {
+        "operationId": "AssetsController_findByEntity",
+        "summary": "List assets for a specific entity",
+        "parameters": [
+          {
+            "name": "entityType",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of assets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "GymSpace API",
+    "description": "The GymSpace Gym Management System API",
+    "version": "1.0",
+    "contact": {
+      "name": "GymSpace API Support",
+      "email": "support@gymspace.com"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and authorization"
+    },
+    {
+      "name": "Gyms",
+      "description": "Gym management operations"
+    },
+    {
+      "name": "Organizations",
+      "description": "Organization management"
+    },
+    {
+      "name": "Clients",
+      "description": "Client management"
+    },
+    {
+      "name": "Membership Plans",
+      "description": "Membership plan management"
+    },
+    {
+      "name": "Contracts",
+      "description": "Contract management"
+    },
+    {
+      "name": "Check-ins",
+      "description": "Check-in tracking"
+    },
+    {
+      "name": "Evaluations",
+      "description": "Client evaluations"
+    },
+    {
+      "name": "Invitations",
+      "description": "Invitation management"
+    },
+    {
+      "name": "Leads",
+      "description": "Lead management"
+    },
+    {
+      "name": "Public Catalog",
+      "description": "Public gym catalog"
+    },
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.gymspace.com/api/v1",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      },
+      "gym-id": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Gym-Id"
+      }
+    },
+    "schemas": {
+      "RegisterOwnerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "password": {
+            "type": "string",
+            "example": "SecurePassword123!"
+          },
+          "organizationName": {
+            "type": "string",
+            "example": "My Fitness Center"
+          },
+          "subscriptionPlanId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "country": {
+            "type": "string",
+            "example": "US"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "America/New_York"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "phone",
+          "password",
+          "organizationName",
+          "subscriptionPlanId"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "SecurePassword123!"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object"
+          },
+          "redirectPath": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "user",
+          "redirectPath"
+        ]
+      },
+      "CreateInvitationDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "john.trainer@example.com"
+          },
+          "gymId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "roleId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174001"
+          }
+        },
+        "required": [
+          "email",
+          "gymId",
+          "roleId"
+        ]
+      },
+      "AcceptInvitationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Trainer"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "password": {
+            "type": "string",
+            "example": "SecurePassword123!"
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "password"
+        ]
+      },
+      "UpdateOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "example": "US"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "America/New_York"
+          },
+          "settings": {
+            "type": "object",
+            "example": {
+              "theme": "light",
+              "language": "en"
+            }
+          }
+        }
+      },
+      "CreateGymDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "PowerFit Downtown"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Main Street"
+          },
+          "city": {
+            "type": "string",
+            "example": "New York"
+          },
+          "state": {
+            "type": "string",
+            "example": "NY"
+          },
+          "postalCode": {
+            "type": "string",
+            "example": "10001"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "email": {
+            "type": "string",
+            "example": "info@powerfit.com"
+          },
+          "openingTime": {
+            "type": "string",
+            "example": "08:00"
+          },
+          "closingTime": {
+            "type": "string",
+            "example": "22:00"
+          },
+          "capacity": {
+            "type": "number",
+            "example": 150
+          },
+          "amenities": {
+            "type": "object",
+            "example": {
+              "hasParking": true,
+              "hasShowers": true,
+              "hasLockers": true
+            }
+          },
+          "settings": {
+            "type": "object",
+            "example": {
+              "logo": "https://example.com/logo.png",
+              "primaryColor": "#FF0000"
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateGymDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "PowerFit Downtown"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Main Street"
+          },
+          "city": {
+            "type": "string",
+            "example": "New York"
+          },
+          "state": {
+            "type": "string",
+            "example": "NY"
+          },
+          "postalCode": {
+            "type": "string",
+            "example": "10001"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "email": {
+            "type": "string",
+            "example": "info@powerfit.com"
+          },
+          "openingTime": {
+            "type": "string",
+            "example": "08:00"
+          },
+          "closingTime": {
+            "type": "string",
+            "example": "22:00"
+          },
+          "capacity": {
+            "type": "number",
+            "example": 150
+          },
+          "amenities": {
+            "type": "object",
+            "example": {
+              "hasParking": true,
+              "hasShowers": true,
+              "hasLockers": true
+            }
+          },
+          "settings": {
+            "type": "object",
+            "example": {
+              "logo": "https://example.com/logo.png",
+              "primaryColor": "#FF0000"
+            }
+          }
+        }
+      },
+      "CreateClientDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john.doe@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "document": {
+            "type": "string",
+            "example": "12345678"
+          },
+          "birthDate": {
+            "type": "string",
+            "example": "1990-01-01"
+          },
+          "gender": {
+            "type": "string",
+            "example": "male"
+          },
+          "maritalStatus": {
+            "type": "string",
+            "example": "single"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Main St"
+          },
+          "city": {
+            "type": "string",
+            "example": "New York"
+          },
+          "state": {
+            "type": "string",
+            "example": "NY"
+          },
+          "postalCode": {
+            "type": "string",
+            "example": "10001"
+          },
+          "occupation": {
+            "type": "string",
+            "example": "Software Developer"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Emergency Contact: Jane Doe - +1234567891"
+          },
+          "customData": {
+            "type": "object",
+            "example": {
+              "referredBy": "Facebook",
+              "interests": [
+                "Weight Loss",
+                "Muscle Gain"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "address"
+        ]
+      },
+      "UpdateClientDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john.doe@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "document": {
+            "type": "string",
+            "example": "12345678"
+          },
+          "birthDate": {
+            "type": "string",
+            "example": "1990-01-01"
+          },
+          "gender": {
+            "type": "string",
+            "example": "male"
+          },
+          "maritalStatus": {
+            "type": "string",
+            "example": "single"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Main St"
+          },
+          "city": {
+            "type": "string",
+            "example": "New York"
+          },
+          "state": {
+            "type": "string",
+            "example": "NY"
+          },
+          "postalCode": {
+            "type": "string",
+            "example": "10001"
+          },
+          "occupation": {
+            "type": "string",
+            "example": "Software Developer"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Emergency Contact: Jane Doe - +1234567891"
+          },
+          "customData": {
+            "type": "object",
+            "example": {
+              "referredBy": "Facebook",
+              "interests": [
+                "Weight Loss",
+                "Muscle Gain"
+              ]
+            }
+          }
+        }
+      },
+      "CreateMembershipPlanDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Plan Mensual"
+          },
+          "description": {
+            "type": "string",
+            "example": "Acceso completo al gimnasio durante un mes"
+          },
+          "price": {
+            "type": "number",
+            "example": 49.99
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "durationMonths": {
+            "type": "number",
+            "example": 1,
+            "description": "Duration in months"
+          },
+          "termsAndConditions": {
+            "type": "string",
+            "example": "Terms and conditions text"
+          },
+          "allowsCustomPricing": {
+            "type": "boolean",
+            "example": false
+          },
+          "maxEvaluations": {
+            "type": "number",
+            "example": 4
+          },
+          "includesAdvisor": {
+            "type": "boolean",
+            "example": false
+          },
+          "showInCatalog": {
+            "type": "boolean",
+            "example": true
+          },
+          "features": {
+            "example": [
+              "Acceso completo",
+              "Clases grupales",
+              "Evaluación mensual"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "description": "Plan status",
+            "enum": [
+              "active",
+              "inactive",
+              "archived"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "price",
+          "durationMonths"
+        ]
+      },
+      "UpdateMembershipPlanDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Plan Mensual"
+          },
+          "description": {
+            "type": "string",
+            "example": "Acceso completo al gimnasio durante un mes"
+          },
+          "price": {
+            "type": "number",
+            "example": 49.99
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "durationMonths": {
+            "type": "number",
+            "example": 1,
+            "description": "Duration in months"
+          },
+          "termsAndConditions": {
+            "type": "string",
+            "example": "Terms and conditions text"
+          },
+          "allowsCustomPricing": {
+            "type": "boolean",
+            "example": false
+          },
+          "maxEvaluations": {
+            "type": "number",
+            "example": 4
+          },
+          "includesAdvisor": {
+            "type": "boolean",
+            "example": false
+          },
+          "showInCatalog": {
+            "type": "boolean",
+            "example": true
+          },
+          "features": {
+            "example": [
+              "Acceso completo",
+              "Clases grupales",
+              "Evaluación mensual"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "description": "Plan status",
+            "enum": [
+              "active",
+              "inactive",
+              "archived"
+            ]
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "CreateContractDto": {
+        "type": "object",
+        "properties": {
+          "gymClientId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "gymMembershipPlanId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174001"
+          },
+          "startDate": {
+            "type": "string",
+            "example": "2024-01-01",
+            "description": "Contract start date"
+          },
+          "discountPercentage": {
+            "type": "number",
+            "example": 0,
+            "description": "Discount percentage (0-100)"
+          },
+          "customPrice": {
+            "type": "number",
+            "example": 49.99,
+            "description": "Custom price override"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "paymentMethod": "credit_card",
+              "referredBy": "John Doe",
+              "notes": "Special promotion"
+            }
+          }
+        },
+        "required": [
+          "gymClientId",
+          "gymMembershipPlanId",
+          "startDate"
+        ]
+      },
+      "RenewContractDto": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "example": "2024-02-01",
+            "description": "New start date"
+          },
+          "discountPercentage": {
+            "type": "number",
+            "example": 0,
+            "description": "Discount percentage for renewal"
+          },
+          "customPrice": {
+            "type": "number",
+            "example": 49.99,
+            "description": "Custom price for renewal"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "renewalReason": "loyalty",
+              "notes": "Renewal with loyalty discount"
+            }
+          }
+        }
+      },
+      "FreezeContractDto": {
+        "type": "object",
+        "properties": {
+          "freezeStartDate": {
+            "type": "string",
+            "example": "2024-01-15",
+            "description": "Freeze start date"
+          },
+          "freezeEndDate": {
+            "type": "string",
+            "example": "2024-01-30",
+            "description": "Freeze end date"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Medical reasons",
+            "description": "Reason for freezing"
+          }
+        },
+        "required": [
+          "freezeStartDate",
+          "freezeEndDate"
+        ]
+      },
+      "CreateEvaluationDto": {
+        "type": "object",
+        "properties": {
+          "gymClientId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "weight": {
+            "type": "number",
+            "example": 75.5,
+            "description": "Weight in kg"
+          },
+          "height": {
+            "type": "number",
+            "example": 175,
+            "description": "Height in cm"
+          },
+          "bodyFatPercentage": {
+            "type": "number",
+            "example": 25,
+            "description": "Body fat percentage"
+          },
+          "muscleMassPercentage": {
+            "type": "number",
+            "example": 40,
+            "description": "Muscle mass percentage"
+          },
+          "measurements": {
+            "type": "object",
+            "example": {
+              "chest": 100,
+              "waist": 85,
+              "hips": 95,
+              "leftArm": 30,
+              "rightArm": 30,
+              "leftThigh": 55,
+              "rightThigh": 55
+            },
+            "description": "Body measurements in cm"
+          },
+          "healthMetrics": {
+            "type": "object",
+            "example": {
+              "bloodPressure": "120/80",
+              "restingHeartRate": 65,
+              "vo2Max": 45
+            },
+            "description": "Health metrics"
+          },
+          "performanceMetrics": {
+            "type": "object",
+            "example": {
+              "benchPress": 80,
+              "squat": 100,
+              "deadlift": 120
+            },
+            "description": "Performance metrics in kg"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Client has improved significantly"
+          },
+          "goals": {
+            "type": "string",
+            "example": "Build muscle mass and reduce body fat"
+          },
+          "recommendations": {
+            "type": "string",
+            "example": "Increase protein intake and maintain training frequency"
+          }
+        },
+        "required": [
+          "gymClientId",
+          "weight",
+          "height"
+        ]
+      },
+      "UpdateEvaluationDto": {
+        "type": "object",
+        "properties": {
+          "gymClientId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "weight": {
+            "type": "number",
+            "example": 75.5,
+            "description": "Weight in kg"
+          },
+          "height": {
+            "type": "number",
+            "example": 175,
+            "description": "Height in cm"
+          },
+          "bodyFatPercentage": {
+            "type": "number",
+            "example": 25,
+            "description": "Body fat percentage"
+          },
+          "muscleMassPercentage": {
+            "type": "number",
+            "example": 40,
+            "description": "Muscle mass percentage"
+          },
+          "measurements": {
+            "type": "object",
+            "example": {
+              "chest": 100,
+              "waist": 85,
+              "hips": 95,
+              "leftArm": 30,
+              "rightArm": 30,
+              "leftThigh": 55,
+              "rightThigh": 55
+            },
+            "description": "Body measurements in cm"
+          },
+          "healthMetrics": {
+            "type": "object",
+            "example": {
+              "bloodPressure": "120/80",
+              "restingHeartRate": 65,
+              "vo2Max": 45
+            },
+            "description": "Health metrics"
+          },
+          "performanceMetrics": {
+            "type": "object",
+            "example": {
+              "benchPress": 80,
+              "squat": 100,
+              "deadlift": 120
+            },
+            "description": "Performance metrics in kg"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Client has improved significantly"
+          },
+          "goals": {
+            "type": "string",
+            "example": "Build muscle mass and reduce body fat"
+          },
+          "recommendations": {
+            "type": "string",
+            "example": "Increase protein intake and maintain training frequency"
+          }
+        }
+      },
+      "CreateCheckInDto": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Client feeling good today"
+          }
+        },
+        "required": [
+          "clientId"
+        ]
+      },
+      "CreateLeadDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "john.doe@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1234567890"
+          },
+          "gymId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "message": {
+            "type": "string",
+            "example": "I would like to know more about membership plans"
+          },
+          "source": {
+            "type": "string",
+            "example": "Website Contact Form"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "preferredContactTime": "morning",
+              "interests": [
+                "weight loss",
+                "muscle gain"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "phone",
+          "gymId"
+        ]
+      },
+      "UpdateLeadDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "CONTACTED",
+              "INTERESTED",
+              "CONVERTED",
+              "LOST"
+            ],
+            "example": "CONTACTED"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Follow up scheduled for next week"
+          },
+          "assignedToUserId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "lastContactDate": "2024-01-15",
+              "nextFollowUp": "2024-01-22"
+            }
+          }
+        }
+      },
+      "AssetResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "originalName": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "number"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "deleted"
+            ]
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "uploadedBy": {
+            "type": "object",
+            "description": "User who uploaded the asset"
+          },
+          "previewUrl": {
+            "type": "string",
+            "description": "Public URL for previewing the asset (valid for 1 hour)"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "originalName",
+          "fileSize",
+          "mimeType",
+          "entityType",
+          "entityId",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "uploadedBy"
+        ]
+      }
+    }
+  }
+}
