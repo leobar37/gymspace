@@ -1,0 +1,1 @@
+- To check if an endpoint exists, read the yml at `/Users/leobar37/code/gymspace/openapi.yaml`

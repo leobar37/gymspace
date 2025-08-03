@@ -1,6 +1,14 @@
-import { atom } from "jotai";
+import { atom } from 'jotai';
 
-// Example atoms for global state management
-export const userAtom = atom<{ name: string; email: string } | null>(null);
-export const counterAtom = atom(0);
-export const themeAtom = atom<"light" | "dark">("light");
+// User and auth atoms
+export const userAtom = atom<any>(null);
+export const isAuthenticatedAtom = atom((get) => get(userAtom) !== null);
+
+// Current gym atom
+export const currentGymAtom = atom<any>(null);
+
+// Navigation state
+export const currentTabAtom = atom<'dashboard' | 'clients' | 'contracts' | 'more'>('dashboard');
+
+// Theme atom
+export const themeAtom = atom<'light' | 'dark'>('light');

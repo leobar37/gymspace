@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 214, 219, 220;
+    --background-end-rgb: 255, 255, 255;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --foreground-rgb: 255, 255, 255;
+      --background-start-rgb: 0, 0, 0;
+      --background-end-rgb: 0, 0, 0;
+    }
+  }
+
+  body {
+    color: rgb(var(--foreground-rgb));
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        rgb(var(--background-end-rgb))
+      )
+      rgb(var(--background-start-rgb));
+  }
+}
+
+@layer utilities {
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .glassmorphism-dark {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #F57E24 0%, #FF9144 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-bg {
+    background: linear-gradient(135deg, #F57E24 0%, #FF9144 50%, #F57E24 100%);
+    background-size: 200% 200%;
+  }
+
+  .glow-orange {
+    box-shadow: 0 0 20px rgba(245, 126, 36, 0.5),
+                0 0 40px rgba(245, 126, 36, 0.3),
+                0 0 60px rgba(245, 126, 36, 0.1);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(245, 126, 36, 0.8),
+                 0 0 40px rgba(245, 126, 36, 0.6),
+                 0 0 60px rgba(245, 126, 36, 0.4);
+  }
+
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  }
+
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+                linear-gradient(135deg, #F57E24, #FF9144) border-box;
+    border: 2px solid transparent;
+  }
+
+  .hex-pattern {
+    background-image: 
+      repeating-linear-gradient(
+        30deg,
+        transparent,
+        transparent 35px,
+        rgba(245, 126, 36, 0.05) 35px,
+        rgba(245, 126, 36, 0.05) 70px
+      ),
+      repeating-linear-gradient(
+        -30deg,
+        transparent,
+        transparent 35px,
+        rgba(245, 126, 36, 0.05) 35px,
+        rgba(245, 126, 36, 0.05) 70px
+      );
+  }
+
+  .grid-pattern {
+    background-image: 
+      linear-gradient(rgba(245, 126, 36, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245, 126, 36, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+}
