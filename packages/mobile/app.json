@@ -34,7 +34,7 @@
       "expo-secure-store"
     ],
     "extra": {
-      "apiUrl": "http://localhost:3001/api/v1"
+      "apiUrl": "http://localhost:5200/api/v1"
     }
   }
 }

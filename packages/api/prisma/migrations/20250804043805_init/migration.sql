@@ -53,7 +53,7 @@ CREATE TYPE "EvaluationAssetCategory" AS ENUM ('body_photo', 'measurement_photo'
 CREATE TABLE "subscription_plans" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "price" DECIMAL(10,2) NOT NULL,
+    "price" JSONB NOT NULL,
     "billing_frequency" TEXT NOT NULL,
     "max_gyms" INTEGER NOT NULL,
     "max_clients_per_gym" INTEGER NOT NULL,
@@ -78,6 +78,8 @@ CREATE TABLE "users" (
     "phone" TEXT,
     "user_type" "UserType" NOT NULL,
     "email_verified_at" TIMESTAMP(3),
+    "verification_code" TEXT,
+    "verification_code_expires_at" TIMESTAMP(3),
     "created_by_user_id" TEXT,
     "updated_by_user_id" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -92,6 +94,7 @@ CREATE TABLE "organizations" (
     "id" TEXT NOT NULL,
     "owner_user_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "organization_code" TEXT NOT NULL,
     "subscription_plan_id" TEXT NOT NULL,
     "subscription_status" "SubscriptionStatus" NOT NULL,
     "subscription_start" TIMESTAMP(3) NOT NULL,
@@ -465,6 +468,9 @@ CREATE TABLE "leads" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "organizations_organization_code_key" ON "organizations"("organization_code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "gyms_slug_key" ON "gyms"("slug");

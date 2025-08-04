@@ -9,9 +9,8 @@ import { useAuthController } from '@/features/auth/controllers/auth.controller';
 import { PinInput } from '@/shared/components/PinInput';
 import { useRouter } from 'expo-router';
 import { MailIcon, RefreshCwIcon } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Pressable } from 'react-native';
-
 interface EmailVerificationProps {
   email: string;
   onSuccess?: () => void;
@@ -28,10 +27,11 @@ export function EmailVerification({
   description = 'Hemos enviado un código de verificación a',
 }: EmailVerificationProps) {
   const router = useRouter();
-  const {  isVerifying, resendVerification, isResending, verifyEmailAsync } = useAuthController();
+  const { isVerifying, resendVerification, isResending, verifyEmailAsync } = useAuthController();
   const [code, setCode] = useState('');
-  const [resendTimer, setResendTimer] = useState(3);
+  const [resendTimer, setResendTimer] = useState(1);
   const [canResend, setCanResend] = useState(false);
+
   // Resend timer
   useEffect(() => {
     if (resendTimer > 0) {
@@ -42,9 +42,13 @@ export function EmailVerification({
     }
   }, [resendTimer]);
 
-  const handleVerify = async () => {
+  const handleVerify = useCallback(async () => {
     if (code.length === 6) {
       try {
+        console.log("verify the email", {
+          email,
+          code
+        });
         await verifyEmailAsync({
           email: email,
           code: code,
@@ -56,7 +60,7 @@ export function EmailVerification({
         // Error is handled by the mutation
       }
     }
-  };
+  }, [code, email]);
 
   const handleResend = () => {
     if (canResend) {
@@ -135,7 +139,6 @@ export function EmailVerification({
         >
           <ButtonText>{isVerifying ? 'Verificando...' : 'Verificar código'}</ButtonText>
         </GluestackButton>
-
         <Center>
           <Pressable onPress={handleBack}>
             <Text className="text-gray-600">Cambiar correo electrónico</Text>

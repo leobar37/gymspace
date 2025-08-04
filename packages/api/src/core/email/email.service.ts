@@ -9,6 +9,7 @@ export class EmailService {
   private supabase: SupabaseClient;
   private resend: Resend;
   private fromEmail: string;
+  private isDev: boolean;
 
   constructor(private configService: ConfigService) {
     const supabaseUrl = this.configService.get<string>('supabase.url');
@@ -22,17 +23,22 @@ export class EmailService {
 
     this.supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Get dev mode configuration
+    this.isDev = this.configService.get<boolean>('isDev');
+
     // Initialize Resend
     const resendApiKey = this.configService.get<string>('resend.apiKey');
     this.fromEmail = this.configService.get<string>('resend.fromEmail');
 
-    if (!resendApiKey) {
+    if (!resendApiKey && !this.isDev) {
       throw new Error(
         'Resend API key is missing. Please check RESEND_API_KEY environment variable.',
       );
     }
 
-    this.resend = new Resend(resendApiKey);
+    if (!this.isDev) {
+      this.resend = new Resend(resendApiKey);
+    }
   }
 
   /**
@@ -40,6 +46,19 @@ export class EmailService {
    */
   async sendVerificationCode(email: string, code: string, name: string): Promise<void> {
     try {
+      // In development mode, just log to console
+      if (this.isDev) {
+        console.log('='.repeat(60));
+        console.log('📧 EMAIL VERIFICATION CODE (DEV MODE)');
+        console.log('='.repeat(60));
+        console.log(`📩 To: ${email}`);
+        console.log(`👤 Name: ${name}`);
+        console.log(`🔑 Verification Code: ${code}`);
+        console.log(`⏰ Expires: ${new Date(Date.now() + 10 * 60 * 1000).toISOString()}`);
+        console.log('='.repeat(60));
+        return;
+      }
+
       // Generate email content with the OTP code
       const emailContent = this.generateVerificationCodeEmail(code, name);
 
@@ -135,6 +154,19 @@ export class EmailService {
     ownerName: string,
   ): Promise<void> {
     try {
+      // In development mode, just log to console
+      if (this.isDev) {
+        console.log('='.repeat(60));
+        console.log('🏢 ORGANIZATION CODE EMAIL (DEV MODE)');
+        console.log('='.repeat(60));
+        console.log(`📩 To: ${email}`);
+        console.log(`👤 Owner: ${ownerName}`);
+        console.log(`🏢 Organization: ${organizationName}`);
+        console.log(`🔑 Organization Code: ${organizationCode}`);
+        console.log('='.repeat(60));
+        return;
+      }
+
       // Generate email content
       const emailContent = this.generateOrganizationCodeEmail(
         organizationCode,

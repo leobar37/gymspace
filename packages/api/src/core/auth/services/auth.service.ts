@@ -349,6 +349,8 @@ export class AuthService {
         where: { email: dto.email },
       });
 
+      console.log(user);
+      
       if (!user) {
         throw new BusinessException('User not found');
       }
@@ -440,10 +442,11 @@ export class AuthService {
    */
   async resendVerification(dto: ResendVerificationDto) {
     // Check if user exists and is not verified
+
     const user = await this.prismaService.user.findUnique({
       where: { email: dto.email },
     });
-
+    
     if (!user) {
       throw new BusinessException('User not found');
     }
@@ -451,21 +454,58 @@ export class AuthService {
     if (user.emailVerifiedAt) {
       throw new BusinessException('Email already verified');
     }
+    
 
+    // Use the same logic as generateAndSendVerificationCode
+    await this.resendVerificationCode(dto.email, user.name);
+
+    return {
+      success: true,
+      message: 'Verification code sent',
+    };
+  }
+
+  /**
+   * Resend verification code for email registration
+   * Similar to generateAndSendVerificationCode but for existing users
+   */
+  async resendVerificationCode(email: string, name: string): Promise<{ verificationCode: string }> {
     try {
-      const { error } = await this.supabaseService.getClient().auth.resend({
-        type: 'signup',
-        email: dto.email,
+      // Generate new 6-digit verification code
+      const verificationCode = this.emailService.generateVerificationCode();
+
+      const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000); // 3 hours from now
+
+      // Check if user exists
+      const existingUser = await this.prismaService.user.findUnique({
+        where: { email },
       });
 
-      if (error) {
-        throw new BusinessException('Failed to resend verification code');
+      // Debug logging
+      console.log(`Resending verification code for user: ${email}`);
+
+      if (!existingUser) {
+        throw new BusinessException('User not found');
       }
 
-      return {
-        success: true,
-        message: 'Verification code sent',
-      };
+      if (existingUser.emailVerifiedAt) {
+        throw new BusinessException('Email already verified');
+      }
+
+      // Update user with new verification code
+      await this.prismaService.user.update({
+        where: { email },
+        data: {
+          verificationCode,
+          verificationCodeExpiresAt: expiresAt,
+          name, // Update name in case it changed
+        },
+      });
+
+      // Send verification code via email
+      await this.emailService.sendVerificationCode(email, verificationCode, name);
+
+      return { verificationCode };
     } catch (error) {
       if (error instanceof BusinessException) {
         throw error;
@@ -670,7 +710,7 @@ export class AuthService {
    */
   async registerCollaborator(dto: RegisterCollaboratorDto): Promise<LoginResponseDto> {
     // Validate invitation
-    const invitationData = await this.validateInvitation(dto.invitationToken);
+    await this.validateInvitation(dto.invitationToken);
     const invitation = await this.prismaService.invitation.findUnique({
       where: { token: dto.invitationToken },
     });

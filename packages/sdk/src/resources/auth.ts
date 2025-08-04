@@ -8,7 +8,7 @@ import {
   RegisterOwnerDto,
   ResendVerificationDto,
   SubscriptionPlan,
-  VerifyEmailDto
+  VerifyEmailDto,
 } from '../models/auth';
 import { RequestOptions } from '../types';
 import { BaseResource } from './base';
@@ -28,19 +28,26 @@ export class AuthResource extends BaseResource {
     return this.client.post<LoginResponseDto>(`${this.basePath}/refresh`, undefined, options);
   }
 
-  async verifyEmail(data: VerifyEmailDto, options?: RequestOptions): Promise<{ success: boolean; message: string }> {
-    console.log("hello wworkd");
-
+  async verifyEmail(
+    data: VerifyEmailDto,
+    options?: RequestOptions,
+  ): Promise<{ success: boolean; message: string }> {
     return this.client.post(`${this.basePath}/verify-email`, data, options);
   }
 
-  async resendVerification(data: ResendVerificationDto, options?: RequestOptions): Promise<{ success: boolean; message: string }> {
-    console.log("hello wworkd, resende");
-  
+  async resendVerification(
+    data: ResendVerificationDto,
+    options?: RequestOptions,
+  ): Promise<{ success: boolean; message: string }> {
+    console.log('the path', `${this.basePath}/resend-verification`);
+
     return this.client.post(`${this.basePath}/resend-verification`, data, options);
   }
 
-  async completeOnboarding(data: CompleteOnboardingDto, options?: RequestOptions): Promise<OnboardingCompleteResponse> {
+  async completeOnboarding(
+    data: CompleteOnboardingDto,
+    options?: RequestOptions,
+  ): Promise<OnboardingCompleteResponse> {
     return this.client.post(`${this.basePath}/complete-onboarding`, data, options);
   }
 
@@ -48,11 +55,21 @@ export class AuthResource extends BaseResource {
     return this.client.get(`${this.basePath}/subscription-plans`, options);
   }
 
-  async validateInvitation(token: string, options?: RequestOptions): Promise<InvitationValidationResponse> {
+  async validateInvitation(
+    token: string,
+    options?: RequestOptions,
+  ): Promise<InvitationValidationResponse> {
     return this.client.get(`${this.basePath}/invitation/${token}`, options);
   }
 
-  async registerCollaborator(data: RegisterCollaboratorDto, options?: RequestOptions): Promise<LoginResponseDto> {
-    return this.client.post<LoginResponseDto>(`${this.basePath}/register/collaborator`, data, options);
+  async registerCollaborator(
+    data: RegisterCollaboratorDto,
+    options?: RequestOptions,
+  ): Promise<LoginResponseDto> {
+    return this.client.post<LoginResponseDto>(
+      `${this.basePath}/register/collaborator`,
+      data,
+      options,
+    );
   }
 }

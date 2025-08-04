@@ -11,22 +11,16 @@ import React from 'react';
 import { Pressable, SafeAreaView, View } from 'react-native';
 
 export default function EmailVerificationScreen() {
-  const { ownerData, setEmailVerified, setVerificationCode } = useOnboardingStore();
+  const { ownerData, setEmailVerified, emailVerified } = useOnboardingStore();
 
   const handleSuccess = () => {
     setEmailVerified(true);
-    router.push('/(onboarding)/owner/plan-selection');
+    router.push('/owner/welcome');
   };
 
   const handleBack = () => {
     router.back();
   };
-
-  if (!ownerData?.email) {
-    // Redirect back if no email data
-    router.replace('/(onboarding)/owner/step-2-contact');
-    return null;
-  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -44,13 +38,12 @@ export default function EmailVerificationScreen() {
         <Progress value={28} className="mb-8">
           <ProgressFilledTrack />
         </Progress>
-
         {/* Email Verification Component */}
-        <EmailVerification
+        {!emailVerified && <EmailVerification
           email={ownerData.email}
           onSuccess={handleSuccess}
           onBack={handleBack}
-        />
+        />}
       </View>
     </SafeAreaView>
   );

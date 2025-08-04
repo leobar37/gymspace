@@ -1,6 +1,7 @@
 export default () => ({
   // Application
   nodeEnv: process.env.NODE_ENV || 'development',
+  isDev: process.env.NODE_ENV === 'development',
   port: parseInt(process.env.PORT || '3000', 10),
   apiPrefix: process.env.API_PREFIX || 'api/v1',
 
@@ -47,7 +48,7 @@ export default () => ({
   // Email (Resend)
   resend: {
     apiKey: process.env.RESEND_API_KEY,
-    fromEmail: process.env.RESEND_FROM_EMAIL || 'GymSpace <noreply@gymspace.com>',
+    fromEmail: process.env.RESEND_FROM_EMAIL || 'GymSpace <onboarding@resend.dev>',
   },
 
   // Rate limiting

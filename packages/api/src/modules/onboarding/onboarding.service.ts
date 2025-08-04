@@ -56,7 +56,7 @@ export class OnboardingService {
     });
 
     if (!subscriptionPlan) {
-      throw new ResourceNotFoundException('Subscription plan not found');
+      throw new ResourceNotFoundException('Subscription');
     }
 
     // Ensure it's a free plan (for now only free plans are allowed)
@@ -66,7 +66,7 @@ export class OnboardingService {
         { field: 'subscriptionPlanId', message: 'Only free plans are allowed at this time' },
       ]);
     }
-
+    const verificationCode = this.emailService.generateVerificationCode();
     try {
       // Create everything in a transaction
       const result = await this.prismaService.$transaction(async (tx) => {
@@ -100,6 +100,8 @@ export class OnboardingService {
             password: '', // Password is managed by Supabase
             userType: UserType.OWNER,
             emailVerifiedAt: new Date(),
+            verificationCode: verificationCode,
+            verificationCodeExpiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000), // 3 hours from now
           },
         });
 
@@ -147,7 +149,6 @@ export class OnboardingService {
 
       // Generate and send verification code after successful onboarding
       try {
-        const verificationCode = this.emailService.generateVerificationCode();
         await this.emailService.sendVerificationCode(
           result.user.email,
           verificationCode,
@@ -156,19 +157,6 @@ export class OnboardingService {
       } catch (emailError) {
         // Log email error but don't fail the onboarding process
         console.error('Failed to send verification code email:', emailError);
-      }
-
-      // Send organization code via email
-      try {
-        await this.emailService.sendOrganizationCode(
-          result.user.email,
-          result.organization.organizationCode,
-          result.organization.name,
-          result.user.name,
-        );
-      } catch (emailError) {
-        // Log email error but don't fail the onboarding process
-        console.error('Failed to send organization code email:', emailError);
       }
 
       return {

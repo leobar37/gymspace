@@ -1,4 +1,4 @@
-import { useSDK } from '@/shared/hooks/useSDK';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { gymAtom, userAtom } from '@/shared/stores/auth.store';
 import {
   CompleteGuidedSetupData,
@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
 
 export const useOnboardingController = () => {
-  const { gymSpaceSDK } = useSDK();
+  const { sdk: gymSpaceSDK } = useGymSdk();
   const queryClient = useQueryClient();
   const router = useRouter();
   const setUser = useSetAtom(userAtom);

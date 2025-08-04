@@ -90,6 +90,8 @@ export default function OrganizationSetupScreen() {
 
   const onSubmit = async (data: OrganizationForm) => {
     const country = COUNTRY_OPTIONS.find(c => c.value === data.country);
+    console.log("country", country);
+
     if (country) {
       setOrganizationData({
         name: data.name,
@@ -97,17 +99,25 @@ export default function OrganizationSetupScreen() {
         currency: country.currency,
         timezone: data.timezone,
       });
-      await startOnboarding.mutateAsync({
-        country: organizationData.country,
-        currency: organizationData.currency,
-        email: ownerData.email,
-        name: ownerData.name,
-        organizationName: organizationData.name,
-        password: ownerData.password,
-        phone: ownerData.phone,
-        timezone: organizationData.timezone
-      })
-      router.push('/(onboarding)/owner/email-verification');
+
+      try {
+        const result = await startOnboarding.mutateAsync({
+          country: country.value,
+          currency: country.currency,
+          email: ownerData.email,
+          name: ownerData.name,
+          organizationName: data.name,
+          password: ownerData.password,
+          phone: ownerData.phone,
+          timezone: data.timezone
+        })
+        console.log("result", result);
+        router.push('/(onboarding)/owner/email-verification');
+      } catch (error) {
+        console.log("error", error);
+      }
+
+
     }
   };
 

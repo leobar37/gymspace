@@ -19,7 +19,8 @@ interface GymSdkProviderProps {
   children: React.ReactNode;
 }
 
-const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:3001/api/v1';
+const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5200/api/v1';
+console.log("api",API_BASE_URL);
 
 export function GymSdkProvider({ children }: GymSdkProviderProps) {
   const { getItem, setItem, removeItem } = useSecureStorage();

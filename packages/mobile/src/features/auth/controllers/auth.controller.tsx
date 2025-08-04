@@ -1,6 +1,6 @@
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { useSDK } from '@/shared/hooks/useSDK';
-import { gymAtom, userAtom, type User } from '@/shared/stores/auth.store';
+import { useGymSdk } from '@/providers/GymSdkProvider';
+import { userAtom, type User } from '@/shared/stores/auth.store';
 import type { ResendVerificationDto, VerifyEmailDto } from '@gymspace/sdk';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
@@ -8,7 +8,7 @@ import { useAtom } from 'jotai';
 import React from 'react';
 
 export const useAuthController = () => {
-  const { gymSpaceSDK } = useSDK();
+  const { sdk: gymSpaceSDK } = useGymSdk();
   const router = useRouter();
   const userAtomResult = useAtom(userAtom);
   const setUser: (user: User | null) => void = userAtomResult[1];
@@ -20,6 +20,7 @@ export const useAuthController = () => {
     mutationFn: (data: VerifyEmailDto) => gymSpaceSDK.auth.verifyEmail(data),
     onSuccess: (response) => {
       // Show success toast
+
       toast.show({
         placement: 'top',
         duration: 3000,
@@ -35,8 +36,7 @@ export const useAuthController = () => {
         },
       });
 
-      // Navigate to next step in onboarding
-      router.push('/(onboarding)/owner/plan-selection');
+      // Navigation is handled by the parent component via onSuccess callback
     },
     onError: (error: any) => {
       // Show error toast
@@ -78,6 +78,8 @@ export const useAuthController = () => {
       });
     },
     onError: (error: any) => {
+      console.log("error", error);
+
       // Show error toast
       toast.show({
         placement: 'top',

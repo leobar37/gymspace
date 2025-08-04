@@ -1,9 +1,9 @@
-import { Injectable, Scope } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { FastifyRequest } from 'fastify';
 import { IRequestContext, IUser, IGym, IOrganization, Permission } from '@gymspace/shared';
 import { UUID } from '@gymspace/shared';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class RequestContextService implements IRequestContext {
   private _user: IUser;
   private _gym?: IGym;

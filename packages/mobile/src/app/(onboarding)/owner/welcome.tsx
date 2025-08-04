@@ -39,27 +39,16 @@ const CHECKLIST_ITEMS = [
 ];
 
 export default function WelcomeScreen() {
-  const { 
-    ownerData, 
-    organizationData, 
-    selectedPlanId, 
+  const {
     gymData,
-    resetOnboarding 
+    resetOnboarding
   } = useOnboardingStore();
-  const { sdk, setAuthToken } = useGymSdk();
+  const { setAuthToken } = useGymSdk();
 
   // Complete registration mutation
   const completeMutation = useMutation({
     mutationFn: async () => {
-      // TODO: Implement actual API call to complete registration
-      // This would combine all the onboarding data and create the complete account
-      console.log('Completing registration with:', {
-        ownerData,
-        organizationData,
-        selectedPlanId,
-        gymData,
-      });
-      
+
       // Mock successful registration
       return {
         success: true,
@@ -70,10 +59,8 @@ export default function WelcomeScreen() {
     onSuccess: async (data) => {
       // Store auth token
       await setAuthToken(data.accessToken);
-      
       // Reset onboarding state
       resetOnboarding();
-      
       // Navigate to main app
       router.replace('/(app)');
     },
@@ -124,7 +111,7 @@ export default function WelcomeScreen() {
           </VStack>
 
           {/* Checklist */}
-          <VStack className="gap-4">
+          {/* <VStack className="gap-4">
             <Text className="font-semibold text-gray-900 text-lg">
               Próximos pasos
             </Text>
@@ -153,14 +140,13 @@ export default function WelcomeScreen() {
                 </Pressable>
               ))}
             </VStack>
-          </VStack>
+          </VStack> */}
 
           {/* Complete button */}
           <Box className="mt-auto">
             <GluestackButton
               onPress={handleComplete}
               disabled={completeMutation.isPending}
-              className="py-3 px-6 w-full"
             >
               <ButtonText>
                 {completeMutation.isPending ? 'Finalizando...' : 'Comenzar a usar GymSpace'}
