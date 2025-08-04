@@ -128,24 +128,6 @@ paths:
           description: Email already verified or invalid
       tags:
         - Authentication
-  /api/v1/auth/complete-onboarding:
-    post:
-      operationId: AuthController_completeOnboarding
-      summary: Complete owner onboarding with organization and gym
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompleteOnboardingDto'
-      responses:
-        '201':
-          description: Onboarding completed successfully
-        '400':
-          description: Invalid data or verification required
-      tags:
-        - Authentication
   /api/v1/auth/subscription-plans:
     get:
       operationId: AuthController_getSubscriptionPlans
@@ -2006,75 +1988,6 @@ components:
           example: john@example.com
       required:
         - email
-    GymDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: Fitness Center Pro
-        address:
-          type: string
-          example: Av. Principal 123, Lima
-        phone:
-          type: string
-          example: +51 999 999 999
-        description:
-          type: string
-          example: The best gym in town
-        logo:
-          type: string
-          example: https://example.com/logo.png
-        coverPhoto:
-          type: string
-          example: https://example.com/cover.png
-      required:
-        - name
-        - address
-        - phone
-    CompleteOnboardingDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: John Doe
-        email:
-          type: string
-          example: john@example.com
-        phone:
-          type: string
-          example: '+1234567890'
-        password:
-          type: string
-          example: SecurePassword123!
-        organizationName:
-          type: string
-          example: My Fitness Center
-        country:
-          type: string
-          example: PE
-        currency:
-          type: string
-          example: PEN
-        subscriptionPlanId:
-          type: string
-          example: 123e4567-e89b-12d3-a456-426614174000
-        gym:
-          $ref: '#/components/schemas/GymDto'
-        verificationCode:
-          type: string
-          example: '123456'
-          description: Email verification code
-      required:
-        - name
-        - email
-        - phone
-        - password
-        - organizationName
-        - country
-        - currency
-        - subscriptionPlanId
-        - gym
-        - verificationCode
     RegisterCollaboratorDto:
       type: object
       properties:

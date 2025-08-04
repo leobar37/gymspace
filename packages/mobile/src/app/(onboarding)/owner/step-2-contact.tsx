@@ -46,7 +46,7 @@ export default function OwnerContactInfoScreen() {
     });
     
     // Navigate to next step
-    router.push('/owner/step-3-security');
+    router.replace('/owner/step-3-security');
   };
 
   return (

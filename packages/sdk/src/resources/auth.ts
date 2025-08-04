@@ -1,10 +1,8 @@
 import {
-  CompleteOnboardingDto,
   CurrentSessionResponse,
   InvitationValidationResponse,
   LoginDto,
   LoginResponseDto,
-  OnboardingCompleteResponse,
   RegisterCollaboratorDto,
   RegisterOwnerDto,
   ResendVerificationDto,
@@ -45,12 +43,6 @@ export class AuthResource extends BaseResource {
     return this.client.post(`${this.basePath}/resend-verification`, data, options);
   }
 
-  async completeOnboarding(
-    data: CompleteOnboardingDto,
-    options?: RequestOptions,
-  ): Promise<OnboardingCompleteResponse> {
-    return this.client.post(`${this.basePath}/complete-onboarding`, data, options);
-  }
 
   async getSubscriptionPlans(options?: RequestOptions): Promise<{ data: SubscriptionPlan[] }> {
     return this.client.get(`${this.basePath}/subscription-plans`, options);

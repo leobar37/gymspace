@@ -49,7 +49,7 @@ export default function OwnerPersonalInfoScreen() {
     });
 
     // Navigate to next step
-    router.push('/owner/step-2-contact');
+    router.replace('/owner/step-2-contact');
   };
 
   return (

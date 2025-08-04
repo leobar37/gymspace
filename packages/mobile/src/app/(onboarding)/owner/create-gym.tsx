@@ -7,7 +7,6 @@ import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
-import { CreateGymForm } from '@/features/onboarding/components/CreateGymForm';
 
 export default function CreateGymScreen() {
   const handleComplete = () => {
@@ -35,7 +34,6 @@ export default function CreateGymScreen() {
         </View>
 
         {/* Form */}
-        <CreateGymForm onComplete={handleComplete} />
       </View>
     </SafeAreaView>
   );

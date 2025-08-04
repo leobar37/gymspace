@@ -13,7 +13,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Pressable } from 'react-native';
 interface EmailVerificationProps {
   email: string;
-  onSuccess?: () => void;
+  onSuccess?: (verificationCode: string) => void;
   onBack?: () => void;
   title?: string;
   description?: string;
@@ -54,7 +54,7 @@ export function EmailVerification({
           code: code,
         });
         if (onSuccess) {
-          onSuccess();
+          onSuccess(code);
         }
       } catch (error) {
         // Error is handled by the mutation

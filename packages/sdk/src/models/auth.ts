@@ -31,30 +31,6 @@ export interface ResendVerificationDto {
   email: string;
 }
 
-export interface CompleteOnboardingDto {
-  // Owner data
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  // Organization data
-  organizationName: string;
-  country: string;
-  currency: string;
-  // Subscription
-  subscriptionPlanId: string;
-  // First gym
-  gym: {
-    name: string;
-    address: string;
-    phone: string;
-    description?: string;
-    logo?: string;
-    coverPhoto?: string;
-  };
-  // Email verification
-  verificationCode: string;
-}
 
 export interface RegisterCollaboratorDto {
   invitationToken: string;
@@ -75,26 +51,6 @@ export interface SubscriptionPlan {
   description?: string;
 }
 
-export interface OnboardingCompleteResponse {
-  success: boolean;
-  access_token: string;
-  refresh_token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    userType: string;
-  };
-  organization: {
-    id: string;
-    name: string;
-  };
-  gym: {
-    id: string;
-    name: string;
-  };
-  redirectPath: string;
-}
 
 export interface InvitationValidationResponse {
   valid: boolean;

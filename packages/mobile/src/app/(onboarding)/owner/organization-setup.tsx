@@ -66,9 +66,8 @@ const organizationSchema = z.object({
 type OrganizationForm = z.infer<typeof organizationSchema>;
 
 export default function OrganizationSetupScreen() {
-  const { setOrganizationData, organizationData, ownerData } = useOnboardingStore();
+  const { setOrganizationData, ownerData, setTempAuthTokens } = useOnboardingStore();
   const [selectedCountry, setSelectedCountry] = useState<string>('');
-
   // Initialize form
   const methods = useForm<OrganizationForm>({
     resolver: zodResolver(organizationSchema),
@@ -85,12 +84,19 @@ export default function OrganizationSetupScreen() {
       return context.sdk.onboarding.start({
         ...input
       })
+    },
+    onSuccess: (response) => {
+      // Store tokens temporarily - they'll be applied after email verification
+      setTempAuthTokens({
+        accessToken: response.access_token,
+        refreshToken: response.refresh_token,
+      });
+      console.log("Registration completed, awaiting email verification");
     }
   })
 
   const onSubmit = async (data: OrganizationForm) => {
     const country = COUNTRY_OPTIONS.find(c => c.value === data.country);
-    console.log("country", country);
 
     if (country) {
       setOrganizationData({
@@ -99,7 +105,6 @@ export default function OrganizationSetupScreen() {
         currency: country.currency,
         timezone: data.timezone,
       });
-
       try {
         const result = await startOnboarding.mutateAsync({
           country: country.value,
@@ -112,12 +117,10 @@ export default function OrganizationSetupScreen() {
           timezone: data.timezone
         })
         console.log("result", result);
-        router.push('/(onboarding)/owner/email-verification');
+        router.replace('/owner/email-verification');
       } catch (error) {
         console.log("error", error);
       }
-
-
     }
   };
 

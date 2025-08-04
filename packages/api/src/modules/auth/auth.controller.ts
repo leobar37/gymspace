@@ -7,7 +7,6 @@ import {
   LoginResponseDto,
   VerifyEmailDto,
   ResendVerificationDto,
-  CompleteOnboardingDto,
   RegisterCollaboratorDto,
   GenerateVerificationCodeDto,
   CurrentSessionDto,
@@ -83,15 +82,6 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Email already verified or invalid' })
   async resendVerification(@Body() dto: ResendVerificationDto) {
     return await this.authService.resendVerification(dto);
-  }
-
-  @Post('complete-onboarding')
-  @Public()
-  @ApiOperation({ summary: 'Complete owner onboarding with organization and gym' })
-  @ApiResponse({ status: 201, description: 'Onboarding completed successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid data or verification required' })
-  async completeOnboarding(@Body() dto: CompleteOnboardingDto) {
-    return await this.authService.completeOnboarding(dto);
   }
 
   @Get('subscription-plans')

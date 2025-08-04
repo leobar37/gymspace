@@ -33,6 +33,12 @@ interface OnboardingState {
   emailVerified: boolean;
   verificationCode: string | null;
   
+  // Temporary auth tokens (stored during registration, used after verification)
+  tempAuthTokens: {
+    accessToken: string;
+    refreshToken: string;
+  } | null;
+  
   // Collaborator invitation
   invitationToken: string | null;
   invitationData: any | null;
@@ -45,6 +51,7 @@ const initialState: OnboardingState = {
   gymData: null,
   emailVerified: false,
   verificationCode: null,
+  tempAuthTokens: null,
   invitationToken: null,
   invitationData: null,
 };
@@ -80,6 +87,10 @@ export function useOnboardingStore() {
     
     setVerificationCode: (code: string) => {
       setState((prev) => ({ ...prev, verificationCode: code }));
+    },
+    
+    setTempAuthTokens: (tokens: OnboardingState['tempAuthTokens']) => {
+      setState((prev) => ({ ...prev, tempAuthTokens: tokens }));
     },
     
     setInvitationToken: (token: string) => {

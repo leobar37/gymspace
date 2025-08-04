@@ -1,92 +1,28 @@
 import React from 'react';
-import { SafeAreaView, View, Pressable } from 'react-native';
+import { SafeAreaView, View } from 'react-native';
 import { router } from 'expo-router';
 import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
 import { Center } from '@/components/ui/center';
 import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
 import { Button as GluestackButton, ButtonText } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { Card } from '@/components/ui/card';
 import { Box } from '@/components/ui/box';
 import { StatusBar } from 'expo-status-bar';
-import { CheckCircleIcon, RocketIcon, BookOpenIcon, HeadphonesIcon, ChevronRightIcon } from 'lucide-react-native';
+import { CheckCircleIcon } from 'lucide-react-native';
 import { useOnboardingStore } from '@/store/onboarding';
-import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useMutation } from '@tanstack/react-query';
-
-// Welcome checklist items
-const CHECKLIST_ITEMS = [
-  {
-    icon: BookOpenIcon,
-    title: 'Ver el tutorial',
-    description: 'Aprende a usar todas las funciones',
-    action: 'tutorial',
-  },
-  {
-    icon: HeadphonesIcon,
-    title: 'Configurar notificaciones',
-    description: 'Mantente al día con tu gimnasio',
-    action: 'notifications',
-  },
-  {
-    icon: RocketIcon,
-    title: 'Invitar colaboradores',
-    description: 'Agrega a tu equipo de trabajo',
-    action: 'invite',
-  },
-];
 
 export default function WelcomeScreen() {
-  const {
-    gymData,
-    resetOnboarding
-  } = useOnboardingStore();
-  const { setAuthToken } = useGymSdk();
-
-  // Complete registration mutation
-  const completeMutation = useMutation({
-    mutationFn: async () => {
-
-      // Mock successful registration
-      return {
-        success: true,
-        accessToken: 'mock-token',
-        userId: 'mock-user-id',
-      };
-    },
-    onSuccess: async (data) => {
-      // Store auth token
-      await setAuthToken(data.accessToken);
-      // Reset onboarding state
-      resetOnboarding();
-      // Navigate to main app
-      router.replace('/(app)');
-    },
-    onError: (error: any) => {
-      console.error('Registration error:', error);
-    },
-  });
-
-  const handleChecklistAction = (action: string) => {
-    // Handle different checklist actions
-    switch (action) {
-      case 'tutorial':
-        // Navigate to tutorial
-        break;
-      case 'notifications':
-        // Navigate to notification settings
-        break;
-      case 'invite':
-        // Navigate to invite screen
-        break;
-    }
-  };
+  const { organizationData, resetOnboarding } = useOnboardingStore();
 
   const handleComplete = () => {
-    completeMutation.mutate();
+    // Reset onboarding state and navigate directly to dashboard
+    resetOnboarding();
+    router.replace('/(app)');
   };
+
+  // Display organization name as gym name
+  const displayGymName = organizationData?.name || 'tu gimnasio';
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -106,7 +42,7 @@ export default function WelcomeScreen() {
               ¡Bienvenido a GymSpace!
             </Heading>
             <Text className="text-gray-600 text-lg text-center">
-              Tu gimnasio "{gymData?.name}" ha sido creado exitosamente
+              Tu gimnasio "{displayGymName}" ha sido creado exitosamente
             </Text>
           </VStack>
 
@@ -146,11 +82,9 @@ export default function WelcomeScreen() {
           <Box className="mt-auto">
             <GluestackButton
               onPress={handleComplete}
-              disabled={completeMutation.isPending}
+              className="bg-blue-600"
             >
-              <ButtonText>
-                {completeMutation.isPending ? 'Finalizando...' : 'Comenzar a usar GymSpace'}
-              </ButtonText>
+              <ButtonText>Comenzar</ButtonText>
             </GluestackButton>
           </Box>
         </VStack>

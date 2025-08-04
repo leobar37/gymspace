@@ -17,7 +17,6 @@ export default function RootLayout() {
           <Stack.Screen name="(onboarding)" />
           <Stack.Screen name="(app)" />
           <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="test-nativewind" options={{ title: "Test NativeWind", headerShown: true }} />
         </Stack>
       </AppProviders>
     </GestureHandlerRootView></GluestackUIProvider>

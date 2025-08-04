@@ -58,7 +58,7 @@ export default function LoginScreen() {
       // Store auth token
       await setAuthToken(data.data.accessToken);
       
-      // Navigate to main app
+      // Navigate to main app - the app layout will handle checking if user has completed onboarding
       router.replace('/(app)');
     },
     onError: (error: any) => {

@@ -15,7 +15,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       //   configService.get<string>('nodeEnv') === 'development'
       //     ? ['query', 'error', 'warn']
       //     : ['error'],
-      log: []
+      log: [],
     });
 
     // Apply soft delete middleware

@@ -99,7 +99,7 @@ export class OnboardingService {
             phone: dto.phone,
             password: '', // Password is managed by Supabase
             userType: UserType.OWNER,
-            emailVerifiedAt: new Date(),
+            emailVerifiedAt: null,
             verificationCode: verificationCode,
             verificationCodeExpiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000), // 3 hours from now
           },

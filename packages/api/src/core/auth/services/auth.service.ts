@@ -10,7 +10,6 @@ import {
   LoginResponseDto,
   VerifyEmailDto,
   ResendVerificationDto,
-  CompleteOnboardingDto,
   RegisterCollaboratorDto,
 } from '../../../modules/auth/dto';
 import { BusinessException } from '../../../common/exceptions';
@@ -115,6 +114,67 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  /**
+   * Get default gym for user (first active gym from their organization)
+   */
+  async getDefaultGymForUser(userId: string): Promise<any> {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+      include: {
+        ownedOrganizations: {
+          include: {
+            gyms: {
+              where: { 
+                deletedAt: null,
+                isActive: true 
+              },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+              include: {
+                organization: true,
+              },
+            },
+          },
+        },
+        collaborators: {
+          where: { status: 'active' },
+          include: {
+            gym: {
+              include: {
+                organization: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    // If user is an owner and has active gyms in their organization
+    if (user.userType === UserType.OWNER && user.ownedOrganizations?.length > 0) {
+      const firstOrg = user.ownedOrganizations[0];
+      if (firstOrg.gyms.length > 0) {
+        return firstOrg.gyms[0];
+      }
+    }
+
+    // If user is a collaborator with access to an active gym
+    if (user.collaborators?.length > 0) {
+      const activeCollaborator = user.collaborators.find((c: any) => 
+        c.gym && c.gym.isActive && c.gym.deletedAt === null
+      );
+      if (activeCollaborator) {
+        return activeCollaborator.gym;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -232,7 +292,24 @@ export class AuthService {
           },
         });
 
-        return { user, organization };
+        // Create default gym
+        const gymTimestamp = Date.now().toString(36).toUpperCase();
+        const gymRandom = Math.random().toString(36).substring(2, 5).toUpperCase();
+        const gym = await tx.gym.create({
+          data: {
+            organizationId: organization.id,
+            name: 'Default',
+            slug: `default-${gymTimestamp.toLowerCase()}-${gymRandom.toLowerCase()}`,
+            gymCode: `GYM-${gymTimestamp}-${gymRandom}`,
+            settings: {
+              setupCompleted: false,
+              features: {},
+            },
+            createdByUserId: user.id,
+          },
+        });
+
+        return { user, organization, gym };
       });
 
       return {
@@ -245,6 +322,10 @@ export class AuthService {
         organization: {
           id: result.organization.id,
           name: result.organization.name,
+        },
+        gym: {
+          id: result.gym.id,
+          name: result.gym.name,
         },
       };
     } catch (error) {
@@ -350,7 +431,7 @@ export class AuthService {
       });
 
       console.log(user);
-      
+
       if (!user) {
         throw new BusinessException('User not found');
       }
@@ -446,7 +527,7 @@ export class AuthService {
     const user = await this.prismaService.user.findUnique({
       where: { email: dto.email },
     });
-    
+
     if (!user) {
       throw new BusinessException('User not found');
     }
@@ -454,7 +535,6 @@ export class AuthService {
     if (user.emailVerifiedAt) {
       throw new BusinessException('Email already verified');
     }
-    
 
     // Use the same logic as generateAndSendVerificationCode
     await this.resendVerificationCode(dto.email, user.name);
@@ -524,139 +604,6 @@ export class AuthService {
     });
 
     return { data: plans };
-  }
-
-  /**
-   * Complete owner onboarding
-   */
-  async completeOnboarding(dto: CompleteOnboardingDto) {
-    // Verify email first
-    await this.verifyEmail({
-      email: dto.email,
-      code: dto.verificationCode,
-    });
-
-    // Check if user already exists
-    const existingUser = await this.prismaService.user.findUnique({
-      where: { email: dto.email },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('User already exists');
-    }
-
-    // Validate subscription plan
-    const subscriptionPlan = await this.prismaService.subscriptionPlan.findUnique({
-      where: { id: dto.subscriptionPlanId },
-    });
-
-    if (!subscriptionPlan) {
-      throw new BusinessException('Invalid subscription plan');
-    }
-
-    try {
-      // Create everything in a transaction
-      const result = await this.prismaService.$transaction(async (tx) => {
-        // Create Supabase user
-        const { data: supabaseAuth, error: authError } = await this.supabaseService
-          .getClient()
-          .auth.signUp({
-            email: dto.email,
-            password: dto.password,
-            options: {
-              data: {
-                name: dto.name,
-                phone: dto.phone,
-                userType: UserType.OWNER,
-              },
-            },
-          });
-
-        if (authError) {
-          throw new BusinessException(`Authentication error: ${authError.message}`);
-        }
-
-        // Create user
-        const user = await tx.user.create({
-          data: {
-            id: supabaseAuth.user!.id,
-            email: dto.email,
-            name: dto.name,
-            phone: dto.phone,
-            password: '', // Password is managed by Supabase
-            userType: UserType.OWNER,
-            emailVerifiedAt: new Date(),
-          },
-        });
-
-        // Create organization
-        const orgTimestamp = Date.now().toString(36);
-        const orgRandom = Math.random().toString(36).substring(2, 5);
-        const organization = await tx.organization.create({
-          data: {
-            name: dto.organizationName,
-            organizationCode: `ORG-${orgTimestamp.toUpperCase()}-${orgRandom.toUpperCase()}`,
-            subscriptionStatus: SubscriptionStatus.ACTIVE,
-            subscriptionStart: new Date(),
-            subscriptionEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial
-            country: dto.country,
-            currency: dto.currency,
-            timezone: 'America/Lima', // Default timezone
-            settings: {},
-            owner: { connect: { id: user.id } },
-            subscriptionPlan: { connect: { id: dto.subscriptionPlanId } },
-            createdBy: { connect: { id: user.id } },
-          },
-        });
-
-        // Create first gym
-        const timestamp = Date.now().toString(36);
-        const random = Math.random().toString(36).substring(2, 5);
-        const gym = await tx.gym.create({
-          data: {
-            organization: { connect: { id: organization.id } },
-            name: dto.gym.name,
-            slug: `${dto.gym.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${timestamp}`,
-            gymCode: `GYM-${timestamp.toUpperCase()}-${random.toUpperCase()}`,
-            address: dto.gym.address,
-            phone: dto.gym.phone,
-            description: dto.gym.description,
-            settings: {
-              logo: dto.gym.logo,
-              coverPhoto: dto.gym.coverPhoto,
-            },
-            createdBy: { connect: { id: user.id } },
-          },
-        });
-
-        return { user, organization, gym, session: supabaseAuth.session };
-      });
-
-      return {
-        success: true,
-        access_token: result.session!.access_token,
-        refresh_token: result.session!.refresh_token,
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          name: result.user.name,
-          userType: result.user.userType,
-        },
-        organization: {
-          id: result.organization.id,
-          name: result.organization.name,
-        },
-        gym: {
-          id: result.gym.id,
-          name: result.gym.name,
-        },
-      };
-    } catch (error) {
-      if (error instanceof BusinessException || error instanceof ConflictException) {
-        throw error;
-      }
-      throw new BusinessException('Onboarding failed. Please try again.');
-    }
   }
 
   /**

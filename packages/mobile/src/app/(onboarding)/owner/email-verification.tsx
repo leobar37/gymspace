@@ -4,6 +4,7 @@ import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { Text } from '@/components/ui/text';
 import { EmailVerification } from '@/features/auth/components/EmailVerification';
 import { useOnboardingStore } from '@/store/onboarding';
+import { useAuthToken } from '@/hooks/useAuthToken';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'lucide-react-native';
@@ -11,11 +12,29 @@ import React from 'react';
 import { Pressable, SafeAreaView, View } from 'react-native';
 
 export default function EmailVerificationScreen() {
-  const { ownerData, setEmailVerified, emailVerified } = useOnboardingStore();
+  const { ownerData, setEmailVerified, emailVerified, tempAuthTokens, setVerificationCode } = useOnboardingStore();
+  const { storeTokens } = useAuthToken();
 
-  const handleSuccess = () => {
+  // Redirect if no owner data (shouldn't happen with proper navigation)
+  if (!ownerData) {
+    router.replace('/');
+    return null;
+  }
+
+  const handleSuccess = async (verificationCode: string) => {
     setEmailVerified(true);
-    router.push('/owner/welcome');
+    setVerificationCode(verificationCode); // Store the verification code for later use in welcome screen
+    
+    // Apply the temporary tokens now that email is verified
+    if (tempAuthTokens) {
+      await storeTokens({
+        accessToken: tempAuthTokens.accessToken,
+        refreshToken: tempAuthTokens.refreshToken,
+        expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours from now
+      });
+    }
+    
+    router.replace('/owner/welcome');
   };
 
   const handleBack = () => {

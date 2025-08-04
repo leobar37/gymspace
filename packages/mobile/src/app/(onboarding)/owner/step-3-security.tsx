@@ -54,7 +54,7 @@ export default function OwnerSecurityInfoScreen() {
       password: data.password,
     });
     // Navigate to organization setup
-    router.push('/owner/organization-setup');
+    router.replace('/owner/organization-setup');
   };
 
   return (

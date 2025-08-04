@@ -2,6 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { AuthService } from '../services/auth.service';
 import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator';
+import { IGym, IOrganization } from '@gymspace/shared';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -35,16 +36,25 @@ export class AuthGuard implements CanActivate {
       const user = await this.authService.validateToken(token);
       request.user = user;
 
-      // Get gym context if gym ID is provided
+      // Get gym context if gym ID is provided, or get first active gym from user's organization
       const gymId = request.headers['x-gym-id'] as string;
+      let gym: (IGym & { organization: IOrganization }) | null = null;
+
       if (gymId) {
-        const gym = await this.authService.getGymContext(gymId, user.id);
+        // Use specific gym ID if provided
+        gym = await this.authService.getGymContext(gymId, user.id);
+      } else {
+        // Get the user's first active gym if no gym ID is provided
+        gym = await this.authService.getDefaultGymForUser(user.id);
+      }
+
+      if (gym) {
         request.gym = gym;
         request.organization = gym.organization;
       }
 
-      // Get user permissions
-      const permissions = await this.authService.getUserPermissions(user.id, gymId);
+      // Get user permissions for the selected gym context
+      const permissions = await this.authService.getUserPermissions(user.id, gym?.id);
       request.permissions = permissions;
 
       return true;

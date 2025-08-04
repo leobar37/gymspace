@@ -20,7 +20,7 @@ interface GymSdkProviderProps {
 }
 
 const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5200/api/v1';
-console.log("api",API_BASE_URL);
+console.log(API_BASE_URL);
 
 export function GymSdkProvider({ children }: GymSdkProviderProps) {
   const { getItem, setItem, removeItem } = useSecureStorage();
