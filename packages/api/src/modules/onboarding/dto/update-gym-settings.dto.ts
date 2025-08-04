@@ -1,4 +1,17 @@
-import { IsNotEmpty, IsString, IsOptional, IsNumber, Min, Max, IsUrl, IsObject, IsBoolean, Matches, ValidateNested, IsArray } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsNumber,
+  Min,
+  Max,
+  IsUrl,
+  IsObject,
+  IsBoolean,
+  Matches,
+  ValidateNested,
+  IsArray,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -166,7 +179,10 @@ export class UpdateGymSettingsDto {
   @Max(10000)
   capacity: number;
 
-  @ApiPropertyOptional({ example: 'The best gym in downtown with state-of-the-art equipment', description: 'Gym description' })
+  @ApiPropertyOptional({
+    example: 'The best gym in downtown with state-of-the-art equipment',
+    description: 'Gym description',
+  })
   @IsOptional()
   @IsString()
   description?: string;

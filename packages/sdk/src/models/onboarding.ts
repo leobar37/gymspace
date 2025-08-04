@@ -7,8 +7,6 @@ export interface StartOnboardingData {
   country: string;
   currency: string;
   timezone: string;
-  subscriptionPlanId: string;
-  verificationCode: string;
 }
 
 export interface StartOnboardingResponse {
@@ -24,6 +22,7 @@ export interface StartOnboardingResponse {
   organization: {
     id: string;
     name: string;
+    organizationCode: string;
   };
   gym: {
     id: string;

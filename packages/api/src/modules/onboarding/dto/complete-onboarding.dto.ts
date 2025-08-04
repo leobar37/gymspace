@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsOptional, IsString, Length, MinLength } from 'class-validator';
 
-export class StartOnboardingDto {
+export class CompleteOnboardingDto {
   // Owner data
   @ApiProperty({ example: 'John Doe', description: 'Full name of the gym owner' })
   @IsNotEmpty()
@@ -23,6 +23,12 @@ export class StartOnboardingDto {
   @IsString()
   @MinLength(8)
   password: string;
+
+  @ApiProperty({ example: '123456', description: 'Email verification code' })
+  @IsNotEmpty()
+  @IsString()
+  @Length(6, 6)
+  verificationCode: string;
 
   // Organization data
   @ApiProperty({ example: 'My Fitness Center', description: 'Name of the organization/company' })

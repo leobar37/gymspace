@@ -7,11 +7,7 @@ import {
 } from '../../common/exceptions';
 import { CacheService } from '../../core/cache/cache.service';
 import { PrismaService } from '../../core/database/prisma.service';
-import {
-  AffiliateOrganizationDto,
-  AvailablePlanDto,
-  SubscriptionStatusDto,
-} from './dto';
+import { AffiliateOrganizationDto, AvailablePlanDto, SubscriptionStatusDto } from './dto';
 
 @Injectable()
 export class SubscriptionsService {
@@ -27,7 +23,7 @@ export class SubscriptionsService {
   async getAvailablePlans(): Promise<AvailablePlanDto[]> {
     const cacheKey = 'subscription-plans:free';
     const cached = await this.cache.get<AvailablePlanDto[]>(cacheKey);
-    
+
     if (cached) {
       return cached;
     }
@@ -114,10 +110,7 @@ export class SubscriptionsService {
     }
 
     // Calculate usage
-    const totalClients = organization.gyms.reduce(
-      (sum, gym) => sum + gym.gymClients.length,
-      0,
-    );
+    const totalClients = organization.gyms.reduce((sum, gym) => sum + gym.gymClients.length, 0);
     const totalUsers = organization.gyms.reduce(
       (sum, gym) => sum + gym.collaborators.length + 1, // +1 for owner
       0,
@@ -127,10 +120,7 @@ export class SubscriptionsService {
     const now = new Date();
     const daysRemaining = Math.max(
       0,
-      Math.ceil(
-        (organization.subscriptionEnd.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
-      ),
+      Math.ceil((organization.subscriptionEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
     );
 
     const isExpired = now > organization.subscriptionEnd;
@@ -192,9 +182,7 @@ export class SubscriptionsService {
     }
 
     if (organization.ownerUserId !== context.getUserId()) {
-      throw new BusinessException(
-        'Only the organization owner can change subscription plans',
-      );
+      throw new BusinessException('Only the organization owner can change subscription plans');
     }
 
     // Get the new plan
@@ -357,9 +345,7 @@ export class SubscriptionsService {
     });
 
     if (!freePlan) {
-      throw new BusinessException(
-        'Default free plan not found. Please run database seed.',
-      );
+      throw new BusinessException('Default free plan not found. Please run database seed.');
     }
 
     return freePlan;

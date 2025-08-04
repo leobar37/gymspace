@@ -145,14 +145,16 @@ model SubscriptionPlan {
 }
 
 model User {
-    id              String    @id @default(uuid())
-    email           String    @unique
-    password        String? // Optional - auth handled by Supabase
-    name            String
-    phone           String?
-    userType        UserType  @map("user_type")
-    emailVerifiedAt DateTime? @map("email_verified_at")
-    createdByUserId String?   @map("created_by_user_id")
+    id                String    @id @default(uuid())
+    email             String    @unique
+    password          String? // Optional - auth handled by Supabase
+    name              String
+    phone             String?
+    userType          UserType  @map("user_type")
+    emailVerifiedAt   DateTime? @map("email_verified_at")
+    verificationCode  String?   @map("verification_code")
+    verificationCodeExpiresAt DateTime? @map("verification_code_expires_at")
+    createdByUserId   String?   @map("created_by_user_id")
     updatedByUserId String?   @map("updated_by_user_id")
     createdAt       DateTime  @default(now()) @map("created_at")
     updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -220,6 +222,7 @@ model Organization {
     id                 String             @id @default(uuid())
     ownerUserId        String             @map("owner_user_id")
     name               String
+    organizationCode   String             @unique @map("organization_code")
     subscriptionPlanId String             @map("subscription_plan_id")
     subscriptionStatus SubscriptionStatus @map("subscription_status")
     subscriptionStart  DateTime           @map("subscription_start")

@@ -25,7 +25,7 @@ export class AssetsService implements OnModuleInit {
     private configService: ConfigService,
   ) {
     const s3Config = this.configService.get('s3');
-    
+
     this.s3 = new AWS.S3({
       endpoint: s3Config.endpoint,
       accessKeyId: s3Config.accessKey,
@@ -53,11 +53,17 @@ export class AssetsService implements OnModuleInit {
           await this.s3.createBucket({ Bucket: this.bucket }).promise();
           this.logger.log(`S3 bucket '${this.bucket}' created successfully`);
         } catch (createError) {
-          this.logger.error(`Failed to create S3 bucket '${this.bucket}': ${createError.message}`, createError.stack);
+          this.logger.error(
+            `Failed to create S3 bucket '${this.bucket}': ${createError.message}`,
+            createError.stack,
+          );
           throw createError;
         }
       } else {
-        this.logger.error(`Failed to verify S3 bucket '${this.bucket}': ${error.message}`, error.stack);
+        this.logger.error(
+          `Failed to verify S3 bucket '${this.bucket}': ${error.message}`,
+          error.stack,
+        );
         throw error;
       }
     }
@@ -66,11 +72,7 @@ export class AssetsService implements OnModuleInit {
   /**
    * Upload a file and create asset record
    */
-  async upload(
-    file: FileUploadResult,
-    dto: UploadAssetDto,
-    context: IRequestContext,
-  ) {
+  async upload(file: FileUploadResult, dto: UploadAssetDto, context: IRequestContext) {
     const gymId = context.getGymId();
     const userId = context.getUserId();
 
@@ -84,18 +86,20 @@ export class AssetsService implements OnModuleInit {
 
     try {
       // Upload to S3
-      await this.s3.upload({
-        Bucket: this.bucket,
-        Key: filePath,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-        Metadata: {
-          gymId,
-          entityType: dto.entityType,
-          entityId: dto.entityId,
-          uploadedBy: userId,
-        },
-      }).promise();
+      await this.s3
+        .upload({
+          Bucket: this.bucket,
+          Key: filePath,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+          Metadata: {
+            gymId,
+            entityType: dto.entityType,
+            entityId: dto.entityId,
+            uploadedBy: userId,
+          },
+        })
+        .promise();
 
       // Create asset record
       const asset = await this.prisma.asset.create({
@@ -196,10 +200,12 @@ export class AssetsService implements OnModuleInit {
     const asset = await this.findOne(assetId, context);
 
     try {
-      const stream = this.s3.getObject({
-        Bucket: this.bucket,
-        Key: asset.filePath,
-      }).createReadStream();
+      const stream = this.s3
+        .getObject({
+          Bucket: this.bucket,
+          Key: asset.filePath,
+        })
+        .createReadStream();
 
       return {
         stream,
@@ -239,11 +245,7 @@ export class AssetsService implements OnModuleInit {
   /**
    * List assets for an entity
    */
-  async findByEntity(
-    entityType: AssetEntityType,
-    entityId: string,
-    context: IRequestContext,
-  ) {
+  async findByEntity(entityType: AssetEntityType, entityId: string, context: IRequestContext) {
     const gymId = context.getGymId();
 
     // Validate entity access
@@ -270,9 +272,7 @@ export class AssetsService implements OnModuleInit {
     });
 
     // Add preview URLs to all assets
-    const assetsWithUrls = await Promise.all(
-      assets.map(asset => this.addPreviewUrl(asset))
-    );
+    const assetsWithUrls = await Promise.all(assets.map((asset) => this.addPreviewUrl(asset)));
 
     return assetsWithUrls;
   }
@@ -280,11 +280,7 @@ export class AssetsService implements OnModuleInit {
   /**
    * Validate entity access based on gym context
    */
-  private async validateEntityAccess(
-    entityType: AssetEntityType,
-    entityId: string,
-    gymId: string,
-  ) {
+  private async validateEntityAccess(entityType: AssetEntityType, entityId: string, gymId: string) {
     switch (entityType) {
       case AssetEntityType.GYM:
         const gym = await this.prisma.gym.findFirst({
@@ -306,7 +302,7 @@ export class AssetsService implements OnModuleInit {
 
       case AssetEntityType.CONTRACT:
         const contract = await this.prisma.contract.findFirst({
-          where: { 
+          where: {
             id: entityId,
             gymClient: { gymId },
           },

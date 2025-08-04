@@ -44,6 +44,12 @@ export default () => ({
     origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
   },
 
+  // Email (Resend)
+  resend: {
+    apiKey: process.env.RESEND_API_KEY,
+    fromEmail: process.env.RESEND_FROM_EMAIL || 'GymSpace <noreply@gymspace.com>',
+  },
+
   // Rate limiting
   rateLimit: {
     ttl: parseInt(process.env.RATE_LIMIT_TTL || '60', 10),

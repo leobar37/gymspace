@@ -7,6 +7,7 @@ import {
 } from '../../common/exceptions';
 import { AuthService } from '../../core/auth/services/auth.service';
 import { PrismaService } from '../../core/database/prisma.service';
+import { EmailService } from '../../core/email/email.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import {
   CompleteGuidedSetupDto,
@@ -23,18 +24,13 @@ export class OnboardingService {
     private prismaService: PrismaService,
     private authService: AuthService,
     private subscriptionsService: SubscriptionsService,
+    private emailService: EmailService,
   ) {}
 
   /**
    * Start the onboarding process - creates organization, user, and initial gym
    */
   async startOnboarding(dto: StartOnboardingDto) {
-    // Verify email first
-    await this.authService.verifyEmail({
-      email: dto.email,
-      code: dto.verificationCode,
-    });
-
     // Check if user already exists
     const existingUser = await this.prismaService.user.findUnique({
       where: { email: dto.email },
@@ -48,7 +44,7 @@ export class OnboardingService {
 
     // Get subscription plan ID - use default free plan if not provided
     let subscriptionPlanId = dto.subscriptionPlanId;
-    
+
     if (!subscriptionPlanId) {
       const defaultPlan = await this.subscriptionsService.getDefaultFreePlan();
       subscriptionPlanId = defaultPlan.id;
@@ -107,11 +103,15 @@ export class OnboardingService {
           },
         });
 
+        // Generate unique organization code
+        const organizationCode = this.emailService.generateOrganizationCode();
+
         // Create organization
         const organization = await tx.organization.create({
           data: {
             ownerUserId: user.id,
             name: dto.organizationName,
+            organizationCode: organizationCode,
             subscriptionPlanId: subscriptionPlanId,
             subscriptionStatus: SubscriptionStatus.ACTIVE,
             subscriptionStart: new Date(),
@@ -145,6 +145,32 @@ export class OnboardingService {
         return { user, organization, gym, session: supabaseAuth.session };
       });
 
+      // Generate and send verification code after successful onboarding
+      try {
+        const verificationCode = this.emailService.generateVerificationCode();
+        await this.emailService.sendVerificationCode(
+          result.user.email,
+          verificationCode,
+          result.user.name,
+        );
+      } catch (emailError) {
+        // Log email error but don't fail the onboarding process
+        console.error('Failed to send verification code email:', emailError);
+      }
+
+      // Send organization code via email
+      try {
+        await this.emailService.sendOrganizationCode(
+          result.user.email,
+          result.organization.organizationCode,
+          result.organization.name,
+          result.user.name,
+        );
+      } catch (emailError) {
+        // Log email error but don't fail the onboarding process
+        console.error('Failed to send organization code email:', emailError);
+      }
+
       return {
         success: true,
         access_token: result.session!.access_token,
@@ -158,6 +184,7 @@ export class OnboardingService {
         organization: {
           id: result.organization.id,
           name: result.organization.name,
+          organizationCode: result.organization.organizationCode,
         },
         gym: {
           id: result.gym.id,

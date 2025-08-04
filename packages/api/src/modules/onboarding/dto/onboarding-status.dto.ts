@@ -14,7 +14,11 @@ export class OnboardingStatusDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Gym ID' })
   gymId: string;
 
-  @ApiProperty({ enum: OnboardingStep, example: OnboardingStep.GYM_SETTINGS, description: 'Current onboarding step' })
+  @ApiProperty({
+    enum: OnboardingStep,
+    example: OnboardingStep.GYM_SETTINGS,
+    description: 'Current onboarding step',
+  })
   currentStep: OnboardingStep;
 
   @ApiProperty({ example: true, description: 'Whether account creation is completed' })

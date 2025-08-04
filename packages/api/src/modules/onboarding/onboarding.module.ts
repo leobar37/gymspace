@@ -4,9 +4,10 @@ import { OnboardingService } from './onboarding.service';
 import { CommonModule } from '../../common/common.module';
 import { AuthModule } from '../auth/auth.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { EmailModule } from '../../core/email/email.module';
 
 @Module({
-  imports: [CommonModule, AuthModule, SubscriptionsModule],
+  imports: [CommonModule, AuthModule, SubscriptionsModule, EmailModule],
   controllers: [OnboardingController],
   providers: [OnboardingService],
   exports: [OnboardingService],

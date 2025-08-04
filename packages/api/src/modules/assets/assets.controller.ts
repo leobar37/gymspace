@@ -69,17 +69,14 @@ export class AssetsController {
     description: 'Asset uploaded successfully',
     type: AssetResponseDto,
   })
-  async upload(
-    @Req() request: FastifyRequest,
-    @RequestContext() context: IRequestContext,
-  ) {
+  async upload(@Req() request: FastifyRequest, @RequestContext() context: IRequestContext) {
     try {
       // Parse multipart upload
       const { file, fields } = await parseMultipartUpload(request);
-      
+
       // Parse and validate DTO
       const dto = parseUploadDto<UploadAssetDto>(fields);
-      
+
       // Validate required fields
       if (!dto.entityType || !dto.entityId) {
         throw new BadRequestException('entityType and entityId are required');
@@ -142,10 +139,7 @@ export class AssetsController {
     @RequestContext() context: IRequestContext,
     @Res() res: FastifyReply,
   ) {
-    const { stream, filename, mimeType, fileSize } = await this.assetsService.download(
-      id,
-      context,
-    );
+    const { stream, filename, mimeType, fileSize } = await this.assetsService.download(id, context);
 
     res.headers({
       'Content-Type': mimeType,
@@ -163,10 +157,7 @@ export class AssetsController {
     status: 200,
     description: 'Asset deleted successfully',
   })
-  async delete(
-    @Param('id', ParseUUIDPipe) id: string,
-    @RequestContext() context: IRequestContext,
-  ) {
+  async delete(@Param('id', ParseUUIDPipe) id: string, @RequestContext() context: IRequestContext) {
     return this.assetsService.delete(id, context);
   }
 

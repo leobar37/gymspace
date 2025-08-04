@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsString, IsBoolean, IsObject, ValidateNested, IsOptional, IsNumber, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsBoolean,
+  IsObject,
+  ValidateNested,
+  IsOptional,
+  IsNumber,
+  Min,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -129,7 +138,10 @@ class NotificationSettingsDto {
 }
 
 export class ConfigureFeaturesDto {
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Gym ID to configure' })
+  @ApiProperty({
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'Gym ID to configure',
+  })
   @IsNotEmpty()
   @IsString()
   gymId: string;

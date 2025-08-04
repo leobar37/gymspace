@@ -12,6 +12,7 @@ import {
 export class OnboardingResource extends BaseResource {
   /**
    * Creates owner account, organization, and initial gym
+   * Now also sends verification and organization codes via email
    */
   async start(data: StartOnboardingData): Promise<StartOnboardingResponse> {
     const response = await this.client.post<StartOnboardingResponse>('/onboarding/start', data);

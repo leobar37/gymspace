@@ -152,22 +152,18 @@ export class OrganizationsService {
         },
         clients: {
           current: totalClients,
-          limit:
-            org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms,
+          limit: org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms,
           percentage:
             (totalClients /
-              (org.subscriptionPlan.maxClientsPerGym *
-                org.subscriptionPlan.maxGyms)) *
+              (org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms)) *
             100,
         },
         collaborators: {
           current: totalCollaborators,
-          limit:
-            org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms,
+          limit: org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms,
           percentage:
             (totalCollaborators /
-              (org.subscriptionPlan.maxUsersPerGym *
-                org.subscriptionPlan.maxGyms)) *
+              (org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms)) *
             100,
         },
       },

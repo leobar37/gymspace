@@ -1,23 +1,22 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSDK } from '@/shared/hooks/useSDK';
-import { 
-  StartOnboardingData, 
-  UpdateGymSettingsData, 
-  ConfigureFeaturesData,
+import { gymAtom, userAtom } from '@/shared/stores/auth.store';
+import {
   CompleteGuidedSetupData,
-  OnboardingStatus,
-  OnboardingStep
+  ConfigureFeaturesData,
+  OnboardingStep,
+  StartOnboardingData,
+  UpdateGymSettingsData
 } from '@gymspace/sdk';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useAtom } from 'jotai';
-import { userAtom, gymAtom } from '@/shared/stores/auth.store';
+import { useSetAtom } from 'jotai';
 
 export const useOnboardingController = () => {
   const { gymSpaceSDK } = useSDK();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [, setUser] = useAtom(userAtom);
-  const [, setGym] = useAtom(gymAtom);
+  const setUser = useSetAtom(userAtom);
+  const setGym = useSetAtom(gymAtom);
 
   // Start onboarding mutation
   const startOnboardingMutation = useMutation({

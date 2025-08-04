@@ -34,16 +34,18 @@ export async function parseMultipartUpload(
 
       for await (const chunk of part.file) {
         totalSize += chunk.length;
-        
+
         if (totalSize > maxFileSize) {
-          throw new BadRequestException(`File size exceeds maximum allowed size of ${maxFileSize} bytes`);
+          throw new BadRequestException(
+            `File size exceeds maximum allowed size of ${maxFileSize} bytes`,
+          );
         }
-        
+
         chunks.push(chunk);
       }
 
       const buffer = Buffer.concat(chunks);
-      
+
       fileData = {
         filename: part.filename,
         mimetype: part.mimetype,

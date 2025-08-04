@@ -139,7 +139,9 @@ export class GymMembershipPlansService {
         ...(dto.durationMonths !== undefined && { durationMonths: dto.durationMonths }),
         ...(dto.features !== undefined && { features: dto.features }),
         ...(dto.termsAndConditions !== undefined && { termsAndConditions: dto.termsAndConditions }),
-        ...(dto.allowsCustomPricing !== undefined && { allowsCustomPricing: dto.allowsCustomPricing }),
+        ...(dto.allowsCustomPricing !== undefined && {
+          allowsCustomPricing: dto.allowsCustomPricing,
+        }),
         ...(dto.maxEvaluations !== undefined && { maxEvaluations: dto.maxEvaluations }),
         ...(dto.includesAdvisor !== undefined && { includesAdvisor: dto.includesAdvisor }),
         ...(dto.showInCatalog !== undefined && { showInCatalog: dto.showInCatalog }),

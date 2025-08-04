@@ -3,11 +3,7 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Allow } from '../../common/decorators/allow.decorator';
 import { RequestContext } from '../../common/decorators/request-context.decorator';
-import {
-  AffiliateOrganizationDto,
-  AvailablePlanDto,
-  SubscriptionStatusDto,
-} from './dto';
+import { AffiliateOrganizationDto, AvailablePlanDto, SubscriptionStatusDto } from './dto';
 import { SubscriptionsService } from './subscriptions.service';
 
 @Controller('subscriptions')
@@ -23,9 +19,7 @@ export class SubscriptionsController {
     description: 'List of available subscription plans',
     type: [AvailablePlanDto],
   })
-  async getAvailablePlans(
-    @RequestContext() context: IRequestContext,
-  ): Promise<AvailablePlanDto[]> {
+  async getAvailablePlans(@RequestContext() context: IRequestContext): Promise<AvailablePlanDto[]> {
     return this.subscriptionsService.getAvailablePlans();
   }
 
@@ -46,9 +40,10 @@ export class SubscriptionsController {
 
   @Post('organizations/:organizationId/affiliate')
   @Allow(PERMISSIONS.ORGANIZATIONS_UPDATE)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Affiliate organization to a subscription plan',
-    description: 'Currently only allows affiliation to free plans. The organization owner must perform this action.'
+    description:
+      'Currently only allows affiliation to free plans. The organization owner must perform this action.',
   })
   @ApiResponse({
     status: 200,
@@ -60,18 +55,15 @@ export class SubscriptionsController {
     @Body() dto: AffiliateOrganizationDto,
     @RequestContext() context: IRequestContext,
   ): Promise<SubscriptionStatusDto> {
-    return this.subscriptionsService.affiliateOrganization(
-      organizationId,
-      dto,
-      context,
-    );
+    return this.subscriptionsService.affiliateOrganization(organizationId, dto, context);
   }
 
   @Get('organizations/:organizationId/limits/:limitType')
   @Allow(PERMISSIONS.ORGANIZATIONS_READ)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Check subscription limits',
-    description: 'Check if an organization can perform an action based on subscription limits. Limit types: gyms, clients, users'
+    description:
+      'Check if an organization can perform an action based on subscription limits. Limit types: gyms, clients, users',
   })
   @ApiResponse({
     status: 200,
@@ -92,10 +84,6 @@ export class SubscriptionsController {
     @RequestContext() context: IRequestContext,
   ) {
     const gymId = context.getGymId();
-    return this.subscriptionsService.checkSubscriptionLimit(
-      organizationId,
-      limitType,
-      gymId,
-    );
+    return this.subscriptionsService.checkSubscriptionLimit(organizationId, limitType, gymId);
   }
 }

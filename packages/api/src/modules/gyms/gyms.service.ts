@@ -197,11 +197,11 @@ export class GymsService {
       }),
       // Active contracts
       this.prismaService.contract.count({
-        where: { 
+        where: {
           gymClient: {
-            gymId
+            gymId,
           },
-          status: 'active' 
+          status: 'active',
         },
       }),
       // Today's check-ins

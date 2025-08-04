@@ -2,15 +2,16 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { SupabaseService } from './supabase.service';
 import { PrismaService } from '../../database/prisma.service';
 import { CacheService } from '../../cache/cache.service';
+import { EmailService } from '../../email/email.service';
 import { UserType, Permission, SubscriptionStatus, PERMISSIONS } from '@gymspace/shared';
-import { 
-  RegisterOwnerDto, 
-  LoginDto, 
+import {
+  RegisterOwnerDto,
+  LoginDto,
   LoginResponseDto,
   VerifyEmailDto,
   ResendVerificationDto,
   CompleteOnboardingDto,
-  RegisterCollaboratorDto
+  RegisterCollaboratorDto,
 } from '../../../modules/auth/dto';
 import { BusinessException } from '../../../common/exceptions';
 
@@ -20,6 +21,7 @@ export class AuthService {
     private supabaseService: SupabaseService,
     private prismaService: PrismaService,
     private cacheService: CacheService,
+    private emailService: EmailService,
   ) {}
 
   /**
@@ -211,11 +213,12 @@ export class AuthService {
         });
 
         // Create organization
+        const ownerOrgTimestamp = Date.now().toString(36);
+        const ownerOrgRandom = Math.random().toString(36).substring(2, 5);
         const organization = await tx.organization.create({
           data: {
-            ownerUserId: user.id,
             name: dto.organizationName,
-            subscriptionPlanId: dto.subscriptionPlanId,
+            organizationCode: `ORG-${ownerOrgTimestamp.toUpperCase()}-${ownerOrgRandom.toUpperCase()}`,
             subscriptionStatus: SubscriptionStatus.ACTIVE,
             subscriptionStart: new Date(),
             subscriptionEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial
@@ -223,7 +226,9 @@ export class AuthService {
             currency: dto.currency || 'USD',
             timezone: dto.timezone || 'America/New_York',
             settings: {},
-            createdByUserId: user.id,
+            owner: { connect: { id: user.id } },
+            subscriptionPlan: { connect: { id: dto.subscriptionPlanId } },
+            createdBy: { connect: { id: user.id } },
           },
         });
 
@@ -335,26 +340,36 @@ export class AuthService {
   }
 
   /**
-   * Verify email with OTP code
+   * Verify email with our stored verification code
    */
   async verifyEmail(dto: VerifyEmailDto) {
     try {
-      const { data, error } = await this.supabaseService
-        .getClient()
-        .auth.verifyOtp({
-          email: dto.email,
-          token: dto.code,
-          type: 'signup',
-        });
+      // Find user with verification code
+      const user = await this.prismaService.user.findUnique({
+        where: { email: dto.email },
+      });
 
-      if (error) {
-        throw new BusinessException('Invalid or expired verification code');
+      if (!user) {
+        throw new BusinessException('User not found');
       }
 
-      // Update email verified status in database
+      // Check if verification code matches and is not expired
+      if (!user.verificationCode || user.verificationCode !== dto.code) {
+        throw new BusinessException('Invalid verification code');
+      }
+
+      if (!user.verificationCodeExpiresAt || user.verificationCodeExpiresAt < new Date()) {
+        throw new BusinessException('Verification code has expired');
+      }
+
+      // Clear verification code and mark as verified
       await this.prismaService.user.update({
-        where: { email: dto.email },
-        data: { emailVerifiedAt: new Date() },
+        where: { id: user.id },
+        data: {
+          emailVerifiedAt: new Date(),
+          verificationCode: null,
+          verificationCodeExpiresAt: null,
+        },
       });
 
       return {
@@ -366,6 +381,57 @@ export class AuthService {
         throw error;
       }
       throw new BusinessException('Email verification failed');
+    }
+  }
+
+  /**
+   * Generate and send verification code for email registration
+   */
+  async generateAndSendVerificationCode(
+    email: string,
+    name: string,
+  ): Promise<{ verificationCode: string }> {
+    try {
+      // Generate 6-digit verification code
+      const verificationCode = this.emailService.generateVerificationCode();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+      // Check if user already exists
+      const existingUser = await this.prismaService.user.findUnique({
+        where: { email },
+      });
+
+      if (existingUser && existingUser.emailVerifiedAt) {
+        throw new BusinessException('Email already verified and registered');
+      }
+
+      // Create or update user with verification code
+      await this.prismaService.user.upsert({
+        where: { email },
+        create: {
+          id: `temp_${Date.now()}_${Math.random().toString(36).substring(2)}`, // Temporary ID
+          email,
+          name,
+          userType: UserType.OWNER,
+          verificationCode,
+          verificationCodeExpiresAt: expiresAt,
+        },
+        update: {
+          verificationCode,
+          verificationCodeExpiresAt: expiresAt,
+          name, // Update name in case it changed
+        },
+      });
+
+      // Send verification code via email
+      await this.emailService.sendVerificationCode(email, verificationCode, name);
+
+      return { verificationCode };
+    } catch (error) {
+      if (error instanceof BusinessException) {
+        throw error;
+      }
+      throw new BusinessException('Failed to generate and send verification code');
     }
   }
 
@@ -387,12 +453,10 @@ export class AuthService {
     }
 
     try {
-      const { error } = await this.supabaseService
-        .getClient()
-        .auth.resend({
-          type: 'signup',
-          email: dto.email,
-        });
+      const { error } = await this.supabaseService.getClient().auth.resend({
+        type: 'signup',
+        email: dto.email,
+      });
 
       if (error) {
         throw new BusinessException('Failed to resend verification code');
@@ -486,11 +550,12 @@ export class AuthService {
         });
 
         // Create organization
+        const orgTimestamp = Date.now().toString(36);
+        const orgRandom = Math.random().toString(36).substring(2, 5);
         const organization = await tx.organization.create({
           data: {
-            ownerUserId: user.id,
             name: dto.organizationName,
-            subscriptionPlanId: dto.subscriptionPlanId,
+            organizationCode: `ORG-${orgTimestamp.toUpperCase()}-${orgRandom.toUpperCase()}`,
             subscriptionStatus: SubscriptionStatus.ACTIVE,
             subscriptionStart: new Date(),
             subscriptionEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial
@@ -498,7 +563,9 @@ export class AuthService {
             currency: dto.currency,
             timezone: 'America/Lima', // Default timezone
             settings: {},
-            createdByUserId: user.id,
+            owner: { connect: { id: user.id } },
+            subscriptionPlan: { connect: { id: dto.subscriptionPlanId } },
+            createdBy: { connect: { id: user.id } },
           },
         });
 
@@ -543,7 +610,6 @@ export class AuthService {
           id: result.gym.id,
           name: result.gym.name,
         },
-        redirectPath: `/gym/${result.gym.id}/dashboard`,
       };
     } catch (error) {
       if (error instanceof BusinessException || error instanceof ConflictException) {

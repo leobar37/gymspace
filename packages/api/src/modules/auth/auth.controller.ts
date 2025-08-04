@@ -1,14 +1,15 @@
 import { Controller, Post, Get, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from '../../core/auth/services/auth.service';
-import { 
-  RegisterOwnerDto, 
-  LoginDto, 
+import {
+  RegisterOwnerDto,
+  LoginDto,
   LoginResponseDto,
   VerifyEmailDto,
   ResendVerificationDto,
   CompleteOnboardingDto,
-  RegisterCollaboratorDto
+  RegisterCollaboratorDto,
+  GenerateVerificationCodeDto,
 } from './dto';
 import { Public } from '../../common/decorators';
 
@@ -51,10 +52,20 @@ export class AuthController {
     return await this.authService.refreshToken(refreshToken);
   }
 
+  @Post('generate-verification-code')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Generate and send verification code to email' })
+  @ApiResponse({ status: 200, description: 'Verification code sent successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid request or email already verified' })
+  async generateVerificationCode(@Body() dto: GenerateVerificationCodeDto) {
+    return await this.authService.generateAndSendVerificationCode(dto.email, dto.name);
+  }
+
   @Post('verify-email')
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Verify email with OTP code' })
+  @ApiOperation({ summary: 'Verify email with verification code' })
   @ApiResponse({ status: 200, description: 'Email verified successfully' })
   @ApiResponse({ status: 400, description: 'Invalid or expired code' })
   async verifyEmail(@Body() dto: VerifyEmailDto) {
@@ -100,7 +111,11 @@ export class AuthController {
   @Post('register/collaborator')
   @Public()
   @ApiOperation({ summary: 'Complete collaborator registration with invitation' })
-  @ApiResponse({ status: 201, description: 'Collaborator registered successfully', type: LoginResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Collaborator registered successfully',
+    type: LoginResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Invalid invitation or data' })
   async registerCollaborator(@Body() dto: RegisterCollaboratorDto): Promise<LoginResponseDto> {
     return await this.authService.registerCollaborator(dto);

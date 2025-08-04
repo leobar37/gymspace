@@ -5,10 +5,7 @@ import { OrganizationsModule } from '../organizations/organizations.module';
 import { GymsModule } from '../gyms/gyms.module';
 
 @Module({
-  imports: [
-    OrganizationsModule,
-    GymsModule,
-  ],
+  imports: [OrganizationsModule, GymsModule],
   controllers: [AssetsController],
   providers: [AssetsService],
   exports: [AssetsService],

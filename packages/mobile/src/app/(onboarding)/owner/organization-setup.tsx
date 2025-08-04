@@ -1,9 +1,3 @@
-import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { ChevronLeftIcon, DollarSignIcon, FlagIcon, ClockIcon } from 'lucide-react-native';
-import React, { useState, useEffect } from 'react';
-import { Pressable, SafeAreaView, ScrollView, View } from 'react-native';
-import { z } from 'zod';
 import {
   FormInput,
   FormProvider,
@@ -12,15 +6,24 @@ import {
   zodResolver
 } from '@/components/forms';
 import { Box } from '@/components/ui/box';
-import { Button as GluestackButton, ButtonText } from '@/components/ui/button';
+import { ButtonText, Button as GluestackButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useOnboardingStore } from '@/store/onboarding';
+import { StartOnboardingData } from '@gymspace/sdk';
+import { useMutation } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { ChevronLeftIcon, DollarSignIcon, FlagIcon } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, SafeAreaView, ScrollView, View } from 'react-native';
+import { z } from 'zod';
 
 // Country/currency options
 const COUNTRY_OPTIONS = [
@@ -46,7 +49,7 @@ const COUNTRY_OPTIONS = [
 const getTimezoneOptions = (country: string) => {
   const countryData = COUNTRY_OPTIONS.find(c => c.value === country);
   if (!countryData) return [];
-  
+
   return countryData.timezones.map(tz => ({
     label: tz.replace('America/', '').replace('Pacific/', '').replace(/_/g, ' '),
     value: tz
@@ -63,7 +66,7 @@ const organizationSchema = z.object({
 type OrganizationForm = z.infer<typeof organizationSchema>;
 
 export default function OrganizationSetupScreen() {
-  const { setOrganizationData } = useOnboardingStore();
+  const { setOrganizationData, organizationData, ownerData } = useOnboardingStore();
   const [selectedCountry, setSelectedCountry] = useState<string>('');
 
   // Initialize form
@@ -76,7 +79,16 @@ export default function OrganizationSetupScreen() {
     },
   });
 
-  const onSubmit = (data: OrganizationForm) => {
+  const context = useGymSdk();
+  const startOnboarding = useMutation({
+    mutationFn: (input: StartOnboardingData) => {
+      return context.sdk.onboarding.start({
+        ...input
+      })
+    }
+  })
+
+  const onSubmit = async (data: OrganizationForm) => {
     const country = COUNTRY_OPTIONS.find(c => c.value === data.country);
     if (country) {
       setOrganizationData({
@@ -85,6 +97,16 @@ export default function OrganizationSetupScreen() {
         currency: country.currency,
         timezone: data.timezone,
       });
+      await startOnboarding.mutateAsync({
+        country: organizationData.country,
+        currency: organizationData.currency,
+        email: ownerData.email,
+        name: ownerData.name,
+        organizationName: organizationData.name,
+        password: ownerData.password,
+        phone: ownerData.phone,
+        timezone: organizationData.timezone
+      })
       router.push('/(onboarding)/owner/email-verification');
     }
   };
@@ -175,8 +197,8 @@ export default function OrganizationSetupScreen() {
                             </HStack>
                             <Box
                               className={`w-5 h-5 rounded-full border-2 ${selectedCountry === country.value
-                                  ? 'border-blue-500 bg-blue-500'
-                                  : 'border-gray-300'
+                                ? 'border-blue-500 bg-blue-500'
+                                : 'border-gray-300'
                                 }`}
                             >
                               {selectedCountry === country.value && (

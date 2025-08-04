@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom, WritableAtom } from 'jotai';
 
 export interface User {
   id: string;
@@ -13,8 +13,8 @@ export interface Gym {
   organizationId: string;
 }
 
-export const userAtom = atom<User | null>(null);
-export const gymAtom = atom<Gym | null>(null);
+export const userAtom = atom<User>(undefined!) as WritableAtom<User>;
+export const gymAtom = atom<Gym>(undefined!) as WritableAtom<Gym>;
 export const isAuthenticatedAtom = atom((get) => get(userAtom) !== null);
 export const accessTokenAtom = atom<string | null>(null);
 export const refreshTokenAtom = atom<string | null>(null);

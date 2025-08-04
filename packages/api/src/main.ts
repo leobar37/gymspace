@@ -134,7 +134,7 @@ async function bootstrap() {
         noRefs: true,
         sortKeys: false,
       });
-      
+
       writeFileSync(outputPathYaml, yamlContent);
       console.log(`📄 OpenAPI YAML generated: ${outputPathYaml}`);
 
