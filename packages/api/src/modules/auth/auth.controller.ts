@@ -10,8 +10,11 @@ import {
   CompleteOnboardingDto,
   RegisterCollaboratorDto,
   GenerateVerificationCodeDto,
+  CurrentSessionDto,
 } from './dto';
 import { Public } from '../../common/decorators';
+import { RequestContext } from '../../common/decorators/request-context.decorator';
+import { IRequestContext } from '@gymspace/shared';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -119,5 +122,23 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid invitation or data' })
   async registerCollaborator(@Body() dto: RegisterCollaboratorDto): Promise<LoginResponseDto> {
     return await this.authService.registerCollaborator(dto);
+  }
+
+  @Get('current-session')
+  @ApiOperation({ summary: 'Get current user session information' })
+  @ApiResponse({
+    status: 200,
+    description: 'Current session information',
+    type: CurrentSessionDto,
+  })
+  @ApiResponse({ status: 401, description: 'User not authenticated' })
+  async getCurrentSession(@RequestContext() context: IRequestContext): Promise<CurrentSessionDto> {
+    return {
+      user: context.user,
+      gym: context.gym,
+      organization: context.organization,
+      permissions: context.permissions,
+      isAuthenticated: true,
+    };
   }
 }

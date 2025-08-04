@@ -111,3 +111,41 @@ export interface InvitationValidationResponse {
     email: string;
   };
 }
+
+export interface CurrentSessionResponse {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    phone?: string;
+    userType: string;
+    emailVerifiedAt?: Date;
+  };
+  gym?: {
+    id: string;
+    organizationId: string;
+    name: string;
+    address?: string;
+    description?: string;
+    phone?: string;
+    gymCode: string;
+    profileAssetId?: string;
+    coverAssetId?: string;
+    evaluationStructure?: Record<string, any>;
+  };
+  organization?: {
+    id: string;
+    ownerUserId: string;
+    name: string;
+    subscriptionPlanId: string;
+    subscriptionStatus: string;
+    subscriptionStart: Date;
+    subscriptionEnd: Date;
+    country: string;
+    currency: string;
+    timezone: string;
+    settings?: Record<string, any>;
+  };
+  permissions: string[];
+  isAuthenticated: boolean;
+}

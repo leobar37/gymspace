@@ -195,6 +195,22 @@ paths:
           description: Invalid invitation or data
       tags:
         - Authentication
+  /api/v1/auth/current-session:
+    get:
+      operationId: AuthController_getCurrentSession
+      summary: Get current user session information
+      parameters: []
+      responses:
+        '200':
+          description: Current session information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentSessionDto'
+        '401':
+          description: User not authenticated
+      tags:
+        - Authentication
   /api/v1/invitations:
     post:
       operationId: InvitationsController_createInvitation
@@ -2080,6 +2096,30 @@ components:
         - name
         - phone
         - password
+    CurrentSessionDto:
+      type: object
+      properties:
+        user:
+          type: object
+          description: Current authenticated user
+        gym:
+          type: object
+          description: Current selected gym context
+        organization:
+          type: object
+          description: User organization
+        permissions:
+          description: User permissions in current context
+          type: array
+          items:
+            type: string
+        isAuthenticated:
+          type: boolean
+          description: Whether user is authenticated
+      required:
+        - user
+        - permissions
+        - isAuthenticated
     CreateInvitationDto:
       type: object
       properties:

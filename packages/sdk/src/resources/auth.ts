@@ -1,5 +1,6 @@
 import {
   CompleteOnboardingDto,
+  CurrentSessionResponse,
   InvitationValidationResponse,
   LoginDto,
   LoginResponseDto,
@@ -71,5 +72,9 @@ export class AuthResource extends BaseResource {
       data,
       options,
     );
+  }
+
+  async getCurrentSession(options?: RequestOptions): Promise<CurrentSessionResponse> {
+    return this.client.get<CurrentSessionResponse>(`${this.basePath}/current-session`, options);
   }
 }
