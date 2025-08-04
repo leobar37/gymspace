@@ -15,7 +15,7 @@ export async function parseMultipartUpload(
   request: FastifyRequest,
   maxFileSize: number = 10 * 1024 * 1024, // 10MB default
 ): Promise<MultipartParseResult> {
-  const parts = request.parts();
+  const parts = (request as any).parts();
   const fields: MultipartFields = {};
   let fileData: FileUploadResult | null = null;
 

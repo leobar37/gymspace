@@ -1,3 +1,5 @@
+import { PaginationQueryDto } from '@gymspace/shared';
+
 export interface CreateClientDto {
   name: string;
   email: string;
@@ -65,9 +67,7 @@ export interface ClientStats {
   lastEvaluation?: string;
 }
 
-export interface SearchClientsParams {
+export interface SearchClientsParams extends PaginationQueryDto {
   search?: string;
   activeOnly?: boolean;
-  limit?: number;
-  offset?: number;
 }

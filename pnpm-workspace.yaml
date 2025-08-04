@@ -18,6 +18,9 @@ catalog:
   
   # Type checking
   '@types/node': ^20.11.0
-  
   # Common dependencies
-  zod: ^3.22.4
+  zod: ^3.25.0
+
+pnpm:
+  overrides:
+    zod: ^3.22.4

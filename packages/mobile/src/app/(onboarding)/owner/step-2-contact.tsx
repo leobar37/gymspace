@@ -9,25 +9,20 @@ import {
   FormProvider,
   useForm,
   zodResolver
-} from '../../../components/forms';
-import {
-  Box,
-  GluestackButton as Button,
-  ButtonText,
-  HStack,
-  Heading,
-  Icon,
-  Progress,
-  ProgressFilledTrack,
-  Text,
-  VStack
-} from '../../../components/ui';
+} from '@/components/forms';
+import { Box } from '@/components/ui/box';
+import { Button as GluestackButton, ButtonText } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { Heading } from '@/components/ui/heading';
+import { Icon } from '@/components/ui/icon';
+import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useOnboardingStore } from '@/store/onboarding';
 
 // Validation schema
 const contactInfoSchema = z.object({
   phone: z.string().min(8, 'Número de teléfono inválido'),
-  whatsapp: z.string().min(8, 'Número de WhatsApp inválido').optional(),
 });
 
 type ContactInfoForm = z.infer<typeof contactInfoSchema>;
@@ -40,7 +35,6 @@ export default function OwnerContactInfoScreen() {
     resolver: zodResolver(contactInfoSchema),
     defaultValues: {
       phone: ownerData?.phone || '',
-      whatsapp: ownerData?.whatsapp || '',
     },
   });
 
@@ -49,7 +43,6 @@ export default function OwnerContactInfoScreen() {
     setOwnerData({
       ...ownerData,
       phone: data.phone,
-      whatsapp: data.whatsapp,
     });
     
     // Navigate to next step
@@ -75,11 +68,11 @@ export default function OwnerContactInfoScreen() {
               <Pressable onPress={() => router.back()}>
                 <Icon as={ChevronLeftIcon} className="text-gray-700 w-6 h-6" />
               </Pressable>
-              <Text className="text-gray-600">Paso 2 de 3</Text>
+              <Text className="text-gray-600">Paso 2 de 4</Text>
             </HStack>
 
             {/* Progress bar */}
-            <Progress value={66} className="mb-8">
+            <Progress value={50} className="mb-8">
               <ProgressFilledTrack />
             </Progress>
 
@@ -103,17 +96,8 @@ export default function OwnerContactInfoScreen() {
                     placeholder="+51 999 999 999"
                     keyboardType="phone-pad"
                     autoComplete="tel"
-                    returnKeyType="next"
-                    autoFocus
-                  />
-
-                  <FormInput
-                    name="whatsapp"
-                    label="WhatsApp (opcional)"
-                    placeholder="+51 999 999 999"
-                    keyboardType="phone-pad"
-                    autoComplete="tel"
                     returnKeyType="done"
+                    autoFocus
                     onSubmitEditing={methods.handleSubmit(onSubmit)}
                   />
                 </VStack>
@@ -121,12 +105,11 @@ export default function OwnerContactInfoScreen() {
 
               {/* Continue button */}
               <Box className="mt-auto pb-8">
-                <Button
+                <GluestackButton
                   onPress={methods.handleSubmit(onSubmit)}
-                  className="w-full py-3 px-6 bg-blue-600 rounded-lg"
                 >
                   <ButtonText className="text-white font-semibold text-center">Continuar</ButtonText>
-                </Button>
+                </GluestackButton>
               </Box>
             </VStack>
           </View>

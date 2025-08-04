@@ -1,70 +1,60 @@
 import React from 'react';
 import { useController } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
-import { 
-  VStack, 
-  Text, 
-  GluestackInput as Input, 
-  InputField,
-  FormControl,
-  FormControlError,
-  FormControlErrorText,
-  FormControlHelper,
-  FormControlHelperText
-} from '../ui';
+import { VStack } from '@/components/ui/vstack';
+import { Text } from '@/components/ui/text';
+import { Input as GluestackInput, InputField } from '@/components/ui/input';
+import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
 import type { ComponentProps } from 'react';
 
-interface FormInputProps<TFieldValues extends FieldValues = FieldValues> 
+interface FormInputProps<TFieldValues extends FieldValues = FieldValues>
   extends UseControllerProps<TFieldValues>,
-    Omit<ComponentProps<typeof InputField>, 'value' | 'onChangeText' | 'onBlur'> {
+  Omit<ComponentProps<typeof InputField>, 'value' | 'onChangeText' | 'onBlur'> {
   label: string;
   description?: string;
 }
 
-export function FormInput<TFieldValues extends FieldValues = FieldValues>({ 
-  name, 
+export function FormInput<TFieldValues extends FieldValues = FieldValues>({
+  name,
   control,
   rules,
   defaultValue,
   shouldUnregister,
-  label, 
-  description, 
-  ...props 
+  label,
+  description,
+  ...props
 }: FormInputProps<TFieldValues>) {
-  const { field, fieldState } = useController({ 
-    name, 
+  const { field, fieldState } = useController({
+    name,
     control,
     rules,
     defaultValue,
     shouldUnregister
   });
-  
+
   return (
     <FormControl isInvalid={!!fieldState.error}>
-      <VStack className="gap-1">
+      <VStack className="gap-3">
         <Text className="font-medium text-gray-900">{label}</Text>
-        
         {description && (
           <FormControlHelper>
             <FormControlHelperText>{description}</FormControlHelperText>
           </FormControlHelper>
         )}
-        
-        <Input
-          variant="outline"
+
+        <GluestackInput
+          variant="rounded"
           size="md"
-          className="border border-gray-300 rounded-lg bg-white"
         >
           <InputField
             value={field.value || ''}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
-            className="px-3 py-2 text-base text-gray-900"
             placeholderClassName="text-gray-400"
             {...props}
           />
-        </Input>
-        
+        </GluestackInput>
+
         {fieldState.error && (
           <FormControlError>
             <FormControlErrorText>{fieldState.error.message}</FormControlErrorText>

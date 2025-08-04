@@ -10,18 +10,16 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     // Development optimizations
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     // SDK specific
     "lib": ["ES2020"],
     "target": "ES2020",
-    "module": "ESNext"
+    "module": "ESNext",
+    "customConditions": ["source"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
-  "references": [
-    { "path": "../shared" }
-  ]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

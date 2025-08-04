@@ -8,13 +8,21 @@ const workspaceRoot = path.resolve(projectRoot);
 
 const config = getDefaultConfig(__dirname);
 
-// 1. Watch all files in the monorepo
-config.watchFolders = [workspaceRoot];
+// 1. Watch all files in the monorepo including node_modules
+config.watchFolders = [
+  workspaceRoot,
+  path.resolve(projectRoot, 'node_modules'),
+];
 
 // 2. Let Metro know where to resolve packages from
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(__dirname, "node_modules"),
+];
+
+// Remove the problematic blockList for now
+config.resolver.blockList = [
+  /.*\/\.tsbuildinfo$/,
 ];
 
 // 3. Force Metro to resolve workspace packages correctly
@@ -27,12 +35,21 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     try {
       const packageJson = require(path.join(packagePath, "package.json"));
       const main = packageJson.main || "index.js";
-      return {
-        type: "sourceFile",
-        filePath: path.resolve(packagePath, main),
-      };
+      const mainPath = path.resolve(packagePath, main);
+      
+      // Check if the main file exists
+      const fs = require("fs");
+      if (fs.existsSync(mainPath)) {
+        return {
+          type: "sourceFile",
+          filePath: mainPath,
+        };
+      } else {
+        console.warn(`⚠️  Package ${moduleName} main file not found: ${mainPath}`);
+        console.warn(`   Make sure to build the package with: cd ${packagePath} && pnpm build`);
+      }
     } catch (e) {
-      // Fall back to default resolution
+      console.warn(`⚠️  Could not resolve workspace package ${moduleName}:`, e.message);
     }
   }
   

@@ -503,10 +503,14 @@ export class AuthService {
         });
 
         // Create first gym
+        const timestamp = Date.now().toString(36);
+        const random = Math.random().toString(36).substring(2, 5);
         const gym = await tx.gym.create({
           data: {
-            organizationId: organization.id,
+            organization: { connect: { id: organization.id } },
             name: dto.gym.name,
+            slug: `${dto.gym.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${timestamp}`,
+            gymCode: `GYM-${timestamp.toUpperCase()}-${random.toUpperCase()}`,
             address: dto.gym.address,
             phone: dto.gym.phone,
             description: dto.gym.description,
@@ -514,7 +518,7 @@ export class AuthService {
               logo: dto.gym.logo,
               coverPhoto: dto.gym.coverPhoto,
             },
-            createdByUserId: user.id,
+            createdBy: { connect: { id: user.id } },
           },
         });
 
@@ -583,7 +587,7 @@ export class AuthService {
       invitation: {
         id: invitation.id,
         gymName: invitation.gym.name,
-        gymLogo: invitation.gym.settings?.logo || null,
+        gymLogo: (invitation.gym.settings as any)?.logo || null,
         gymAddress: invitation.gym.address,
         inviterName: invitation.invitedBy.name,
         inviterRole: 'Administrador', // TODO: Get actual role

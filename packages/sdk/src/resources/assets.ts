@@ -8,7 +8,7 @@ import {
 import { RequestOptions } from '../types';
 
 export class AssetsResource extends BaseResource {
-  private basePath = '/api/v1/v1/assets';
+  private basePath = '/api/v1/assets';
 
   async upload(data: UploadAssetDto, options?: RequestOptions): Promise<AssetResponseDto> {
     const formData = new FormData();

@@ -3,13 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, SafeAreaView, View } from 'react-native';
-import {
-  HStack,
-  Icon,
-  Text,
-  Progress,
-  ProgressFilledTrack,
-} from '../../../components/ui';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Text } from '@/components/ui/text';
+import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { CreateGymForm } from '@/features/onboarding/components/CreateGymForm';
 
 export default function CreateGymScreen() {

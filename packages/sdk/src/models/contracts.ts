@@ -1,3 +1,5 @@
+import { PaginationQueryDto, ContractStatus } from '@gymspace/shared';
+
 export interface CreateContractDto {
   gymClientId: string;
   gymMembershipPlanId: string;
@@ -20,8 +22,6 @@ export interface FreezeContractDto {
   reason?: string;
 }
 
-export type ContractStatus = 'pending' | 'active' | 'expiring_soon' | 'expired' | 'cancelled';
-
 export interface Contract {
   id: string;
   gymId: string;
@@ -41,8 +41,6 @@ export interface Contract {
   updatedAt: string;
 }
 
-export interface GetContractsParams {
+export interface GetContractsParams extends PaginationQueryDto {
   status?: ContractStatus;
-  limit?: number;
-  offset?: number;
 }

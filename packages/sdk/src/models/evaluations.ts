@@ -1,3 +1,5 @@
+import { PaginationQueryDto } from '@gymspace/shared';
+
 export interface CreateEvaluationDto {
   gymClientId: string;
   weight: number;
@@ -72,8 +74,8 @@ export interface Evaluation {
   updatedAt: string;
 }
 
-export interface GetClientEvaluationsParams {
-  limit?: string;
+export interface GetClientEvaluationsParams extends PaginationQueryDto {
+  // Additional evaluation-specific parameters can be added here
 }
 
 export interface EvaluationReport {

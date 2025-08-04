@@ -1,7 +1,7 @@
-import { Redirect } from "expo-router";
-
+import { Redirect } from 'expo-router';
+import React from 'react';
 export default function HomeScreen() {
-  // Redirect to onboarding by default
-  // The onboarding layout will handle redirecting to (app) if authenticated
-  return <Redirect href="/(onboarding)" />;
+  return (
+  <Redirect href={"/(onboarding)/"}/>
+  );
 }

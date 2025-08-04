@@ -1,15 +1,14 @@
 import { BaseResource } from './base';
 import { RequestOptions, PaginatedResponseDto } from '../types';
+import { PaginationQueryDto } from '@gymspace/shared';
 
-export interface SearchCatalogParams {
+export interface SearchCatalogParams extends PaginationQueryDto {
   search?: string;
   city?: string;
   state?: string;
   latitude?: string;
   longitude?: string;
   radius?: string;
-  limit?: string;
-  offset?: string;
 }
 
 export interface GetFeaturedGymsParams {
@@ -36,7 +35,7 @@ export interface CityWithGyms {
 }
 
 export class PublicCatalogResource extends BaseResource {
-  private basePath = '/api/v1/v1/catalog';
+  private basePath = '/api/v1/catalog';
 
   async searchCatalog(
     params?: SearchCatalogParams,

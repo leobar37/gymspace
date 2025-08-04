@@ -1,8 +1,7 @@
-import { z } from 'zod';
-
 export interface GymSpaceConfig {
   baseURL: string;
   apiKey?: string;
+  refreshToken?: string;
   timeout?: number;
   headers?: Record<string, string>;
 }

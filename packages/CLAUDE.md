@@ -1,1 +1,2 @@
 - To check if an endpoint exists, read the yml at `/Users/leobar37/code/gymspace/openapi.yaml`
+- Never add raw styles to UI components, use default styles by default

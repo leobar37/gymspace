@@ -1,3 +1,5 @@
+import { PaginationQueryDto } from '@gymspace/shared';
+
 export interface CreateCheckInDto {
   clientId: string;
   notes?: string;
@@ -12,12 +14,10 @@ export interface CheckIn {
   createdAt: string;
 }
 
-export interface SearchCheckInsParams {
+export interface SearchCheckInsParams extends PaginationQueryDto {
   clientId?: string;
   startDate?: string;
   endDate?: string;
-  limit?: string;
-  offset?: string;
 }
 
 export interface GetCheckInStatsParams {
@@ -33,6 +33,6 @@ export interface CheckInStats {
   dayDistribution: Record<string, number>;
 }
 
-export interface GetClientCheckInHistoryParams {
-  limit?: number;
+export interface GetClientCheckInHistoryParams extends PaginationQueryDto {
+  // Additional check-in history specific parameters can be added here
 }

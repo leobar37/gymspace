@@ -3,7 +3,7 @@ import { Organization, UpdateOrganizationDto, OrganizationStats } from '../model
 import { RequestOptions } from '../types';
 
 export class OrganizationsResource extends BaseResource {
-  private basePath = '/api/v1/v1/organizations';
+  private basePath = '/api/v1/organizations';
 
   async getOrganization(id: string, options?: RequestOptions): Promise<Organization> {
     return this.client.get<Organization>(`${this.basePath}/${id}`, undefined, options);

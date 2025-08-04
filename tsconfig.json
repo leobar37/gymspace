@@ -2,7 +2,9 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -27,5 +29,13 @@
     "incremental": true,
     "baseUrl": "."
   },
-  "exclude": ["node_modules", "dist", "build", "coverage", ".cache", "tmp"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".cache",
+    "tmp"
+  ],
+  "extends": "expo/tsconfig.base"
 }

@@ -1,18 +1,15 @@
 import React from 'react';
 import { SafeAreaView, View, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { 
-  VStack, 
-  HStack,
-  Center,
-  Heading, 
-  Text, 
-  GluestackButton as Button, 
-  ButtonText,
-  Icon,
-  Card,
-  Box
-} from '@/components/ui';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Center } from '@/components/ui/center';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
+import { Button as GluestackButton, ButtonText } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
+import { Card } from '@/components/ui/card';
+import { Box } from '@/components/ui/box';
 import { StatusBar } from 'expo-status-bar';
 import { CheckCircleIcon, RocketIcon, BookOpenIcon, HeadphonesIcon, ChevronRightIcon } from 'lucide-react-native';
 import { useOnboardingStore } from '@/store/onboarding';
@@ -160,7 +157,7 @@ export default function WelcomeScreen() {
 
           {/* Complete button */}
           <Box className="mt-auto">
-            <Button
+            <GluestackButton
               onPress={handleComplete}
               disabled={completeMutation.isPending}
               className="py-3 px-6 w-full"
@@ -168,7 +165,7 @@ export default function WelcomeScreen() {
               <ButtonText>
                 {completeMutation.isPending ? 'Finalizando...' : 'Comenzar a usar GymSpace'}
               </ButtonText>
-            </Button>
+            </GluestackButton>
           </Box>
         </VStack>
       </View>

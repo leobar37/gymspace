@@ -1,3 +1,5 @@
+import { PaginationQueryDto, LeadStatus } from '@gymspace/shared';
+
 export interface CreateLeadDto {
   name: string;
   email: string;
@@ -14,8 +16,6 @@ export interface UpdateLeadDto {
   assignedToUserId?: string;
   metadata?: Record<string, any>;
 }
-
-export type LeadStatus = 'NEW' | 'CONTACTED' | 'INTERESTED' | 'CONVERTED' | 'LOST';
 
 export interface Lead {
   id: string;
@@ -34,14 +34,12 @@ export interface Lead {
   updatedAt: string;
 }
 
-export interface SearchLeadsParams {
+export interface SearchLeadsParams extends PaginationQueryDto {
   status?: LeadStatus;
   search?: string;
   assignedToUserId?: string;
   startDate?: string;
   endDate?: string;
-  limit?: string;
-  offset?: string;
 }
 
 export interface LeadStats {

@@ -23,6 +23,8 @@ import { CheckInsModule } from './modules/check-ins/check-ins.module';
 import { PublicCatalogModule } from './modules/public-catalog/public-catalog.module';
 import { LeadsModule } from './modules/leads/leads.module';
 import { AssetsModule } from './modules/assets/assets.module';
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 
 // Global providers
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
@@ -67,6 +69,8 @@ import validationSchema from './config/validation.schema';
     PublicCatalogModule,
     LeadsModule,
     AssetsModule,
+    OnboardingModule,
+    SubscriptionsModule,
   ],
   providers: [
     {

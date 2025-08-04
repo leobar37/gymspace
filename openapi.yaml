@@ -74,6 +74,109 @@ paths:
           description: Invalid refresh token
       tags:
         - Authentication
+  /api/v1/v1/auth/verify-email:
+    post:
+      operationId: AuthController_verifyEmail
+      summary: Verify email with OTP code
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailDto'
+      responses:
+        '200':
+          description: Email verified successfully
+        '400':
+          description: Invalid or expired code
+      tags:
+        - Authentication
+  /api/v1/v1/auth/resend-verification:
+    post:
+      operationId: AuthController_resendVerification
+      summary: Resend email verification code
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationDto'
+      responses:
+        '200':
+          description: Verification code sent
+        '400':
+          description: Email already verified or invalid
+      tags:
+        - Authentication
+  /api/v1/v1/auth/complete-onboarding:
+    post:
+      operationId: AuthController_completeOnboarding
+      summary: Complete owner onboarding with organization and gym
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteOnboardingDto'
+      responses:
+        '201':
+          description: Onboarding completed successfully
+        '400':
+          description: Invalid data or verification required
+      tags:
+        - Authentication
+  /api/v1/v1/auth/subscription-plans:
+    get:
+      operationId: AuthController_getSubscriptionPlans
+      summary: Get available subscription plans
+      parameters: []
+      responses:
+        '200':
+          description: List of subscription plans
+      tags:
+        - Authentication
+  /api/v1/v1/auth/invitation/{token}:
+    get:
+      operationId: AuthController_validateInvitation
+      summary: Validate invitation token
+      parameters:
+        - name: token
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invitation details
+        '404':
+          description: Invalid or expired invitation
+      tags:
+        - Authentication
+  /api/v1/v1/auth/register/collaborator:
+    post:
+      operationId: AuthController_registerCollaborator
+      summary: Complete collaborator registration with invitation
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCollaboratorDto'
+      responses:
+        '201':
+          description: Collaborator registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDto'
+        '400':
+          description: Invalid invitation or data
+      tags:
+        - Authentication
   /api/v1/v1/invitations:
     post:
       operationId: InvitationsController_createInvitation
@@ -1478,6 +1581,151 @@ paths:
         - Assets
       security:
         - bearer: []
+  /api/v1/v1/onboarding/start:
+    post:
+      operationId: OnboardingController_startOnboarding
+      summary: Start gym onboarding process
+      description: Creates owner account, organization, and initial gym. This is the first step in the onboarding process.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartOnboardingDto'
+      responses:
+        '201':
+          description: Onboarding started successfully
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    id: 123e4567-e89b-12d3-a456-426614174000
+                    email: john@example.com
+                    name: John Doe
+                    userType: owner
+                  organization:
+                    id: 123e4567-e89b-12d3-a456-426614174001
+                    name: My Fitness Center
+                  gym:
+                    id: 123e4567-e89b-12d3-a456-426614174002
+                    name: My Fitness Center - Main Location
+                  onboardingStatus:
+                    currentStep: account_created
+                    completionPercentage: 25
+        '400':
+          description: Validation error
+        '409':
+          description: User already exists
+      tags:
+        - Onboarding
+  /api/v1/v1/onboarding/gym-settings:
+    put:
+      operationId: OnboardingController_updateGymSettings
+      summary: Update gym settings
+      description: Configure gym details including business hours, amenities, and branding. This is step 2 of onboarding.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGymSettingsDto'
+      responses:
+        '200':
+          description: Gym settings updated successfully
+        '403':
+          description: Access denied
+        '404':
+          description: Gym not found
+      tags:
+        - Onboarding
+      security:
+        - bearer: []
+  /api/v1/v1/onboarding/configure-features:
+    put:
+      operationId: OnboardingController_configureFeatures
+      summary: Configure gym features
+      description: Enable/disable and configure various gym management features. This is step 3 of onboarding.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigureFeaturesDto'
+      responses:
+        '200':
+          description: Features configured successfully
+        '403':
+          description: Access denied
+        '404':
+          description: Gym not found
+      tags:
+        - Onboarding
+      security:
+        - bearer: []
+  /api/v1/v1/onboarding/complete:
+    post:
+      operationId: OnboardingController_completeGuidedSetup
+      summary: Complete guided setup
+      description: Mark the onboarding process as complete. All previous steps must be completed first.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteGuidedSetupDto'
+      responses:
+        '200':
+          description: Onboarding completed successfully
+          content:
+            application/json:
+              schema:
+                example:
+                  success: true
+                  message: Congratulations! Your gym setup is complete.
+                  onboardingStatus:
+                    currentStep: completed
+                    isCompleted: true
+                    completionPercentage: 100
+        '400':
+          description: Previous steps not completed
+        '404':
+          description: Gym not found
+      tags:
+        - Onboarding
+      security:
+        - bearer: []
+  /api/v1/v1/onboarding/status/{gymId}:
+    get:
+      operationId: OnboardingController_getOnboardingStatus
+      summary: Get onboarding status
+      description: Check the current onboarding progress and next steps
+      parameters:
+        - name: gymId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Onboarding status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingStatusDto'
+        '404':
+          description: Gym not found
+      tags:
+        - Onboarding
+      security:
+        - bearer: []
 info:
   title: GymSpace API
   description: The GymSpace Gym Management System API
@@ -1593,6 +1841,117 @@ components:
         - refresh_token
         - user
         - redirectPath
+    VerifyEmailDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: john@example.com
+        code:
+          type: string
+          example: '123456'
+          description: 6-digit verification code
+      required:
+        - email
+        - code
+    ResendVerificationDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: john@example.com
+      required:
+        - email
+    GymDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Fitness Center Pro
+        address:
+          type: string
+          example: Av. Principal 123, Lima
+        phone:
+          type: string
+          example: +51 999 999 999
+        description:
+          type: string
+          example: The best gym in town
+        logo:
+          type: string
+          example: https://example.com/logo.png
+        coverPhoto:
+          type: string
+          example: https://example.com/cover.png
+      required:
+        - name
+        - address
+        - phone
+    CompleteOnboardingDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          example: john@example.com
+        phone:
+          type: string
+          example: '+1234567890'
+        password:
+          type: string
+          example: SecurePassword123!
+        organizationName:
+          type: string
+          example: My Fitness Center
+        country:
+          type: string
+          example: PE
+        currency:
+          type: string
+          example: PEN
+        subscriptionPlanId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+        gym:
+          $ref: '#/components/schemas/GymDto'
+        verificationCode:
+          type: string
+          example: '123456'
+          description: Email verification code
+      required:
+        - name
+        - email
+        - phone
+        - password
+        - organizationName
+        - country
+        - currency
+        - subscriptionPlanId
+        - gym
+        - verificationCode
+    RegisterCollaboratorDto:
+      type: object
+      properties:
+        invitationToken:
+          type: string
+          example: abc123def456
+          description: Invitation token
+        name:
+          type: string
+          example: John Doe
+        phone:
+          type: string
+          example: '+1234567890'
+        password:
+          type: string
+          example: SecurePassword123!
+      required:
+        - invitationToken
+        - name
+        - phone
+        - password
     CreateInvitationDto:
       type: object
       properties:
@@ -2243,3 +2602,497 @@ components:
         - createdAt
         - updatedAt
         - uploadedBy
+    StartOnboardingDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: John Doe
+          description: Full name of the gym owner
+        email:
+          type: string
+          example: john@example.com
+          description: Email address for the owner account
+        phone:
+          type: string
+          example: '+1234567890'
+          description: Contact phone number
+        password:
+          type: string
+          example: SecurePassword123!
+          description: Password for the owner account
+        organizationName:
+          type: string
+          example: My Fitness Center
+          description: Name of the organization/company
+        country:
+          type: string
+          example: US
+          description: Country code (ISO 3166-1 alpha-2)
+        currency:
+          type: string
+          example: USD
+          description: Currency code (ISO 4217)
+        timezone:
+          type: string
+          example: America/New_York
+          description: IANA timezone identifier
+        subscriptionPlanId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Selected subscription plan ID
+        verificationCode:
+          type: string
+          example: '123456'
+          description: Email verification code sent to the email
+      required:
+        - name
+        - email
+        - phone
+        - password
+        - organizationName
+        - country
+        - currency
+        - timezone
+        - subscriptionPlanId
+        - verificationCode
+    BusinessHoursDto:
+      type: object
+      properties:
+        open:
+          type: string
+          example: '08:00'
+          description: Opening time in HH:MM format
+        close:
+          type: string
+          example: '22:00'
+          description: Closing time in HH:MM format
+        closed:
+          type: boolean
+          example: false
+          description: Whether the gym is closed on this day
+      required:
+        - open
+        - close
+        - closed
+    WeeklyScheduleDto:
+      type: object
+      properties:
+        monday:
+          $ref: '#/components/schemas/BusinessHoursDto'
+        tuesday:
+          $ref: '#/components/schemas/BusinessHoursDto'
+        wednesday:
+          $ref: '#/components/schemas/BusinessHoursDto'
+        thursday:
+          $ref: '#/components/schemas/BusinessHoursDto'
+        friday:
+          $ref: '#/components/schemas/BusinessHoursDto'
+        saturday:
+          $ref: '#/components/schemas/BusinessHoursDto'
+        sunday:
+          $ref: '#/components/schemas/BusinessHoursDto'
+      required:
+        - monday
+        - tuesday
+        - wednesday
+        - thursday
+        - friday
+        - saturday
+        - sunday
+    AmenitiesDto:
+      type: object
+      properties:
+        hasParking:
+          type: boolean
+          example: true
+        hasShowers:
+          type: boolean
+          example: true
+        hasLockers:
+          type: boolean
+          example: true
+        hasPool:
+          type: boolean
+          example: false
+        hasSauna:
+          type: boolean
+          example: true
+        hasWifi:
+          type: boolean
+          example: true
+        hasChildcare:
+          type: boolean
+          example: false
+        hasCafeteria:
+          type: boolean
+          example: true
+      required:
+        - hasParking
+        - hasShowers
+        - hasLockers
+        - hasPool
+        - hasSauna
+        - hasWifi
+        - hasChildcare
+        - hasCafeteria
+    SocialMediaDto:
+      type: object
+      properties:
+        facebook:
+          type: string
+          example: https://facebook.com/mygym
+        instagram:
+          type: string
+          example: https://instagram.com/mygym
+        twitter:
+          type: string
+          example: https://twitter.com/mygym
+        website:
+          type: string
+          example: https://www.mygym.com
+    UpdateGymSettingsDto:
+      type: object
+      properties:
+        gymId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Gym ID to update
+        name:
+          type: string
+          example: PowerFit Downtown
+          description: Name of the gym
+        address:
+          type: string
+          example: 123 Main Street
+          description: Street address
+        city:
+          type: string
+          example: New York
+          description: City
+        state:
+          type: string
+          example: NY
+          description: State or province
+        postalCode:
+          type: string
+          example: '10001'
+          description: Postal/ZIP code
+        phone:
+          type: string
+          example: '+1234567890'
+          description: Gym contact phone
+        email:
+          type: string
+          example: info@powerfit.com
+          description: Gym contact email
+        businessHours:
+          description: Weekly business hours schedule
+          allOf:
+            - $ref: '#/components/schemas/WeeklyScheduleDto'
+        capacity:
+          type: number
+          example: 150
+          description: Maximum gym capacity
+        description:
+          type: string
+          example: The best gym in downtown with state-of-the-art equipment
+          description: Gym description
+        amenities:
+          description: Available amenities
+          allOf:
+            - $ref: '#/components/schemas/AmenitiesDto'
+        socialMedia:
+          description: Social media links
+          allOf:
+            - $ref: '#/components/schemas/SocialMediaDto'
+        logo:
+          type: string
+          example: https://example.com/logo.png
+          description: Logo URL
+        coverPhoto:
+          type: string
+          example: https://example.com/cover.png
+          description: Cover photo URL
+        primaryColor:
+          type: string
+          example: '#FF0000'
+          description: Primary brand color
+      required:
+        - gymId
+        - name
+        - address
+        - city
+        - state
+        - postalCode
+        - phone
+        - email
+        - businessHours
+        - capacity
+        - amenities
+    ClientManagementDto:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: Enable client registration and management
+        requireDocumentId:
+          type: boolean
+          example: true
+          description: Require document ID for clients
+        enablePhotos:
+          type: boolean
+          example: true
+          description: Enable client photo uploads
+        trackEmergencyContacts:
+          type: boolean
+          example: true
+          description: Track emergency contacts
+        trackMedicalConditions:
+          type: boolean
+          example: true
+          description: Track medical conditions
+      required:
+        - enabled
+        - requireDocumentId
+        - enablePhotos
+        - trackEmergencyContacts
+        - trackMedicalConditions
+    MembershipManagementDto:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: Enable membership plans and contracts
+        allowCustomPricing:
+          type: boolean
+          example: true
+          description: Allow custom pricing for contracts
+        allowContractFreezing:
+          type: boolean
+          example: true
+          description: Enable contract freezing
+        expiryWarningDays:
+          type: number
+          example: 30
+          description: Days before expiry to mark as expiring soon
+        autoRenewalReminders:
+          type: boolean
+          example: true
+          description: Send automatic renewal reminders
+      required:
+        - enabled
+        - allowCustomPricing
+        - allowContractFreezing
+        - expiryWarningDays
+        - autoRenewalReminders
+    CheckInSystemDto:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: Enable check-in tracking
+        requireActiveContract:
+          type: boolean
+          example: true
+          description: Require active contract for check-in
+        trackCheckInTime:
+          type: boolean
+          example: true
+          description: Track check-in times
+        allowMultiplePerDay:
+          type: boolean
+          example: false
+          description: Allow multiple check-ins per day
+      required:
+        - enabled
+        - requireActiveContract
+        - trackCheckInTime
+        - allowMultiplePerDay
+    EvaluationSystemDto:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: Enable physical evaluations
+        trackMeasurements:
+          type: boolean
+          example: true
+          description: Track body measurements
+        trackBodyComposition:
+          type: boolean
+          example: true
+          description: Track body composition
+        trackPerformance:
+          type: boolean
+          example: true
+          description: Track performance metrics
+        defaultFrequencyDays:
+          type: number
+          example: 90
+          description: Default days between evaluations
+      required:
+        - enabled
+        - trackMeasurements
+        - trackBodyComposition
+        - trackPerformance
+        - defaultFrequencyDays
+    LeadManagementDto:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          example: true
+          description: Enable lead capture and management
+        publicCatalogListing:
+          type: boolean
+          example: true
+          description: Show gym in public catalog
+        enableOnlineForm:
+          type: boolean
+          example: true
+          description: Enable online lead form
+        autoAssignLeads:
+          type: boolean
+          example: true
+          description: Auto-assign leads to staff
+      required:
+        - enabled
+        - publicCatalogListing
+        - enableOnlineForm
+        - autoAssignLeads
+    NotificationSettingsDto:
+      type: object
+      properties:
+        emailEnabled:
+          type: boolean
+          example: true
+          description: Enable email notifications
+        smsEnabled:
+          type: boolean
+          example: false
+          description: Enable SMS notifications
+        welcomeEmails:
+          type: boolean
+          example: true
+          description: Send welcome emails to new clients
+        contractExpiryAlerts:
+          type: boolean
+          example: true
+          description: Send contract expiry notifications
+        evaluationReminders:
+          type: boolean
+          example: true
+          description: Send evaluation reminders
+      required:
+        - emailEnabled
+        - smsEnabled
+        - welcomeEmails
+        - contractExpiryAlerts
+        - evaluationReminders
+    ConfigureFeaturesDto:
+      type: object
+      properties:
+        gymId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Gym ID to configure
+        clientManagement:
+          description: Client management features
+          allOf:
+            - $ref: '#/components/schemas/ClientManagementDto'
+        membershipManagement:
+          description: Membership and contract features
+          allOf:
+            - $ref: '#/components/schemas/MembershipManagementDto'
+        checkInSystem:
+          description: Check-in system features
+          allOf:
+            - $ref: '#/components/schemas/CheckInSystemDto'
+        evaluationSystem:
+          description: Evaluation system features
+          allOf:
+            - $ref: '#/components/schemas/EvaluationSystemDto'
+        leadManagement:
+          description: Lead management features
+          allOf:
+            - $ref: '#/components/schemas/LeadManagementDto'
+        notifications:
+          description: Notification settings
+          allOf:
+            - $ref: '#/components/schemas/NotificationSettingsDto'
+      required:
+        - gymId
+        - clientManagement
+        - membershipManagement
+        - checkInSystem
+        - evaluationSystem
+        - leadManagement
+        - notifications
+    CompleteGuidedSetupDto:
+      type: object
+      properties:
+        gymId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Gym ID to complete setup for
+      required:
+        - gymId
+    OnboardingStatusDto:
+      type: object
+      properties:
+        organizationId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Organization ID
+        gymId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Gym ID
+        currentStep:
+          type: string
+          enum:
+            - account_created
+            - gym_settings
+            - features_configured
+            - completed
+          example: gym_settings
+          description: Current onboarding step
+        accountCreated:
+          type: boolean
+          example: true
+          description: Whether account creation is completed
+        gymSettingsCompleted:
+          type: boolean
+          example: false
+          description: Whether gym settings are completed
+        featuresConfigured:
+          type: boolean
+          example: false
+          description: Whether features are configured
+        isCompleted:
+          type: boolean
+          example: false
+          description: Whether entire onboarding is completed
+        nextAction:
+          type: string
+          example: Configure your gym settings
+          description: Next action to take
+        completionPercentage:
+          type: number
+          example: 50
+          description: Completion percentage
+      required:
+        - organizationId
+        - gymId
+        - currentStep
+        - accountCreated
+        - gymSettingsCompleted
+        - featuresConfigured
+        - isCompleted
+        - nextAction
+        - completionPercentage

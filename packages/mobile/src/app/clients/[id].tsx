@@ -2,20 +2,16 @@ import React from 'react';
 import { View, ScrollView } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useClientsController } from '@/features/clients/controllers/clients.controller';
-import {
-  VStack,
-  HStack,
-  Text,
-  Card,
-  Avatar,
-  Badge,
-  BadgeText,
-  Spinner,
-  Button,
-  ButtonText,
-  Icon,
-  Divider,
-} from '../../components/ui';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
+import { Card } from '@/components/ui/card';
+import { Avatar } from '@/components/ui/avatar';
+import { Badge, BadgeText } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
+import { Divider } from '@/components/ui/divider';
 import {
   PhoneIcon,
   MailIcon,

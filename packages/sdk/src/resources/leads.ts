@@ -9,7 +9,7 @@ import {
 import { RequestOptions, PaginatedResponseDto } from '../types';
 
 export class LeadsResource extends BaseResource {
-  private basePath = '/api/v1/v1/leads';
+  private basePath = '/api/v1/leads';
 
   async createLead(data: CreateLeadDto, options?: RequestOptions): Promise<Lead> {
     return this.client.post<Lead>(this.basePath, data, options);

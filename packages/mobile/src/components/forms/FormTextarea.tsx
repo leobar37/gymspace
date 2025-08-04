@@ -1,17 +1,10 @@
 import React from 'react';
 import { useController } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
-import { 
-  VStack, 
-  Text, 
-  Textarea, 
-  TextareaInput,
-  FormControl,
-  FormControlError,
-  FormControlErrorText,
-  FormControlHelper,
-  FormControlHelperText
-} from '../ui';
+import { VStack } from '@/components/ui/vstack';
+import { Text } from '@/components/ui/text';
+import { Textarea, TextareaInput } from '@/components/ui/textarea';
+import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
 import type { ComponentProps } from 'react';
 
 interface FormTextareaProps<TFieldValues extends FieldValues = FieldValues> 

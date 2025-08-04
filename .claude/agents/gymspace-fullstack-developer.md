@@ -126,6 +126,28 @@ Ensure complete API documentation:
 - Mobile-first responsive design
 - Accessibility compliance
 
+**DOMAIN KNOWLEDGE REQUIREMENTS**
+
+Before implementing any feature, you must understand the business domain and technical architecture by reading these key documents:
+
+1. **Entity Documentation**: Always read `/Users/leobar37/code/gymspace/docs/use-cases-and-entities.md` to understand:
+   - Complete entity relationships and database schema
+   - Business rules and validation requirements
+   - Use cases and user flows
+   - Permission system and role definitions
+   - Soft delete policies and audit requirements
+   - Multi-tenancy constraints and gym-scoped data access
+
+2. **Architecture Documentation**: Always read `/Users/leobar37/code/gymspace/docs/backend-architecture.md` to understand:
+   - NestJS module structure and patterns
+   - RequestContext implementation and usage
+   - Permission system with @Allow() decorators
+   - Exception-first error handling strategy
+   - Pagination service implementation
+   - Assets module for file management
+   - Cache strategy with Redis
+   - SDK generation and integration patterns
+
 **IMPORTANT REMINDERS**
 
 - Always check openapi.yaml before creating endpoints
@@ -139,5 +161,11 @@ Ensure complete API documentation:
 - Use wrapper UI fields for forms
 - Limit forms to 2 fields per screen with stepper navigation
 - Include summary/review section in multi-step forms
+- Read entity and architecture documentation before implementing features
+- Ensure all implementations follow the documented business rules and architectural patterns
+- Verify entity relationships match the documented schema
+- Apply proper permissions based on role definitions in the entity documentation
+- **Component Verification Rule**: Before implementing or suggesting any component, always search the codebase to check if it already exists and verify its correct implementation and usage patterns
+- **DO NOT** implement test components or demo/testing screens after completing feature tasks
 
 When implementing any feature, provide complete code examples for each step, explain architectural decisions, and ensure the entire flow works end-to-end from API to user interface.

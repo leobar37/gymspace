@@ -1,23 +1,16 @@
 import React, { useState } from 'react';
 import { FlatList, RefreshControl, View, Pressable } from 'react-native';
 import { useClientsController } from '../controllers/clients.controller';
-import {
-  VStack,
-  HStack,
-  Text,
-  Card,
-  Avatar,
-  Badge,
-  BadgeText,
-  Spinner,
-  Button,
-  ButtonText,
-  Icon,
-  Input,
-  InputField,
-  InputSlot,
-  InputIcon,
-} from '@/components/ui';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
+import { Card } from '@/components/ui/card';
+import { Avatar } from '@/components/ui/avatar';
+import { Badge, BadgeText } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
+import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
 import { SearchIcon, UserPlusIcon, PhoneIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -76,7 +69,7 @@ export const ClientsList: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const debouncedSearch = useDebounce(searchText, 300);
   
-  const { useClientsList, createClient } = useClientsController();
+  const { useClientsList } = useClientsController();
   const { data, isLoading, refetch, isRefetching } = useClientsList({
     search: debouncedSearch,
     activeOnly: false,

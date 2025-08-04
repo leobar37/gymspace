@@ -8,14 +8,10 @@ import {
   useForm,
   zodResolver,
 } from '../../../components/forms';
-import {
-  VStack,
-  Heading,
-  Text,
-  Button,
-  ButtonText,
-  ButtonSpinner,
-} from '../../../components/ui';
+import { VStack } from '@/components/ui/vstack';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
+import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import { useAtom } from 'jotai';
 import { ownerOnboardingDataAtom, updateOwnerDataAtom } from '../stores/onboarding.store';
 import { useOnboardingController } from '../controllers/onboarding.controller';
@@ -37,7 +33,7 @@ interface CreateGymFormProps {
 export const CreateGymForm: React.FC<CreateGymFormProps> = ({ onComplete }) => {
   const [ownerData] = useAtom(ownerOnboardingDataAtom);
   const [, updateOwnerData] = useAtom(updateOwnerDataAtom);
-  const { completeOnboarding, isOnboarding } = useOnboardingController();
+  const { completeSetup: completeOnboarding, isStarting: isOnboarding } = useOnboardingController();
 
   const methods = useForm<GymFormData>({
     resolver: zodResolver(gymSchema),

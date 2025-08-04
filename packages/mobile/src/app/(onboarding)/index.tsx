@@ -3,17 +3,15 @@ import { StatusBar } from 'expo-status-bar';
 import { Building2Icon, UserPlusIcon } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, SafeAreaView, View } from 'react-native';
-import {
-  Card,
-  Center,
-  Heading,
-  HStack,
-  Icon,
-  Logo,
-  Text,
-  VStack
-} from '../../components/ui';
-import { } from "@gluestack-style/react";
+import { Card } from '@/components/ui/card';
+import { Center } from '@/components/ui/center';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Logo } from '@/components/Logo';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+
 export default function UserTypeSelectionScreen() {
   const router = useRouter();
   return (

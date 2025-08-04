@@ -15,10 +15,9 @@ interface OnboardingState {
     name: string;
     country: string;
     currency: string;
+    timezone: string;
   } | null;
   
-  // Subscription plan
-  selectedPlanId: string | null;
   
   // Gym data
   gymData: {
@@ -43,7 +42,6 @@ interface OnboardingState {
 const initialState: OnboardingState = {
   ownerData: null,
   organizationData: null,
-  selectedPlanId: null,
   gymData: null,
   emailVerified: false,
   verificationCode: null,
@@ -71,9 +69,6 @@ export function useOnboardingStore() {
       setState((prev) => ({ ...prev, organizationData: data }));
     },
     
-    setSelectedPlanId: (planId: string) => {
-      setState((prev) => ({ ...prev, selectedPlanId: planId }));
-    },
     
     setGymData: (data: OnboardingState['gymData']) => {
       setState((prev) => ({ ...prev, gymData: data }));

@@ -1,9 +1,9 @@
 import { BaseResource } from './base';
 import { Gym, CreateGymDto, UpdateGymDto, GymStats } from '../models/gyms';
-import { RequestOptions, PaginatedResponseDto } from '../types';
+import { RequestOptions } from '../types';
 
 export class GymsResource extends BaseResource {
-  private basePath = '/api/v1/v1/gyms';
+  private basePath = '/api/v1/gyms';
 
   async createGym(
     organizationId: string,
@@ -11,7 +11,7 @@ export class GymsResource extends BaseResource {
     options?: RequestOptions
   ): Promise<Gym> {
     return this.client.post<Gym>(
-      this.basePath, 
+      `${this.basePath}?organizationId=${organizationId}`, 
       data, 
       { ...options, headers: { ...options?.headers } }
     );

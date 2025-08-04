@@ -1,16 +1,13 @@
 import React from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
-import {
-  VStack,
-  HStack,
-  Text,
-  Card,
-  Avatar,
-  Icon,
-  Divider,
-  Button,
-  ButtonText,
-} from '@/components/ui';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
+import { Card } from '@/components/ui/card';
+import { Avatar } from '@/components/ui/avatar';
+import { Icon } from '@/components/ui/icon';
+import { Divider } from '@/components/ui/divider';
+import { Button, ButtonText } from '@/components/ui/button';
 import {
   UserIcon,
   BuildingIcon,

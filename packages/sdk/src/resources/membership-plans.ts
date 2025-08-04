@@ -9,7 +9,7 @@ import {
 import { RequestOptions } from '../types';
 
 export class MembershipPlansResource extends BaseResource {
-  private basePath = '/api/v1/v1/membership-plans';
+  private basePath = '/api/v1/membership-plans';
 
   async createMembershipPlan(
     data: CreateMembershipPlanDto, 

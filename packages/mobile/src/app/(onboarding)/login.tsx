@@ -1,31 +1,26 @@
-import React, { useState } from 'react';
-import { SafeAreaView, View, ScrollView, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
-import { Link, router } from 'expo-router';
-import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
-import { 
-  VStack, 
-  HStack,
-  Center, 
-  Heading, 
-  Text, 
-  GluestackButton as Button, 
-  ButtonText,
-  ButtonSpinner,
-  Box,
-  Icon,
-  Logo
-} from '../../components/ui';
-import { 
-  useForm, 
-  FormProvider, 
-  FormInput, 
-  zodResolver,
-  FormCheckbox
-} from '../../components/forms';
+import { Logo } from '@/components/Logo';
+import {
+  FormCheckbox,
+  FormInput,
+  FormProvider,
+  useForm,
+  zodResolver
+} from '@/components/forms';
+import { ButtonSpinner, ButtonText, Button as GluestackButton } from '@/components/ui/button';
+import { Center } from '@/components/ui/center';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useGymSdk } from '@/providers/GymSdkProvider';
+import { useMutation } from '@tanstack/react-query';
+import { Link, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, View } from 'react-native';
+import { z } from 'zod';
 
 // Login schema
 const loginSchema = z.object({
@@ -148,7 +143,7 @@ export default function LoginScreen() {
                     </Link>
                   </HStack>
 
-                  <Button
+                  <GluestackButton
                     onPress={methods.handleSubmit(onSubmit)}
                     disabled={loginMutation.isPending}
                     className="w-full mt-4"
@@ -161,7 +156,7 @@ export default function LoginScreen() {
                     ) : (
                       <ButtonText>Sign In</ButtonText>
                     )}
-                  </Button>
+                  </GluestackButton>
                 </VStack>
               </FormProvider>
 

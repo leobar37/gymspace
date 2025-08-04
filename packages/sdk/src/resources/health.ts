@@ -16,7 +16,7 @@ export interface ReadyResponse {
 }
 
 export class HealthResource extends BaseResource {
-  private basePath = '/api/v1/v1/health';
+  private basePath = '/api/v1/health';
 
   async health(options?: RequestOptions): Promise<HealthResponse> {
     return this.client.get<HealthResponse>(this.basePath, undefined, options);

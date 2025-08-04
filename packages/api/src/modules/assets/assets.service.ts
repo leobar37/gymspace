@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../core/database/prisma.service';
 import { IRequestContext } from '@gymspace/shared';
@@ -15,7 +15,7 @@ import { randomUUID } from 'crypto';
 import * as path from 'path';
 
 @Injectable()
-export class AssetsService {
+export class AssetsService implements OnModuleInit {
   private readonly logger = new Logger(AssetsService.name);
   private s3: AWS.S3;
   private bucket: string;
@@ -36,6 +36,31 @@ export class AssetsService {
     });
 
     this.bucket = s3Config.bucket;
+  }
+
+  /**
+   * Initialize module and ensure bucket exists
+   */
+  async onModuleInit() {
+    try {
+      // Check if bucket exists
+      await this.s3.headBucket({ Bucket: this.bucket }).promise();
+      this.logger.log(`S3 bucket '${this.bucket}' verified successfully`);
+    } catch (error) {
+      if (error.statusCode === 404) {
+        try {
+          // Bucket doesn't exist, create it
+          await this.s3.createBucket({ Bucket: this.bucket }).promise();
+          this.logger.log(`S3 bucket '${this.bucket}' created successfully`);
+        } catch (createError) {
+          this.logger.error(`Failed to create S3 bucket '${this.bucket}': ${createError.message}`, createError.stack);
+          throw createError;
+        }
+      } else {
+        this.logger.error(`Failed to verify S3 bucket '${this.bucket}': ${error.message}`, error.stack);
+        throw error;
+      }
+    }
   }
 
   /**

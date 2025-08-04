@@ -1,17 +1,11 @@
 import React from 'react';
 import { useController } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
-import { 
-  HStack,
-  VStack,
-  Text,
-  GluestackSwitch as Switch,
-  FormControl,
-  FormControlError,
-  FormControlErrorText,
-  FormControlHelper,
-  FormControlHelperText
-} from '../ui';
+import { HStack } from '@/components/ui/hstack';
+import { VStack } from '@/components/ui/vstack';
+import { Text } from '@/components/ui/text';
+import { Switch as GluestackSwitch } from '@/components/ui/switch';
+import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
 
 interface FormSwitchProps<TFieldValues extends FieldValues = FieldValues> 
   extends UseControllerProps<TFieldValues> {
@@ -49,7 +43,7 @@ export function FormSwitch<TFieldValues extends FieldValues = FieldValues>({
             )}
           </VStack>
           
-          <Switch
+          <GluestackSwitch
             value={field.value}
             onValueChange={field.onChange}
             onBlur={field.onBlur}

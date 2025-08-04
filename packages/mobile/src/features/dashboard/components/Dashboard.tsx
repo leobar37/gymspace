@@ -1,18 +1,15 @@
 import React from 'react';
 import { ScrollView, RefreshControl, View, Pressable } from 'react-native';
 import { useDashboardController } from '../controllers/dashboard.controller';
-import {
-  VStack,
-  HStack,
-  Text,
-  Card,
-  Heading,
-  Spinner,
-  Badge,
-  BadgeText,
-  Icon,
-  Divider,
-} from '../../../components/ui';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
+import { Card } from '@/components/ui/card';
+import { Heading } from '@/components/ui/heading';
+import { Spinner } from '@/components/ui/spinner';
+import { Badge, BadgeText } from '@/components/ui/badge';
+import { Icon } from '@/components/ui/icon';
+import { Divider } from '@/components/ui/divider';
 import {
   UsersIcon,
   FileTextIcon,

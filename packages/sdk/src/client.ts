@@ -141,12 +141,19 @@ export class ApiClient {
     this.config.apiKey = token;
   }
 
+  setTokens(accessToken: string, refreshToken: string): void {
+    this.config.apiKey = accessToken;
+    // Store refresh token if needed for token refresh logic
+    this.config.refreshToken = refreshToken;
+  }
+
   setGymId(gymId: string): void {
     this.axiosInstance.defaults.headers.common['X-Gym-Id'] = gymId;
   }
 
   clearAuth(): void {
     delete this.config.apiKey;
+    delete this.config.refreshToken;
     delete this.axiosInstance.defaults.headers.common['Authorization'];
   }
 }

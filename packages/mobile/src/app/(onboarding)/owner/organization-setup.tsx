@@ -1,27 +1,25 @@
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ChevronLeftIcon, DollarSignIcon, FlagIcon } from 'lucide-react-native';
-import React, { useState } from 'react';
+import { ChevronLeftIcon, DollarSignIcon, FlagIcon, ClockIcon } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
 import { Pressable, SafeAreaView, ScrollView, View } from 'react-native';
 import { z } from 'zod';
 import {
   FormInput,
   FormProvider,
+  FormSelect,
   useForm,
   zodResolver
-} from '../../../components/forms';
-import {
-  Box,
-  GluestackButton as Button,
-  ButtonText,
-  Card,
-  HStack,
-  Heading,
-  Icon,
-  Progress,
-  Text,
-  VStack
-} from '../../../components/ui';
+} from '@/components/forms';
+import { Box } from '@/components/ui/box';
+import { Button as GluestackButton, ButtonText } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { HStack } from '@/components/ui/hstack';
+import { Heading } from '@/components/ui/heading';
+import { Icon } from '@/components/ui/icon';
+import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useOnboardingStore } from '@/store/onboarding';
 
 // Country/currency options
@@ -31,21 +29,35 @@ const COUNTRY_OPTIONS = [
     label: 'Perú',
     currency: 'PEN',
     currencySymbol: 'S/',
-    flag: '🇵🇪'
+    flag: '🇵🇪',
+    timezones: ['America/Lima']
   },
   {
     value: 'EC',
     label: 'Ecuador',
     currency: 'USD',
     currencySymbol: '$',
-    flag: '🇪🇨'
+    flag: '🇪🇨',
+    timezones: ['America/Guayaquil', 'Pacific/Galapagos']
   },
 ];
+
+// Timezone options based on selected country
+const getTimezoneOptions = (country: string) => {
+  const countryData = COUNTRY_OPTIONS.find(c => c.value === country);
+  if (!countryData) return [];
+  
+  return countryData.timezones.map(tz => ({
+    label: tz.replace('America/', '').replace('Pacific/', '').replace(/_/g, ' '),
+    value: tz
+  }));
+};
 
 // Validation schema
 const organizationSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   country: z.string().min(2, 'Selecciona un país'),
+  timezone: z.string().min(1, 'Selecciona una zona horaria'),
 });
 
 type OrganizationForm = z.infer<typeof organizationSchema>;
@@ -60,6 +72,7 @@ export default function OrganizationSetupScreen() {
     defaultValues: {
       name: '',
       country: '',
+      timezone: '',
     },
   });
 
@@ -70,12 +83,23 @@ export default function OrganizationSetupScreen() {
         name: data.name,
         country: country.value,
         currency: country.currency,
+        timezone: data.timezone,
       });
-      router.push('/(onboarding)/owner/create-gym');
+      router.push('/(onboarding)/owner/email-verification');
     }
   };
 
   const selectedCountryInfo = COUNTRY_OPTIONS.find(c => c.value === selectedCountry);
+
+  // Reset timezone when country changes
+  useEffect(() => {
+    if (selectedCountry) {
+      const timezones = getTimezoneOptions(selectedCountry);
+      if (timezones.length > 0) {
+        methods.setValue('timezone', timezones[0].value);
+      }
+    }
+  }, [selectedCountry, methods]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -90,13 +114,13 @@ export default function OrganizationSetupScreen() {
             <Pressable onPress={() => router.back()}>
               <Icon as={ChevronLeftIcon} className="text-gray-700 w-6 h-6" />
             </Pressable>
-            <Text className="text-gray-600">Paso 4 de 7</Text>
+            <Text className="text-gray-600">Paso 4 de 4</Text>
           </HStack>
 
           {/* Progress bar */}
-          <Box className="mb-8">
-            <Progress value={56} className="h-2 bg-gray-200 rounded-full" />
-          </Box>
+          <Progress value={100} className="mb-8">
+            <ProgressFilledTrack />
+          </Progress>
 
           <VStack className="flex-1 gap-12">
             {/* Title */}
@@ -166,6 +190,16 @@ export default function OrganizationSetupScreen() {
                   </VStack>
                 </VStack>
 
+                {/* Timezone selection */}
+                {selectedCountry && (
+                  <FormSelect
+                    name="timezone"
+                    label="Zona horaria"
+                    placeholder="Selecciona una zona horaria"
+                    options={getTimezoneOptions(selectedCountry)}
+                  />
+                )}
+
                 {/* Currency preview */}
                 {selectedCountryInfo && (
                   <Card className="p-4 bg-blue-50 border border-blue-200">
@@ -182,12 +216,12 @@ export default function OrganizationSetupScreen() {
 
             {/* Continue button */}
             <Box className="mt-auto pb-4">
-              <Button
+              <GluestackButton
                 onPress={methods.handleSubmit(onSubmit)}
                 className="w-full"
               >
                 <ButtonText>Continuar</ButtonText>
-              </Button>
+              </GluestackButton>
             </Box>
           </VStack>
         </View>

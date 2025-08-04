@@ -1,21 +1,11 @@
 import React from 'react';
 import { useController } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
-import { 
-  VStack,
-  Text,
-  Radio,
-  RadioGroup,
-  RadioIndicator,
-  RadioIcon,
-  RadioLabel,
-  FormControl,
-  FormControlError,
-  FormControlErrorText,
-  FormControlHelper,
-  FormControlHelperText,
-  Icon
-} from '../ui';
+import { VStack } from '@/components/ui/vstack';
+import { Text } from '@/components/ui/text';
+import { Radio, RadioGroup, RadioIndicator, RadioIcon, RadioLabel } from '@/components/ui/radio';
+import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
+import { Icon } from '@/components/ui/icon';
 import { CircleIcon } from 'lucide-react-native';
 
 interface RadioOption {

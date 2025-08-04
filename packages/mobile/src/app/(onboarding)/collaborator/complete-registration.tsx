@@ -1,26 +1,26 @@
-import React from 'react';
-import { SafeAreaView, View, ScrollView, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
-import { router } from 'expo-router';
-import { z } from 'zod';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Heading } from '@/components/ui/heading';
-import { Text } from '@/components/ui/text';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { Box } from '@/components/ui/box';
-import { Card } from '@/components/ui/card';
-import { 
-  useForm, 
-  FormProvider, 
+import {
   FormInput,
+  FormProvider,
+  useForm,
   zodResolver
 } from '@/components/forms';
+import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { useGymSdk } from '@/providers/GymSdkProvider';
+import { useOnboardingStore } from '@/store/onboarding';
+import { useMutation } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon, UserIcon } from 'lucide-react-native';
-import { useOnboardingStore } from '@/store/onboarding';
-import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useMutation } from '@tanstack/react-query';
+import React from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, View } from 'react-native';
+import { z } from 'zod';
 
 // Validation schema
 const collaboratorSchema = z.object({
@@ -45,7 +45,7 @@ export default function CompleteRegistrationScreen() {
 
   // Initialize form
   const methods = useForm<CollaboratorForm>({
-    resolver: zodResolver(collaboratorSchema),
+    resolver: zodResolver(collaboratorSchema as any),
     defaultValues: {
       name: '',
       phone: '',
@@ -57,12 +57,7 @@ export default function CompleteRegistrationScreen() {
   // Complete registration mutation
   const registerMutation = useMutation({
     mutationFn: async (data: CollaboratorForm) => {
-      // TODO: Implement actual API call to complete collaborator registration
-      console.log('Completing collaborator registration:', {
-        invitationToken,
-        ...data,
-      });
-      
+
       // Mock successful registration
       return {
         success: true,
@@ -74,10 +69,10 @@ export default function CompleteRegistrationScreen() {
     onSuccess: async (data) => {
       // Store auth token
       await setAuthToken(data.accessToken);
-      
+
       // Reset onboarding state
       resetOnboarding();
-      
+
       // Navigate to collaborator dashboard
       router.replace(`/(app)/gym/${data.gymId}/dashboard`);
     },
@@ -93,11 +88,11 @@ export default function CompleteRegistrationScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >

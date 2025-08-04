@@ -2,36 +2,14 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": false,
-     "baseUrl": ".",
+    "baseUrl": ".",
+    "customConditions": ["source"],
     "paths": {
-      "@gymspace/shared": [
-        "../shared/src"
-      ],
-      "@gymspace/shared/*": [
-        "../shared/src/*"
-      ],
-      "@gymspace/sdk": [
-        "../sdk/src"
-      ],
-      "@gymspace/sdk/*": [
-        "../sdk/src/*"
-      ],
-      "@/*": [
-        "./src/*"
-      ],
-      "tailwind.config": [
-        "./tailwind.config.js"
-      ]
+      "@gymspace/shared": ["../shared/src"],
+      "@/*": ["./src/*", "./*"],
+      "tailwind.config": ["./tailwind.config.js"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "nativewind-env.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "babel.config.js",
-    "metro.config.js"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"],
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js"]
 }

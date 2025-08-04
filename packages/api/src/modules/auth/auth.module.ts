@@ -5,5 +5,6 @@ import { AuthModule as CoreAuthModule } from '../../core/auth/auth.module';
 @Module({
   imports: [CoreAuthModule],
   controllers: [AuthController],
+  exports: [CoreAuthModule],
 })
 export class AuthModule {}

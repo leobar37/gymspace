@@ -1,26 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Pressable, ActivityIndicator } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { 
-  VStack, 
-  HStack,
-  Center,
-  Heading, 
-  Text, 
-  GluestackButton as Button, 
-  ButtonText,
-  Icon,
-  Card,
-  Box,
-  Avatar,
-  AvatarImage,
-  AvatarFallbackText
-} from '@/components/ui';
-import { StatusBar } from 'expo-status-bar';
-import { ChevronLeftIcon, BuildingIcon, UserIcon, CalendarIcon, XCircleIcon, CheckIcon } from 'lucide-react-native';
-import { useOnboardingStore } from '@/store/onboarding';
+import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
+import { Box } from '@/components/ui/box';
+import { ButtonText, Button as GluestackButton } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Center } from '@/components/ui/center';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useGymSdk } from '@/providers/GymSdkProvider';
+import { useOnboardingStore } from '@/store/onboarding';
 import { useQuery } from '@tanstack/react-query';
+import { router, useLocalSearchParams } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { BuildingIcon, CalendarIcon, CheckIcon, ChevronLeftIcon, UserIcon, XCircleIcon } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, SafeAreaView, View } from 'react-native';
 
 export default function InvitationValidationScreen() {
   const { token } = useLocalSearchParams<{ token?: string }>();
@@ -100,12 +95,12 @@ export default function InvitationValidationScreen() {
             </VStack>
 
             <Box className="mt-auto">
-              <Button
+              <GluestackButton
                 onPress={handleManualTokenEntry}
                 className="w-full py-3 px-6"
               >
                 <ButtonText>Validar invitación</ButtonText>
-              </Button>
+              </GluestackButton>
             </Box>
           </VStack>
         </View>
@@ -147,9 +142,9 @@ export default function InvitationValidationScreen() {
                   El código de invitación es inválido o ha expirado
                 </Text>
               </VStack>
-              <Button onPress={() => router.back()} variant="outline">
+              <GluestackButton onPress={() => router.back()} variant="outline">
                 <ButtonText>Volver</ButtonText>
-              </Button>
+              </GluestackButton>
             </VStack>
           </Center>
         </View>
@@ -248,19 +243,19 @@ export default function InvitationValidationScreen() {
           {/* Action buttons */}
           <Box className="mt-auto">
             <VStack className="gap-4">
-              <Button
+              <GluestackButton
                 onPress={handleAcceptInvitation}
                 className="w-full py-3 px-6"
               >
                 <ButtonText>Aceptar invitación</ButtonText>
-              </Button>
-              <Button
+              </GluestackButton>
+              <GluestackButton
                 onPress={() => router.back()}
                 variant="outline"
                 className="w-full py-3 px-6"
               >
                 <ButtonText>Rechazar</ButtonText>
-              </Button>
+              </GluestackButton>
             </VStack>
           </Box>
         </VStack>

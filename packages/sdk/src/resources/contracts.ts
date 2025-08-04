@@ -9,7 +9,7 @@ import {
 import { RequestOptions, PaginatedResponseDto } from '../types';
 
 export class ContractsResource extends BaseResource {
-  private basePath = '/api/v1/v1/contracts';
+  private basePath = '/api/v1/contracts';
 
   async createContract(data: CreateContractDto, options?: RequestOptions): Promise<Contract> {
     return this.client.post<Contract>(this.basePath, data, options);

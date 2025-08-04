@@ -1,26 +1,11 @@
 import React from 'react';
 import { useController } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
-import { 
-  VStack, 
-  Text,
-  GluestackSelect as Select,
-  SelectTrigger,
-  SelectInput,
-  SelectIcon,
-  SelectPortal,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicatorWrapper,
-  SelectDragIndicator,
-  SelectItem,
-  FormControl,
-  FormControlError,
-  FormControlErrorText,
-  FormControlHelper,
-  FormControlHelperText,
-  Icon
-} from '../ui';
+import { VStack } from '@/components/ui/vstack';
+import { Text } from '@/components/ui/text';
+import { Select as GluestackSelect, SelectTrigger, SelectInput, SelectIcon, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem } from '@/components/ui/select';
+import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
+import { Icon } from '@/components/ui/icon';
 import { ChevronDownIcon } from 'lucide-react-native';
 
 interface SelectOption {
@@ -66,7 +51,7 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
           </FormControlHelper>
         )}
         
-        <Select
+        <GluestackSelect
           selectedValue={field.value}
           onValueChange={field.onChange}
         >
@@ -91,7 +76,7 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
               ))}
             </SelectContent>
           </SelectPortal>
-        </Select>
+        </GluestackSelect>
         
         {fieldState.error && (
           <FormControlError>

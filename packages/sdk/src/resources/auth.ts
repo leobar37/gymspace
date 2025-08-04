@@ -1,20 +1,20 @@
-import { BaseResource } from './base';
-import { 
-  RegisterOwnerDto, 
-  LoginDto, 
-  LoginResponseDto,
-  VerifyEmailDto,
-  ResendVerificationDto,
+import {
   CompleteOnboardingDto,
-  RegisterCollaboratorDto,
-  SubscriptionPlan,
+  InvitationValidationResponse,
+  LoginDto,
+  LoginResponseDto,
   OnboardingCompleteResponse,
-  InvitationValidationResponse
+  RegisterCollaboratorDto,
+  RegisterOwnerDto,
+  ResendVerificationDto,
+  SubscriptionPlan,
+  VerifyEmailDto
 } from '../models/auth';
 import { RequestOptions } from '../types';
+import { BaseResource } from './base';
 
 export class AuthResource extends BaseResource {
-  private basePath = '/api/v1/v1/auth';
+  private basePath = 'auth';
 
   async registerOwner(data: RegisterOwnerDto, options?: RequestOptions): Promise<void> {
     return this.client.post(`${this.basePath}/register/owner`, data, options);
@@ -29,10 +29,14 @@ export class AuthResource extends BaseResource {
   }
 
   async verifyEmail(data: VerifyEmailDto, options?: RequestOptions): Promise<{ success: boolean; message: string }> {
+    console.log("hello wworkd");
+
     return this.client.post(`${this.basePath}/verify-email`, data, options);
   }
 
   async resendVerification(data: ResendVerificationDto, options?: RequestOptions): Promise<{ success: boolean; message: string }> {
+    console.log("hello wworkd, resende");
+  
     return this.client.post(`${this.basePath}/resend-verification`, data, options);
   }
 

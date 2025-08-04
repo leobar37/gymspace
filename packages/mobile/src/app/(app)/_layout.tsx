@@ -7,7 +7,7 @@ import {
   FileTextIcon,
   MenuIcon,
 } from 'lucide-react-native';
-import { Icon } from '@/components/ui';
+import { Icon } from '@/components/ui/icon';
 import { useAtom } from 'jotai';
 import { currentTabAtom } from '@/store/atoms';
 import { useGymSdk } from '@/providers/GymSdkProvider';

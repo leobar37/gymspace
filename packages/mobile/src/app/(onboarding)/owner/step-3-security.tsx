@@ -9,19 +9,15 @@ import {
   FormProvider,
   useForm,
   zodResolver
-} from '../../../components/forms';
-import {
-  Box,
-  GluestackButton as Button,
-  ButtonText,
-  HStack,
-  Heading,
-  Icon,
-  Progress,
-  ProgressFilledTrack,
-  Text,
-  VStack
-} from '../../../components/ui';
+} from '@/components/forms';
+import { Box } from '@/components/ui/box';
+import { Button as GluestackButton, ButtonText } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { Heading } from '@/components/ui/heading';
+import { Icon } from '@/components/ui/icon';
+import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useOnboardingStore } from '@/store/onboarding';
 
 // Validation schema
@@ -57,20 +53,20 @@ export default function OwnerSecurityInfoScreen() {
       ...ownerData,
       password: data.password,
     });
-    
-    // Navigate to email verification
-    router.push('/owner/email-verification');
+
+    // Navigate to organization setup
+    router.push('/owner/organization-setup');
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -81,11 +77,11 @@ export default function OwnerSecurityInfoScreen() {
               <Pressable onPress={() => router.back()}>
                 <Icon as={ChevronLeftIcon} className="text-gray-700 w-6 h-6" />
               </Pressable>
-              <Text className="text-gray-600">Paso 3 de 3</Text>
+              <Text className="text-gray-600">Paso 3 de 4</Text>
             </HStack>
 
             {/* Progress bar */}
-            <Progress value={100} className="mb-8">
+            <Progress value={75} className="mb-8">
               <ProgressFilledTrack />
             </Progress>
 
@@ -136,12 +132,11 @@ export default function OwnerSecurityInfoScreen() {
 
               {/* Continue button */}
               <Box className="mt-auto pb-8">
-                <Button
+                <GluestackButton
                   onPress={methods.handleSubmit(onSubmit)}
-                  className="w-full py-3 px-6 bg-blue-600 rounded-lg"
                 >
-                  <ButtonText className="text-white font-semibold text-center">Continuar</ButtonText>
-                </Button>
+                  <ButtonText>Continuar</ButtonText>
+                </GluestackButton>
               </Box>
             </VStack>
           </View>

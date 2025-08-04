@@ -8,15 +8,11 @@ import {
   useForm,
   zodResolver,
 } from '@/components/forms';
-import {
-  VStack,
-  Heading,
-  Text,
-  Button,
-  ButtonText,
-  ButtonSpinner,
-  Divider,
-} from '@/components/ui';
+import { VStack } from '@/components/ui/vstack';
+import { Heading } from '@/components/ui/heading';
+import { Text } from '@/components/ui/text';
+import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
+import { Divider } from '@/components/ui/divider';
 import { useClientsController, ClientFormData } from '../controllers/clients.controller';
 import { router } from 'expo-router';
 import { showToast } from '@/components/ui/toast';

@@ -8,8 +8,34 @@ async function main() {
   // Create subscription plans
   const plans = [
     {
+      name: 'Gratuito',
+      price: {
+        USD: { currency: 'USD', value: 0 }, // Estados Unidos - Dólares
+        COP: { currency: 'COP', value: 0 }, // Colombia - Pesos Colombianos
+        MXN: { currency: 'MXN', value: 0 }, // México - Pesos Mexicanos
+        USD_EC: { currency: 'USD', value: 0 }, // Ecuador - Dólares (moneda oficial)
+      },
+      billingFrequency: 'monthly',
+      maxGyms: 1,
+      maxClientsPerGym: 10,
+      maxUsersPerGym: 1,
+      features: {
+        evaluations: 5,
+        checkIns: true,
+        basicReports: false,
+        emailSupport: false,
+        trialPeriod: 30,
+      },
+      description: 'Plan gratuito para comenzar - 30 días de prueba',
+    },
+    {
       name: 'Básico',
-      price: 29.99,
+      price: {
+        USD: { currency: 'USD', value: 29.99 }, // Estados Unidos - ~$30 USD
+        COP: { currency: 'COP', value: 129900 }, // Colombia - ~$130K COP (1 USD ≈ 4,330 COP)
+        MXN: { currency: 'MXN', value: 549 }, // México - ~$549 MXN (1 USD ≈ 18.3 MXN)
+        USD_EC: { currency: 'USD', value: 29.99 }, // Ecuador - Misma tarifa USD
+      },
       billingFrequency: 'monthly',
       maxGyms: 1,
       maxClientsPerGym: 100,
@@ -24,7 +50,12 @@ async function main() {
     },
     {
       name: 'Premium',
-      price: 79.99,
+      price: {
+        USD: { currency: 'USD', value: 79.99 }, // Estados Unidos - ~$80 USD
+        COP: { currency: 'COP', value: 349900 }, // Colombia - ~$350K COP (1 USD ≈ 4,330 COP)
+        MXN: { currency: 'MXN', value: 1449 }, // México - ~$1,449 MXN (1 USD ≈ 18.3 MXN)
+        USD_EC: { currency: 'USD', value: 79.99 }, // Ecuador - Misma tarifa USD
+      },
       billingFrequency: 'monthly',
       maxGyms: 3,
       maxClientsPerGym: 500,
@@ -41,7 +72,12 @@ async function main() {
     },
     {
       name: 'Enterprise',
-      price: 199.99,
+      price: {
+        USD: { currency: 'USD', value: 199.99 }, // Estados Unidos - ~$200 USD
+        COP: { currency: 'COP', value: 879900 }, // Colombia - ~$880K COP (1 USD ≈ 4,330 COP)
+        MXN: { currency: 'MXN', value: 3599 }, // México - ~$3,599 MXN (1 USD ≈ 18.3 MXN)
+        USD_EC: { currency: 'USD', value: 199.99 }, // Ecuador - Misma tarifa USD
+      },
       billingFrequency: 'monthly',
       maxGyms: 999, // Unlimited
       maxClientsPerGym: 9999, // Unlimited

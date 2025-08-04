@@ -1,177 +1,167 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useGymSdk } from '@/providers/GymSdkProvider';
-import { router } from 'expo-router';
+import { useSDK } from '@/shared/hooks/useSDK';
+import { 
+  StartOnboardingData, 
+  UpdateGymSettingsData, 
+  ConfigureFeaturesData,
+  CompleteGuidedSetupData,
+  OnboardingStatus,
+  OnboardingStep
+} from '@gymspace/sdk';
+import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
-import { currentGymAtom } from '@/store/atoms';
-
-// Query keys
-export const onboardingKeys = {
-  all: ['onboarding'] as const,
-  organization: () => [...onboardingKeys.all, 'organization'] as const,
-  subscriptionPlans: () => [...onboardingKeys.all, 'subscriptionPlans'] as const,
-  invitations: () => [...onboardingKeys.all, 'invitations'] as const,
-};
-
-// Types
-interface CreateOwnerData {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-}
-
-interface CreateOrganizationData {
-  name: string;
-  subscriptionPlanId: string;
-  country: string;
-  currency: string;
-  timezone: string;
-}
-
-interface CreateGymData {
-  name: string;
-  address: string;
-  phone: string;
-  description?: string;
-}
+import { userAtom, gymAtom } from '@/shared/stores/auth.store';
 
 export const useOnboardingController = () => {
-  const { sdk, setAuthToken, setCurrentGymId } = useGymSdk();
+  const { gymSpaceSDK } = useSDK();
   const queryClient = useQueryClient();
-  const [, setCurrentGym] = useAtom(currentGymAtom);
+  const router = useRouter();
+  const [, setUser] = useAtom(userAtom);
+  const [, setGym] = useAtom(gymAtom);
 
-  // Get subscription plans
-  const subscriptionPlansQuery = useQuery({
-    queryKey: onboardingKeys.subscriptionPlans(),
-    queryFn: async () => {
-      // Mock data for now - replace with actual SDK call
-      return [
-        { id: '1', name: 'Básico', price: 29.99, maxGyms: 1, maxClientsPerGym: 100 },
-        { id: '2', name: 'Premium', price: 59.99, maxGyms: 3, maxClientsPerGym: 500 },
-        { id: '3', name: 'Enterprise', price: 99.99, maxGyms: -1, maxClientsPerGym: -1 },
-      ];
-    },
-    staleTime: 30 * 60 * 1000, // 30 minutes
-  });
-
-  // Owner registration mutation
-  const registerOwnerMutation = useMutation({
-    mutationFn: async (data: CreateOwnerData) => {
-      const response = await sdk.auth.register({
-        ...data,
-        userType: 'owner',
+  // Start onboarding mutation
+  const startOnboardingMutation = useMutation({
+    mutationFn: (data: StartOnboardingData) => gymSpaceSDK.onboarding.start(data),
+    onSuccess: (response) => {
+      // Store user and gym info
+      setUser({
+        id: response.user.id,
+        email: response.user.email,
+        name: response.user.name,
+        userType: response.user.userType,
       });
-      return response;
+      
+      setGym({
+        id: response.gym.id,
+        name: response.gym.name,
+        organizationId: response.organization.id,
+      });
+
+      // Set gym context for SDK
+      gymSpaceSDK.setGymId(response.gym.id);
+
+      // Cache onboarding status
+      queryClient.setQueryData(
+        ['onboarding', 'status', response.gym.id],
+        response.onboardingStatus
+      );
+
+      // Navigate to next step
+      router.push('/onboarding/gym-settings');
     },
-    onSuccess: async (response) => {
-      // Set auth token after successful registration
-      await setAuthToken(response.data.accessToken);
+    onError: (error) => {
+      console.error('Failed to start onboarding:', error);
     },
   });
 
-  // Create organization mutation
-  const createOrganizationMutation = useMutation({
-    mutationFn: async (data: CreateOrganizationData) => {
-      const response = await sdk.organizations.create(data);
-      return response;
+  // Update gym settings mutation
+  const updateGymSettingsMutation = useMutation({
+    mutationFn: (data: UpdateGymSettingsData) => gymSpaceSDK.onboarding.updateGymSettings(data),
+    onSuccess: (response) => {
+      // Update cached onboarding status
+      queryClient.setQueryData(
+        ['onboarding', 'status', response.gym.id],
+        response.onboardingStatus
+      );
+
+      // Navigate to next step
+      router.push('/onboarding/configure-features');
+    },
+    onError: (error) => {
+      console.error('Failed to update gym settings:', error);
     },
   });
 
-  // Create gym mutation
-  const createGymMutation = useMutation({
-    mutationFn: async (data: CreateGymData) => {
-      const response = await sdk.gyms.create(data);
-      return response;
+  // Configure features mutation
+  const configureFeaturesMutation = useMutation({
+    mutationFn: (data: ConfigureFeaturesData) => gymSpaceSDK.onboarding.configureFeatures(data),
+    onSuccess: (response) => {
+      // Update cached onboarding status
+      queryClient.setQueryData(
+        ['onboarding', 'status', response.gym.id],
+        response.onboardingStatus
+      );
+
+      // Navigate to completion screen
+      router.push('/onboarding/complete');
     },
-    onSuccess: async (response) => {
-      // Set current gym and update global state
-      const gymId = response.data.id;
-      await setCurrentGymId(gymId);
-      setCurrentGym(response.data);
-      
-      // Navigate to main app
-      router.replace('/(app)');
+    onError: (error) => {
+      console.error('Failed to configure features:', error);
     },
   });
 
-  // Complete onboarding flow
-  const completeOnboarding = async (
-    ownerData: CreateOwnerData,
-    organizationData: CreateOrganizationData,
-    gymData: CreateGymData
-  ) => {
-    try {
-      // Step 1: Register owner
-      await registerOwnerMutation.mutateAsync(ownerData);
-      
-      // Step 2: Create organization
-      await createOrganizationMutation.mutateAsync(organizationData);
-      
-      // Step 3: Create first gym
-      await createGymMutation.mutateAsync(gymData);
-      
-      // Clear onboarding cache
-      queryClient.removeQueries({ queryKey: onboardingKeys.all });
-      
-      return true;
-    } catch (error) {
-      console.error('Onboarding failed:', error);
-      throw error;
+  // Complete setup mutation
+  const completeSetupMutation = useMutation({
+    mutationFn: (data: CompleteGuidedSetupData) => gymSpaceSDK.onboarding.completeSetup(data),
+    onSuccess: (response) => {
+      // Update cached onboarding status
+      queryClient.setQueryData(
+        ['onboarding', 'status', response.onboardingStatus.gymId],
+        response.onboardingStatus
+      );
+
+      // Navigate to dashboard
+      router.replace('/(authenticated)/(tabs)/dashboard');
+    },
+    onError: (error) => {
+      console.error('Failed to complete setup:', error);
+    },
+  });
+
+  // Get onboarding status query
+  const useOnboardingStatus = (gymId: string | undefined) => {
+    return useQuery({
+      queryKey: ['onboarding', 'status', gymId],
+      queryFn: () => gymSpaceSDK.onboarding.getStatus(gymId!),
+      enabled: !!gymId,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  };
+
+  // Helper functions
+  const getNextStep = (currentStep: OnboardingStep): string => {
+    switch (currentStep) {
+      case OnboardingStep.ACCOUNT_CREATED:
+        return '/onboarding/gym-settings';
+      case OnboardingStep.GYM_SETTINGS:
+        return '/onboarding/configure-features';
+      case OnboardingStep.FEATURES_CONFIGURED:
+        return '/onboarding/complete';
+      case OnboardingStep.COMPLETED:
+        return '/(authenticated)/(tabs)/dashboard';
+      default:
+        return '/onboarding/start';
     }
   };
 
-  // Check invitation for collaborator onboarding
-  const checkInvitationMutation = useMutation({
-    mutationFn: async (token: string) => {
-      const response = await sdk.invitations.check(token);
-      return response;
-    },
-  });
-
-  // Accept invitation mutation
-  const acceptInvitationMutation = useMutation({
-    mutationFn: async (data: { token: string; userData: CreateOwnerData }) => {
-      const response = await sdk.invitations.accept({
-        token: data.token,
-        ...data.userData,
-      });
-      return response;
-    },
-    onSuccess: async (response) => {
-      // Set auth token and gym
-      await setAuthToken(response.data.accessToken);
-      await setCurrentGymId(response.data.gymId);
-      
-      // Navigate to main app
-      router.replace('/(app)');
-    },
-  });
+  const canSkipStep = (step: OnboardingStep): boolean => {
+    // Only features configuration can be skipped with defaults
+    return step === OnboardingStep.FEATURES_CONFIGURED;
+  };
 
   return {
-    // Queries
-    subscriptionPlans: subscriptionPlansQuery.data,
-    isLoadingPlans: subscriptionPlansQuery.isLoading,
-    
     // Mutations
-    registerOwner: registerOwnerMutation.mutate,
-    isRegisteringOwner: registerOwnerMutation.isPending,
-    
-    createOrganization: createOrganizationMutation.mutate,
-    isCreatingOrganization: createOrganizationMutation.isPending,
-    
-    createGym: createGymMutation.mutate,
-    isCreatingGym: createGymMutation.isPending,
-    
-    completeOnboarding,
-    isOnboarding: registerOwnerMutation.isPending || 
-                  createOrganizationMutation.isPending || 
-                  createGymMutation.isPending,
-    
-    // Collaborator onboarding
-    checkInvitation: checkInvitationMutation.mutate,
-    isCheckingInvitation: checkInvitationMutation.isPending,
-    
-    acceptInvitation: acceptInvitationMutation.mutate,
-    isAcceptingInvitation: acceptInvitationMutation.isPending,
+    startOnboarding: startOnboardingMutation.mutate,
+    isStarting: startOnboardingMutation.isPending,
+    startError: startOnboardingMutation.error,
+
+    updateGymSettings: updateGymSettingsMutation.mutate,
+    isUpdatingSettings: updateGymSettingsMutation.isPending,
+    settingsError: updateGymSettingsMutation.error,
+
+    configureFeatures: configureFeaturesMutation.mutate,
+    isConfiguringFeatures: configureFeaturesMutation.isPending,
+    featuresError: configureFeaturesMutation.error,
+
+    completeSetup: completeSetupMutation.mutate,
+    isCompletingSetup: completeSetupMutation.isPending,
+    completeError: completeSetupMutation.error,
+
+    // Query
+    useOnboardingStatus,
+
+    // Helpers
+    getNextStep,
+    canSkipStep,
   };
 };

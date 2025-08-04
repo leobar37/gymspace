@@ -1,21 +1,12 @@
 import React from 'react';
 import { useController } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
-import { 
-  HStack,
-  VStack,
-  Text,
-  GluestackCheckbox as Checkbox,
-  CheckboxIndicator,
-  CheckboxIcon,
-  CheckboxLabel,
-  FormControl,
-  FormControlError,
-  FormControlErrorText,
-  FormControlHelper,
-  FormControlHelperText,
-  Icon
-} from '../ui';
+import { HStack } from '@/components/ui/hstack';
+import { VStack } from '@/components/ui/vstack';
+import { Text } from '@/components/ui/text';
+import { Checkbox as GluestackCheckbox, CheckboxIndicator, CheckboxIcon, CheckboxLabel } from '@/components/ui/checkbox';
+import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
+import { Icon } from '@/components/ui/icon';
 import { CheckIcon } from 'lucide-react-native';
 
 interface FormCheckboxProps<TFieldValues extends FieldValues = FieldValues> 
@@ -45,7 +36,7 @@ export function FormCheckbox<TFieldValues extends FieldValues = FieldValues>({
     <FormControl isInvalid={!!fieldState.error}>
       <VStack className="gap-1">
         <HStack className="gap-2" alignItems="center">
-          <Checkbox
+          <GluestackCheckbox
             value={field.value}
             isChecked={field.value}
             onChange={(isSelected) => field.onChange(isSelected)}
@@ -57,7 +48,7 @@ export function FormCheckbox<TFieldValues extends FieldValues = FieldValues>({
             <CheckboxLabel>
               <Text className="font-medium text-gray-900">{label}</Text>
             </CheckboxLabel>
-          </Checkbox>
+          </GluestackCheckbox>
         </HStack>
         
         {description && (

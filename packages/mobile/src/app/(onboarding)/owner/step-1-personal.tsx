@@ -9,25 +9,21 @@ import {
   FormProvider,
   useForm,
   zodResolver
-} from '../../../components/forms';
-import {
-  Box,
-  GluestackButton as Button,
-  ButtonText,
-  HStack,
-  Heading,
-  Icon,
-  Progress,
-  ProgressFilledTrack,
-  Text,
-  VStack
-} from '../../../components/ui';
+} from '@/components/forms';
+import { Box } from '@/components/ui/box';
+import { Button as GluestackButton, ButtonText } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { Heading } from '@/components/ui/heading';
+import { Icon } from '@/components/ui/icon';
+import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useOnboardingStore } from '@/store/onboarding';
 
 // Validation schema
 const personalInfoSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  email: z.string().email('Correo electrónico inválido'),
+  email: z.string().min(2, 'Correo electrónico inválido'),
 });
 
 type PersonalInfoForm = z.infer<typeof personalInfoSchema>;
@@ -51,7 +47,7 @@ export default function OwnerPersonalInfoScreen() {
       name: data.name,
       email: data.email,
     });
-    
+
     // Navigate to next step
     router.push('/owner/step-2-contact');
   };
@@ -59,11 +55,11 @@ export default function OwnerPersonalInfoScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -74,11 +70,11 @@ export default function OwnerPersonalInfoScreen() {
               <Pressable onPress={() => router.back()}>
                 <Icon as={ChevronLeftIcon} className="text-gray-700 w-6 h-6" />
               </Pressable>
-              <Text className="text-gray-600">Paso 1 de 3</Text>
+              <Text className="text-gray-600">Paso 1 de 4</Text>
             </HStack>
 
             {/* Progress bar */}
-            <Progress value={33} className="mb-8">
+            <Progress value={25} className="mb-8">
               <ProgressFilledTrack />
             </Progress>
 
@@ -119,13 +115,12 @@ export default function OwnerPersonalInfoScreen() {
               </FormProvider>
 
               {/* Continue button */}
-              <Box className="mt-auto pb-8">
-                <Button
+              <Box>
+                <GluestackButton
                   onPress={methods.handleSubmit(onSubmit)}
-                  className="w-full py-3 px-6 bg-blue-600 rounded-lg"
                 >
-                  <ButtonText className="text-white font-semibold text-center">Continuar</ButtonText>
-                </Button>
+                  <ButtonText>Continuar</ButtonText>
+                </GluestackButton>
               </Box>
             </VStack>
           </View>
