@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import {
   FormInput,
@@ -20,10 +21,11 @@ import { showToast } from '@/components/ui/toast';
 // Validation schema
 const clientSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato: AAAA-MM-DD'),
-  documentId: z.string().min(6, 'Documento inválido'),
-  phone: z.string().min(8, 'Teléfono inválido'),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato: AAAA-MM-DD').optional().or(z.literal('')),
+  document: z.string().min(6, 'Documento inválido').optional().or(z.literal('')),
+  phone: z.string().min(8, 'Teléfono inválido').optional().or(z.literal('')),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
+  address: z.string().min(1, 'La dirección es requerida'),
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
   medicalConditions: z.string().optional(),
@@ -51,9 +53,10 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
     defaultValues: {
       name: initialData?.name || '',
       birthDate: initialData?.birthDate || '',
-      documentId: initialData?.documentId || '',
+      document: initialData?.document || initialData?.documentId || '',
       phone: initialData?.phone || '',
       email: initialData?.email || '',
+      address: initialData?.address || '',
       emergencyContactName: initialData?.emergencyContactName || '',
       emergencyContactPhone: initialData?.emergencyContactPhone || '',
       medicalConditions: initialData?.medicalConditions || '',
@@ -109,16 +112,17 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1"
-    >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
       >
-        <View className="flex-1 p-4">
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="flex-1 p-4">
           <FormProvider {...methods}>
             <VStack className="gap-6">
               {/* Personal Information */}
@@ -137,15 +141,15 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
 
                 <FormInput
                   name="birthDate"
-                  label="Fecha de nacimiento"
+                  label="Fecha de nacimiento (opcional)"
                   placeholder="1990-01-31"
                   keyboardType="numeric"
                   returnKeyType="next"
                 />
 
                 <FormInput
-                  name="documentId"
-                  label="Documento de identidad"
+                  name="document"
+                  label="Documento de identidad (opcional)"
                   placeholder="12345678"
                   keyboardType="numeric"
                   returnKeyType="next"
@@ -162,7 +166,7 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                 
                 <FormInput
                   name="phone"
-                  label="Teléfono"
+                  label="Teléfono (opcional)"
                   placeholder="+51 999 999 999"
                   keyboardType="phone-pad"
                   returnKeyType="next"
@@ -174,6 +178,13 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                   placeholder="correo@ejemplo.com"
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  returnKeyType="next"
+                />
+
+                <FormInput
+                  name="address"
+                  label="Dirección"
+                  placeholder="Av. Principal 123, Distrito"
                   returnKeyType="next"
                 />
               </VStack>
@@ -251,5 +262,6 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };

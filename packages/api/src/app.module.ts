@@ -25,6 +25,7 @@ import { LeadsModule } from './modules/leads/leads.module';
 import { AssetsModule } from './modules/assets/assets.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 // Global providers
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
@@ -71,6 +72,7 @@ import validationSchema from './config/validation.schema';
     AssetsModule,
     OnboardingModule,
     SubscriptionsModule,
+    DashboardModule,
   ],
   providers: [
     {

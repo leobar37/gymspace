@@ -547,3 +547,7 @@ import { Button } from "components/ui/button";
 - **Linting Strategy**:
   - Always run linting before committing code
   - not run lint: This indicates a specific instruction to skip linting checks, which should be used sparingly and with caution
+
+## Dev Workflows
+
+- **Use VSCode MCP to know about the errors**

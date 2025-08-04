@@ -20,10 +20,9 @@ import {
   SettingsIcon,
 } from 'lucide-react-native';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useAtom } from 'jotai';
-import { userAtom, currentGymAtom } from '@/store/atoms';
+import { useCurrentSession } from '@/hooks/useCurrentSession';
+import { useAuthToken } from '@/hooks/useAuthToken';
 import { router } from 'expo-router';
-import { showToast } from '@/components/ui/toast';
 
 interface MenuItemProps {
   icon: any;
@@ -62,19 +61,23 @@ const MenuItem: React.FC<MenuItemProps> = ({
 
 export const ProfileMenu: React.FC = () => {
   const { clearAuth } = useGymSdk();
-  const [user] = useAtom(userAtom);
-  const [currentGym] = useAtom(currentGymAtom);
+  const { clearStoredTokens } = useAuthToken();
+  const { session, user, gym, clearSessionCache } = useCurrentSession();
 
   const handleLogout = async () => {
     try {
+      // Clear auth from provider
       await clearAuth();
+      // Clear stored tokens
+      await clearStoredTokens();
+      // Clear session cache
+      clearSessionCache();
+      // Navigate to onboarding
       router.replace('/(onboarding)');
     } catch (error) {
-      showToast({
-        title: 'Error',
-        description: 'No se pudo cerrar sesión',
-        action: 'error',
-      });
+      console.error('Logout error:', error);
+      // Even if clearing fails, navigate to login to prevent stuck state
+      router.replace('/(onboarding)');
     }
   };
 
@@ -91,7 +94,7 @@ export const ProfileMenu: React.FC = () => {
         {
           icon: BuildingIcon,
           title: 'Mi Gimnasio',
-          subtitle: currentGym?.name || 'Configuración del gimnasio',
+          subtitle: gym?.name || 'Configuración del gimnasio',
           onPress: () => router.push('/gym/settings'),
         },
       ],

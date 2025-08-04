@@ -82,7 +82,6 @@ export default function WelcomeScreen() {
           <Box className="mt-auto">
             <GluestackButton
               onPress={handleComplete}
-              className="bg-blue-600"
             >
               <ButtonText>Comenzar</ButtonText>
             </GluestackButton>

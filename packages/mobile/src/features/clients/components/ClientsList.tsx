@@ -11,22 +11,41 @@ import { Spinner } from '@/components/ui/spinner';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
-import { SearchIcon, UserPlusIcon, PhoneIcon } from 'lucide-react-native';
+import {
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogCloseButton,
+  AlertDialogFooter,
+  AlertDialogBody,
+} from '@/components/ui/alert-dialog';
+import {
+  Actionsheet,
+  ActionsheetBackdrop,
+  ActionsheetContent,
+  ActionsheetDragIndicator,
+  ActionsheetDragIndicatorWrapper,
+  ActionsheetItem,
+  ActionsheetItemText,
+} from '@/components/ui/actionsheet';
+import { SearchIcon, UserPlusIcon, PhoneIcon, MoreHorizontalIcon, EditIcon, TrashIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface ClientCardProps {
   client: any;
   onPress: () => void;
+  onActionPress: (client: any) => void;
 }
 
-const ClientCard: React.FC<ClientCardProps> = ({ client, onPress }) => {
+const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress }) => {
   const hasActiveContract = client.contracts?.length > 0;
   
   return (
-    <Pressable onPress={onPress}>
-      <Card className="mb-3 p-4">
-        <HStack className="items-center justify-between">
+    <Card className="mb-3 p-4">
+      <HStack className="items-center justify-between">
+        <Pressable onPress={onPress} className="flex-1">
           <HStack className="items-center gap-3 flex-1">
             <Avatar className="bg-blue-600">
               <Text className="text-white font-semibold">
@@ -45,31 +64,40 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress }) => {
               )}
             </VStack>
           </HStack>
-          
-          <VStack className="items-end gap-1">
+        </Pressable>
+        
+        <VStack className="items-end gap-1">
+          <HStack className="items-center gap-2">
             <Badge
               variant="solid"
-              action={client.status === 'active' ? 'success' : 'muted'}
+              action={client.isActive ? 'success' : 'muted'}
             >
-              <BadgeText>{client.status === 'active' ? 'Activo' : 'Inactivo'}</BadgeText>
+              <BadgeText>{client.isActive ? 'Activo' : 'Inactivo'}</BadgeText>
             </Badge>
-            {hasActiveContract && (
-              <Badge variant="outline" action="info">
-                <BadgeText className="text-xs">Plan activo</BadgeText>
-              </Badge>
-            )}
-          </VStack>
-        </HStack>
-      </Card>
-    </Pressable>
+            <Pressable onPress={() => onActionPress(client)} className="p-1">
+              <Icon as={MoreHorizontalIcon} className="w-5 h-5 text-gray-400" />
+            </Pressable>
+          </HStack>
+          {hasActiveContract && (
+            <Badge variant="outline" action="info">
+              <BadgeText className="text-xs">Plan activo</BadgeText>
+            </Badge>
+          )}
+        </VStack>
+      </HStack>
+    </Card>
   );
 };
 
 export const ClientsList: React.FC = () => {
   const [searchText, setSearchText] = useState('');
+  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [showActionsheet, setShowActionsheet] = useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<any>(null);
   const debouncedSearch = useDebounce(searchText, 300);
   
-  const { useClientsList } = useClientsController();
+  const { useClientsList, toggleStatus, isTogglingStatus } = useClientsController();
   const { data, isLoading, refetch, isRefetching } = useClientsList({
     search: debouncedSearch,
     activeOnly: false,
@@ -81,6 +109,37 @@ export const ClientsList: React.FC = () => {
 
   const handleAddClient = () => {
     router.push('/clients/create');
+  };
+
+  const handleActionPress = (client: any) => {
+    setSelectedClient(client);
+    setShowActionsheet(true);
+  };
+
+  const handleEditClient = () => {
+    setShowActionsheet(false);
+    if (selectedClient) {
+      router.push(`/clients/${selectedClient.id}/edit`);
+    }
+  };
+
+  const handleToggleStatusPress = () => {
+    setShowActionsheet(false);
+    setClientToDelete(selectedClient);
+    setShowDeleteAlert(true);
+  };
+
+  const handleConfirmToggleStatus = () => {
+    if (clientToDelete) {
+      toggleStatus(clientToDelete.id);
+      setShowDeleteAlert(false);
+      setClientToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteAlert(false);
+    setClientToDelete(null);
   };
 
   const renderEmptyState = () => (
@@ -122,12 +181,13 @@ export const ClientsList: React.FC = () => {
         </VStack>
       ) : (
         <FlatList
-          data={data?.clients || []}
+          data={data?.data || []}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ClientCard 
               client={item} 
               onPress={() => handleClientPress(item.id)}
+              onActionPress={handleActionPress}
             />
           )}
           contentContainerStyle={{ 
@@ -142,7 +202,7 @@ export const ClientsList: React.FC = () => {
       )}
 
       {/* FAB for adding client */}
-      {data?.clients && data.clients.length > 0 && (
+      {data?.data && data.data.length > 0 && (
         <View className="absolute bottom-6 right-6">
           <Button
             onPress={handleAddClient}
@@ -152,6 +212,58 @@ export const ClientsList: React.FC = () => {
           </Button>
         </View>
       )}
+
+      {/* Action Sheet */}
+      <Actionsheet isOpen={showActionsheet} onClose={() => setShowActionsheet(false)} snapPoints={[30]}>
+        <ActionsheetBackdrop />
+        <ActionsheetContent>
+          <ActionsheetDragIndicatorWrapper>
+            <ActionsheetDragIndicator />
+          </ActionsheetDragIndicatorWrapper>
+          
+          <ActionsheetItem onPress={handleEditClient}>
+            <Icon as={EditIcon} className="w-4 h-4 text-gray-500 mr-3" />
+            <ActionsheetItemText>Editar</ActionsheetItemText>
+          </ActionsheetItem>
+          
+          <ActionsheetItem onPress={handleToggleStatusPress}>
+            <Icon as={TrashIcon} className="w-4 h-4 text-orange-500 mr-3" />
+            <ActionsheetItemText className="text-orange-500">
+              {selectedClient?.isActive ? 'Desactivar' : 'Activar'}
+            </ActionsheetItemText>
+          </ActionsheetItem>
+        </ActionsheetContent>
+      </Actionsheet>
+
+      {/* Status Toggle Confirmation Alert */}
+      <AlertDialog isOpen={showDeleteAlert} onClose={handleCancelDelete}>
+        <AlertDialogBackdrop />
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <Text className="text-lg font-semibold">Confirmar cambio de estado</Text>
+            <AlertDialogCloseButton onPress={handleCancelDelete} />
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            <Text className="text-gray-600">
+              ¿Estás seguro de que deseas {clientToDelete?.isActive ? 'desactivar' : 'activar'} a {clientToDelete?.name}?
+            </Text>
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <Button variant="outline" onPress={handleCancelDelete}>
+              <ButtonText>Cancelar</ButtonText>
+            </Button>
+            <Button 
+              className="bg-orange-600 ml-3" 
+              onPress={handleConfirmToggleStatus}
+              disabled={isTogglingStatus}
+            >
+              <ButtonText>
+                {clientToDelete?.isActive ? 'Desactivar' : 'Activar'}
+              </ButtonText>
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </View>
   );
 };

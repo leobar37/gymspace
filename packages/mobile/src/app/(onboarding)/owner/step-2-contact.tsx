@@ -107,6 +107,8 @@ export default function OwnerContactInfoScreen() {
               <Box className="mt-auto pb-8">
                 <GluestackButton
                   onPress={methods.handleSubmit(onSubmit)}
+                  disabled={!methods.formState.isValid}
+                  className={`${!methods.formState.isValid ? 'opacity-50' : ''}`}
                 >
                   <ButtonText className="text-white font-semibold text-center">Continuar</ButtonText>
                 </GluestackButton>

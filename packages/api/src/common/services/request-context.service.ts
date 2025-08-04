@@ -3,8 +3,7 @@ import { FastifyRequest } from 'fastify';
 import { IRequestContext, IUser, IGym, IOrganization, Permission } from '@gymspace/shared';
 import { UUID } from '@gymspace/shared';
 
-@Injectable()
-export class RequestContextService implements IRequestContext {
+export class RequestContext implements IRequestContext {
   private _user: IUser;
   private _gym?: IGym;
   private _organization?: IOrganization;
@@ -50,7 +49,7 @@ export class RequestContextService implements IRequestContext {
   /**
    * Initialize context from request
    */
-  fromRequest(request: FastifyRequest): RequestContextService {
+  fromRequest(request: FastifyRequest): RequestContext {
     // User will be populated by auth guard
     if (request.user) {
       this._user = request.user as IUser;
@@ -78,7 +77,7 @@ export class RequestContextService implements IRequestContext {
   /**
    * Create empty context for system operations
    */
-  createEmpty(): RequestContextService {
+  createEmpty(): RequestContext {
     // Used for system operations that don't have a user context
     return this;
   }
@@ -86,7 +85,7 @@ export class RequestContextService implements IRequestContext {
   /**
    * Create context for specific user (used in testing or system operations)
    */
-  forUser(user: IUser, permissions: Permission[] = []): RequestContextService {
+  forUser(user: IUser, permissions: Permission[] = []): RequestContext {
     this._user = user;
     this._permissions = permissions;
     return this;
@@ -95,7 +94,7 @@ export class RequestContextService implements IRequestContext {
   /**
    * Set gym context
    */
-  withGym(gym: IGym): RequestContextService {
+  withGym(gym: IGym): RequestContext {
     this._gym = gym;
     return this;
   }
@@ -103,7 +102,7 @@ export class RequestContextService implements IRequestContext {
   /**
    * Set organization context
    */
-  withOrganization(organization: IOrganization): RequestContextService {
+  withOrganization(organization: IOrganization): RequestContext {
     this._organization = organization;
     return this;
   }
@@ -111,7 +110,7 @@ export class RequestContextService implements IRequestContext {
   /**
    * Add permissions
    */
-  withPermissions(permissions: Permission[]): RequestContextService {
+  withPermissions(permissions: Permission[]): RequestContext {
     this._permissions = [...new Set([...this._permissions, ...permissions])];
     return this;
   }

@@ -89,6 +89,7 @@ async function bootstrap() {
     .addTag('Invitations', 'Invitation management')
     .addTag('Leads', 'Lead management')
     .addTag('Public Catalog', 'Public gym catalog')
+    .addTag('Dashboard', 'Dashboard statistics and metrics')
     .addTag('Health', 'Health check endpoints')
     .addServer(`http://localhost:3000/${apiPrefix}`, 'Development server')
     .addServer(`https://api.gymspace.com/${apiPrefix}`, 'Production server')

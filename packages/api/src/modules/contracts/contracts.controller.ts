@@ -10,7 +10,7 @@ import {
 import { ContractsService } from './contracts.service';
 import { CreateContractDto, RenewContractDto, FreezeContractDto } from './dto';
 import { Allow, RequestContext } from '../../common/decorators';
-import { RequestContextService } from '../../common/services/request-context.service';
+import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS, ContractStatus } from '@gymspace/shared';
 
 @ApiTags('Contracts')
@@ -27,7 +27,7 @@ export class ContractsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createContract(
     @Body() dto: CreateContractDto,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.contractsService.createContract(ctx.getGymId()!, dto, ctx.getUserId());
   }
@@ -40,7 +40,7 @@ export class ContractsController {
   async renewContract(
     @Param('id') id: string,
     @Body() dto: RenewContractDto,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.contractsService.renewContract(id, dto, ctx.getUserId());
   }
@@ -53,7 +53,7 @@ export class ContractsController {
   async freezeContract(
     @Param('id') id: string,
     @Body() dto: FreezeContractDto,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.contractsService.freezeContract(id, dto, ctx.getUserId());
   }
@@ -66,7 +66,7 @@ export class ContractsController {
   async cancelContract(
     @Param('id') id: string,
     @Body('reason') reason: string,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.contractsService.cancelContract(id, reason, ctx.getUserId());
   }
@@ -76,7 +76,7 @@ export class ContractsController {
   @ApiOperation({ summary: 'Get contract details' })
   @ApiResponse({ status: 200, description: 'Contract details' })
   @ApiResponse({ status: 404, description: 'Contract not found' })
-  async getContract(@Param('id') id: string, @RequestContext() ctx: RequestContextService) {
+  async getContract(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
     return await this.contractsService.getContract(id, ctx.getUserId());
   }
 
@@ -91,7 +91,7 @@ export class ContractsController {
     @Query('status') status: ContractStatus,
     @Query('limit') limit: string,
     @Query('offset') offset: string,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.contractsService.getGymContracts(
       ctx.getGymId()!,
@@ -108,7 +108,7 @@ export class ContractsController {
   @ApiResponse({ status: 200, description: 'List of client contracts' })
   async getClientContracts(
     @Param('clientId') clientId: string,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.contractsService.getClientContracts(clientId, ctx.getUserId());
   }

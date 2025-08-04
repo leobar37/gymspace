@@ -6,7 +6,7 @@ import {
   zodResolver
 } from '@/components/forms';
 import { Box } from '@/components/ui/box';
-import { ButtonText, Button as GluestackButton } from '@/components/ui/button';
+import { ButtonSpinner, ButtonText, Button as GluestackButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -85,12 +85,18 @@ export default function OrganizationSetupScreen() {
         ...input
       })
     },
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       // Store tokens temporarily - they'll be applied after email verification
       setTempAuthTokens({
         accessToken: response.access_token,
         refreshToken: response.refresh_token,
       });
+      
+      // Store the gym ID that was created during onboarding
+      if (response.gym?.id) {
+        await context.setCurrentGymId(response.gym.id);
+      }
+      
       console.log("Registration completed, awaiting email verification");
     }
   })
@@ -253,8 +259,10 @@ export default function OrganizationSetupScreen() {
             <Box className="mt-auto pb-4">
               <GluestackButton
                 onPress={methods.handleSubmit(onSubmit)}
-                className="w-full"
+                className={`w-full ${(!methods.formState.isValid || !selectedCountry || startOnboarding.isPending) ? 'opacity-50' : ''}`}
+                disabled={!methods.formState.isValid || !selectedCountry || startOnboarding.isPending}
               >
+                {startOnboarding.isPending && <ButtonSpinner className="mr-2" />}
                 <ButtonText>Continuar</ButtonText>
               </GluestackButton>
             </Box>

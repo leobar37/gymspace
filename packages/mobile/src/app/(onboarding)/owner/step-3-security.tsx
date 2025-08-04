@@ -133,6 +133,8 @@ export default function OwnerSecurityInfoScreen() {
               <Box className="mt-auto pb-8">
                 <GluestackButton
                   onPress={methods.handleSubmit(onSubmit)}
+                  disabled={!methods.formState.isValid}
+                  className={`${!methods.formState.isValid ? 'opacity-50' : ''}`}
                 >
                   <ButtonText>Continuar</ButtonText>
                 </GluestackButton>

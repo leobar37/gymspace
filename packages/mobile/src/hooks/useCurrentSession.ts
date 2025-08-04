@@ -18,7 +18,7 @@ export interface UseCurrentSessionOptions {
 }
 
 export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
-  const { sdk, isAuthenticated, authToken } = useGymSdk();
+  const { sdk, isAuthenticated, authToken, currentGymId, setCurrentGymId } = useGymSdk();
   const { hasValidToken, refreshToken } = useAuthToken();
   const queryClient = useQueryClient();
 
@@ -45,6 +45,13 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
 
       try {
         const response = await sdk.auth.getCurrentSession();
+        
+        // If we get a gym in the response but don't have a current gym ID stored,
+        // store it automatically (this handles the onboarding case)
+        if (response?.gym?.id && !currentGymId) {
+          await setCurrentGymId(response.gym.id);
+        }
+        
         return response;
       } catch (error: any) {
         // Handle 401 errors by attempting token refresh
@@ -53,6 +60,13 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
           if (refreshedToken) {
             // Retry the request with new token
             const response = await sdk.auth.getCurrentSession();
+            
+            // If we get a gym in the response but don't have a current gym ID stored,
+            // store it automatically (this handles the onboarding case)
+            if (response?.gym?.id && !currentGymId) {
+              await setCurrentGymId(response.gym.id);
+            }
+            
             return response;
           }
         }

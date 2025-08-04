@@ -1,6 +1,6 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { RequestContextService } from '../services/request-context.service';
+import { RequestContext } from '../services/request-context.service';
 
 @Injectable()
 export class RequestContextInterceptor implements NestInterceptor {
@@ -8,7 +8,7 @@ export class RequestContextInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
 
     // Create a new instance of RequestContextService for this request
-    const requestContextService = new RequestContextService();
+    const requestContextService = new RequestContext();
 
     // Initialize request context from the request
     const requestContext = requestContextService.fromRequest(request);

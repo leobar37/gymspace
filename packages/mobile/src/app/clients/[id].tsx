@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, ScrollView, Pressable } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useClientsController } from '@/features/clients/controllers/clients.controller';
 import { VStack } from '@/components/ui/vstack';
@@ -11,20 +11,45 @@ import { Badge, BadgeText } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { Divider } from '@/components/ui/divider';
+import {
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogCloseButton,
+  AlertDialogFooter,
+  AlertDialogBody,
+} from '@/components/ui/alert-dialog';
+import {
+  Actionsheet,
+  ActionsheetBackdrop,
+  ActionsheetContent,
+  ActionsheetDragIndicator,
+  ActionsheetDragIndicatorWrapper,
+  ActionsheetItem,
+  ActionsheetItemText,
+} from '@/components/ui/actionsheet';
 import {
   PhoneIcon,
   MailIcon,
   CalendarIcon,
-  FileTextIcon,
-  ActivityIcon,
   EditIcon,
+  MoreHorizontalIcon,
+  TrashIcon,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function ClientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { useClientDetail, useClientStats, toggleStatus, isTogglingStatus } = useClientsController();
+  const [showActionsheet, setShowActionsheet] = useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  
+  const { 
+    useClientDetail, 
+    useClientStats, 
+    toggleStatus, 
+    isTogglingStatus
+  } = useClientsController();
   
   const { data: client, isLoading } = useClientDetail(id);
   const { data: stats } = useClientStats(id);
@@ -35,6 +60,29 @@ export default function ClientDetailScreen() {
 
   const handleToggleStatus = () => {
     toggleStatus(id);
+  };
+
+  const handleMorePress = () => {
+    setShowActionsheet(true);
+  };
+
+  const handleEditFromMenu = () => {
+    setShowActionsheet(false);
+    handleEdit();
+  };
+
+  const handleToggleStatusPress = () => {
+    setShowActionsheet(false);
+    setShowDeleteAlert(true);
+  };
+
+  const handleConfirmToggleStatus = () => {
+    toggleStatus(id);
+    setShowDeleteAlert(false);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteAlert(false);
   };
 
   if (isLoading) {
@@ -61,9 +109,9 @@ export default function ClientDetailScreen() {
           title: client.name,
           headerBackTitle: 'Clientes',
           headerRight: () => (
-            <Button onPress={handleEdit} variant="link" className="p-0">
-              <Icon as={EditIcon} className="w-5 h-5 text-blue-600" />
-            </Button>
+            <Pressable onPress={handleMorePress} className="p-2">
+              <Icon as={MoreHorizontalIcon} className="w-5 h-5 text-blue-600" />
+            </Pressable>
           ),
         }} 
       />
@@ -87,10 +135,10 @@ export default function ClientDetailScreen() {
                 </Text>
                 <Badge
                   variant="solid"
-                  action={client.status === 'active' ? 'success' : 'muted'}
+                  action={client.isActive ? 'success' : 'muted'}
                   className="mt-2 self-start"
                 >
-                  <BadgeText>{client.status === 'active' ? 'Activo' : 'Inactivo'}</BadgeText>
+                  <BadgeText>{client.isActive ? 'Activo' : 'Inactivo'}</BadgeText>
                 </Badge>
               </VStack>
             </HStack>
@@ -133,7 +181,7 @@ export default function ClientDetailScreen() {
                 <View className="w-1/2 px-2 mb-3">
                   <VStack className="items-center p-3 bg-gray-50 rounded-lg">
                     <Text className="text-2xl font-bold text-gray-900">
-                      {stats.activity.totalCheckIns}
+                      {stats.totalCheckIns}
                     </Text>
                     <Text className="text-xs text-gray-600">Check-ins Total</Text>
                   </VStack>
@@ -141,7 +189,7 @@ export default function ClientDetailScreen() {
                 <View className="w-1/2 px-2 mb-3">
                   <VStack className="items-center p-3 bg-gray-50 rounded-lg">
                     <Text className="text-2xl font-bold text-gray-900">
-                      {stats.activity.monthlyCheckIns}
+                      {stats.checkInsThisMonth}
                     </Text>
                     <Text className="text-xs text-gray-600">Check-ins Mes</Text>
                   </VStack>
@@ -149,7 +197,7 @@ export default function ClientDetailScreen() {
                 <View className="w-1/2 px-2">
                   <VStack className="items-center p-3 bg-gray-50 rounded-lg">
                     <Text className="text-2xl font-bold text-gray-900">
-                      {stats.contracts.active}
+                      {stats.activeContracts}
                     </Text>
                     <Text className="text-xs text-gray-600">Contratos Activos</Text>
                   </VStack>
@@ -157,41 +205,15 @@ export default function ClientDetailScreen() {
                 <View className="w-1/2 px-2">
                   <VStack className="items-center p-3 bg-gray-50 rounded-lg">
                     <Text className="text-2xl font-bold text-gray-900">
-                      ${stats.contracts.totalSpent}
+                      {stats.totalEvaluations}
                     </Text>
-                    <Text className="text-xs text-gray-600">Total Gastado</Text>
+                    <Text className="text-xs text-gray-600">Evaluaciones</Text>
                   </VStack>
                 </View>
               </View>
             </Card>
           )}
 
-          {/* Emergency Contact */}
-          {(client.emergencyContactName || client.emergencyContactPhone) && (
-            <Card className="p-4">
-              <Text className="font-semibold text-gray-900 mb-3">
-                Contacto de Emergencia
-              </Text>
-              <VStack className="gap-2">
-                {client.emergencyContactName && (
-                  <Text className="text-gray-700">{client.emergencyContactName}</Text>
-                )}
-                {client.emergencyContactPhone && (
-                  <Text className="text-gray-600">{client.emergencyContactPhone}</Text>
-                )}
-              </VStack>
-            </Card>
-          )}
-
-          {/* Medical Conditions */}
-          {client.medicalConditions && (
-            <Card className="p-4">
-              <Text className="font-semibold text-gray-900 mb-3">
-                Condiciones Médicas
-              </Text>
-              <Text className="text-gray-700">{client.medicalConditions}</Text>
-            </Card>
-          )}
 
           {/* Notes */}
           {client.notes && (
@@ -207,17 +229,69 @@ export default function ClientDetailScreen() {
           <VStack className="gap-3 mt-4">
             <Button
               onPress={handleToggleStatus}
-              variant={client.status === 'active' ? 'outline' : 'solid'}
+              variant={client.isActive ? 'outline' : 'solid'}
               disabled={isTogglingStatus}
               className="w-full"
             >
               <ButtonText>
-                {client.status === 'active' ? 'Desactivar Cliente' : 'Activar Cliente'}
+                {client.isActive ? 'Desactivar Cliente' : 'Activar Cliente'}
               </ButtonText>
             </Button>
           </VStack>
         </VStack>
       </ScrollView>
+
+      {/* Action Sheet */}
+      <Actionsheet isOpen={showActionsheet} onClose={() => setShowActionsheet(false)} snapPoints={[30]}>
+        <ActionsheetBackdrop />
+        <ActionsheetContent>
+          <ActionsheetDragIndicatorWrapper>
+            <ActionsheetDragIndicator />
+          </ActionsheetDragIndicatorWrapper>
+          
+          <ActionsheetItem onPress={handleEditFromMenu}>
+            <Icon as={EditIcon} className="w-4 h-4 text-gray-500 mr-3" />
+            <ActionsheetItemText>Editar</ActionsheetItemText>
+          </ActionsheetItem>
+          
+          <ActionsheetItem onPress={handleToggleStatusPress}>
+            <Icon as={TrashIcon} className="w-4 h-4 text-orange-500 mr-3" />
+            <ActionsheetItemText className="text-orange-500">
+              {client?.isActive ? 'Desactivar' : 'Activar'}
+            </ActionsheetItemText>
+          </ActionsheetItem>
+        </ActionsheetContent>
+      </Actionsheet>
+
+      {/* Status Toggle Confirmation Alert */}
+      <AlertDialog isOpen={showDeleteAlert} onClose={handleCancelDelete}>
+        <AlertDialogBackdrop />
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <Text className="text-lg font-semibold">Confirmar cambio de estado</Text>
+            <AlertDialogCloseButton onPress={handleCancelDelete} />
+          </AlertDialogHeader>
+          <AlertDialogBody>
+            <Text className="text-gray-600">
+              ¿Estás seguro de que deseas {client?.isActive ? 'desactivar' : 'activar'} a {client?.name}?
+            </Text>
+          </AlertDialogBody>
+          <AlertDialogFooter>
+            <Button variant="outline" onPress={handleCancelDelete}>
+              <ButtonText>Cancelar</ButtonText>
+            </Button>
+            <Button 
+              className="bg-orange-600 ml-3" 
+              onPress={handleConfirmToggleStatus}
+              disabled={isTogglingStatus}
+            >
+              <ButtonText>
+                {client?.isActive ? 'Desactivar' : 'Activar'}
+              </ButtonText>
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -1838,6 +1838,84 @@ paths:
                     nullable: true
       tags:
         - Subscriptions
+  /api/v1/dashboard/stats:
+    get:
+      operationId: DashboardController_getDashboardStats
+      summary: Get dashboard statistics
+      description: Get aggregated statistics for the gym dashboard including clients, contracts, revenue, and check-ins
+      parameters: []
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStatsDto'
+        '403':
+          description: Forbidden
+      tags:
+        - Dashboard
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/dashboard/recent-activity:
+    get:
+      operationId: DashboardController_getRecentActivity
+      summary: Get recent activity
+      description: Get recent activities in the gym including check-ins, new clients, and contracts
+      parameters:
+        - name: limit
+          required: false
+          in: query
+          description: Maximum number of activities to return
+          schema:
+            example: 10
+            type: number
+      responses:
+        '200':
+          description: List of recent activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecentActivityDto'
+        '403':
+          description: Forbidden
+      tags:
+        - Dashboard
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/dashboard/expiring-contracts:
+    get:
+      operationId: DashboardController_getExpiringContracts
+      summary: Get expiring contracts
+      description: Get contracts that are expiring in the next 30 days
+      parameters:
+        - name: limit
+          required: false
+          in: query
+          description: Maximum number of contracts to return
+          schema:
+            example: 10
+            type: number
+      responses:
+        '200':
+          description: List of expiring contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExpiringContractDto'
+        '403':
+          description: Forbidden
+      tags:
+        - Dashboard
+      security:
+        - gym-id: []
+        - bearer: []
 info:
   title: GymSpace API
   description: The GymSpace Gym Management System API
@@ -1870,6 +1948,8 @@ tags:
     description: Lead management
   - name: Public Catalog
     description: Public gym catalog
+  - name: Dashboard
+    description: Dashboard statistics and metrics
   - name: Health
     description: Health check endpoints
 servers:
@@ -3306,3 +3386,118 @@ components:
           example: 123e4567-e89b-12d3-a456-426614174000
       required:
         - subscriptionPlanId
+    DashboardStatsDto:
+      type: object
+      properties:
+        totalClients:
+          type: number
+          description: Total number of clients in the gym
+          example: 156
+        activeClients:
+          type: number
+          description: Number of active clients (with active contracts)
+          example: 142
+        totalContracts:
+          type: number
+          description: Total number of contracts
+          example: 168
+        activeContracts:
+          type: number
+          description: Number of active contracts
+          example: 142
+        monthlyRevenue:
+          type: number
+          description: Monthly revenue for the current month
+          example: 4250
+        todayCheckIns:
+          type: number
+          description: Number of check-ins today
+          example: 23
+        expiringContractsCount:
+          type: number
+          description: Number of contracts expiring in the next 30 days
+          example: 8
+        newClientsThisMonth:
+          type: number
+          description: Number of new clients registered this month
+          example: 12
+      required:
+        - totalClients
+        - activeClients
+        - totalContracts
+        - activeContracts
+        - monthlyRevenue
+        - todayCheckIns
+        - expiringContractsCount
+        - newClientsThisMonth
+    RecentActivityDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Activity ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type:
+          type: string
+          description: Type of activity
+          enum:
+            - check_in
+            - new_client
+            - new_contract
+            - contract_expired
+          example: check_in
+        description:
+          type: string
+          description: Description of the activity
+          example: Check-in registrado
+        timestamp:
+          type: string
+          description: Timestamp of the activity
+          example: '2024-01-15T10:30:00Z'
+        clientName:
+          type: string
+          description: Name of the client related to the activity
+          example: Juan Pérez
+        clientId:
+          type: string
+          description: ID of the client related to the activity
+          example: 123e4567-e89b-12d3-a456-426614174000
+      required:
+        - id
+        - type
+        - description
+        - timestamp
+    ExpiringContractDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Contract ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        clientName:
+          type: string
+          description: Client name
+          example: Ana Martínez
+        clientId:
+          type: string
+          description: Client ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        planName:
+          type: string
+          description: Membership plan name
+          example: Plan Premium
+        endDate:
+          type: string
+          description: Contract end date
+          example: '2024-01-20T00:00:00Z'
+        daysRemaining:
+          type: number
+          description: Days remaining until expiration
+          example: 5
+      required:
+        - id
+        - clientName
+        - clientId
+        - planName
+        - endDate
+        - daysRemaining

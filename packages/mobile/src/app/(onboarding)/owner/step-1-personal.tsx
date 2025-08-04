@@ -23,7 +23,9 @@ import { useOnboardingStore } from '@/store/onboarding';
 // Validation schema
 const personalInfoSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  email: z.string().min(2, 'Correo electrónico inválido'),
+  email: z.string()
+    .min(1, 'El correo electrónico es requerido')
+    .email('Correo electrónico inválido'),
 });
 
 type PersonalInfoForm = z.infer<typeof personalInfoSchema>;
@@ -118,6 +120,8 @@ export default function OwnerPersonalInfoScreen() {
               <Box>
                 <GluestackButton
                   onPress={methods.handleSubmit(onSubmit)}
+                  disabled={!methods.formState.isValid}
+                  className={`${!methods.formState.isValid ? 'opacity-50' : ''}`}
                 >
                   <ButtonText>Continuar</ButtonText>
                 </GluestackButton>

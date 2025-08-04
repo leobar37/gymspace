@@ -14,21 +14,24 @@ export const clientsKeys = {
 // Types
 export interface ClientFormData {
   name: string;
-  birthDate: string;
-  documentId: string;
-  phone: string;
-  email?: string;
+  email: string;
+  phone?: string;
+  document?: string;
+  birthDate?: string;
+  address: string;
+  notes?: string;
+  // Legacy fields for backward compatibility
+  documentId?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   medicalConditions?: string;
-  notes?: string;
 }
 
 export interface SearchFilters {
   search?: string;
   activeOnly?: boolean;
+  page?: number;
   limit?: number;
-  offset?: number;
 }
 
 export const useClientsController = () => {
@@ -40,11 +43,12 @@ export const useClientsController = () => {
     return useQuery({
       queryKey: clientsKeys.list(filters),
       queryFn: async () => {
-        const response = await sdk.clients.search({
+        const response = await sdk.clients.searchClients({
           ...filters,
+          page: filters.page || 1,
           limit: filters.limit || 20,
         });
-        return response.data;
+        return response;
       },
       staleTime: 2 * 60 * 1000, // 2 minutes
     });
@@ -55,8 +59,8 @@ export const useClientsController = () => {
     return useQuery({
       queryKey: clientsKeys.detail(clientId),
       queryFn: async () => {
-        const response = await sdk.clients.getById(clientId);
-        return response.data;
+        const response = await sdk.clients.getClient(clientId);
+        return response;
       },
       enabled: !!clientId,
       staleTime: 5 * 60 * 1000, // 5 minutes
@@ -68,8 +72,8 @@ export const useClientsController = () => {
     return useQuery({
       queryKey: clientsKeys.stats(clientId),
       queryFn: async () => {
-        const response = await sdk.clients.getStats(clientId);
-        return response.data;
+        const response = await sdk.clients.getClientStats(clientId);
+        return response;
       },
       enabled: !!clientId,
       staleTime: 5 * 60 * 1000, // 5 minutes
@@ -79,8 +83,18 @@ export const useClientsController = () => {
   // Create client mutation
   const createClientMutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
-      const response = await sdk.clients.create(data);
-      return response.data;
+      // Transform ClientFormData to CreateClientDto
+      const createData = {
+        name: data.name,
+        email: data.email || '',
+        phone: data.phone,
+        document: data.document || data.documentId,
+        birthDate: data.birthDate,
+        address: data.address || '',
+        notes: data.notes,
+      };
+      const response = await sdk.clients.createClient(createData);
+      return response;
     },
     onSuccess: () => {
       // Invalidate clients list to refetch
@@ -91,8 +105,18 @@ export const useClientsController = () => {
   // Update client mutation
   const updateClientMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ClientFormData> }) => {
-      const response = await sdk.clients.update(id, data);
-      return response.data;
+      // Transform ClientFormData to UpdateClientDto
+      const updateData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        document: data.document || data.documentId,
+        birthDate: data.birthDate,
+        address: data.address,
+        notes: data.notes,
+      };
+      const response = await sdk.clients.updateClient(id, updateData);
+      return response;
     },
     onSuccess: (data, variables) => {
       // Update cache for this client
@@ -105,8 +129,8 @@ export const useClientsController = () => {
   // Toggle client status mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async (clientId: string) => {
-      const response = await sdk.clients.toggleStatus(clientId);
-      return response.data;
+      const response = await sdk.clients.toggleClientStatus(clientId);
+      return response;
     },
     onSuccess: (data, clientId) => {
       // Update client detail cache
@@ -116,26 +140,25 @@ export const useClientsController = () => {
     },
   });
 
-  // Delete client mutation
-  const deleteClientMutation = useMutation({
-    mutationFn: async (clientId: string) => {
-      await sdk.clients.delete(clientId);
-    },
-    onSuccess: (_, clientId) => {
-      // Remove from cache
-      queryClient.removeQueries({ queryKey: clientsKeys.detail(clientId) });
-      // Invalidate list
-      queryClient.invalidateQueries({ queryKey: clientsKeys.lists() });
-    },
-  });
+  // Note: There is no delete endpoint for clients in the API
+  // Clients are managed through status toggling (active/inactive)
+  // const deleteClientMutation = useMutation({
+  //   mutationFn: async (clientId: string) => {
+  //     await sdk.clients.delete(clientId);
+  //   },
+  //   onSuccess: (_, clientId) => {
+  //     queryClient.removeQueries({ queryKey: clientsKeys.detail(clientId) });
+  //     queryClient.invalidateQueries({ queryKey: clientsKeys.lists() });
+  //   },
+  // });
 
   // Prefetch client data
   const prefetchClient = async (clientId: string) => {
     await queryClient.prefetchQuery({
       queryKey: clientsKeys.detail(clientId),
       queryFn: async () => {
-        const response = await sdk.clients.getById(clientId);
-        return response.data;
+        const response = await sdk.clients.getClient(clientId);
+        return response;
       },
     });
   };
@@ -157,8 +180,8 @@ export const useClientsController = () => {
     toggleStatus: toggleStatusMutation.mutate,
     isTogglingStatus: toggleStatusMutation.isPending,
     
-    deleteClient: deleteClientMutation.mutate,
-    isDeletingClient: deleteClientMutation.isPending,
+    // deleteClient: deleteClientMutation.mutate,
+    // isDeletingClient: deleteClientMutation.isPending,
     
     // Utilities
     prefetchClient,

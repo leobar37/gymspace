@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiSecurity } from '
 import { LeadsService } from './leads.service';
 import { CreateLeadDto, UpdateLeadDto, SearchLeadsDto } from './dto';
 import { Allow, Public, RequestContext } from '../../common/decorators';
-import { RequestContextService } from '../../common/services/request-context.service';
+import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS } from '@gymspace/shared';
 
 @ApiTags('Leads')
@@ -26,7 +26,7 @@ export class LeadsController {
   @ApiOperation({ summary: 'Get lead details' })
   @ApiResponse({ status: 200, description: 'Lead details' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
-  async getLead(@Param('id') id: string, @RequestContext() ctx: RequestContextService) {
+  async getLead(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
     return await this.leadsService.getLead(id, ctx.getUserId());
   }
 
@@ -39,7 +39,7 @@ export class LeadsController {
   async updateLead(
     @Param('id') id: string,
     @Body() dto: UpdateLeadDto,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.leadsService.updateLead(id, dto, ctx.getUserId());
   }
@@ -50,7 +50,7 @@ export class LeadsController {
   @ApiSecurity('gym-id')
   @ApiOperation({ summary: 'Search leads' })
   @ApiResponse({ status: 200, description: 'List of leads' })
-  async searchLeads(@Query() dto: SearchLeadsDto, @RequestContext() ctx: RequestContextService) {
+  async searchLeads(@Query() dto: SearchLeadsDto, @RequestContext() ctx: RequestContext) {
     return await this.leadsService.searchLeads(ctx.getGymId()!, dto, ctx.getUserId());
   }
 
@@ -60,7 +60,7 @@ export class LeadsController {
   @ApiSecurity('gym-id')
   @ApiOperation({ summary: 'Get lead statistics for gym' })
   @ApiResponse({ status: 200, description: 'Lead statistics' })
-  async getLeadStats(@RequestContext() ctx: RequestContextService) {
+  async getLeadStats(@RequestContext() ctx: RequestContext) {
     return await this.leadsService.getLeadStats(ctx.getGymId()!, ctx.getUserId());
   }
 
@@ -71,7 +71,7 @@ export class LeadsController {
   @ApiResponse({ status: 200, description: 'Lead converted successfully' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
   @ApiResponse({ status: 400, description: 'Lead already converted' })
-  async convertLead(@Param('id') id: string, @RequestContext() ctx: RequestContextService) {
+  async convertLead(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
     return await this.leadsService.convertLead(id, ctx.getUserId());
   }
 }

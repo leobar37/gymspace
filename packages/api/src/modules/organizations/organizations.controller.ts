@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { OrganizationsService } from './organizations.service';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { RequestContext } from '../../common/decorators';
-import { RequestContextService } from '../../common/services/request-context.service';
+import { RequestContext } from '../../common/services/request-context.service';
 
 @ApiTags('Organizations')
 @Controller('organizations')
@@ -15,7 +15,7 @@ export class OrganizationsController {
   @ApiOperation({ summary: 'Get organization details' })
   @ApiResponse({ status: 200, description: 'Organization details' })
   @ApiResponse({ status: 404, description: 'Organization not found' })
-  async getOrganization(@Param('id') id: string, @RequestContext() ctx: RequestContextService) {
+  async getOrganization(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
     return await this.organizationsService.getOrganization(id, ctx.getUserId());
   }
 
@@ -26,7 +26,7 @@ export class OrganizationsController {
   async updateOrganization(
     @Param('id') id: string,
     @Body() dto: UpdateOrganizationDto,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.organizationsService.updateOrganization(id, dto, ctx.getUserId());
   }
@@ -37,7 +37,7 @@ export class OrganizationsController {
   @ApiResponse({ status: 404, description: 'Organization not found' })
   async getOrganizationStats(
     @Param('id') id: string,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.organizationsService.getOrganizationStats(id, ctx.getUserId());
   }

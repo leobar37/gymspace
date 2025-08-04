@@ -32,7 +32,7 @@ export class ApiClient {
     // Request interceptor
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        // Add API key if configured
+        // Add Authorization header if auth token is configured
         if (this.config.apiKey && config.headers) {
           config.headers['Authorization'] = `Bearer ${this.config.apiKey}`;
         }
@@ -54,12 +54,16 @@ export class ApiClient {
   }
 
   private handleError(error: AxiosError): GymSpaceError {
+    console.error('API Error:', error.message);
+    
     if (!error.response) {
       return new NetworkError(error.message);
     }
 
     const { status, data } = error.response;
     const errorData = data as any;
+
+    console.error(`HTTP ${status}:`, errorData?.message || error.message);
 
     switch (status) {
       case 401:
@@ -155,5 +159,6 @@ export class ApiClient {
     delete this.config.apiKey;
     delete this.config.refreshToken;
     delete this.axiosInstance.defaults.headers.common['Authorization'];
+    delete this.axiosInstance.defaults.headers.common['X-Gym-Id'];
   }
 }

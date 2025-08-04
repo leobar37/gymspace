@@ -21,18 +21,22 @@ import { ChevronLeftIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, View } from 'react-native';
 import { z } from 'zod';
+import { useAuthToken } from '@/hooks/useAuthToken';
 
 // Login schema
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string()
+    .min(1, 'El correo electrónico es requerido')
+    .email('Dirección de correo inválida'),
+  password: z.string().min(1, 'La contraseña es requerida'),
   rememberMe: z.boolean().default(false),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
-  const { sdk, setAuthToken } = useGymSdk();
+  const { sdk } = useGymSdk();
+  const { storeTokens } = useAuthToken();
   const [showPassword, setShowPassword] = useState(false);
 
   // Initialize form
@@ -54,21 +58,59 @@ export default function LoginScreen() {
       });
       return response;
     },
-    onSuccess: async (data) => {
-      // Store auth token
-      await setAuthToken(data.data.accessToken);
-      
-      // Navigate to main app - the app layout will handle checking if user has completed onboarding
-      router.replace('/(app)');
+    onSuccess: async (response) => {
+      try {
+        // Store both access and refresh tokens properly
+        const success = await storeTokens({
+          accessToken: response.access_token,
+          refreshToken: response.refresh_token,
+          expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours from now
+        });
+        
+        if (!success) {
+          throw new Error('Failed to store tokens');
+        }
+        
+        // Navigate to main app - the app layout will handle checking if user has completed onboarding
+        router.replace('/(app)');
+      } catch (error) {
+        console.error('Error storing auth tokens:', error);
+        methods.setError('email', { 
+          message: 'Error al guardar la sesión. Inténtalo de nuevo.' 
+        });
+      }
     },
     onError: (error: any) => {
-      // Show error to user
-      const message = error.response?.data?.message || 'Login failed. Please try again.';
+      console.error('Login error:', error);
+      
+      // Handle different error types from the SDK
+      let message = 'Error de inicio de sesión. Inténtalo de nuevo.';
+      
+      if (error.message) {
+        // SDK errors have a message property
+        message = error.message;
+      } else if (error.response?.data?.message) {
+        // Axios/HTTP errors
+        message = error.response.data.message;
+      }
+      
+      // Translate common error messages to Spanish
+      if (message.toLowerCase().includes('invalid credentials') || 
+          message.toLowerCase().includes('unauthorized')) {
+        message = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
+      } else if (message.toLowerCase().includes('user not found')) {
+        message = 'Usuario no encontrado. Verifica tu correo electrónico.';
+      } else if (message.toLowerCase().includes('email not verified')) {
+        message = 'Debes verificar tu correo electrónico antes de iniciar sesión.';
+      }
+      
       methods.setError('email', { message });
     },
   });
 
   const onSubmit = (data: LoginForm) => {
+    // Clear any existing errors before attempting login
+    methods.clearErrors();
     loginMutation.mutate(data);
   };
 
@@ -101,10 +143,10 @@ export default function LoginScreen() {
               {/* Header */}
               <VStack className="gap-3">
                 <Heading className="text-gray-900 text-3xl font-bold">
-                  Welcome back
+                  ¡Bienvenido de nuevo!
                 </Heading>
                 <Text className="text-gray-600 text-lg">
-                  Sign in to continue to GymSpace
+                  Inicia sesión para continuar en GymSpace
                 </Text>
               </VStack>
 
@@ -113,31 +155,33 @@ export default function LoginScreen() {
                 <VStack className="gap-4">
                   <FormInput
                     name="email"
-                    label="Email"
-                    placeholder="Enter your email"
+                    label="Correo electrónico"
+                    placeholder="Ingresa tu correo"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoComplete="email"
+                    disabled={loginMutation.isPending}
                   />
 
                   <FormInput
                     name="password"
-                    label="Password"
-                    placeholder="Enter your password"
+                    label="Contraseña"
+                    placeholder="Ingresa tu contraseña"
                     secureTextEntry={!showPassword}
                     autoComplete="password"
+                    disabled={loginMutation.isPending}
                   />
 
                   <HStack justifyContent="space-between" alignItems="center">
                     <FormCheckbox
                       name="rememberMe"
-                      label="Remember me"
+                      label="Recordarme"
                     />
                     
                     <Link href="/(onboarding)/forgot-password" asChild>
                       <Pressable>
                         <Text className="text-blue-500 text-sm font-medium">
-                          Forgot password?
+                          ¿Olvidaste tu contraseña?
                         </Text>
                       </Pressable>
                     </Link>
@@ -151,10 +195,10 @@ export default function LoginScreen() {
                     {loginMutation.isPending ? (
                       <>
                         <ButtonSpinner />
-                        <ButtonText>Signing in...</ButtonText>
+                        <ButtonText>Iniciando sesión...</ButtonText>
                       </>
                     ) : (
-                      <ButtonText>Sign In</ButtonText>
+                      <ButtonText>Iniciar Sesión</ButtonText>
                     )}
                   </GluestackButton>
                 </VStack>
@@ -164,12 +208,12 @@ export default function LoginScreen() {
               <Center className="mt-8">
                 <HStack className="gap-1">
                   <Text className="text-gray-600">
-                    Don't have an account?
+                    ¿No tienes una cuenta?
                   </Text>
                   <Link href="/(onboarding)/register" asChild>
                     <Pressable>
                       <Text className="text-blue-500 font-medium">
-                        Sign up
+                        Regístrate
                       </Text>
                     </Pressable>
                   </Link>

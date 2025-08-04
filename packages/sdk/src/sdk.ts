@@ -7,6 +7,7 @@ import {
   ClientsResource,
   MembershipPlansResource,
   ContractsResource,
+  DashboardResource,
   EvaluationsResource,
   CheckInsResource,
   InvitationsResource,
@@ -27,6 +28,7 @@ export class GymSpaceSdk {
   public clients: ClientsResource;
   public membershipPlans: MembershipPlansResource;
   public contracts: ContractsResource;
+  public dashboard: DashboardResource;
   public evaluations: EvaluationsResource;
   public checkIns: CheckInsResource;
   public invitations: InvitationsResource;
@@ -46,6 +48,7 @@ export class GymSpaceSdk {
     this.clients = new ClientsResource(this.client);
     this.membershipPlans = new MembershipPlansResource(this.client);
     this.contracts = new ContractsResource(this.client);
+    this.dashboard = new DashboardResource(this.client);
     this.evaluations = new EvaluationsResource(this.client);
     this.checkIns = new CheckInsResource(this.client);
     this.invitations = new InvitationsResource(this.client);

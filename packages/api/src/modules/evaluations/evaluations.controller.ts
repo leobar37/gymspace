@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiSecurity } from '
 import { EvaluationsService } from './evaluations.service';
 import { CreateEvaluationDto, UpdateEvaluationDto } from './dto';
 import { Allow, RequestContext } from '../../common/decorators';
-import { RequestContextService } from '../../common/services/request-context.service';
+import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS } from '@gymspace/shared';
 
 @ApiTags('Evaluations')
@@ -20,7 +20,7 @@ export class EvaluationsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createEvaluation(
     @Body() dto: CreateEvaluationDto,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.evaluationsService.createEvaluation(ctx.getGymId()!, dto, ctx.getUserId());
   }
@@ -30,7 +30,7 @@ export class EvaluationsController {
   @ApiOperation({ summary: 'Get evaluation details' })
   @ApiResponse({ status: 200, description: 'Evaluation details' })
   @ApiResponse({ status: 404, description: 'Evaluation not found' })
-  async getEvaluation(@Param('id') id: string, @RequestContext() ctx: RequestContextService) {
+  async getEvaluation(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
     return await this.evaluationsService.getEvaluation(id, ctx.getUserId());
   }
 
@@ -42,7 +42,7 @@ export class EvaluationsController {
   async updateEvaluation(
     @Param('id') id: string,
     @Body() dto: UpdateEvaluationDto,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.evaluationsService.updateEvaluation(id, dto, ctx.getUserId());
   }
@@ -54,7 +54,7 @@ export class EvaluationsController {
   async getClientEvaluations(
     @Param('clientId') clientId: string,
     @Query('limit') limit: string,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.evaluationsService.getClientEvaluations(
       clientId,
@@ -67,7 +67,7 @@ export class EvaluationsController {
   @Allow(PERMISSIONS.EVALUATIONS_READ)
   @ApiOperation({ summary: 'Get gym evaluation statistics' })
   @ApiResponse({ status: 200, description: 'Gym evaluation statistics' })
-  async getGymEvaluationStats(@RequestContext() ctx: RequestContextService) {
+  async getGymEvaluationStats(@RequestContext() ctx: RequestContext) {
     return await this.evaluationsService.getGymEvaluationStats(ctx.getGymId()!, ctx.getUserId());
   }
 
@@ -77,7 +77,7 @@ export class EvaluationsController {
   @ApiResponse({ status: 200, description: 'Evaluation report data' })
   async generateEvaluationReport(
     @Param('id') id: string,
-    @RequestContext() ctx: RequestContextService,
+    @RequestContext() ctx: RequestContext,
   ) {
     return await this.evaluationsService.generateEvaluationReport(id, ctx.getUserId());
   }
@@ -87,7 +87,7 @@ export class EvaluationsController {
   @ApiOperation({ summary: 'Delete evaluation' })
   @ApiResponse({ status: 200, description: 'Evaluation deleted successfully' })
   @ApiResponse({ status: 404, description: 'Evaluation not found' })
-  async deleteEvaluation(@Param('id') id: string, @RequestContext() ctx: RequestContextService) {
+  async deleteEvaluation(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
     await this.evaluationsService.deleteEvaluation(id, ctx.getUserId());
     return { message: 'Evaluation deleted successfully' };
   }

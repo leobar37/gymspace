@@ -14,9 +14,6 @@ import { Platform } from 'react-native';
 export default function AppLayout() {
   const { isAuthenticated } = useGymSdk();
   const { session, isLoading: isSessionLoading, isError } = useCurrentSession();
-
-  console.log("auth", { gym: session.gym });
-
   // If user is not authenticated, redirect to onboarding
   if (!isAuthenticated) {
     return <Redirect href="/(onboarding)" />;
