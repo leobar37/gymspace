@@ -1,9 +1,9 @@
 export interface CreateMembershipPlanDto {
   name: string;
   description?: string;
-  price: number;
-  currency?: string;
-  durationMonths: number;
+  basePrice: number;
+  durationMonths?: number;
+  durationDays?: number;
   termsAndConditions?: string;
   allowsCustomPricing?: boolean;
   maxEvaluations?: number;
@@ -16,9 +16,9 @@ export interface CreateMembershipPlanDto {
 export interface UpdateMembershipPlanDto {
   name?: string;
   description?: string;
-  price?: number;
-  currency?: string;
+  basePrice?: number;
   durationMonths?: number;
+  durationDays?: number;
   termsAndConditions?: string;
   allowsCustomPricing?: boolean;
   maxEvaluations?: number;
@@ -34,9 +34,16 @@ export interface MembershipPlan {
   gymId: string;
   name: string;
   description?: string;
-  price: number;
-  currency: string;
-  durationMonths: number;
+  basePrice: number;
+  durationMonths?: number;
+  durationDays?: number;
+  gym?: {
+    id: string;
+    name: string;
+    organization: {
+      currency: string;
+    };
+  };
   termsAndConditions?: string;
   allowsCustomPricing: boolean;
   maxEvaluations: number;

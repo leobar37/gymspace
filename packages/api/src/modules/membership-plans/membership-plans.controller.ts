@@ -19,11 +19,7 @@ export class MembershipPlansController {
   @ApiResponse({ status: 201, description: 'Membership plan created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createMembershipPlan(@Body() dto: CreateMembershipPlanDto, @AppCtxt() ctx: RequestContext) {
-    return await this.membershipPlansService.createGymMembershipPlan(
-      ctx.getGymId()!,
-      dto,
-      ctx.getUserId(),
-    );
+    return await this.membershipPlansService.createGymMembershipPlan(ctx, dto);
   }
 
   @Get(':id')
@@ -32,7 +28,7 @@ export class MembershipPlansController {
   @ApiResponse({ status: 200, description: 'Membership plan details' })
   @ApiResponse({ status: 404, description: 'Membership plan not found' })
   async getMembershipPlan(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.membershipPlansService.getGymMembershipPlan(id, ctx.getUserId());
+    return await this.membershipPlansService.getGymMembershipPlan(ctx, id);
   }
 
   @Put(':id')
@@ -45,7 +41,7 @@ export class MembershipPlansController {
     @Body() dto: UpdateMembershipPlanDto,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.membershipPlansService.updateGymMembershipPlan(id, dto, ctx.getUserId());
+    return await this.membershipPlansService.updateGymMembershipPlan(ctx, id, dto);
   }
 
   @Get()
@@ -56,11 +52,7 @@ export class MembershipPlansController {
     @Query('activeOnly') activeOnly: string,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.membershipPlansService.getGymGymMembershipPlans(
-      ctx.getGymId()!,
-      ctx.getUserId(),
-      activeOnly === 'true',
-    );
+    return await this.membershipPlansService.getGymGymMembershipPlans(ctx, activeOnly === 'true');
   }
 
   @Get(':id/stats')
@@ -69,7 +61,7 @@ export class MembershipPlansController {
   @ApiResponse({ status: 200, description: 'Membership plan statistics' })
   @ApiResponse({ status: 404, description: 'Membership plan not found' })
   async getMembershipPlanStats(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.membershipPlansService.getGymMembershipPlanStats(id, ctx.getUserId());
+    return await this.membershipPlansService.getGymMembershipPlanStats(ctx, id);
   }
 
   @Delete(':id')
@@ -79,6 +71,6 @@ export class MembershipPlansController {
   @ApiResponse({ status: 404, description: 'Membership plan not found' })
   @ApiResponse({ status: 400, description: 'Cannot delete plan with active contracts' })
   async deleteMembershipPlan(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.membershipPlansService.deleteGymMembershipPlan(id, ctx.getUserId());
+    return await this.membershipPlansService.deleteGymMembershipPlan(ctx, id);
   }
 }

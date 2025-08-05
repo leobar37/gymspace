@@ -20,9 +20,25 @@ export class ContractsService {
    * Create a new contract (CU-012)
    */
   async createContract(gymId: string, dto: CreateContractDto, userId: string): Promise<Contract> {
-    // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
-    if (!hasAccess) {
+    // Verify gym access and get gym with organization for currency
+    const gym = await this.prismaService.gym.findFirst({
+      where: {
+        id: gymId,
+        OR: [
+          { organization: { ownerUserId: userId } },
+          { collaborators: { some: { userId, status: 'active' } } },
+        ],
+      },
+      include: {
+        organization: {
+          select: {
+            currency: true,
+          },
+        },
+      },
+    });
+    
+    if (!gym) {
       throw new ResourceNotFoundException('Gym', gymId);
     }
 
@@ -72,7 +88,14 @@ export class ContractsService {
     // Calculate end date based on plan duration
     const startDate = new Date(dto.startDate);
     const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + plan.durationMonths);
+    if (plan.durationMonths) {
+      endDate.setMonth(endDate.getMonth() + plan.durationMonths);
+    } else if (plan.durationDays) {
+      endDate.setDate(endDate.getDate() + plan.durationDays);
+    } else {
+      // Default to 1 month if no duration specified
+      endDate.setMonth(endDate.getMonth() + 1);
+    }
 
     // Create contract
     const contract = await this.prismaService.contract.create({
@@ -84,7 +107,7 @@ export class ContractsService {
         basePrice: plan.basePrice,
         customPrice: dto.customPrice || null,
         finalAmount: finalPrice,
-        currency: plan.currency,
+        currency: gym.organization.currency,
         discountPercentage: dto.discountPercentage || null,
         status: 'active',
         paymentFrequency: 'monthly',
@@ -135,6 +158,19 @@ export class ContractsService {
       },
       include: {
         gymMembershipPlan: true,
+        gymClient: {
+          include: {
+            gym: {
+              include: {
+                organization: {
+                  select: {
+                    currency: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -162,7 +198,14 @@ export class ContractsService {
       : new Date(existingContract.endDate || new Date());
 
     const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + existingContract.gymMembershipPlan.durationMonths);
+    if (existingContract.gymMembershipPlan.durationMonths) {
+      endDate.setMonth(endDate.getMonth() + existingContract.gymMembershipPlan.durationMonths);
+    } else if (existingContract.gymMembershipPlan.durationDays) {
+      endDate.setDate(endDate.getDate() + existingContract.gymMembershipPlan.durationDays);
+    } else {
+      // Default to 1 month if no duration specified
+      endDate.setMonth(endDate.getMonth() + 1);
+    }
 
     // Calculate price
     let finalPrice = dto.customPrice || Number(existingContract.gymMembershipPlan.basePrice);
@@ -180,7 +223,7 @@ export class ContractsService {
         basePrice: existingContract.gymMembershipPlan.basePrice,
         customPrice: dto.customPrice || null,
         finalAmount: finalPrice,
-        currency: existingContract.currency,
+        currency: existingContract.gymClient.gym.organization.currency,
         discountPercentage: dto.discountPercentage || null,
         status: 'active',
         paymentFrequency: existingContract.paymentFrequency,

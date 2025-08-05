@@ -274,6 +274,8 @@ Key entities and relationships:
 
 All entities include audit fields and soft delete support.
 
+## Preferences
+- Make the code in english but the code in english.
 ## API Documentation
 
 - Swagger UI available at `/api/v1/docs`

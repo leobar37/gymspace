@@ -4,6 +4,7 @@ import { GymsService } from '../gyms/gyms.service';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { CreateMembershipPlanDto, UpdateMembershipPlanDto } from './dto';
 import { GymMembershipPlan, PlanStatus } from '@prisma/client';
+import { IRequestContext } from '@gymspace/shared';
 
 @Injectable()
 export class GymMembershipPlansService {
@@ -16,14 +17,41 @@ export class GymMembershipPlansService {
    * Create a new membership plan (CU-010)
    */
   async createGymMembershipPlan(
-    gymId: string,
+    context: IRequestContext,
     dto: CreateMembershipPlanDto,
-    userId: string,
   ): Promise<GymMembershipPlan> {
-    // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
-    if (!hasAccess) {
+    const gymId = context.getGymId();
+    const userId = context.getUserId();
+    
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+    
+    // Verify gym access and get gym with organization
+    const gym = await this.prismaService.gym.findFirst({
+      where: {
+        id: gymId,
+        OR: [
+          { organization: { ownerUserId: userId } },
+          { collaborators: { some: { userId, status: 'active' } } },
+        ],
+      },
+      include: {
+        organization: {
+          select: {
+            currency: true,
+          },
+        },
+      },
+    });
+
+    if (!gym) {
       throw new ResourceNotFoundException('Gym', gymId);
+    }
+
+    // Validate that at least one duration is provided
+    if (!dto.durationMonths && !dto.durationDays) {
+      throw new BusinessException('Either durationMonths or durationDays must be provided');
     }
 
     // Check if plan name already exists in this gym
@@ -43,9 +71,9 @@ export class GymMembershipPlansService {
       data: {
         name: dto.name,
         description: dto.description,
-        basePrice: dto.price,
-        currency: dto.currency || 'USD',
-        durationMonths: dto.durationMonths,
+        basePrice: dto.basePrice,
+        durationMonths: dto.durationMonths || null,
+        durationDays: dto.durationDays || null,
         features: dto.features,
         termsAndConditions: dto.termsAndConditions,
         allowsCustomPricing: dto.allowsCustomPricing || false,
@@ -61,6 +89,11 @@ export class GymMembershipPlansService {
           select: {
             id: true,
             name: true,
+            organization: {
+              select: {
+                currency: true,
+              },
+            },
           },
         },
         _count: {
@@ -78,10 +111,12 @@ export class GymMembershipPlansService {
    * Update membership plan (CU-011)
    */
   async updateGymMembershipPlan(
+    context: IRequestContext,
     planId: string,
     dto: UpdateMembershipPlanDto,
-    userId: string,
   ): Promise<GymMembershipPlan> {
+    const userId = context.getUserId();
+    
     // Verify plan exists and user has access
     const plan = await this.prismaService.gymMembershipPlan.findFirst({
       where: {
@@ -97,6 +132,17 @@ export class GymMembershipPlansService {
 
     if (!plan) {
       throw new ResourceNotFoundException('GymMembershipPlan', planId);
+    }
+
+    // Validate duration logic
+    if (dto.durationMonths !== undefined || dto.durationDays !== undefined) {
+      // If updating duration, ensure at least one is provided
+      const finalDurationMonths = dto.durationMonths !== undefined ? dto.durationMonths : plan.durationMonths;
+      const finalDurationDays = dto.durationDays !== undefined ? dto.durationDays : plan.durationDays;
+      
+      if (!finalDurationMonths && !finalDurationDays) {
+        throw new BusinessException('Either durationMonths or durationDays must be provided');
+      }
     }
 
     // If name is being updated, check uniqueness within gym
@@ -134,9 +180,9 @@ export class GymMembershipPlansService {
       data: {
         ...(dto.name && { name: dto.name }),
         ...(dto.description !== undefined && { description: dto.description }),
-        ...(dto.price !== undefined && { basePrice: dto.price }),
-        ...(dto.currency && { currency: dto.currency }),
+        ...(dto.basePrice !== undefined && { basePrice: dto.basePrice }),
         ...(dto.durationMonths !== undefined && { durationMonths: dto.durationMonths }),
+        ...(dto.durationDays !== undefined && { durationDays: dto.durationDays }),
         ...(dto.features !== undefined && { features: dto.features }),
         ...(dto.termsAndConditions !== undefined && { termsAndConditions: dto.termsAndConditions }),
         ...(dto.allowsCustomPricing !== undefined && {
@@ -153,6 +199,11 @@ export class GymMembershipPlansService {
           select: {
             id: true,
             name: true,
+            organization: {
+              select: {
+                currency: true,
+              },
+            },
           },
         },
         _count: {
@@ -169,7 +220,9 @@ export class GymMembershipPlansService {
   /**
    * Get membership plan by ID
    */
-  async getGymMembershipPlan(planId: string, userId: string): Promise<GymMembershipPlan> {
+  async getGymMembershipPlan(context: IRequestContext, planId: string): Promise<GymMembershipPlan> {
+    const userId = context.getUserId();
+    
     const plan = await this.prismaService.gymMembershipPlan.findFirst({
       where: {
         id: planId,
@@ -185,6 +238,11 @@ export class GymMembershipPlansService {
           select: {
             id: true,
             name: true,
+            organization: {
+              select: {
+                currency: true,
+              },
+            },
           },
         },
         _count: {
@@ -205,7 +263,14 @@ export class GymMembershipPlansService {
   /**
    * Get all membership plans for a gym
    */
-  async getGymGymMembershipPlans(gymId: string, userId: string, activeOnly = false) {
+  async getGymGymMembershipPlans(context: IRequestContext, activeOnly = false) {
+    const gymId = context.getGymId();
+    const userId = context.getUserId();
+    
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+    
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
@@ -238,8 +303,8 @@ export class GymMembershipPlansService {
   /**
    * Get membership plan statistics
    */
-  async getGymMembershipPlanStats(planId: string, userId: string) {
-    const plan = await this.getGymMembershipPlan(planId, userId);
+  async getGymMembershipPlanStats(context: IRequestContext, planId: string) {
+    const plan = await this.getGymMembershipPlan(context, planId);
 
     const [totalContracts, activeContracts, cancelledContracts, monthlyRevenue, averageRetention] =
       await Promise.all([
@@ -288,8 +353,8 @@ export class GymMembershipPlansService {
         id: plan.id,
         name: plan.name,
         basePrice: plan.basePrice,
-        currency: plan.currency,
         durationMonths: plan.durationMonths,
+        durationDays: plan.durationDays,
         status: plan.status,
       },
       contracts: {
@@ -313,7 +378,9 @@ export class GymMembershipPlansService {
   /**
    * Delete (soft delete) membership plan
    */
-  async deleteGymMembershipPlan(planId: string, userId: string): Promise<GymMembershipPlan> {
+  async deleteGymMembershipPlan(context: IRequestContext, planId: string): Promise<GymMembershipPlan> {
+    const userId = context.getUserId();
+    
     const plan = await this.prismaService.gymMembershipPlan.findFirst({
       where: {
         id: planId,
@@ -367,7 +434,13 @@ export class GymMembershipPlansService {
     });
 
     // Calculate monthly revenue based on plan duration
-    const monthlyRevenue = (Number(plan.basePrice) / plan.durationMonths) * activeContracts;
+    let monthsEquivalent = 1;
+    if (plan.durationMonths) {
+      monthsEquivalent = plan.durationMonths;
+    } else if (plan.durationDays) {
+      monthsEquivalent = plan.durationDays / 30;
+    }
+    const monthlyRevenue = (Number(plan.basePrice) / monthsEquivalent) * activeContracts;
     return monthlyRevenue;
   }
 

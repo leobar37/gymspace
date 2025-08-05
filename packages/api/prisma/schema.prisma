@@ -431,8 +431,8 @@ model GymMembershipPlan {
     gymId               String     @map("gym_id")
     name                String
     basePrice           Decimal    @map("base_price") @db.Decimal(10, 2)
-    currency            String
-    durationMonths      Int        @map("duration_months")
+    durationMonths      Int?       @map("duration_months")
+    durationDays        Int?       @map("duration_days")
     description         String?    @db.Text
     features            Json?
     termsAndConditions  String?    @map("terms_and_conditions") @db.Text

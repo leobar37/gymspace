@@ -35,7 +35,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>({
   return (
     <FormControl isInvalid={!!fieldState.error}>
       <VStack className="gap-3">
-        <Text className="font-medium text-gray-900">{label}</Text>
+        {label && <Text className="font-medium text-gray-900">{label}</Text>}
         {description && (
           <FormControlHelper>
             <FormControlHelperText>{description}</FormControlHelperText>

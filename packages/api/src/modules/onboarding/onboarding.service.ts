@@ -317,7 +317,7 @@ export class OnboardingService {
 
     // Create default membership plans if membership management is enabled
     if (dto.membershipManagement.enabled) {
-      await this.createDefaultMembershipPlans(dto.gymId, userId, gym.organization.currency);
+      await this.createDefaultMembershipPlans(dto.gymId, userId);
     }
 
     return {
@@ -470,7 +470,7 @@ export class OnboardingService {
   /**
    * Create default membership plans
    */
-  private async createDefaultMembershipPlans(gymId: string, userId: string, currency: string) {
+  private async createDefaultMembershipPlans(gymId: string, userId: string) {
     const defaultPlans = [
       {
         name: 'Membresía Mensual',
@@ -516,7 +516,6 @@ export class OnboardingService {
           gymId,
           name: plan.name,
           basePrice: plan.basePrice,
-          currency,
           durationMonths: plan.durationMonths,
           description: plan.description,
           features: plan.features,

@@ -26,7 +26,7 @@
     "prisma:reset": "prisma migrate reset --force",
     "prisma:reset:script": "pnpm tsx prisma/reset.ts",
     "cli": "node ./build/cli.js",
-    "setup:user": "pnpm run cli setup-default-user"
+    "setup:user": "pnpm run cli setup-user"
   },
   "dependencies": {
     "@fastify/helmet": "^11.1.1",

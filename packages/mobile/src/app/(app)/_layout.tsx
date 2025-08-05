@@ -7,6 +7,7 @@ import {
   HomeIcon,
   MenuIcon,
   UsersIcon,
+  CreditCardIcon,
 } from 'lucide-react-native';
 import React from 'react';
 import { Platform } from 'react-native';
@@ -93,6 +94,16 @@ export default function AppLayout() {
           headerTitle: 'Contratos',
           tabBarIcon: ({ color, size }) => (
             <Icon as={FileTextIcon} style={{ color, width: size, height: size }} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="plans"
+        options={{
+          title: 'Planes',
+          headerTitle: 'Planes de Membresía',
+          tabBarIcon: ({ color, size }) => (
+            <Icon as={CreditCardIcon} style={{ color, width: size, height: size }} />
           ),
         }}
       />

@@ -35,12 +35,12 @@ export class SetupDefaultUserCommand extends CommandRunner {
       await this.prismaService.$connect();
       console.log('✅ Connected to database');
 
-      // Default user details
-      const email = 'admin@gymspace.com';
-      const password = 'Admin123!';
-      const name = 'Default Admin';
-      const phone = '+1234567890';
-      const organizationName = 'Default Gym Organization';
+      // Default user details for Peru
+      const email = 'admin@gymspace.pe';
+      const password = '182@Alfk3458';
+      const name = 'Administrador Principal';
+      const phone = '+51999888777';
+      const organizationName = 'Gimnasio Elite Lima';
 
       // Check if user already exists
       const existingUser = await this.prismaService.user.findUnique({
@@ -80,16 +80,16 @@ export class SetupDefaultUserCommand extends CommandRunner {
         name,
         phone,
         organizationName,
-        country: 'US',
-        currency: 'USD',
-        timezone: 'America/New_York',
+        country: 'PE',
+        currency: 'PEN',
+        timezone: 'America/Lima',
         subscriptionPlanId: defaultPlan.id,
       });
 
       console.log('✅ Onboarding started successfully');
-      console.log('🏢 Organization:', onboardingResult.organization.name);
-      console.log('🏋️  Gym:', onboardingResult.gym.name);
-      console.log('👤 User:', onboardingResult.user.email);
+      console.log('🏢 Organización:', onboardingResult.organization.name);
+      console.log('🏋️  Gimnasio:', onboardingResult.gym.name);
+      console.log('👤 Usuario:', onboardingResult.user.email);
 
       // Step 2: Verify email (simulate email verification)
       console.log('\n📧 Verifying email...');
@@ -123,15 +123,15 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       await this.onboardingService.updateGymSettings(context as any, {
         gymId: onboardingResult.gym.id,
-        name: 'Default Gym',
-        address: '123 Main Street',
-        city: 'New York',
-        state: 'NY',
-        postalCode: '10001',
-        phone: '+1234567890',
-        email: 'gym@gymspace.com',
-        capacity: 100,
-        description: 'A modern fitness facility',
+        name: 'Gimnasio Elite Lima',
+        address: 'Av. Javier Prado Este 4200',
+        city: 'Lima',
+        state: 'Lima',
+        postalCode: '15023',
+        phone: '+51999888777',
+        email: 'contacto@gimnasioelite.pe',
+        capacity: 150,
+        description: 'El mejor gimnasio de Lima con equipamiento de última generación',
         businessHours: {
           monday: { open: '06:00', close: '22:00', closed: false },
           tuesday: { open: '06:00', close: '22:00', closed: false },
@@ -152,8 +152,8 @@ export class SetupDefaultUserCommand extends CommandRunner {
           hasCafeteria: true,
         },
         socialMedia: {
-          facebook: 'https://facebook.com/defaultgym',
-          instagram: 'https://instagram.com/defaultgym',
+          facebook: 'https://facebook.com/gimnasioelitelima',
+          instagram: 'https://instagram.com/gimnasioelitelima',
         },
       });
 
@@ -217,19 +217,22 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       // Display the created user information
       console.log('\n========================================');
-      console.log('🎉 DEFAULT USER CREATED SUCCESSFULLY! 🎉');
+      console.log('🎉 USUARIO CREADO EXITOSAMENTE! 🎉');
       console.log('========================================');
-      console.log('📧 Email:', email);
-      console.log('🔑 Password:', password);
-      console.log('🆔 User ID:', onboardingResult.user.id);
-      console.log('🏢 Organization:', onboardingResult.organization.name);
-      console.log('🏋️  Gym:', onboardingResult.gym.name);
-      console.log('✉️  Email Verified: Yes');
-      console.log('🚀 Onboarding Status: Completed');
-      console.log('🔐 Access Token:', onboardingResult.access_token.substring(0, 20) + '...');
+      console.log('📧 Correo:', email);
+      console.log('🔑 Contraseña:', password);
+      console.log('🆔 ID de Usuario:', onboardingResult.user.id);
+      console.log('🏢 Organización:', onboardingResult.organization.name);
+      console.log('🏋️  Gimnasio:', onboardingResult.gym.name);
+      console.log('✉️  Correo Verificado: Sí');
+      console.log('🚀 Estado de Configuración: Completado');
+      console.log('🔐 Token de Acceso:', onboardingResult.access_token.substring(0, 20) + '...');
+      console.log('🇵🇪 País: Perú');
+      console.log('💰 Moneda: PEN (Soles)');
+      console.log('🕐 Zona Horaria: America/Lima');
       console.log('========================================\n');
 
-      console.log('ℹ️  You can now login with these credentials and start using the system.');
+      console.log('ℹ️  Ahora puede iniciar sesión con estas credenciales y comenzar a usar el sistema.');
     } catch (error: any) {
       console.error('❌ Error setting up default user:', error.message || error);
       if (error.stack) {

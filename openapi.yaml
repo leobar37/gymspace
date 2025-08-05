@@ -2338,16 +2338,17 @@ components:
         description:
           type: string
           example: Acceso completo al gimnasio durante un mes
-        price:
+        basePrice:
           type: number
           example: 49.99
-        currency:
-          type: string
-          example: USD
         durationMonths:
           type: number
           example: 1
           description: Duration in months
+        durationDays:
+          type: number
+          example: 30
+          description: Duration in days
         termsAndConditions:
           type: string
           example: Terms and conditions text
@@ -2381,8 +2382,7 @@ components:
             - archived
       required:
         - name
-        - price
-        - durationMonths
+        - basePrice
     UpdateMembershipPlanDto:
       type: object
       properties:
@@ -2392,16 +2392,17 @@ components:
         description:
           type: string
           example: Acceso completo al gimnasio durante un mes
-        price:
+        basePrice:
           type: number
           example: 49.99
-        currency:
-          type: string
-          example: USD
         durationMonths:
           type: number
           example: 1
           description: Duration in months
+        durationDays:
+          type: number
+          example: 30
+          description: Duration in days
         termsAndConditions:
           type: string
           example: Terms and conditions text

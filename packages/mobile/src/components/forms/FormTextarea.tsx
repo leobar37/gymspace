@@ -1,39 +1,26 @@
 import React from 'react';
-import { useController } from 'react-hook-form';
-import type { UseControllerProps, FieldValues } from 'react-hook-form';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import { Textarea, TextareaInput } from '@/components/ui/textarea';
 import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
 import type { ComponentProps } from 'react';
 
-interface FormTextareaProps<TFieldValues extends FieldValues = FieldValues> 
-  extends UseControllerProps<TFieldValues>,
-    Omit<ComponentProps<typeof TextareaInput>, 'value' | 'onChangeText' | 'onBlur'> {
+interface FormTextareaProps extends Omit<ComponentProps<typeof TextareaInput>, 'ref'> {
   label: string;
+  error?: string;
+  isRequired?: boolean;
   description?: string;
 }
 
-export function FormTextarea<TFieldValues extends FieldValues = FieldValues>({ 
-  name, 
-  control,
-  rules,
-  defaultValue,
-  shouldUnregister,
+export function FormTextarea({ 
   label, 
+  error,
+  isRequired,
   description, 
   ...props 
-}: FormTextareaProps<TFieldValues>) {
-  const { field, fieldState } = useController({ 
-    name, 
-    control,
-    rules,
-    defaultValue,
-    shouldUnregister
-  });
-  
+}: FormTextareaProps) {
   return (
-    <FormControl isInvalid={!!fieldState.error}>
+    <FormControl isInvalid={!!error} isRequired={isRequired}>
       <VStack className="gap-1">
         <Text className="font-medium text-gray-900">{label}</Text>
         
@@ -45,16 +32,13 @@ export function FormTextarea<TFieldValues extends FieldValues = FieldValues>({
         
         <Textarea>
           <TextareaInput
-            value={field.value || ''}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
             {...props}
           />
         </Textarea>
         
-        {fieldState.error && (
+        {error && (
           <FormControlError>
-            <FormControlErrorText>{fieldState.error.message}</FormControlErrorText>
+            <FormControlErrorText>{error}</FormControlErrorText>
           </FormControlError>
         )}
       </VStack>

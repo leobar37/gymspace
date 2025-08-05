@@ -23,17 +23,19 @@ export class CreateMembershipPlanDto {
   @ApiProperty({ example: 49.99 })
   @IsNumber()
   @Min(0)
-  price: number;
+  basePrice: number;
 
-  @ApiProperty({ example: 'USD', required: false })
+  @ApiProperty({ example: 1, description: 'Duration in months', required: false })
   @IsOptional()
-  @IsString()
-  currency?: string;
-
-  @ApiProperty({ example: 1, description: 'Duration in months' })
   @IsNumber()
   @Min(1)
-  durationMonths: number;
+  durationMonths?: number;
+
+  @ApiProperty({ example: 30, description: 'Duration in days', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  durationDays?: number;
 
   @ApiProperty({ example: 'Terms and conditions text', required: false })
   @IsOptional()

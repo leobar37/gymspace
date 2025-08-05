@@ -4,6 +4,7 @@
     "strict": false,
     "baseUrl": ".",
     "customConditions": ["source"],
+    "types": [],
     "paths": {
       "@gymspace/shared": ["../shared/src"],
       "@/*": ["./src/*", "./*"],
