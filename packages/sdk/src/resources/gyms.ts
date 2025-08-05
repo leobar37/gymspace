@@ -3,27 +3,25 @@ import { Gym, CreateGymDto, UpdateGymDto, GymStats } from '../models/gyms';
 import { RequestOptions } from '../types';
 
 export class GymsResource extends BaseResource {
-  private basePath = '/api/v1/gyms';
+  private basePath = 'gyms';
 
   async createGym(
-    organizationId: string,
     data: CreateGymDto, 
     options?: RequestOptions
   ): Promise<Gym> {
     return this.client.post<Gym>(
-      `${this.basePath}?organizationId=${organizationId}`, 
+      this.basePath, 
       data, 
-      { ...options, headers: { ...options?.headers } }
+      options
     );
   }
 
   async getOrganizationGyms(
-    organizationId: string,
     options?: RequestOptions
   ): Promise<Gym[]> {
     return this.client.get<Gym[]>(
       this.basePath,
-      { organizationId },
+      undefined,
       options
     );
   }
@@ -46,5 +44,18 @@ export class GymsResource extends BaseResource {
 
   async toggleGymStatus(id: string, options?: RequestOptions): Promise<Gym> {
     return this.client.put<Gym>(`${this.basePath}/${id}/toggle-status`, undefined, options);
+  }
+
+  async updateCurrentGym(
+    data: Partial<{
+      name?: string;
+      address?: string;
+      phone?: string;
+      email?: string;
+      assetId?: string;
+    }>,
+    options?: RequestOptions
+  ): Promise<Gym> {
+    return this.client.put<Gym>(`${this.basePath}/current`, data, options);
   }
 }

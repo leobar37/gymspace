@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "gymspace-gluestack": {
+      "command": "node",
+      "args": ["./mcp/index.js"],
+      "cwd": "/Users/leobar37/code/gymspace",
+      "env": {},
+      "description": "MCP server for Gluestack UI components documentation"
+    }
+  },
+  "description": "MCP configuration for GymSpace project - provides access to Gluestack UI component documentation for React Native development"
+}

@@ -6,8 +6,7 @@ import {
   FileTextIcon,
   HomeIcon,
   MenuIcon,
-  UsersIcon,
-  CreditCardIcon,
+  UsersIcon
 } from 'lucide-react-native';
 import React from 'react';
 import { Platform } from 'react-native';
@@ -30,9 +29,7 @@ export default function AppLayout() {
     return <Redirect href="/(onboarding)" />;
   }
 
-  console.log("session", {
-    gym: session.gym
-  });
+
   // If user doesn't have a gym (incomplete onboarding), redirect to welcome screen
   // This handles cases where tokens exist but onboarding isn't complete
   if (!session.gym || !session.gym.id) {
@@ -97,14 +94,11 @@ export default function AppLayout() {
           ),
         }}
       />
+      {/* Hide plans tab - only showing contracts */}
       <Tabs.Screen
         name="plans"
         options={{
-          title: 'Planes',
-          headerTitle: 'Planes de Membresía',
-          tabBarIcon: ({ color, size }) => (
-            <Icon as={CreditCardIcon} style={{ color, width: size, height: size }} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen

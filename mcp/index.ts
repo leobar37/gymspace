@@ -3,22 +3,43 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import fs from "fs";
 import path from "path";
 import { z } from "zod";
+import { fileURLToPath } from "url";
 
-const COMPONENTS_DIR = path.join(
-  path.dirname(new URL(import.meta.url).pathname),
-  "src/components/"
-);
+// Types
+interface ComponentMetadata {
+  title: string;
+  description: string;
+}
 
-const latestPrompt = `You are a React and React Native expert. Generate COMPLETE and RUNNABLE code using only my design system components and tools sequentially: get_all_components_metadata, select_components, get_selected_components_docs. Requirements: no external component libraries, no HTML tags (<div>, <button>, <input>, etc), no StyleSheet, use TailwindCSS classes via className prop. Images must be from unsplash.com only. Import all components individually. Prefer VStack/HStack over Box component. Ensure screens are scrollable, responsive, and mobile-friendly.`;
+interface ComponentsMetadataMap {
+  [key: string]: ComponentMetadata;
+}
 
-// Initializes an MCP server
+interface ComponentDocsMap {
+  [key: string]: string;
+}
+
+// Get the directory path for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const COMPONENTS_DIR = path.join(__dirname, "src/components/");
+
+const latestPrompt = `
+You are a React and React Native expert. Generate COMPLETE and RUNNABLE code using only my design system 
+components and tools sequentially: get_all_components_metadata, select_components, get_selected_components_docs.
+ Requirements: no external component libraries, no HTML tags (<div>, <button>, <input>, etc), no StyleSheet,
+  use TailwindCSS classes via className prop. Import all components individually. Prefer VStack/HStack
+   over Box component. Ensure screens are scrollable, responsive, and mobile-friendly.`;
+
+// Initialize MCP server
 const server = new McpServer({
-  name: "use-gluestack-components",
+  name: "gymspace-gluestack",
   version: "1.0.0",
   systemPrompt: latestPrompt,
 });
 
-function getAvailableComponents() {
+function getAvailableComponents(): string[] {
   try {
     // Get all markdown files in the components directory
     const componentFiles = fs
@@ -27,32 +48,14 @@ function getAvailableComponents() {
       .map((file) => file.replace(".md", ""));
 
     return componentFiles;
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(componentFiles),
-        },
-      ],
-    };
   } catch (error) {
-    console.error(`Error reading components directory: ${error.message}`);
-
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Error reading components directory: ${errorMessage}`);
     return [];
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify([]),
-        },
-      ],
-    };
   }
 }
 
-function getComponentMetadata(componentName) {
+function getComponentMetadata(componentName: string): ComponentMetadata {
   try {
     const docPath = path.join(
       COMPONENTS_DIR,
@@ -72,7 +75,7 @@ function getComponentMetadata(componentName) {
     }
 
     // Extract only title and description
-    const metadata = {
+    const metadata: ComponentMetadata = {
       title: componentName,
       description: "No description available",
     };
@@ -91,42 +94,22 @@ function getComponentMetadata(componentName) {
     }
 
     return metadata;
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(metadata),
-        },
-      ],
-    };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(
-      `Error reading metadata for ${componentName}: ${error.message}`
+      `Error reading metadata for ${componentName}: ${errorMessage}`
     );
 
     return {
       title: componentName,
       description: "Error reading metadata",
     };
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({
-            title: componentName,
-            description: "Error reading metadata",
-          }),
-        },
-      ],
-    };
   }
 }
 
 function getAllComponentsMetadata() {
   const components = getAvailableComponents();
-  const metadata = {};
+  const metadata: ComponentsMetadataMap = {};
 
   components.forEach((component) => {
     const meta = getComponentMetadata(component);
@@ -138,14 +121,14 @@ function getAllComponentsMetadata() {
   return {
     content: [
       {
-        type: "text",
+        type: "text" as const,
         text: JSON.stringify(metadata, null, 2),
       },
     ],
   };
 }
 
-function getComponentDocs(componentName) {
+function getComponentDocs(componentName: string): string {
   try {
     const docPath = path.join(
       COMPONENTS_DIR,
@@ -163,24 +146,14 @@ function getComponentDocs(componentName) {
     return (
       docsContent || `Empty documentation file for component: ${componentName}`
     );
-
-    return {
-      content: [
-        {
-          type: "text",
-          text:
-            docsContent ||
-            `Empty documentation file for component: ${componentName}`,
-        },
-      ],
-    };
   } catch (error) {
-    return `Error retrieving documentation for ${componentName}: ${error.message}`;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return `Error retrieving documentation for ${componentName}: ${errorMessage}`;
   }
 }
 
-function getSelectedComponentsDocs(componentNames) {
-  const docsObject = {};
+function getSelectedComponentsDocs(componentNames: string[]) {
+  const docsObject: ComponentDocsMap = {};
   console.log(
     `✅ Getting documentation for components: ${componentNames.join(", ")}`
   );
@@ -192,13 +165,14 @@ function getSelectedComponentsDocs(componentNames) {
   return {
     content: [
       {
-        type: "text",
+        type: "text" as const,
         text: JSON.stringify(docsObject, null, 2),
       },
     ],
   };
 }
 
+// Register tools
 server.tool(
   "get_all_components_metadata",
   "Read and gives the metadata of all the components",
@@ -222,7 +196,7 @@ server.tool(
     return {
       content: [
         {
-          type: "text",
+          type: "text" as const,
           text: `You have selected: ${input.selectedComponents.join(
             ", "
           )}. Now proceed to get full documentation for ALL these components at once using get_selected_components_docs.`,
@@ -243,7 +217,7 @@ server.tool(
   (input) => getSelectedComponentsDocs(input.component_names)
 );
 
-// Sets up the MCP server and establishes communication channel with the client using stdio transport
+// Set up the MCP server and establish communication channel with the client using stdio transport
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);

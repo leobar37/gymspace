@@ -35,7 +35,7 @@ export interface CityWithGyms {
 }
 
 export class PublicCatalogResource extends BaseResource {
-  private basePath = '/api/v1/catalog';
+  private basePath = 'catalog';
 
   async searchCatalog(
     params?: SearchCatalogParams,

@@ -18,6 +18,7 @@ import {
   LogOutIcon,
   ChevronRightIcon,
   SettingsIcon,
+  FileTextIcon,
 } from 'lucide-react-native';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
@@ -82,6 +83,17 @@ export const ProfileMenu: React.FC = () => {
   };
 
   const menuSections = [
+    {
+      title: 'Gestión',
+      items: [
+        {
+          icon: FileTextIcon,
+          title: 'Contratos',
+          subtitle: 'Gestiona contratos y membresías',
+          onPress: () => router.push('/contracts'),
+        },
+      ],
+    },
     {
       title: 'Cuenta',
       items: [

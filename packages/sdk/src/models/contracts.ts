@@ -39,6 +39,18 @@ export interface Contract {
   metadata?: Record<string, any>;
   createdAt: string;
   updatedAt: string;
+  // Relations
+  gymClient?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  gymMembershipPlan?: {
+    id: string;
+    name: string;
+    basePrice?: number;
+    durationMonths?: number;
+  };
 }
 
 export interface GetContractsParams extends PaginationQueryDto {

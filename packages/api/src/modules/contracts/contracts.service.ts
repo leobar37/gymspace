@@ -6,7 +6,7 @@ import { ClientsService } from '../clients/clients.service';
 import { CreateContractDto, RenewContractDto, FreezeContractDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Contract, Prisma } from '@prisma/client';
-import { ContractStatus } from '@gymspace/shared';
+import { ContractStatus, IRequestContext } from '@gymspace/shared';
 
 @Injectable()
 export class ContractsService {
@@ -19,7 +19,14 @@ export class ContractsService {
   /**
    * Create a new contract (CU-012)
    */
-  async createContract(gymId: string, dto: CreateContractDto, userId: string): Promise<Contract> {
+  async createContract(context: IRequestContext, dto: CreateContractDto): Promise<Contract> {
+    const gymId = context.getGymId();
+    const userId = context.getUserId();
+    
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+
     // Verify gym access and get gym with organization for currency
     const gym = await this.prismaService.gym.findFirst({
       where: {
@@ -139,10 +146,11 @@ export class ContractsService {
    * Renew contract (CU-013)
    */
   async renewContract(
+    context: IRequestContext,
     contractId: string,
     dto: RenewContractDto,
-    userId: string,
   ): Promise<Contract> {
+    const userId = context.getUserId();
     // Find existing contract
     const existingContract = await this.prismaService.contract.findFirst({
       where: {
@@ -255,10 +263,11 @@ export class ContractsService {
    * Freeze contract (CU-014)
    */
   async freezeContract(
+    context: IRequestContext,
     contractId: string,
     dto: FreezeContractDto,
-    userId: string,
   ): Promise<Contract> {
+    const userId = context.getUserId();
     const contract = await this.prismaService.contract.findFirst({
       where: {
         id: contractId,
@@ -336,7 +345,8 @@ export class ContractsService {
   /**
    * Cancel contract
    */
-  async cancelContract(contractId: string, reason: string, userId: string): Promise<Contract> {
+  async cancelContract(context: IRequestContext, contractId: string, reason: string): Promise<Contract> {
+    const userId = context.getUserId();
     const contract = await this.prismaService.contract.findFirst({
       where: {
         id: contractId,
@@ -379,7 +389,8 @@ export class ContractsService {
   /**
    * Get contract by ID
    */
-  async getContract(contractId: string, userId: string): Promise<Contract> {
+  async getContract(context: IRequestContext, contractId: string): Promise<Contract> {
+    const userId = context.getUserId();
     const contract = await this.prismaService.contract.findFirst({
       where: {
         id: contractId,
@@ -428,12 +439,18 @@ export class ContractsService {
    * Get contracts for a gym
    */
   async getGymContracts(
-    gymId: string,
-    userId: string,
+    context: IRequestContext,
     status?: ContractStatus,
     limit = 20,
     offset = 0,
   ) {
+    const gymId = context.getGymId();
+    const userId = context.getUserId();
+    
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
@@ -488,7 +505,9 @@ export class ContractsService {
   /**
    * Get client's contract history
    */
-  async getClientContracts(clientId: string, userId: string) {
+  async getClientContracts(context: IRequestContext, clientId: string) {
+    const userId = context.getUserId();
+    
     // Verify access through client
     await this.clientsService.getClient(clientId, userId);
 

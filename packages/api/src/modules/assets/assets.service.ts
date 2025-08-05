@@ -72,7 +72,7 @@ export class AssetsService implements OnModuleInit {
   /**
    * Upload a file and create asset record
    */
-  async upload(file: FileUploadResult, dto: UploadAssetDto, context: IRequestContext) {
+  async upload(context: IRequestContext, file: FileUploadResult, dto: UploadAssetDto) {
     const gymId = context.getGymId();
     const userId = context.getUserId();
 
@@ -127,10 +127,13 @@ export class AssetsService implements OnModuleInit {
         },
       });
 
-      // Add preview URL
-      const assetWithUrl = await this.addPreviewUrl(asset);
+      // Generate preview URL
+      const previewUrl = await this.generatePreviewUrl(asset.filePath);
 
-      return assetWithUrl;
+      return {
+        ...asset,
+        previewUrl,
+      };
     } catch (error) {
       this.logger.error(`Failed to upload asset: ${error.message}`, error.stack);
       throw new BusinessException('Failed to upload file');
@@ -140,7 +143,7 @@ export class AssetsService implements OnModuleInit {
   /**
    * Get asset by ID
    */
-  async findOne(assetId: string, context: IRequestContext) {
+  async findOne(context: IRequestContext, assetId: string) {
     const gymId = context.getGymId();
 
     const asset = await this.prisma.asset.findFirst({
@@ -166,17 +169,20 @@ export class AssetsService implements OnModuleInit {
     // Validate gym access for the entity
     await this.validateEntityAccess(asset.entityType as AssetEntityType, asset.entityId, gymId);
 
-    // Add preview URL
-    const assetWithUrl = await this.addPreviewUrl(asset);
+    // Generate preview URL for the asset
+    const previewUrl = await this.generatePreviewUrl(asset.filePath);
 
-    return assetWithUrl;
+    return {
+      ...asset,
+      previewUrl,
+    };
   }
 
   /**
    * Get download URL for an asset
    */
-  async getDownloadUrl(assetId: string, context: IRequestContext) {
-    const asset = await this.findOne(assetId, context);
+  async getDownloadUrl(context: IRequestContext, assetId: string) {
+    const asset = await this.findOne(context, assetId);
 
     try {
       // Generate signed URL valid for 1 hour
@@ -196,8 +202,8 @@ export class AssetsService implements OnModuleInit {
   /**
    * Get asset stream for download
    */
-  async download(assetId: string, context: IRequestContext) {
-    const asset = await this.findOne(assetId, context);
+  async download(context: IRequestContext, assetId: string) {
+    const asset = await this.findOne(context, assetId);
 
     try {
       const stream = this.s3
@@ -222,8 +228,8 @@ export class AssetsService implements OnModuleInit {
   /**
    * Soft delete an asset
    */
-  async delete(assetId: string, context: IRequestContext) {
-    const asset = await this.findOne(assetId, context);
+  async delete(context: IRequestContext, assetId: string) {
+    const asset = await this.findOne(context, assetId);
     const userId = context.getUserId();
 
     // Update asset status to deleted
@@ -245,7 +251,7 @@ export class AssetsService implements OnModuleInit {
   /**
    * List assets for an entity
    */
-  async findByEntity(entityType: AssetEntityType, entityId: string, context: IRequestContext) {
+  async findByEntity(context: IRequestContext, entityType: AssetEntityType, entityId: string) {
     const gymId = context.getGymId();
 
     // Validate entity access
@@ -272,7 +278,12 @@ export class AssetsService implements OnModuleInit {
     });
 
     // Add preview URLs to all assets
-    const assetsWithUrls = await Promise.all(assets.map((asset) => this.addPreviewUrl(asset)));
+    const assetsWithUrls = await Promise.all(
+      assets.map(async (asset) => ({
+        ...asset,
+        previewUrl: await this.generatePreviewUrl(asset.filePath),
+      })),
+    );
 
     return assetsWithUrls;
   }
@@ -339,25 +350,47 @@ export class AssetsService implements OnModuleInit {
   }
 
   /**
-   * Add preview URL to an asset
+   * Generate preview URL for a file
    */
-  private async addPreviewUrl(asset: any): Promise<any> {
+  private async generatePreviewUrl(filePath: string): Promise<string | null> {
     try {
-      // Generate a signed URL for preview (valid for 1 hour)
+      // Generate a signed URL for preview (valid for 7 days for better caching)
       const previewUrl = await this.s3.getSignedUrlPromise('getObject', {
         Bucket: this.bucket,
-        Key: asset.filePath,
-        Expires: 3600, // 1 hour
+        Key: filePath,
+        Expires: 604800, // 7 days for better UX
       });
 
-      return {
-        ...asset,
-        previewUrl,
-      };
+      return previewUrl;
     } catch (error) {
       this.logger.error(`Failed to generate preview URL: ${error.message}`, error.stack);
-      // Return asset without preview URL if generation fails
-      return asset;
+      return null;
+    }
+  }
+
+  /**
+   * Serve file directly (for rendering)
+   */
+  async serve(context: IRequestContext, assetId: string) {
+    const asset = await this.findOne(context, assetId);
+
+    try {
+      const stream = this.s3
+        .getObject({
+          Bucket: this.bucket,
+          Key: asset.filePath,
+        })
+        .createReadStream();
+
+      return {
+        stream,
+        filename: asset.originalName,
+        mimeType: asset.mimeType,
+        fileSize: asset.fileSize,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to serve asset: ${error.message}`, error.stack);
+      throw new BusinessException('Failed to serve file');
     }
   }
 }

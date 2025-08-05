@@ -23,7 +23,9 @@
     "clean": "pnpm -r run clean && rm -rf node_modules",
     "prepare": "husky install",
     "generate:api": "pnpm --filter @gymspace/api run openapi:generate && pnpm generate:client",
-    "generate:client": "pnpm --filter @gymspace/api-client run generate"
+    "generate:client": "pnpm --filter @gymspace/api-client run generate",
+    "mcp:start": "node start-mcp.js",
+    "mcp:test": "cd mcp && node index.js"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

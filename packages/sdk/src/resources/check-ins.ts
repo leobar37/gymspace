@@ -10,7 +10,7 @@ import {
 import { RequestOptions, PaginatedResponseDto } from '../types';
 
 export class CheckInsResource extends BaseResource {
-  private basePath = '/api/v1/check-ins';
+  private basePath = 'check-ins';
 
   async createCheckIn(data: CreateCheckInDto, options?: RequestOptions): Promise<CheckIn> {
     return this.client.post<CheckIn>(this.basePath, data, options);

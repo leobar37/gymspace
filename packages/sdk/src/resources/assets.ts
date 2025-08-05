@@ -8,7 +8,7 @@ import {
 import { RequestOptions } from '../types';
 
 export class AssetsResource extends BaseResource {
-  private basePath = '/api/v1/assets';
+  private basePath = 'assets';
 
   async upload(data: UploadAssetDto, options?: RequestOptions): Promise<AssetResponseDto> {
     const formData = new FormData();
@@ -76,5 +76,32 @@ export class AssetsResource extends BaseResource {
       undefined,
       options
     );
+  }
+
+  /**
+   * Get render URL for displaying an asset inline (images, PDFs, etc.)
+   * This URL can be used directly in img tags or iframes
+   */
+  getRenderUrl(id: string): string {
+    // Note: This returns the URL directly without making a request
+    // The actual request will be made by the browser when loading the asset
+    const baseUrl = this.client.getBaseUrl();
+    return `${baseUrl}${this.basePath}/${id}/render`;
+  }
+
+  /**
+   * Render/preview an asset (returns blob for inline display)
+   */
+  async render(id: string, options?: RequestOptions): Promise<Blob> {
+    const response = await this.client.request<ArrayBuffer>(
+      'GET',
+      `${this.basePath}/${id}/render`,
+      undefined,
+      {
+        ...options,
+        responseType: 'arraybuffer',
+      }
+    );
+    return new Blob([response]);
   }
 }

@@ -553,16 +553,7 @@
       "post": {
         "operationId": "GymsController_createGym",
         "summary": "Create a new gym",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -596,16 +587,7 @@
       "get": {
         "operationId": "GymsController_getOrganizationGyms",
         "summary": "Get gyms for organization",
-        "parameters": [
-          {
-            "name": "organizationId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "List of gyms"
@@ -617,6 +599,42 @@
         "security": [
           {
             "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/gyms/current": {
+      "put": {
+        "operationId": "GymsController_updateCurrentGym",
+        "summary": "Update current gym in session",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCurrentGymDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current gym updated successfully"
+          },
+          "404": {
+            "description": "Gym not found"
+          }
+        },
+        "tags": [
+          "Gyms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "gym-id": []
           }
         ]
       }
@@ -1447,6 +1465,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelContractDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Contract cancelled successfully"
@@ -2637,6 +2665,35 @@
         ]
       }
     },
+    "/api/v1/assets/{id}/render": {
+      "get": {
+        "operationId": "AssetsController_render",
+        "summary": "Render/serve asset file directly (for preview)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File stream for rendering"
+          }
+        },
+        "tags": [
+          "Assets"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/assets/entity/{entityType}/{entityId}": {
       "get": {
         "operationId": "AssetsController_findByEntity",
@@ -3615,6 +3672,36 @@
           "name"
         ]
       },
+      "UpdateCurrentGymDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the gym",
+            "example": "PowerFit Downtown"
+          },
+          "address": {
+            "type": "string",
+            "description": "Gym address",
+            "example": "123 Main Street"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Contact phone number",
+            "example": "+1234567890"
+          },
+          "email": {
+            "type": "string",
+            "description": "Contact email",
+            "example": "info@powerfit.com"
+          },
+          "assetId": {
+            "type": "string",
+            "description": "Asset ID for gym logo or image",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          }
+        }
+      },
       "UpdateGymDto": {
         "type": "object",
         "properties": {
@@ -3987,6 +4074,20 @@
           "freezeEndDate"
         ]
       },
+      "CancelContractDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Reason for cancelling the contract",
+            "example": "Medical reasons",
+            "minLength": 3
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
       "CreateEvaluationDto": {
         "type": "object",
         "properties": {
@@ -4279,7 +4380,8 @@
           },
           "previewUrl": {
             "type": "string",
-            "description": "Public URL for previewing the asset (valid for 1 hour)"
+            "description": "Signed URL for previewing the asset (valid for 7 days)",
+            "nullable": true
           }
         },
         "required": [

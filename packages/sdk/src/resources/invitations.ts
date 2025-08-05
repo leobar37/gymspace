@@ -8,7 +8,7 @@ import {
 import { RequestOptions } from '../types';
 
 export class InvitationsResource extends BaseResource {
-  private basePath = '/api/v1/invitations';
+  private basePath = 'invitations';
 
   async createInvitation(
     data: CreateInvitationDto, 

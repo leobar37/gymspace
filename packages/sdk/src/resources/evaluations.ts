@@ -9,7 +9,7 @@ import {
 import { RequestOptions, PaginatedResponseDto } from '../types';
 
 export class EvaluationsResource extends BaseResource {
-  private basePath = '/api/v1/evaluations';
+  private basePath = 'evaluations';
 
   async createEvaluation(
     data: CreateEvaluationDto, 

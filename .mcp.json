@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "gymspace-gluestack": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "./mcp/index.ts"
+      ],
+      "env": {}
+    }
+  }
+}

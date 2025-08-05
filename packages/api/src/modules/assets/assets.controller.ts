@@ -82,7 +82,7 @@ export class AssetsController {
         throw new BadRequestException('entityType and entityId are required');
       }
 
-      return this.assetsService.upload(file, dto, context);
+      return this.assetsService.upload(context, file, dto);
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -100,7 +100,7 @@ export class AssetsController {
     type: AssetResponseDto,
   })
   async findOne(@Param('id', ParseUUIDPipe) id: string, @AppCtxt() context: IRequestContext) {
-    return this.assetsService.findOne(id, context);
+    return this.assetsService.findOne(context, id);
   }
 
   @Get(':id/download-url')
@@ -121,7 +121,7 @@ export class AssetsController {
     @Param('id', ParseUUIDPipe) id: string,
     @AppCtxt() context: IRequestContext,
   ) {
-    return this.assetsService.getDownloadUrl(id, context);
+    return this.assetsService.getDownloadUrl(context, id);
   }
 
   @Get(':id/download')
@@ -136,7 +136,7 @@ export class AssetsController {
     @AppCtxt() context: IRequestContext,
     @Res() res: FastifyReply,
   ) {
-    const { stream, filename, mimeType, fileSize } = await this.assetsService.download(id, context);
+    const { stream, filename, mimeType, fileSize } = await this.assetsService.download(context, id);
 
     res.headers({
       'Content-Type': mimeType,
@@ -155,7 +155,34 @@ export class AssetsController {
     description: 'Asset deleted successfully',
   })
   async delete(@Param('id', ParseUUIDPipe) id: string, @AppCtxt() context: IRequestContext) {
-    return this.assetsService.delete(id, context);
+    return this.assetsService.delete(context, id);
+  }
+
+  @Get(':id/render')
+  @Allow(PERMISSIONS.ASSETS_READ)
+  @ApiOperation({ summary: 'Render/serve asset file directly (for preview)' })
+  @ApiResponse({
+    status: 200,
+    description: 'File stream for rendering',
+  })
+  async render(
+    @Param('id', ParseUUIDPipe) id: string,
+    @AppCtxt() context: IRequestContext,
+    @Res() res: FastifyReply,
+  ) {
+    const { stream, filename, mimeType, fileSize } = await this.assetsService.serve(context, id);
+
+    // Set appropriate headers for rendering in browser
+    const contentDisposition = this.getContentDisposition(mimeType, filename);
+    
+    res.headers({
+      'Content-Type': mimeType,
+      'Content-Disposition': contentDisposition,
+      'Content-Length': fileSize.toString(),
+      'Cache-Control': 'public, max-age=86400', // Cache for 1 day
+    });
+
+    return res.send(stream);
   }
 
   @Get('entity/:entityType/:entityId')
@@ -171,6 +198,26 @@ export class AssetsController {
     @Param('entityId', ParseUUIDPipe) entityId: string,
     @AppCtxt() context: IRequestContext,
   ) {
-    return this.assetsService.findByEntity(entityType, entityId, context);
+    return this.assetsService.findByEntity(context, entityType, entityId);
+  }
+
+  /**
+   * Get appropriate Content-Disposition header based on mime type
+   */
+  private getContentDisposition(mimeType: string, filename: string): string {
+    // Images, PDFs, and videos should be displayed inline
+    const inlineTypes = [
+      'image/',
+      'application/pdf',
+      'video/',
+      'text/plain',
+      'text/html',
+    ];
+
+    const shouldInline = inlineTypes.some(type => mimeType.startsWith(type));
+    
+    return shouldInline 
+      ? `inline; filename="${filename}"`
+      : `attachment; filename="${filename}"`;
   }
 }

@@ -9,7 +9,7 @@ import {
 import { RequestOptions, PaginatedResponseDto } from '../types';
 
 export class ContractsResource extends BaseResource {
-  private basePath = '/api/v1/contracts';
+  private basePath = 'contracts';
 
   async createContract(data: CreateContractDto, options?: RequestOptions): Promise<Contract> {
     return this.client.post<Contract>(this.basePath, data, options);
@@ -53,7 +53,7 @@ export class ContractsResource extends BaseResource {
     return this.client.post<Contract>(`${this.basePath}/${id}/freeze`, data, options);
   }
 
-  async cancelContract(id: string, options?: RequestOptions): Promise<Contract> {
-    return this.client.put<Contract>(`${this.basePath}/${id}/cancel`, undefined, options);
+  async cancelContract(id: string, data: { reason: string }, options?: RequestOptions): Promise<Contract> {
+    return this.client.put<Contract>(`${this.basePath}/${id}/cancel`, data, options);
   }
 }

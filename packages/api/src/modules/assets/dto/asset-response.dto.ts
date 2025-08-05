@@ -54,8 +54,9 @@ export class AssetResponseDto {
   };
 
   @ApiProperty({
-    description: 'Public URL for previewing the asset (valid for 1 hour)',
+    description: 'Signed URL for previewing the asset (valid for 7 days)',
     required: false,
+    nullable: true,
   })
-  previewUrl?: string;
+  previewUrl?: string | null;
 }

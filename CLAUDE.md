@@ -1,150 +1,155 @@
 # CLAUDE.md
 
-Esta guía proporciona orientación completa para trabajar con el código de GymSpace, un sistema de gestión de gimnasios multi-tenant.
+This guide provides comprehensive guidance for working with the GymSpace codebase, a multi-tenant gym management system.
 
-## Resumen del Proyecto
+## Project Overview
 
-GymSpace es un sistema de gestión de gimnasios multi-tenant construido como monorepo pnpm con:
+GymSpace is a multi-tenant gym management system built as a pnpm monorepo with:
 - **Backend**: NestJS + PostgreSQL + Redis
 - **Frontend Mobile**: React Native + Expo + Gluestack UI
 - **Frontend Web**: Next.js (landing page)
-- **SDK**: TypeScript SDK para comunicación con API
-- **Arquitectura**: Clean architecture con patrón exception-first y permisos basados en contexto
+- **SDK**: TypeScript SDK for API communication
+- **Architecture**: Clean architecture with exception-first pattern and context-based permissions
 
-## Comandos de Desarrollo
+## Development Commands
 
-### Configuración del Entorno
+### Environment Setup
 ```bash
-# Instalar dependencias (usar solo pnpm)
+# Install dependencies (use pnpm only)
 pnpm install
 
-# Iniciar servicios Docker (PostgreSQL, Redis, MinIO)
+# Start Docker services (PostgreSQL, Redis, MinIO)
 pnpm run dev:docker
 
-# Configurar environment
+# Configure environment
 cp packages/api/.env.example packages/api/.env
-# Editar .env con credenciales de Supabase
+# Edit .env with Supabase credentials
 ```
 
-### Ejecutar la Aplicación
+### Run the Application
 ```bash
-# Ejecutar todos los servicios en paralelo
+# Run all services in parallel
 pnpm run dev
 
-# Ejecutar solo el servicio API
+# Run API service only
 pnpm run dev:api
 
-# Ejecutar app móvil
+# Run mobile app
 pnpm run dev:mobile
 
-# Construir todos los paquetes
+# Build all packages
 pnpm run build
 ```
 
-### Gestión de Base de Datos (desde packages/api)
+### Database Management (from packages/api)
 ```bash
-# Generar cliente Prisma
+# Generate Prisma client
 pnpm run prisma:generate
 
-# Ejecutar migraciones
+# Run migrations
 pnpm run prisma:migrate
 
-# Desplegar migraciones a producción
+# Deploy migrations to production
 pnpm run prisma:migrate:deploy
 
-# Abrir Prisma Studio
+# Open Prisma Studio
 pnpm run prisma:studio
 
-# Resetear base de datos (CUIDADO: elimina todos los datos)
+# Reset database (WARNING: deletes all data)
 pnpm run prisma:reset
 
-# Poblar base de datos
+# Seed database
 pnpm run prisma:seed
 ```
 
 ### Testing
 ```bash
-# Ejecutar todas las pruebas
+# Run all tests
 pnpm run test
 
-# Ejecutar pruebas en modo watch
+# Run tests in watch mode
 pnpm run test:watch
 
-# Ejecutar pruebas con cobertura
+# Run tests with coverage
 pnpm run test:cov
 
-# Debug de pruebas
+# Debug tests
 pnpm run test:debug
 
-# Ejecutar pruebas E2E
+# Run E2E tests
 pnpm run test:e2e
 ```
 
-### Calidad de Código
+### Code Quality
 ```bash
-# Ejecutar linting
+# Run linting
 pnpm run lint
 
-# Formatear código
+# Format code
 pnpm run format
 
-# Limpiar artifacts de build
+# Clean build artifacts
 pnpm run clean
 ```
 
-## Arquitectura del Sistema
+## System Architecture
 
-### Principios Arquitectónicos Fundamentales
+### Core Architectural Principles
 
-1. **Patrón Exception-First**: Los servicios lanzan excepciones (BusinessException, ValidationException, ResourceNotFoundException, AuthorizationException), nunca devuelven objetos de error. El filtro global de excepciones maneja las respuestas HTTP.
+1. **Exception-First Pattern**: Services throw exceptions (BusinessException, ValidationException, ResourceNotFoundException, AuthorizationException), never return error objects. The global exception filter handles HTTP responses.
 
-2. **Patrón RequestContext**: Cada request tiene un RequestContext que contiene:
-   - Información del usuario desde Supabase
-   - Contexto del gimnasio actual desde header
-   - Permisos computados
-   - Instancia de cache
+2. **RequestContext Pattern**: Each request has a RequestContext containing:
+   - User information from Supabase
+   - Current gym context from header
+   - Computed permissions
+   - Cache instance
 
-3. **Sistema de Permisos**: Permisos declarativos usando decorador @Allow() en controladores. PermissionGuard verifica contra permisos del rol del usuario.
+3. **Permission System**: Declarative permissions using @Allow() decorator on controllers. PermissionGuard validates against user's role permissions.
 
-4. **Multi-Tenancy**: Todos los datos están aislados por gimnasio. RequestContext.gymId controla todas las consultas. Completo aislamiento de datos entre gimnasios.
+4. **Multi-Tenancy**: All data is isolated by gym. RequestContext.gymId controls all queries. Complete data isolation between gyms.
 
-5. **Audit Trail**: Todas las entidades tienen campos created_by_user_id, updated_by_user_id, created_at, updated_at, deleted_at.
+5. **Audit Trail**: All entities have fields created_by_user_id, updated_by_user_id, created_at, updated_at, deleted_at.
 
-6. **Soft Delete**: No hay eliminaciones físicas. Todas las entidades usan timestamp deleted_at.
+6. **Soft Delete**: No physical deletions. All entities use deleted_at timestamp.
 
-### Estructura de Módulos Backend
+7. **Controller Best Practices**:
+   - **NEVER pass gymId or userId as parameters** - use RequestContext instead
+   - Controllers should extract gymId and userId from RequestContext
+   - Services receive the full RequestContext for context-aware operations
 
-Cada módulo de dominio sigue este patrón:
+### Backend Module Structure
+
+Each domain module follows this pattern:
 ```
 modules/[domain]/
-├── [domain].controller.ts    # Endpoints HTTP con decoradores @Allow()
-├── [domain].module.ts        # Definición del módulo
-├── [domain].service.ts       # Lógica de negocio (lanza excepciones)
-├── dto/                      # DTOs con decoradores class-validator
+├── [domain].controller.ts    # HTTP endpoints with @Allow() decorators
+├── [domain].module.ts        # Module definition
+├── [domain].service.ts       # Business logic (throws exceptions)
+├── dto/                      # DTOs with class-validator decorators
 │   ├── create-[entity].dto.ts
 │   ├── update-[entity].dto.ts
 │   └── index.ts
-└── services/                 # Servicios adicionales si se necesitan
+└── services/                 # Additional services if needed
 ```
 
-### Servicios y Patrones Clave
+### Key Services and Patterns
 
-1. **PrismaService**: Abstracción de base de datos con filtrado automático por gimnasio
-2. **CacheService**: Cache Redis con integración RequestContext
-3. **PaginationService**: Paginación estandarizada en todos los endpoints de lista
-4. **AuthService**: Integración Supabase para autenticación
-5. **RequestContextService**: Crea y gestiona contexto de request
+1. **PrismaService**: Database abstraction with automatic gym filtering
+2. **CacheService**: Redis cache with RequestContext integration
+3. **PaginationService**: Standardized pagination across all list endpoints
+4. **AuthService**: Supabase integration for authentication
+5. **RequestContextService**: Creates and manages request context
 
-### Patrones de Esquema de Base de Datos
+### Database Schema Patterns
 
-- Todas las tablas tienen campos de auditoría: created_by_user_id, updated_by_user_id, created_at, updated_at, deleted_at
-- Foreign keys usan tipo UUID
-- Enums definidos en esquema Prisma
-- Campos JSON para datos flexibles (settings, metadata, features)
+- All tables have audit fields: created_by_user_id, updated_by_user_id, created_at, updated_at, deleted_at
+- Foreign keys use UUID type
+- Enums defined in Prisma schema
+- JSON fields for flexible data (settings, metadata, features)
 
-### Formato de Respuesta API
+### API Response Format
 
-Respuestas exitosas siguen esta estructura:
+Successful responses follow this structure:
 ```json
 {
   "data": {},
@@ -152,7 +157,7 @@ Respuestas exitosas siguen esta estructura:
 }
 ```
 
-Respuestas paginadas:
+Paginated responses:
 ```json
 {
   "data": [],
@@ -165,51 +170,74 @@ Respuestas paginadas:
 }
 ```
 
-### Enfoque de Testing
+### Testing Approach
 
-- Unit tests para servicios con dependencias mockeadas
-- Integration tests para controladores con base de datos de test
-- Mock RequestContext para testing
-- Probar tanto escenarios de éxito como de excepción
+- Unit tests for services with mocked dependencies
+- Integration tests for controllers with test database
+- Mock RequestContext for testing
+- Test both success and exception scenarios
 
-## Tareas Comunes de Desarrollo
+## Common Development Tasks
 
-### Agregar un Nuevo Módulo (Backend)
+### Feature Building Workflow
 
-1. Crear estructura del módulo bajo `src/modules/[domain]/`
-2. Definir DTOs con decoradores de validación
-3. Implementar servicio con patrón exception-first
-4. Crear controlador con decoradores @Allow()
-5. Agregar módulo a imports de app.module.ts
-6. Crear tests para servicio y controlador
+When building a new feature, follow this specific order:
 
-### Agregar una Nueva Entidad
+1. **Backend Controller First**: Examine the backend controller in `packages/api/src/modules/[domain]/`
+   - Understand available endpoints and their permissions
+   - Check DTOs for required/optional fields
+   - Note response formats and pagination
 
-1. Definir entidad en `prisma/schema.prisma`
-2. Ejecutar `pnpm run prisma:generate`
-3. Ejecutar `pnpm run prisma:migrate`
-4. Crear módulo correspondiente siguiendo patrones anteriores
+2. **SDK Methods Second**: Review or implement SDK methods in `packages/sdk/src/`
+   - Ensure SDK methods match backend endpoints
+   - Check type definitions are correct
+   - Verify proper error handling
 
-### Implementar Permisos
+3. **Mobile Controller Last**: Implement the mobile controller in `packages/mobile/src/features/[feature]/controllers/`
+   - Use SDK methods via useSDK() hook
+   - Implement TanStack Query patterns
+   - Handle loading, error, and success states
+   - Never pass gymId or userId - backend handles via RequestContext
 
-1. Agregar permiso al array de permisos del rol en base de datos
-2. Usar @Allow(['PERMISSION_NAME']) en métodos del controlador
-3. PermissionGuard valida automáticamente contra RequestContext
+### Adding a New Module (Backend)
 
-### Trabajar con RequestContext
+1. Create module structure under `src/modules/[domain]/`
+2. Define DTOs with validation decorators
+3. Implement service with exception-first pattern
+4. Create controller with @Allow() decorators
+5. Add module to app.module.ts imports
+6. Create tests for service and controller
+
+### Adding a New Entity
+
+1. Define entity in `prisma/schema.prisma`
+2. Run `pnpm run prisma:generate`
+3. Run `pnpm run prisma:migrate`
+4. Create corresponding module following above patterns
+
+### Implementing Permissions
+
+1. Add permission to role's permissions array in database
+2. Use @Allow(['PERMISSION_NAME']) on controller methods
+3. PermissionGuard automatically validates against RequestContext
+
+### Working with RequestContext
 
 ```typescript
-// En controladores
+// In controllers - NEVER pass gymId or userId as parameters
 @Get()
 @Allow([Permissions.CLIENTS_READ])
 async findAll(@AppCtxt() context: IRequestContext) {
+  // Extract gym context from RequestContext, not from parameters
   return this.service.findAll(context);
 }
 
-// En servicios
+// In services
 async findAll(context: IRequestContext) {
   const gymId = context.getGymId();
-  // Todas las consultas automáticamente filtradas por gymId
+  const userId = context.getUserId();
+  // All queries automatically filtered by gymId
+  // Never accept gymId or userId as method parameters
 }
 ```
 
@@ -222,33 +250,33 @@ async findAll(context: IRequestContext) {
 - All file uploads go through centralized Assets module
 - Swagger documentation auto-generated at /api/v1/docs
 
-## Arquitectura Frontend - Principios y Patrones
+## Frontend Architecture - Principles and Patterns
 
-### PRINCIPIOS FUNDAMENTALES
+### CORE PRINCIPLES
 
-#### **Arquitectura Feature-First**
-- **Siempre organizar por features**, no por capas técnicas
-- Cada feature debe ser auto-contenido e independientemente testeable
-- Features pueden importar de módulos shared, pero no de otros features directamente
+#### **Feature-First Architecture**
+- **Always organize by features**, not by technical layers
+- Each feature must be self-contained and independently testable
+- Features can import from shared modules, but not from other features directly
 
-#### **Filosofía de Tamaño de Componentes**
-- **Mantener componentes pequeños y enfocados** - principio de responsabilidad única
-- Si un componente excede 100-150 líneas, considerar dividirlo
-- Extraer lógica compleja a custom hooks o átomos Jotai
-- Preferir composición sobre componentes monolíticos grandes
+#### **Component Size Philosophy**
+- **Keep components small and focused** - single responsibility principle
+- If a component exceeds 100-150 lines, consider splitting it
+- Extract complex logic to custom hooks or Jotai atoms
+- Prefer composition over large monolithic components
 
-#### **Análisis de Reusabilidad**
-- **Antes de crear cualquier componente, preguntar: "¿Se usará en otro lugar?"**
-- Si sí, colocar en shared/components
-- Si no, mantener dentro del feature
-- En caso de duda, empezar específico del feature y refactorizar a shared cuando sea necesario
+#### **Reusability Analysis**
+- **Before creating any component, ask: "Will it be used elsewhere?"**
+- If yes, place in shared/components
+- If no, keep within the feature
+- When in doubt, start feature-specific and refactor to shared when needed
 
-### PATRÓN DE CONTROLADORES
+### CONTROLLER PATTERN
 
-#### **Definición**
-Los controladores son el puente entre el SDK (API) y TanStack Query. Manejan fetching de datos, mutaciones y estrategias de caching.
+#### **Definition**
+Controllers are the bridge between SDK (API) and TanStack Query. They handle data fetching, mutations, and caching strategies.
 
-#### **Estructura de Controlador**
+#### **Controller Structure**
 ```typescript
 // features/clients/controllers/clients.controller.ts
 export const useClientsController = () => {
@@ -290,23 +318,24 @@ export const useClientsController = () => {
 };
 ```
 
-#### **Reglas de Controladores**
-- **Un controlador por entidad de dominio** (clients, contracts, evaluations)
-- **Exportar custom hooks**, no hooks raw de TanStack Query
-- **Manejar estados de loading y errores** dentro del controlador
-- **Gestionar invalidación de cache** en mutaciones
-- **Mantener lógica de negocio fuera** - controladores solo manejan flujo de datos
+#### **Controller Rules**
+- **One controller per domain entity** (clients, contracts, evaluations)
+- **Export custom hooks**, not raw TanStack Query hooks
+- **Handle loading and error states** within the controller
+- **Manage cache invalidation** in mutations
+- **Keep business logic out** - controllers only handle data flow
+- **NEVER pass gymId or userId as parameters** - these are handled by the backend via RequestContext
 
-### GESTIÓN DE ESTADO CON JOTAI
+### STATE MANAGEMENT WITH JOTAI
 
-#### **Cuándo Usar Jotai**
-- **Estado complejo de componente** que involucra múltiples piezas de datos
-- **Comunicación cross-component** dentro de un feature
-- **Gestión de estado de formularios** para formularios complejos
-- **Estado UI** que necesita persistir a través de navegación
-- **Cálculos de estado derivado**
+#### **When to Use Jotai**
+- **Complex component state** involving multiple pieces of data
+- **Cross-component communication** within a feature
+- **Form state management** for complex forms
+- **UI state** that needs to persist across navigation
+- **Derived state calculations**
 
-#### **Patrón Jotai**
+#### **Jotai Pattern**
 ```typescript
 // features/clients/stores/client-form.store.ts
 export const clientFormAtom = atom({
@@ -337,24 +366,24 @@ export const resetClientFormAtom = atom(null, (get, set) => {
 });
 ```
 
-#### **Reglas de Jotai**
-- **Crear átomos por feature** en feature/stores/
-- **Usar átomos derivados** para cálculos y validaciones
-- **Mantener átomos enfocados** - una preocupación por átomo
-- **Exportar átomos de lectura y escritura** cuando sea necesario
-- **Evitar objetos complejos** - preferir estructura de estado plana
+#### **Jotai Rules**
+- **Create atoms per feature** in feature/stores/
+- **Use derived atoms** for calculations and validations
+- **Keep atoms focused** - one concern per atom
+- **Export read and write atoms** when necessary
+- **Avoid complex objects** - prefer flat state structure
 
-### GUÍAS DE COMPONENTES
+### COMPONENT GUIDELINES
 
-#### **Límites de Tamaño de Componentes**
-- **Máximo 150 líneas** por archivo de componente
-- **Máximo 5 props** - si más, considerar dividir
-- **Responsabilidad única** - un propósito principal por componente
-- **Extraer cuando se reutilice** - si se usa en 2+ lugares, mover a shared/
+#### **Component Size Limits**
+- **Maximum 150 lines** per component file
+- **Maximum 5 props** - if more, consider splitting
+- **Single responsibility** - one main purpose per component
+- **Extract when reused** - if used in 2+ places, move to shared/
 
-#### **Estructura de Componente**
+#### **Component Structure**
 ```typescript
-// Bueno: Componente pequeño y enfocado
+// Good: Small and focused component
 export const ClientCard = ({ client, onEdit }: ClientCardProps) => {
   const { deleteClient } = useClientsController();
   
@@ -367,7 +396,7 @@ export const ClientCard = ({ client, onEdit }: ClientCardProps) => {
   );
 };
 
-// Mejor: Extraer sub-componentes
+// Better: Extract sub-components
 const ClientAvatar = ({ src }: { src?: string }) => (
   <Avatar src={src} fallback="CL" />
 );
@@ -387,27 +416,27 @@ const ClientActions = ({ onEdit, onDelete }: ClientActionsProps) => (
 );
 ```
 
-#### **Reglas de Componentes**
-- **Props deben ser explícitas** - evitar pasar objetos enteros cuando solo se necesitan pocos campos
-- **Usar interfaces TypeScript** para props
-- **Manejar estados de loading y error** en componentes de datos
-- **Separar presentación de lógica** - usar controladores y hooks
+#### **Component Rules**
+- **Props must be explicit** - avoid passing entire objects when only few fields are needed
+- **Use TypeScript interfaces** for props
+- **Handle loading and error states** in data components
+- **Separate presentation from logic** - use controllers and hooks
 
-### CHECKLIST DE REUSABILIDAD Y PATRÓN DE MÓDULO FEATURE
+### REUSABILITY CHECKLIST AND FEATURE MODULE PATTERN
 
-#### **Antes de Crear un Componente**
-1. **¿Se usa en múltiples lugares?** → Mover a shared/components
-2. **¿Es específico del feature pero reutilizable dentro del feature?** → Mantener en feature/components
-3. **¿Contiene lógica compleja?** → Extraer a hooks o átomos Jotai
-4. **¿Es puramente presentacional?** → Considerar hacer un componente UI shared
+#### **Before Creating a Component**
+1. **Is it used in multiple places?** → Move to shared/components
+2. **Is it feature-specific but reusable within the feature?** → Keep in feature/components
+3. **Does it contain complex logic?** → Extract to hooks or Jotai atoms
+4. **Is it purely presentational?** → Consider making a shared UI component
 
-#### **Indicadores de Reusabilidad**
-- **Patrones UI** (cards, forms, buttons) → shared/components
-- **Lógica de negocio** (cálculos, validaciones) → shared/utils o feature/helpers
-- **Patrones de fetching de datos** → shared/hooks
-- **Gestión de estado** (estado app-wide) → shared/stores
+#### **Reusability Indicators**
+- **UI patterns** (cards, forms, buttons) → shared/components
+- **Business logic** (calculations, validations) → shared/utils or feature/helpers
+- **Data fetching patterns** → shared/hooks
+- **State management** (app-wide state) → shared/stores
 
-#### **API Pública del Feature**
+#### **Feature Public API**
 ```typescript
 // features/clients/index.ts
 export { ClientsList } from './components/ClientsList';
@@ -415,58 +444,58 @@ export { ClientForm } from './components/ClientForm';
 export { useClientsController } from './controllers/clients.controller';
 export type { Client, CreateClientData } from './types';
 
-// No exportar componentes internos, helpers, o stores
+// Don't export internal components, helpers, or stores
 ```
 
-#### **Reglas del Feature**
-- **Exportar solo lo necesario** por otros features o app
-- **Mantener implementación interna privada**
-- **Proporcionar tipos TypeScript claros** para items exportados
-- **Documentar la API pública** cuando sea compleja
+#### **Feature Rules**
+- **Export only what's necessary** for other features or app
+- **Keep internal implementation private**
+- **Provide clear TypeScript types** for exported items
+- **Document the public API** when complex
 
-### WORKFLOW DE DESARROLLO
+### DEVELOPMENT WORKFLOW
 
-#### **Al Construir un Nuevo Feature**
-1. **Empezar con el controlador** - definir necesidades de datos
-2. **Crear componentes pequeños** - construir UI pieza por pieza
-3. **Extraer lógica a Jotai** cuando el estado se vuelva complejo
-4. **Identificar partes reutilizables** y mover a shared/
-5. **Escribir tests** para componentes reutilizables y controladores
-6. **Documentar la API pública** en feature/index.ts
+#### **When Building a New Feature**
+1. **Start with the controller** - define data needs
+2. **Create small components** - build UI piece by piece
+3. **Extract logic to Jotai** when state becomes complex
+4. **Identify reusable parts** and move to shared/
+5. **Write tests** for reusable components and controllers
+6. **Document the public API** in feature/index.ts
 
-#### **Guías de Refactoring**
-- **Cuando un componente excede 150 líneas** → Dividir en componentes más pequeños
-- **Cuando la lógica se repite** → Extraer a utilidades shared
-- **Cuando la gestión de estado se vuelve compleja** → Usar átomos Jotai
-- **Cuando un componente se usa en otro lugar** → Mover a shared/
+#### **Refactoring Guidelines**
+- **When a component exceeds 150 lines** → Split into smaller components
+- **When logic repeats** → Extract to shared utilities
+- **When state management becomes complex** → Use Jotai atoms
+- **When a component is used elsewhere** → Move to shared/
 
-#### **Checklist de Code Review**
-- [ ] Componentes están enfocados y bajo 150 líneas
-- [ ] Controladores manejan flujo de datos correctamente
-- [ ] Jotai se usa para estado complejo, no estado simple de componente
-- [ ] Partes reutilizables están identificadas y extraídas
-- [ ] Tipos TypeScript están definidos apropiadamente
-- [ ] Tests cubren los paths críticos
+#### **Code Review Checklist**
+- [ ] Components are focused and under 150 lines
+- [ ] Controllers handle data flow correctly
+- [ ] Jotai is used for complex state, not simple component state
+- [ ] Reusable parts are identified and extracted
+- [ ] TypeScript types are properly defined
+- [ ] Tests cover critical paths
 
-### ANTI-PATRONES A EVITAR
+### ANTI-PATTERNS TO AVOID
 
-#### **No Hacer Esto**
-- ❌ **Prop drilling** - usar Jotai para estado complejo
-- ❌ **Componentes monolíticos** - dividir en piezas más pequeñas
-- ❌ **Llamadas directas al SDK en componentes** - usar controladores
-- ❌ **Imports feature-to-feature** - usar shared/ o refactorizar
-- ❌ **Lógica compleja en JSX** - extraer a hooks o helpers
-- ❌ **Código duplicado** - identificar y extraer a utilidades shared
+#### **Don't Do This**
+- ❌ **Prop drilling** - use Jotai for complex state
+- ❌ **Monolithic components** - split into smaller pieces
+- ❌ **Direct SDK calls in components** - use controllers
+- ❌ **Feature-to-feature imports** - use shared/ or refactor
+- ❌ **Complex logic in JSX** - extract to hooks or helpers
+- ❌ **Duplicated code** - identify and extract to shared utilities
 
-#### **Hacer Esto En Su Lugar**
-- ✅ **Usar controladores** para operaciones de datos
-- ✅ **Componer componentes pequeños** para UI compleja
-- ✅ **Extraer lógica reutilizable** a módulos shared
-- ✅ **Usar átomos Jotai** para estado cross-component
-- ✅ **Tipear todo** con TypeScript
-- ✅ **Probar en aislamiento** donde sea posible
+#### **Do This Instead**
+- ✅ **Use controllers** for data operations
+- ✅ **Compose small components** for complex UI
+- ✅ **Extract reusable logic** to shared modules
+- ✅ **Use Jotai atoms** for cross-component state
+- ✅ **Type everything** with TypeScript
+- ✅ **Test in isolation** where possible
 
-**Recordar: Favorecer composición sobre complejidad, y reutilización sobre repetición.**
+**Remember: Favor composition over complexity, and reusability over repetition.**
 
 ## Special Reminders
 
@@ -488,81 +517,83 @@ export type { Client, CreateClientData } from './types';
 - not use space property, use tailwind classes
 - not use size property, use nativewind features instead
 
-## Patrones de Importación y Desarrollo
+## Import and Development Patterns
 
-### **Estrategia de Alias de Importación**
-- **SIEMPRE usar alias `@/`** para imports internos
-- Seguir estos patrones:
-  - `@/components/ui/[component-name]` para componentes UI
-  - `@/features/[feature-name]` para features
-  - `@/shared/[category]` para utilidades
-- Usar keyword `type` para imports de tipos TypeScript
+### **Import Alias Strategy**
+- **ALWAYS use `@/` alias** for internal imports
+- Follow these patterns:
+  - `@/components/ui/[component-name]` for UI components
+  - `@/features/[feature-name]` for features
+  - `@/shared/[category]` for utilities
+- Use `type` keyword for TypeScript type imports
 
-**Ejemplo**:
+**Example**:
 ```typescript
-// ✅ CORRECTO
+// ✅ CORRECT
 import { Button, ButtonGroup } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ClientForm } from "@/features/clients";
 import type { Client } from "@/shared/types";
 
-// ❌ INCORRECTO
+// ❌ INCORRECT
 import { Button } from "../../../components/ui/button";
 import { Button } from "components/ui/button";
 ```
 
-### **Estrategia de Testing**
-- **Unit test componentes shared** individualmente
-- **Integration test features** como flujos completos
-- **Test controladores** con respuestas SDK mockeadas
-- **Test átomos Jotai** en aislamiento
+### **Testing Strategy**
+- **Unit test shared components** individually
+- **Integration test features** as complete flows
+- **Test controllers** with mocked SDK responses
+- **Test Jotai atoms** in isolation
 
-## Recordatorios Especiales y Reglas de Desarrollo
+## Special Development Reminders and Rules
 
-### **Reglas Arquitectónicas Importantes**
-- Siempre usar `docs/backend-architecture.md` y `docs/use-cases-and-entities.md` como referencia para entender las decisiones arquitectónicas del proyecto y modelos de dominio
-- Siempre usar pnpm para gestión de paquetes
-- Seguir el patrón exception-first - servicios lanzan excepciones, nunca devuelven errores
-- Usar RequestContext para todas las operaciones con scope de gimnasio
-- Todos los endpoints requieren decorador @Allow() para permisos
-- El proyecto usa middleware de soft delete de Prisma - todas las entidades tienen campo deletedAt
-- La autenticación es manejada por Supabase - usuarios no tienen passwords en la base de datos
-- Usar valores enum en lowercase en código TypeScript (ej. 'active' no 'ACTIVE') para coincidir con esquema Prisma
-- Contract se relaciona con Gym a través de relación gymClient, no directamente
-- Siempre generar números de cliente para nuevos gym clients usando patrón timestamp
-- Usar `as any` para conflictos de tipos de plugins Fastify en main.ts
-- Al arreglar referencias de campos, verificar esquema Prisma para nombres exactos de campos
+### **Important Architectural Rules**
+- Always use `docs/backend-architecture.md` and `docs/use-cases-and-entities.md` as reference for understanding the project's architectural decisions and domain models
+- Always use pnpm for package management
+- Follow the exception-first pattern - services throw exceptions, never return errors
+- Use RequestContext for all gym-scoped operations
+- All endpoints require @Allow() decorator for permissions
+- The project uses Prisma's soft delete middleware - all entities have deletedAt field
+- Authentication is handled by Supabase - users don't have passwords in the database
+- Use lowercase enum values in TypeScript code (e.g., 'active' not 'ACTIVE') to match Prisma schema
+- Contract relates to Gym through gymClient relationship, not directly
+- Always generate client numbers for new gym clients using timestamp pattern
+- Use `as any` for Fastify plugin type conflicts in main.ts
+- When fixing field references, check Prisma schema for exact field names
+- **NEVER pass gymId or userId as parameters in controllers** - use RequestContext instead
 
-### **Reglas de Desarrollo Frontend**
-- Siempre leer documentación del SDK antes de implementar un query o mutation
-- Siempre usar los wrapper ui fields para implementar un formulario
-- Siempre echar un vistazo a los casos de estudio antes de agregar una nueva feature
-- No usar propiedad space, usar clases tailwind
-- No usar propiedad size, usar features de nativewind en su lugar
+### **Frontend Development Rules**
+- Always read SDK documentation before implementing a query or mutation
+- Always use the wrapper ui fields to implement a form
+- Always look at the case studies before adding a new feature
+- Don't use space property, use tailwind classes
+- Don't use size property, use nativewind features instead
+- **To build a feature**: First examine backend controller, then SDK method, finally mobile controller
 
-### **Estrategia de Linting**
-- Siempre ejecutar linting antes de hacer commit del código
-- `not run lint`: Esto indica una instrucción específica para omitir verificaciones de linting, que debe usarse con moderación y precaución
+### **Linting Strategy**
+- Always run linting before committing code
+- `not run lint`: This indicates a specific instruction to skip linting checks, which should be used sparingly and with caution
 
-### **Workflows de Desarrollo**
-- **Usar VSCode MCP para conocer sobre los errores**
+### **Development Workflows**
+- **Use VSCode MCP to know about errors**
 
-## Notas Importantes
+## Important Notes
 
-- Nunca usar imports relativos - usar imports absolutos desde 'src/'
-- Siempre validar DTOs con decoradores class-validator
-- Usar transacciones Prisma para operaciones multi-paso
-- Claves de cache deben incluir gymId para aislamiento apropiado
-- Todas las subidas de archivos van a través del módulo Assets centralizado
-- Documentación Swagger auto-generada en /api/v1/docs
+- Never use relative imports - use absolute imports from 'src/'
+- Always validate DTOs with class-validator decorators
+- Use Prisma transactions for multi-step operations
+- Cache keys should include gymId for proper isolation
+- All file uploads go through centralized Assets module
+- Swagger documentation auto-generated at /api/v1/docs
 
-## Guía de Componentes UI (App Móvil)
+## UI Components Guide (Mobile App)
 
-La app móvil usa componentes Gluestack UI ubicados en `/packages/mobile/src/components/ui/`. Estos componentes proporcionan un sistema de diseño consistente:
+The mobile app uses Gluestack UI components located at `/packages/mobile/src/components/ui/`. These components provide a consistent design system:
 
-### Componentes UI Disponibles
+### Available UI Components
 
-#### **Layout y Estructura**
+#### **Layout and Structure**
 - `box/` - Componente contenedor para layout
 - `center/` - Componente wrapper para centrar
 - `grid/` - Sistema de layout grid
@@ -650,21 +681,9 @@ import { Toast, ToastTitle } from "@/components/ui/toast";
 import { Spinner } from "@/components/ui/spinner";
 ```
 
-### Guías de Componentes
+### Component Guidelines
 
-- **Siempre usar componentes Gluestack UI** en lugar de implementaciones custom
-- **Seguir la jerarquía de componentes** (ej. InputField dentro de Input)
-- **Usar VStack/HStack** para layouts en lugar de flexbox directamente
-- **Implementar spacing apropiado** usando componente Box con padding/margin
-- **Usar FormControl** para todas las implementaciones de campos de formulario
-- **Manejar estados de loading** con componentes Spinner o Skeleton
-
-## Development Reminders
-
-- **Linting Strategy**:
-  - Always run linting before committing code
-  - not run lint: This indicates a specific instruction to skip linting checks, which should be used sparingly and with caution
-
-## Dev Workflows
-
-- **Use VSCode MCP to know about the errors**
+- Always use Gluestack UI components instead of custom implementations
+- Follow component hierarchy (e.g., InputField inside Input)
+- Use VStack/HStack for layouts instead of direct flexbox
+- Implement proper spacing using Box component with padding/margin

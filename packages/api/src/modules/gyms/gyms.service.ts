@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CacheService } from '../../core/cache/cache.service';
 import { OrganizationsService } from '../organizations/organizations.service';
-import { CreateGymDto, UpdateGymDto } from './dto';
+import { CreateGymDto, UpdateGymDto, UpdateCurrentGymDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Gym } from '@prisma/client';
+import { IRequestContext } from '@gymspace/shared';
 
 @Injectable()
 export class GymsService {
@@ -17,7 +18,13 @@ export class GymsService {
   /**
    * Create a new gym (CU-004)
    */
-  async createGym(organizationId: string, dto: CreateGymDto, userId: string): Promise<Gym> {
+  async createGym(context: IRequestContext, dto: CreateGymDto): Promise<Gym> {
+    const userId = context.getUserId();
+    const organizationId = context.getOrganizationId();
+    
+    if (!organizationId) {
+      throw new BusinessException('Organization context is required');
+    }
     // Check if organization can add more gyms
     const canAdd = await this.organizationsService.canAddGym(organizationId);
     if (!canAdd) {
@@ -58,7 +65,8 @@ export class GymsService {
   /**
    * Update gym details (CU-005)
    */
-  async updateGym(gymId: string, dto: UpdateGymDto, userId: string): Promise<Gym> {
+  async updateGym(context: IRequestContext, gymId: string, dto: UpdateGymDto): Promise<Gym> {
+    const userId = context.getUserId();
     // Verify gym exists and user has access
     const gym = await this.prismaService.gym.findFirst({
       where: {
@@ -101,7 +109,8 @@ export class GymsService {
   /**
    * Get gym by ID
    */
-  async getGym(gymId: string, userId: string): Promise<Gym> {
+  async getGym(context: IRequestContext, gymId: string): Promise<Gym> {
+    const userId = context.getUserId();
     const gym = await this.prismaService.gym.findFirst({
       where: {
         id: gymId,
@@ -137,7 +146,14 @@ export class GymsService {
   /**
    * Get gyms for organization
    */
-  async getOrganizationGyms(organizationId: string, userId: string) {
+  async getOrganizationGyms(context: IRequestContext) {
+    const userId = context.getUserId();
+    const organizationId = context.getOrganizationId();
+    
+    if (!organizationId) {
+      throw new BusinessException('Organization context is required');
+    }
+
     // Verify user has access to organization
     await this.organizationsService.getOrganization(organizationId, userId);
 
@@ -166,9 +182,9 @@ export class GymsService {
   /**
    * Get gym statistics
    */
-  async getGymStats(gymId: string, userId: string) {
+  async getGymStats(context: IRequestContext, gymId: string) {
     // Verify access
-    const gym = await this.getGym(gymId, userId);
+    const gym = await this.getGym(context, gymId);
 
     const [
       totalClients,
@@ -247,7 +263,8 @@ export class GymsService {
   /**
    * Toggle gym active status
    */
-  async toggleGymStatus(gymId: string, userId: string): Promise<Gym> {
+  async toggleGymStatus(context: IRequestContext, gymId: string): Promise<Gym> {
+    const userId = context.getUserId();
     const gym = await this.prismaService.gym.findFirst({
       where: {
         id: gymId,
@@ -266,6 +283,71 @@ export class GymsService {
         updatedByUserId: userId,
       },
     });
+  }
+
+  /**
+   * Update current gym in session (only basic fields)
+   */
+  async updateCurrentGym(context: IRequestContext, dto: UpdateCurrentGymDto): Promise<Gym> {
+    const gymId = context.getGymId();
+    const userId = context.getUserId();
+    
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+
+    // Verify gym exists and user has access
+    const gym = await this.prismaService.gym.findFirst({
+      where: {
+        id: gymId,
+        OR: [
+          { organization: { ownerUserId: userId } },
+          { collaborators: { some: { userId, status: 'active' } } },
+        ],
+      },
+    });
+
+    if (!gym) {
+      throw new ResourceNotFoundException('Gym', gymId);
+    }
+
+    // Build update data with only the provided fields
+    const updateData: any = {
+      updatedByUserId: userId,
+    };
+
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.address !== undefined) updateData.address = dto.address;
+    if (dto.phone !== undefined) updateData.phone = dto.phone;
+    if (dto.email !== undefined) updateData.email = dto.email;
+    if (dto.assetId !== undefined) {
+      // You might want to validate the asset exists and belongs to the gym
+      updateData.settings = {
+        ...(gym.settings as object || {}),
+        logoAssetId: dto.assetId,
+      };
+    }
+
+    // Update gym with only basic fields
+    const updated = await this.prismaService.gym.update({
+      where: { id: gymId },
+      data: updateData,
+      include: {
+        organization: {
+          select: {
+            id: true,
+            country: true,
+            currency: true,
+            timezone: true,
+          },
+        },
+      },
+    });
+
+    // Invalidate cache
+    await this.cacheService.del(`gym:${gymId}`);
+
+    return updated;
   }
 
   /**

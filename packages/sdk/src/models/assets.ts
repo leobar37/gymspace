@@ -12,7 +12,7 @@ export interface AssetResponseDto {
   createdAt: string;
   updatedAt: string;
   uploadedBy: any;
-  previewUrl?: string;
+  previewUrl?: string | null; // Generated signed URL for preview (valid for 7 days)
 }
 
 export interface UploadAssetDto {

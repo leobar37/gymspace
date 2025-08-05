@@ -196,4 +196,8 @@ export class ApiClient {
     delete this.axiosInstance.defaults.headers.common['Authorization'];
     delete this.axiosInstance.defaults.headers.common['X-Gym-Id'];
   }
+
+  getBaseUrl(): string {
+    return this.config.baseURL;
+  }
 }
