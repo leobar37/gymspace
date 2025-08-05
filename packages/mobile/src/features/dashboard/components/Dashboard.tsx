@@ -157,17 +157,15 @@ export const Dashboard: React.FC = () => {
       }
     >
       <VStack className="p-4 gap-6">
-        {/* Welcome section */}
         <VStack className="gap-1">
           <Heading className="text-2xl font-bold text-gray-900">
             Panel de Control
           </Heading>
           <Text className="text-gray-600">
-            Resumen de tu gimnasio al {new Date().toLocaleDateString()}
+            {`Resumen de tu gimnasio al ${new Date().toLocaleDateString()}`}
           </Text>
         </VStack>
 
-        {/* Stats Grid */}
         <VStack className="gap-4">
           <View className="flex-row flex-wrap -mx-2">
             <View className="w-1/2 px-2 mb-4">
@@ -208,7 +206,6 @@ export const Dashboard: React.FC = () => {
           </View>
         </VStack>
 
-        {/* Expiring Contracts Alert */}
         {stats?.expiringContractsCount && stats.expiringContractsCount > 0 && (
           <Card className="p-4 bg-yellow-50 border border-yellow-200">
             <HStack className="items-center gap-3">
@@ -228,7 +225,6 @@ export const Dashboard: React.FC = () => {
           </Card>
         )}
 
-        {/* Recent Activity */}
         <Card className="p-4">
           <VStack className="gap-3">
             <HStack className="items-center justify-between mb-2">
@@ -255,7 +251,6 @@ export const Dashboard: React.FC = () => {
           </VStack>
         </Card>
 
-        {/* Quick Stats */}
         <Card className="p-4">
           <VStack className="gap-3">
             <Heading className="text-lg font-semibold text-gray-900 mb-2">

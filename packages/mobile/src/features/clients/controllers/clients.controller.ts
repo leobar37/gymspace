@@ -18,7 +18,7 @@ export interface ClientFormData {
   phone?: string;
   document?: string;
   birthDate?: string;
-  address: string;
+  // address: string; // Not supported by backend yet
   notes?: string;
   // Legacy fields for backward compatibility
   documentId?: string;

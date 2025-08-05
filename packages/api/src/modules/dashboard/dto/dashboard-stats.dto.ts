@@ -27,7 +27,7 @@ export class DashboardStatsDto {
 
   @ApiProperty({
     description: 'Monthly revenue for the current month',
-    example: 4250.00,
+    example: 4250.0,
   })
   monthlyRevenue: number;
 

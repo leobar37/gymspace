@@ -56,6 +56,8 @@ export default function LoginScreen() {
         email: data.email,
         password: data.password,
       });
+      console.log("auth responde", response);
+      
       return response;
     },
     onSuccess: async (response) => {
@@ -172,7 +174,7 @@ export default function LoginScreen() {
                     disabled={loginMutation.isPending}
                   />
 
-                  <HStack justifyContent="space-between" alignItems="center">
+                  <HStack className='justify-center items-center'>
                     <FormCheckbox
                       name="rememberMe"
                       label="Recordarme"
@@ -210,7 +212,7 @@ export default function LoginScreen() {
                   <Text className="text-gray-600">
                     ¿No tienes una cuenta?
                   </Text>
-                  <Link href="/(onboarding)/register" asChild>
+                  <Link href="/(onboarding)" asChild>
                     <Pressable>
                       <Text className="text-blue-500 font-medium">
                         Regístrate

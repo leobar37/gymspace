@@ -1,12 +1,17 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { GymSpaceConfig, RequestOptions } from './types';
-import { 
-  GymSpaceError, 
-  AuthenticationError, 
-  AuthorizationError, 
-  NotFoundError, 
+import {
+  GymSpaceError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
   ValidationError,
-  NetworkError 
+  NetworkError,
 } from './errors';
 
 export class ApiClient {
@@ -15,7 +20,7 @@ export class ApiClient {
 
   constructor(config: GymSpaceConfig) {
     this.config = config;
-    
+
     this.axiosInstance = axios.create({
       baseURL: config.baseURL,
       timeout: config.timeout || 30000,
@@ -36,12 +41,12 @@ export class ApiClient {
         if (this.config.apiKey && config.headers) {
           config.headers['Authorization'] = `Bearer ${this.config.apiKey}`;
         }
-        
+
         return config;
       },
       (error) => {
         return Promise.reject(error);
-      }
+      },
     );
 
     // Response interceptor
@@ -49,21 +54,50 @@ export class ApiClient {
       (response) => response,
       (error: AxiosError) => {
         throw this.handleError(error);
-      }
+      },
     );
   }
 
   private handleError(error: AxiosError): GymSpaceError {
-    console.error('API Error:', error.message);
-    
+    const requestPath = error.config?.url || 'unknown';
+    const method = error.config?.method?.toUpperCase() || 'unknown';
+
+    console.error(
+      'API Error:',
+      JSON.stringify(
+        {
+          method,
+          path: requestPath,
+          message: error.message,
+          baseURL: error.config?.baseURL,
+        },
+        null,
+        3,
+      ),
+    );
+
     if (!error.response) {
+      console.error('Network Error:', {
+        method,
+        path: requestPath,
+        error: error.message,
+      });
       return new NetworkError(error.message);
     }
 
     const { status, data } = error.response;
     const errorData = data as any;
+    const resource = errorData?.resource || 'unknown';
 
-    console.error(`HTTP ${status}:`, errorData?.message || error.message);
+    console.error('HTTP Error:', {
+      method,
+      path: requestPath,
+      status,
+      resource,
+      message: errorData?.message || error.message,
+      errorCode: errorData?.code,
+      details: errorData,
+    });
 
     switch (status) {
       case 401:
@@ -73,23 +107,20 @@ export class ApiClient {
       case 404:
         return new NotFoundError(errorData?.resource || 'Resource', errorData?.id);
       case 400:
-        return new ValidationError(
-          errorData?.message || 'Validation failed',
-          errorData?.errors
-        );
+        return new ValidationError(errorData?.message || 'Validation failed', errorData?.errors);
       default:
         return new GymSpaceError(
           errorData?.message || error.message,
           status,
           errorData?.code,
-          errorData
+          errorData,
         );
     }
   }
 
   private mergeOptions(options?: RequestOptions): AxiosRequestConfig {
     const headers: Record<string, string> = { ...options?.headers };
-    
+
     if (options?.gymId) {
       headers['X-Gym-Id'] = options.gymId;
     }
@@ -101,9 +132,13 @@ export class ApiClient {
     method: string,
     path: string,
     data?: any,
-    options?: RequestOptions & AxiosRequestConfig
+    options?: RequestOptions & AxiosRequestConfig,
   ): Promise<T> {
     const { headers, ...axiosConfig } = options || {};
+    console.log({
+      data,
+    });
+
     const config: AxiosRequestConfig = {
       method,
       url: path,

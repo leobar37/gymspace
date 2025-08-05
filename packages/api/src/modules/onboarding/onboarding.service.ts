@@ -68,6 +68,8 @@ export class OnboardingService {
     }
     const verificationCode = this.emailService.generateVerificationCode();
     try {
+      console.log('password dto', dto);
+
       // Create everything in a transaction
       const result = await this.prismaService.$transaction(async (tx) => {
         // Create Supabase user

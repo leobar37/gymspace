@@ -23,7 +23,7 @@ import { AssetsService } from './assets.service';
 import { UploadAssetDto, AssetResponseDto, AssetEntityType } from './dto';
 import { FileUploadResult } from './dto/fastify-file.interface';
 import { Allow } from '../../common/decorators/allow.decorator';
-import { RequestContext } from '../../common/decorators/request-context.decorator';
+import { AppCtxt } from '../../common/decorators/request-context.decorator';
 import { IRequestContext } from '@gymspace/shared';
 import { PERMISSIONS } from '@gymspace/shared';
 import { parseMultipartUpload, parseUploadDto } from './utils/multipart.util';
@@ -69,7 +69,7 @@ export class AssetsController {
     description: 'Asset uploaded successfully',
     type: AssetResponseDto,
   })
-  async upload(@Req() request: FastifyRequest, @RequestContext() context: IRequestContext) {
+  async upload(@Req() request: FastifyRequest, @AppCtxt() context: IRequestContext) {
     try {
       // Parse multipart upload
       const { file, fields } = await parseMultipartUpload(request);
@@ -99,10 +99,7 @@ export class AssetsController {
     description: 'Asset details',
     type: AssetResponseDto,
   })
-  async findOne(
-    @Param('id', ParseUUIDPipe) id: string,
-    @RequestContext() context: IRequestContext,
-  ) {
+  async findOne(@Param('id', ParseUUIDPipe) id: string, @AppCtxt() context: IRequestContext) {
     return this.assetsService.findOne(id, context);
   }
 
@@ -122,7 +119,7 @@ export class AssetsController {
   })
   async getDownloadUrl(
     @Param('id', ParseUUIDPipe) id: string,
-    @RequestContext() context: IRequestContext,
+    @AppCtxt() context: IRequestContext,
   ) {
     return this.assetsService.getDownloadUrl(id, context);
   }
@@ -136,7 +133,7 @@ export class AssetsController {
   })
   async download(
     @Param('id', ParseUUIDPipe) id: string,
-    @RequestContext() context: IRequestContext,
+    @AppCtxt() context: IRequestContext,
     @Res() res: FastifyReply,
   ) {
     const { stream, filename, mimeType, fileSize } = await this.assetsService.download(id, context);
@@ -157,7 +154,7 @@ export class AssetsController {
     status: 200,
     description: 'Asset deleted successfully',
   })
-  async delete(@Param('id', ParseUUIDPipe) id: string, @RequestContext() context: IRequestContext) {
+  async delete(@Param('id', ParseUUIDPipe) id: string, @AppCtxt() context: IRequestContext) {
     return this.assetsService.delete(id, context);
   }
 
@@ -172,7 +169,7 @@ export class AssetsController {
   async findByEntity(
     @Param('entityType') entityType: AssetEntityType,
     @Param('entityId', ParseUUIDPipe) entityId: string,
-    @RequestContext() context: IRequestContext,
+    @AppCtxt() context: IRequestContext,
   ) {
     return this.assetsService.findByEntity(entityType, entityId, context);
   }

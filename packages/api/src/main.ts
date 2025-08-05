@@ -71,6 +71,7 @@ async function bootstrap() {
     }),
   );
 
+  
   // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('GymSpace API')

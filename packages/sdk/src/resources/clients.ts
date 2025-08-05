@@ -9,7 +9,7 @@ import {
 import { RequestOptions, PaginatedResponseDto } from '../types';
 
 export class ClientsResource extends BaseResource {
-  private basePath = '/api/v1/clients';
+  private basePath = 'clients';
 
   async createClient(data: CreateClientDto, options?: RequestOptions): Promise<Client> {
     return this.client.post<Client>(this.basePath, data, options);

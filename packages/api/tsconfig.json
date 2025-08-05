@@ -18,7 +18,8 @@
     "resolveJsonModule": true,
     "customConditions": ["source"],
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "src/*": ["./src/*"]
     },
     "types": ["@types/jest"]
   }

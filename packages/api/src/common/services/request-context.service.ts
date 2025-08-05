@@ -1,7 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { IGym, IOrganization, IRequestContext, IUser, Permission, UUID } from '@gymspace/shared';
 import { FastifyRequest } from 'fastify';
-import { IRequestContext, IUser, IGym, IOrganization, Permission } from '@gymspace/shared';
-import { UUID } from '@gymspace/shared';
 
 export class RequestContext implements IRequestContext {
   private _user: IUser;
@@ -55,9 +53,7 @@ export class RequestContext implements IRequestContext {
       this._user = request.user as IUser;
     }
 
-    // Gym ID from header
-    const gymId = request.headers['x-gym-id'] as string;
-    if (gymId && request.gym) {
+    if (request.gym) {
       this._gym = request.gym as IGym;
     }
 

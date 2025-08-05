@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiSecurity } from '@nestjs/swagger';
 import { GymsService } from './gyms.service';
 import { CreateGymDto, UpdateGymDto } from './dto';
-import { Allow, RequestContext } from '../../common/decorators';
+import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS } from '@gymspace/shared';
 
@@ -21,7 +21,7 @@ export class GymsController {
   async createGym(
     @Query('organizationId') organizationId: string,
     @Body() dto: CreateGymDto,
-    @RequestContext() ctx: RequestContext,
+    @AppCtxt() ctx: RequestContext,
   ) {
     return await this.gymsService.createGym(organizationId, dto, ctx.getUserId());
   }
@@ -32,7 +32,7 @@ export class GymsController {
   @ApiOperation({ summary: 'Get gym details' })
   @ApiResponse({ status: 200, description: 'Gym details' })
   @ApiResponse({ status: 404, description: 'Gym not found' })
-  async getGym(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
+  async getGym(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.gymsService.getGym(id, ctx.getUserId());
   }
 
@@ -45,7 +45,7 @@ export class GymsController {
   async updateGym(
     @Param('id') id: string,
     @Body() dto: UpdateGymDto,
-    @RequestContext() ctx: RequestContext,
+    @AppCtxt() ctx: RequestContext,
   ) {
     return await this.gymsService.updateGym(id, dto, ctx.getUserId());
   }
@@ -55,7 +55,7 @@ export class GymsController {
   @ApiResponse({ status: 200, description: 'List of gyms' })
   async getOrganizationGyms(
     @Query('organizationId') organizationId: string,
-    @RequestContext() ctx: RequestContext,
+    @AppCtxt() ctx: RequestContext,
   ) {
     return await this.gymsService.getOrganizationGyms(organizationId, ctx.getUserId());
   }
@@ -66,7 +66,7 @@ export class GymsController {
   @ApiOperation({ summary: 'Get gym statistics' })
   @ApiResponse({ status: 200, description: 'Gym statistics' })
   @ApiResponse({ status: 404, description: 'Gym not found' })
-  async getGymStats(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
+  async getGymStats(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.gymsService.getGymStats(id, ctx.getUserId());
   }
 
@@ -75,7 +75,7 @@ export class GymsController {
   @ApiOperation({ summary: 'Toggle gym active status' })
   @ApiResponse({ status: 200, description: 'Gym status toggled successfully' })
   @ApiResponse({ status: 404, description: 'Gym not found' })
-  async toggleGymStatus(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
+  async toggleGymStatus(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.gymsService.toggleGymStatus(id, ctx.getUserId());
   }
 }

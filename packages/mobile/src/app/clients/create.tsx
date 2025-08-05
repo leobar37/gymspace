@@ -7,8 +7,7 @@ export default function CreateClientScreen() {
     <>
       <Stack.Screen 
         options={{ 
-          title: 'Nuevo Cliente',
-          headerBackTitle: 'Clientes',
+          headerShown: false,
         }} 
       />
       <CreateClientForm />

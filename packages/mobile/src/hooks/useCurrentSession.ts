@@ -35,6 +35,7 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
     queryFn: async (): Promise<CurrentSessionResponse | null> => {
       // Double-check token validity before making the request
       const tokenValid = await hasValidToken();
+
       if (!tokenValid) {
         // Try to refresh token first
         const refreshedToken = await refreshToken();
@@ -42,31 +43,27 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
           return null;
         }
       }
-
       try {
         const response = await sdk.auth.getCurrentSession();
-        
-        // If we get a gym in the response but don't have a current gym ID stored,
-        // store it automatically (this handles the onboarding case)
-        if (response?.gym?.id && !currentGymId) {
-          await setCurrentGymId(response.gym.id);
-        }
-        
+
+        console.log('response', response);
+
         return response;
       } catch (error: any) {
         // Handle 401 errors by attempting token refresh
         if (error.status === 401) {
           const refreshedToken = await refreshToken();
           if (refreshedToken) {
+            r;
             // Retry the request with new token
             const response = await sdk.auth.getCurrentSession();
-            
+
             // If we get a gym in the response but don't have a current gym ID stored,
             // store it automatically (this handles the onboarding case)
             if (response?.gym?.id && !currentGymId) {
               await setCurrentGymId(response.gym.id);
             }
-            
+
             return response;
           }
         }
@@ -98,7 +95,9 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
     queryClient.removeQueries({ queryKey: sessionKeys.all });
   };
 
-  const updateSessionCache = (updater: (old: CurrentSessionResponse | null | undefined) => CurrentSessionResponse | null) => {
+  const updateSessionCache = (
+    updater: (old: CurrentSessionResponse | null | undefined) => CurrentSessionResponse | null,
+  ) => {
     queryClient.setQueryData(sessionKeys.current(), updater);
   };
 
@@ -109,19 +108,19 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
     gym: sessionQuery.data?.gym || null,
     organization: sessionQuery.data?.organization || null,
     permissions: sessionQuery.data?.permissions || [],
-    
+
     // Query states
     isLoading: sessionQuery.isLoading,
     isFetching: sessionQuery.isFetching,
     isError: sessionQuery.isError,
     error: sessionQuery.error,
     isSuccess: sessionQuery.isSuccess,
-    
+
     // Utility functions
     refetchSession,
     clearSessionCache,
     updateSessionCache,
-    
+
     // Computed values
     isAuthenticated: sessionQuery.isSuccess && !!sessionQuery.data?.isAuthenticated,
     hasPermission: (permission: string) => {

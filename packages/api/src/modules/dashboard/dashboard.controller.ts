@@ -8,14 +8,10 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
-import { Allow, RequestContext } from '../../common/decorators';
+import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS } from '@gymspace/shared';
-import {
-  DashboardStatsDto,
-  RecentActivityDto,
-  ExpiringContractDto,
-} from './dto';
+import { DashboardStatsDto, RecentActivityDto, ExpiringContractDto } from './dto';
 
 @ApiTags('Dashboard')
 @Controller('dashboard')
@@ -28,7 +24,8 @@ export class DashboardController {
   @Allow(PERMISSIONS.REPORTS_VIEW)
   @ApiOperation({
     summary: 'Get dashboard statistics',
-    description: 'Get aggregated statistics for the gym dashboard including clients, contracts, revenue, and check-ins',
+    description:
+      'Get aggregated statistics for the gym dashboard including clients, contracts, revenue, and check-ins',
   })
   @ApiResponse({
     status: 200,
@@ -36,10 +33,8 @@ export class DashboardController {
     type: DashboardStatsDto,
   })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  async getDashboardStats(
-    @RequestContext() ctx: RequestContext,
-  ): Promise<DashboardStatsDto> {
-    return await this.dashboardService.getDashboardStats();
+  async getDashboardStats(@AppCtxt() ctx: RequestContext): Promise<DashboardStatsDto> {
+    return await this.dashboardService.getDashboardStats(ctx);
   }
 
   @Get('recent-activity')
@@ -62,11 +57,11 @@ export class DashboardController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async getRecentActivity(
+    @AppCtxt() ctx: RequestContext,
     @Query('limit') limit?: string,
-    @RequestContext() ctx?: RequestContext,
   ): Promise<RecentActivityDto[]> {
     const limitNum = limit ? parseInt(limit, 10) : 10;
-    return await this.dashboardService.getRecentActivity(limitNum);
+    return await this.dashboardService.getRecentActivity(ctx, limitNum);
   }
 
   @Get('expiring-contracts')
@@ -89,10 +84,10 @@ export class DashboardController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async getExpiringContracts(
+    @AppCtxt() ctx: RequestContext,
     @Query('limit') limit?: string,
-    @RequestContext() ctx?: RequestContext,
   ): Promise<ExpiringContractDto[]> {
     const limitNum = limit ? parseInt(limit, 10) : 10;
-    return await this.dashboardService.getExpiringContracts(limitNum);
+    return await this.dashboardService.getExpiringContracts(ctx, limitNum);
   }
 }

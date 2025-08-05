@@ -7,14 +7,14 @@ export class RequestContextInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
 
-    // Create a new instance of RequestContextService for this request
-    const requestContextService = new RequestContext();
+    // Check if RequestContext already exists (created by AuthGuard)
+    if (!request.requestContext) {
+      // Create a new instance of RequestContext for this request
+      const requestContext = new RequestContext();
 
-    // Initialize request context from the request
-    const requestContext = requestContextService.fromRequest(request);
-
-    // Attach to request for access in decorators
-    request.requestContext = requestContext;
+      // Initialize request context from the request
+      request.requestContext = requestContext.fromRequest(request);
+    }
 
     return next.handle();
   }

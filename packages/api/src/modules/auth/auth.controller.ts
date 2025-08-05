@@ -12,7 +12,7 @@ import {
   CurrentSessionDto,
 } from './dto';
 import { Public } from '../../common/decorators';
-import { RequestContext } from '../../common/decorators/request-context.decorator';
+import { AppCtxt } from '../../common/decorators/request-context.decorator';
 import { IRequestContext } from '@gymspace/shared';
 
 @ApiTags('Authentication')
@@ -122,7 +122,8 @@ export class AuthController {
     type: CurrentSessionDto,
   })
   @ApiResponse({ status: 401, description: 'User not authenticated' })
-  async getCurrentSession(@RequestContext() context: IRequestContext): Promise<CurrentSessionDto> {
+  async getCurrentSession(@AppCtxt() context: IRequestContext): Promise<CurrentSessionDto> {
+    console.log('gym', context.gym);
     return {
       user: context.user,
       gym: context.gym,

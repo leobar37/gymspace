@@ -46,8 +46,15 @@ async function resetDatabase() {
       cwd: process.cwd()
     });
     
+    // Step 5: Setup default user
+    console.log('👤 Setting up default user...');
+    execSync('pnpm run setup:user', { 
+      stdio: 'inherit',
+      cwd: process.cwd()
+    });
+    
     console.log('✅ Database reset completed successfully!');
-    console.log('📈 Database is now ready with fresh schema and seed data.');
+    console.log('📈 Database is now ready with fresh schema, seed data, and default user.');
     
   } catch (error) {
     console.error('❌ Database reset failed:', error);

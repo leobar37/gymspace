@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiSecurity } from '@nestjs/swagger';
 import { ClientsService } from './clients.service';
 import { CreateClientDto, UpdateClientDto, SearchClientsDto } from './dto';
-import { Allow, RequestContext } from '../../common/decorators';
+import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS } from '@gymspace/shared';
 
@@ -19,7 +19,7 @@ export class ClientsController {
   @ApiResponse({ status: 201, description: 'Client created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 403, description: 'Forbidden - Client limit reached' })
-  async createClient(@Body() dto: CreateClientDto, @RequestContext() ctx: RequestContext) {
+  async createClient(@Body() dto: CreateClientDto, @AppCtxt() ctx: RequestContext) {
     return await this.clientsService.createClient(ctx.getGymId()!, dto, ctx.getUserId()!);
   }
 
@@ -28,7 +28,7 @@ export class ClientsController {
   @ApiOperation({ summary: 'Get client details' })
   @ApiResponse({ status: 200, description: 'Client details' })
   @ApiResponse({ status: 404, description: 'Client not found' })
-  async getClient(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
+  async getClient(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.clientsService.getClient(id, ctx.getUserId());
   }
 
@@ -40,7 +40,7 @@ export class ClientsController {
   async updateClient(
     @Param('id') id: string,
     @Body() dto: UpdateClientDto,
-    @RequestContext() ctx: RequestContext,
+    @AppCtxt() ctx: RequestContext,
   ) {
     return await this.clientsService.updateClient(id, dto, ctx.getUserId());
   }
@@ -49,10 +49,7 @@ export class ClientsController {
   @Allow(PERMISSIONS.CLIENTS_READ)
   @ApiOperation({ summary: 'Search clients in gym' })
   @ApiResponse({ status: 200, description: 'List of clients' })
-  async searchClients(
-    @Query() dto: SearchClientsDto,
-    @RequestContext() ctx: RequestContext,
-  ) {
+  async searchClients(@Query() dto: SearchClientsDto, @AppCtxt() ctx: RequestContext) {
     return await this.clientsService.searchClients(ctx.getGymId()!, dto, ctx.getUserId()!);
   }
 
@@ -61,7 +58,7 @@ export class ClientsController {
   @ApiOperation({ summary: 'Toggle client active/inactive status' })
   @ApiResponse({ status: 200, description: 'Client status toggled successfully' })
   @ApiResponse({ status: 404, description: 'Client not found' })
-  async toggleClientStatus(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
+  async toggleClientStatus(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.clientsService.toggleClientStatus(id, ctx.getUserId());
   }
 
@@ -70,7 +67,7 @@ export class ClientsController {
   @ApiOperation({ summary: 'Get client statistics' })
   @ApiResponse({ status: 200, description: 'Client statistics' })
   @ApiResponse({ status: 404, description: 'Client not found' })
-  async getClientStats(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
+  async getClientStats(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.clientsService.getClientStats(id, ctx.getUserId());
   }
 }

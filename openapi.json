@@ -809,6 +809,52 @@
         "summary": "Search clients in gym",
         "parameters": [
           {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order",
+            "schema": {
+              "default": "desc",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
             "name": "search",
             "required": false,
             "in": "query",
@@ -824,24 +870,6 @@
             "schema": {
               "example": true,
               "type": "boolean"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "example": 10,
-              "type": "number"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "example": 0,
-              "type": "number"
             }
           }
         ],
@@ -3721,70 +3749,7 @@
       },
       "UpdateClientDto": {
         "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "John Doe"
-          },
-          "email": {
-            "type": "string",
-            "example": "john.doe@example.com"
-          },
-          "phone": {
-            "type": "string",
-            "example": "+1234567890"
-          },
-          "document": {
-            "type": "string",
-            "example": "12345678"
-          },
-          "birthDate": {
-            "type": "string",
-            "example": "1990-01-01"
-          },
-          "gender": {
-            "type": "string",
-            "example": "male"
-          },
-          "maritalStatus": {
-            "type": "string",
-            "example": "single"
-          },
-          "address": {
-            "type": "string",
-            "example": "123 Main St"
-          },
-          "city": {
-            "type": "string",
-            "example": "New York"
-          },
-          "state": {
-            "type": "string",
-            "example": "NY"
-          },
-          "postalCode": {
-            "type": "string",
-            "example": "10001"
-          },
-          "occupation": {
-            "type": "string",
-            "example": "Software Developer"
-          },
-          "notes": {
-            "type": "string",
-            "example": "Emergency Contact: Jane Doe - +1234567891"
-          },
-          "customData": {
-            "type": "object",
-            "example": {
-              "referredBy": "Facebook",
-              "interests": [
-                "Weight Loss",
-                "Muscle Gain"
-              ]
-            }
-          }
-        }
+        "properties": {}
       },
       "CreateMembershipPlanDto": {
         "type": "object",

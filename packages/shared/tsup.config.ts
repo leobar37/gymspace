@@ -11,6 +11,7 @@ export default defineConfig({
   treeshake: true,
   outDir: 'dist',
   external: [],
+  tsconfig: "./tsconfig.json",
   noExternal: [],
   // Enable watch mode for development
   onSuccess: async () => {

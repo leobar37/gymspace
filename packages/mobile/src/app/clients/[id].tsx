@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, ScrollView, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useClientsController } from '@/features/clients/controllers/clients.controller';
 import { VStack } from '@/components/ui/vstack';
@@ -36,6 +37,7 @@ import {
   EditIcon,
   MoreHorizontalIcon,
   TrashIcon,
+  ChevronLeftIcon,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 
@@ -87,42 +89,51 @@ export default function ClientDetailScreen() {
 
   if (isLoading) {
     return (
-      <VStack className="flex-1 items-center justify-center">
-        <Spinner className="text-blue-600" />
-        <Text className="text-gray-600 mt-2">Cargando cliente...</Text>
-      </VStack>
+      <SafeAreaView className="flex-1 bg-white">
+        <VStack className="flex-1 items-center justify-center">
+          <Spinner />
+          <Text className="text-gray-600 mt-2">Cargando cliente...</Text>
+        </VStack>
+      </SafeAreaView>
     );
   }
 
   if (!client) {
     return (
-      <VStack className="flex-1 items-center justify-center p-8">
-        <Text className="text-gray-600">Cliente no encontrado</Text>
-      </VStack>
+      <SafeAreaView className="flex-1 bg-white">
+        <VStack className="flex-1 items-center justify-center p-8">
+          <Text className="text-gray-600">Cliente no encontrado</Text>
+        </VStack>
+      </SafeAreaView>
     );
   }
 
   return (
-    <>
-      <Stack.Screen 
-        options={{ 
-          title: client.name,
-          headerBackTitle: 'Clientes',
-          headerRight: () => (
-            <Pressable onPress={handleMorePress} className="p-2">
-              <Icon as={MoreHorizontalIcon} className="w-5 h-5 text-blue-600" />
+    <SafeAreaView className="flex-1 bg-gray-50">
+      {/* Custom Header */}
+      <View className="bg-white border-b border-gray-200">
+        <HStack className="items-center justify-between px-4 py-3">
+          <HStack className="items-center flex-1">
+            <Pressable onPress={() => router.back()} className="p-2 -ml-2">
+              <Icon as={ChevronLeftIcon} size="xl" />
             </Pressable>
-          ),
-        }} 
-      />
+            <Text className="text-lg font-semibold ml-2" numberOfLines={1}>
+              {client.name}
+            </Text>
+          </HStack>
+          <Pressable onPress={handleMorePress} className="p-2">
+            <Icon as={MoreHorizontalIcon} />
+          </Pressable>
+        </HStack>
+      </View>
       
-      <ScrollView className="flex-1 bg-gray-50">
+      <ScrollView className="flex-1">
         <VStack className="p-4 gap-4">
           {/* Client Header */}
           <Card className="p-6">
             <HStack className="items-center gap-4">
-              <Avatar className="w-20 h-20 bg-blue-600">
-                <Text className="text-white text-2xl font-semibold">
+              <Avatar size="xl">
+                <Text>
                   {client.name.split(' ').map((n: string) => n[0]).join('')}
                 </Text>
               </Avatar>
@@ -136,7 +147,6 @@ export default function ClientDetailScreen() {
                 <Badge
                   variant="solid"
                   action={client.isActive ? 'success' : 'muted'}
-                  className="mt-2 self-start"
                 >
                   <BadgeText>{client.isActive ? 'Activo' : 'Inactivo'}</BadgeText>
                 </Badge>
@@ -163,7 +173,7 @@ export default function ClientDetailScreen() {
                 </HStack>
               )}
               <HStack className="items-center gap-3">
-                <Icon as={CalendarIcon} className="w-4 h-4 text-gray-500" />
+                <Icon as={CalendarIcon} />
                 <Text className="text-gray-700">
                   Nacimiento: {new Date(client.birthDate).toLocaleDateString()}
                 </Text>
@@ -231,7 +241,6 @@ export default function ClientDetailScreen() {
               onPress={handleToggleStatus}
               variant={client.isActive ? 'outline' : 'solid'}
               disabled={isTogglingStatus}
-              className="w-full"
             >
               <ButtonText>
                 {client.isActive ? 'Desactivar Cliente' : 'Activar Cliente'}
@@ -255,25 +264,28 @@ export default function ClientDetailScreen() {
           </ActionsheetItem>
           
           <ActionsheetItem onPress={handleToggleStatusPress}>
-            <Icon as={TrashIcon} className="w-4 h-4 text-orange-500 mr-3" />
-            <ActionsheetItemText className="text-orange-500">
-              {client?.isActive ? 'Desactivar' : 'Activar'}
+            <Icon as={TrashIcon} className="w-4 h-4 text-red-500 mr-3" />
+            <ActionsheetItemText className="text-red-500">
+              Eliminar
             </ActionsheetItemText>
           </ActionsheetItem>
         </ActionsheetContent>
       </Actionsheet>
 
-      {/* Status Toggle Confirmation Alert */}
+      {/* Delete Confirmation Alert */}
       <AlertDialog isOpen={showDeleteAlert} onClose={handleCancelDelete}>
         <AlertDialogBackdrop />
         <AlertDialogContent>
           <AlertDialogHeader>
-            <Text className="text-lg font-semibold">Confirmar cambio de estado</Text>
+            <Text className="text-lg font-semibold">Eliminar Cliente</Text>
             <AlertDialogCloseButton onPress={handleCancelDelete} />
           </AlertDialogHeader>
           <AlertDialogBody>
             <Text className="text-gray-600">
-              ¿Estás seguro de que deseas {client?.isActive ? 'desactivar' : 'activar'} a {client?.name}?
+              ¿Estás seguro de que deseas eliminar a {client?.name}?
+            </Text>
+            <Text className="text-sm text-gray-500 mt-2">
+              Nota: El cliente será desactivado y no podrá acceder al gimnasio, pero su historial se mantendrá.
             </Text>
           </AlertDialogBody>
           <AlertDialogFooter>
@@ -281,17 +293,17 @@ export default function ClientDetailScreen() {
               <ButtonText>Cancelar</ButtonText>
             </Button>
             <Button 
-              className="bg-orange-600 ml-3" 
+              action="negative"
               onPress={handleConfirmToggleStatus}
               disabled={isTogglingStatus}
             >
               <ButtonText>
-                {client?.isActive ? 'Desactivar' : 'Activar'}
+                Eliminar
               </ButtonText>
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </SafeAreaView>
   );
 }

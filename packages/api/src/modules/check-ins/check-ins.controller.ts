@@ -9,7 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { CheckInsService } from './check-ins.service';
 import { CreateCheckInDto, SearchCheckInsDto } from './dto';
-import { Allow, RequestContext } from '../../common/decorators';
+import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS } from '@gymspace/shared';
 
@@ -25,7 +25,7 @@ export class CheckInsController {
   @ApiOperation({ summary: 'Create a check-in for a client' })
   @ApiResponse({ status: 201, description: 'Check-in created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  async createCheckIn(@Body() dto: CreateCheckInDto, @RequestContext() ctx: RequestContext) {
+  async createCheckIn(@Body() dto: CreateCheckInDto, @AppCtxt() ctx: RequestContext) {
     return await this.checkInsService.createCheckIn(ctx.getGymId()!, dto, ctx.getUserId());
   }
 
@@ -34,7 +34,7 @@ export class CheckInsController {
   @ApiOperation({ summary: 'Get check-in details' })
   @ApiResponse({ status: 200, description: 'Check-in details' })
   @ApiResponse({ status: 404, description: 'Check-in not found' })
-  async getCheckIn(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
+  async getCheckIn(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.checkInsService.getCheckIn(id, ctx.getUserId());
   }
 
@@ -42,10 +42,7 @@ export class CheckInsController {
   @Allow(PERMISSIONS.CHECKINS_READ)
   @ApiOperation({ summary: 'Search check-ins' })
   @ApiResponse({ status: 200, description: 'List of check-ins' })
-  async searchCheckIns(
-    @Query() dto: SearchCheckInsDto,
-    @RequestContext() ctx: RequestContext,
-  ) {
+  async searchCheckIns(@Query() dto: SearchCheckInsDto, @AppCtxt() ctx: RequestContext) {
     return await this.checkInsService.searchCheckIns(ctx.getGymId()!, dto, ctx.getUserId());
   }
 
@@ -56,7 +53,7 @@ export class CheckInsController {
   @ApiResponse({ status: 200, description: 'Check-in statistics' })
   async getGymCheckInStats(
     @Param('period') period: 'day' | 'week' | 'month',
-    @RequestContext() ctx: RequestContext,
+    @AppCtxt() ctx: RequestContext,
   ) {
     return await this.checkInsService.getGymCheckInStats(ctx.getGymId()!, ctx.getUserId(), period);
   }
@@ -69,7 +66,7 @@ export class CheckInsController {
   async getClientCheckInHistory(
     @Param('clientId') clientId: string,
     @Query('limit') limit: string,
-    @RequestContext() ctx: RequestContext,
+    @AppCtxt() ctx: RequestContext,
   ) {
     return await this.checkInsService.getClientCheckInHistory(
       clientId,
@@ -84,7 +81,7 @@ export class CheckInsController {
   @ApiResponse({ status: 200, description: 'Check-in deleted successfully' })
   @ApiResponse({ status: 404, description: 'Check-in not found' })
   @ApiResponse({ status: 400, description: "Can only delete today's check-ins" })
-  async deleteCheckIn(@Param('id') id: string, @RequestContext() ctx: RequestContext) {
+  async deleteCheckIn(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     await this.checkInsService.deleteCheckIn(id, ctx.getUserId());
     return { message: 'Check-in deleted successfully' };
   }

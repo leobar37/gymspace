@@ -1,31 +1,35 @@
 import React from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, ScrollView, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import {
   FormInput,
   FormTextarea,
+  FormDatePicker,
   FormProvider,
   useForm,
   zodResolver,
 } from '@/components/forms';
 import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
+import { Icon } from '@/components/ui/icon';
+import { ChevronLeft } from 'lucide-react-native';
 import { useClientsController, ClientFormData } from '../controllers/clients.controller';
 import { router } from 'expo-router';
-import { showToast } from '@/components/ui/toast';
+import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 
 // Validation schema
 const clientSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato: AAAA-MM-DD').optional().or(z.literal('')),
+  birthDate: z.date().nullable().optional(),
   document: z.string().min(6, 'Documento inválido').optional().or(z.literal('')),
   phone: z.string().min(8, 'Teléfono inválido').optional().or(z.literal('')),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
-  address: z.string().min(1, 'La dirección es requerida'),
+  // address: z.string().min(1, 'La dirección es requerida'), // Not supported by backend yet
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
   medicalConditions: z.string().optional(),
@@ -47,16 +51,17 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
 }) => {
   const { createClient, updateClient, isCreatingClient, isUpdatingClient } = useClientsController();
   const isLoading = isCreatingClient || isUpdatingClient;
+  const toast = useToast();
 
   const methods = useForm<ClientFormSchema>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
       name: initialData?.name || '',
-      birthDate: initialData?.birthDate || '',
+      birthDate: initialData?.birthDate ? new Date(initialData.birthDate) : null,
       document: initialData?.document || initialData?.documentId || '',
       phone: initialData?.phone || '',
       email: initialData?.email || '',
-      address: initialData?.address || '',
+      // address: initialData?.address || '', // Not supported by backend yet
       emergencyContactName: initialData?.emergencyContactName || '',
       emergencyContactPhone: initialData?.emergencyContactPhone || '',
       medicalConditions: initialData?.medicalConditions || '',
@@ -64,50 +69,99 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
     },
   });
 
-  const onSubmit = async (data: ClientFormSchema) => {
-    try {
-      if (isEditing && clientId) {
-        updateClient(
-          { id: clientId, data },
-          {
-            onSuccess: () => {
-              showToast({
-                title: 'Cliente actualizado',
-                description: 'Los datos del cliente se actualizaron correctamente',
-                action: 'success',
-              });
-              router.back();
-            },
-            onError: (error) => {
-              showToast({
-                title: 'Error',
-                description: 'No se pudo actualizar el cliente',
-                action: 'error',
-              });
-            },
-          }
-        );
-      } else {
-        createClient(data as ClientFormData, {
+  const onSubmit = (data: ClientFormSchema) => {
+    // Convert date to string format for API and ensure required fields
+    const formattedData = {
+      ...data,
+      birthDate: data.birthDate ? data.birthDate.toISOString().split('T')[0] : undefined,
+      // Ensure email is always a string (required by API)
+      email: data.email || '',
+      // Clean up optional fields
+      document: data.document || undefined,
+      phone: data.phone || undefined,
+      emergencyContactName: data.emergencyContactName || undefined,
+      emergencyContactPhone: data.emergencyContactPhone || undefined,
+      medicalConditions: data.medicalConditions || undefined,
+      notes: data.notes || undefined,
+    };
+
+    if (isEditing && clientId) {
+      updateClient(
+        { id: clientId, data: formattedData },
+        {
           onSuccess: () => {
-            showToast({
-              title: 'Cliente creado',
-              description: 'El cliente se registró correctamente',
-              action: 'success',
+            toast.show({
+              placement: 'top',
+              duration: 3000,
+              render: ({ id }) => {
+                return (
+                  <Toast nativeID={`toast-${id}`} action="success" variant="solid">
+                    <ToastTitle>Cliente actualizado</ToastTitle>
+                    <ToastDescription>
+                      Los datos del cliente se actualizaron correctamente
+                    </ToastDescription>
+                  </Toast>
+                );
+              },
             });
             router.back();
           },
           onError: (error) => {
-            showToast({
-              title: 'Error',
-              description: 'No se pudo crear el cliente',
-              action: 'error',
+            console.error('Update client error:', error);
+            toast.show({
+              placement: 'top',
+              duration: 4000,
+              render: ({ id }) => {
+                return (
+                  <Toast nativeID={`toast-${id}`} action="error" variant="solid">
+                    <ToastTitle>Error</ToastTitle>
+                    <ToastDescription>
+                      No se pudo actualizar el cliente
+                    </ToastDescription>
+                  </Toast>
+                );
+              },
             });
           },
-        });
-      }
-    } catch (error) {
-      console.error('Form submission error:', error);
+        }
+      );
+    } else {
+      createClient(formattedData as ClientFormData, {
+        onSuccess: () => {
+          toast.show({
+            placement: 'top',
+            duration: 3000,
+            render: ({ id }) => {
+              return (
+                <Toast nativeID={`toast-${id}`} action="success" variant="solid">
+                  <ToastTitle>Cliente creado</ToastTitle>
+                  <ToastDescription>
+                    El cliente se registró correctamente
+                  </ToastDescription>
+                </Toast>
+              );
+            },
+          });
+          router.back();
+        },
+        onError: (error) => {
+          console.error('Create client error:', error);
+          toast.show({
+            placement: 'top',
+            duration: 4000,
+            render: ({ id }) => {
+              return (
+                <Toast nativeID={`toast-${id}`} action="error" variant="solid">
+                  <ToastTitle>Error</ToastTitle>
+                  <ToastDescription>
+                    No se pudo crear el cliente
+                  </ToastDescription>
+                </Toast>
+              );
+            },
+          });
+        },
+      });
     }
   };
 
@@ -125,6 +179,16 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
           <View className="flex-1 p-4">
           <FormProvider {...methods}>
             <VStack className="gap-6">
+              {/* Back Button and Title */}
+              <HStack className="items-center gap-2 mb-2">
+                <Pressable onPress={() => router.back()} className="p-2 -ml-2">
+                  <Icon as={ChevronLeft} className="text-gray-600" size="xl" />
+                </Pressable>
+                <Heading className="text-2xl font-bold text-gray-900">
+                  {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
+                </Heading>
+              </HStack>
+
               {/* Personal Information */}
               <VStack className="gap-4">
                 <Heading className="text-xl font-bold text-gray-900">
@@ -139,12 +203,12 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                   returnKeyType="next"
                 />
 
-                <FormInput
+                <FormDatePicker
                   name="birthDate"
                   label="Fecha de nacimiento (opcional)"
-                  placeholder="1990-01-31"
-                  keyboardType="numeric"
-                  returnKeyType="next"
+                  placeholder="Seleccionar fecha"
+                  mode="date"
+                  maximumDate={new Date()}
                 />
 
                 <FormInput
@@ -242,17 +306,20 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
               <Button
                 onPress={methods.handleSubmit(onSubmit)}
                 disabled={isLoading}
-                className="w-full py-3 px-6 bg-blue-600 rounded-lg mt-6"
+                size="lg"
+                action="primary"
+                variant="solid"
+                className="w-full mt-6"
               >
                 {isLoading ? (
                   <>
-                    <ButtonSpinner className="text-white" />
-                    <ButtonText className="text-white font-semibold ml-2">
+                    <ButtonSpinner />
+                    <ButtonText>
                       {isEditing ? 'Actualizando...' : 'Creando...'}
                     </ButtonText>
                   </>
                 ) : (
-                  <ButtonText className="text-white font-semibold text-center">
+                  <ButtonText>
                     {isEditing ? 'Actualizar Cliente' : 'Crear Cliente'}
                   </ButtonText>
                 )}

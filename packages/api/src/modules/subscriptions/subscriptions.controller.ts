@@ -2,7 +2,7 @@ import { IRequestContext, PERMISSIONS } from '@gymspace/shared';
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Allow } from '../../common/decorators/allow.decorator';
-import { RequestContext } from '../../common/decorators/request-context.decorator';
+import { AppCtxt } from '../../common/decorators/request-context.decorator';
 import { AffiliateOrganizationDto, AvailablePlanDto, SubscriptionStatusDto } from './dto';
 import { SubscriptionsService } from './subscriptions.service';
 
@@ -19,7 +19,7 @@ export class SubscriptionsController {
     description: 'List of available subscription plans',
     type: [AvailablePlanDto],
   })
-  async getAvailablePlans(@RequestContext() context: IRequestContext): Promise<AvailablePlanDto[]> {
+  async getAvailablePlans(@AppCtxt() context: IRequestContext): Promise<AvailablePlanDto[]> {
     return this.subscriptionsService.getAvailablePlans();
   }
 
@@ -33,7 +33,7 @@ export class SubscriptionsController {
   })
   async getSubscriptionStatus(
     @Param('organizationId') organizationId: string,
-    @RequestContext() context: IRequestContext,
+    @AppCtxt() context: IRequestContext,
   ): Promise<SubscriptionStatusDto> {
     return this.subscriptionsService.getSubscriptionStatus(organizationId, context);
   }
@@ -53,7 +53,7 @@ export class SubscriptionsController {
   async affiliateOrganization(
     @Param('organizationId') organizationId: string,
     @Body() dto: AffiliateOrganizationDto,
-    @RequestContext() context: IRequestContext,
+    @AppCtxt() context: IRequestContext,
   ): Promise<SubscriptionStatusDto> {
     return this.subscriptionsService.affiliateOrganization(organizationId, dto, context);
   }
@@ -81,7 +81,7 @@ export class SubscriptionsController {
   async checkSubscriptionLimit(
     @Param('organizationId') organizationId: string,
     @Param('limitType') limitType: 'gyms' | 'clients' | 'users',
-    @RequestContext() context: IRequestContext,
+    @AppCtxt() context: IRequestContext,
   ) {
     const gymId = context.getGymId();
     return this.subscriptionsService.checkSubscriptionLimit(organizationId, limitType, gymId);

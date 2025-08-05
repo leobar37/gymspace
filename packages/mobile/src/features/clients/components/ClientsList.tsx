@@ -58,7 +58,7 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
               <Text className="text-sm text-gray-600">{client.clientNumber}</Text>
               {client.phone && (
                 <HStack className="items-center gap-1 mt-1">
-                  <Icon as={PhoneIcon} className="w-3 h-3 text-gray-500" />
+                  <Icon as={PhoneIcon} />
                   <Text className="text-sm text-gray-500">{client.phone}</Text>
                 </HStack>
               )}
@@ -75,7 +75,7 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
               <BadgeText>{client.isActive ? 'Activo' : 'Inactivo'}</BadgeText>
             </Badge>
             <Pressable onPress={() => onActionPress(client)} className="p-1">
-              <Icon as={MoreHorizontalIcon} className="w-5 h-5 text-gray-400" />
+              <Icon as={MoreHorizontalIcon} />
             </Pressable>
           </HStack>
           {hasActiveContract && (
@@ -206,9 +206,9 @@ export const ClientsList: React.FC = () => {
         <View className="absolute bottom-6 right-6">
           <Button
             onPress={handleAddClient}
-            className="bg-blue-600 rounded-full w-14 h-14 items-center justify-center shadow-lg"
+            action="primary"
           >
-            <Icon as={UserPlusIcon} className="text-white" />
+            <Icon as={UserPlusIcon} />
           </Button>
         </View>
       )}
@@ -222,30 +222,33 @@ export const ClientsList: React.FC = () => {
           </ActionsheetDragIndicatorWrapper>
           
           <ActionsheetItem onPress={handleEditClient}>
-            <Icon as={EditIcon} className="w-4 h-4 text-gray-500 mr-3" />
+            <Icon as={EditIcon} />
             <ActionsheetItemText>Editar</ActionsheetItemText>
           </ActionsheetItem>
           
           <ActionsheetItem onPress={handleToggleStatusPress}>
-            <Icon as={TrashIcon} className="w-4 h-4 text-orange-500 mr-3" />
-            <ActionsheetItemText className="text-orange-500">
-              {selectedClient?.isActive ? 'Desactivar' : 'Activar'}
+            <Icon as={TrashIcon} />
+            <ActionsheetItemText>
+              Eliminar
             </ActionsheetItemText>
           </ActionsheetItem>
         </ActionsheetContent>
       </Actionsheet>
 
-      {/* Status Toggle Confirmation Alert */}
+      {/* Delete Confirmation Alert */}
       <AlertDialog isOpen={showDeleteAlert} onClose={handleCancelDelete}>
         <AlertDialogBackdrop />
         <AlertDialogContent>
           <AlertDialogHeader>
-            <Text className="text-lg font-semibold">Confirmar cambio de estado</Text>
+            <Text className="text-lg font-semibold">Eliminar Cliente</Text>
             <AlertDialogCloseButton onPress={handleCancelDelete} />
           </AlertDialogHeader>
           <AlertDialogBody>
             <Text className="text-gray-600">
-              ¿Estás seguro de que deseas {clientToDelete?.isActive ? 'desactivar' : 'activar'} a {clientToDelete?.name}?
+              ¿Estás seguro de que deseas eliminar a {clientToDelete?.name}?
+            </Text>
+            <Text className="text-sm text-gray-500 mt-2">
+              Nota: El cliente será desactivado y no podrá acceder al gimnasio, pero su historial se mantendrá.
             </Text>
           </AlertDialogBody>
           <AlertDialogFooter>
@@ -253,12 +256,12 @@ export const ClientsList: React.FC = () => {
               <ButtonText>Cancelar</ButtonText>
             </Button>
             <Button 
-              className="bg-orange-600 ml-3" 
+              action="negative"
               onPress={handleConfirmToggleStatus}
               disabled={isTogglingStatus}
             >
               <ButtonText>
-                {clientToDelete?.isActive ? 'Desactivar' : 'Activar'}
+                Eliminar
               </ButtonText>
             </Button>
           </AlertDialogFooter>

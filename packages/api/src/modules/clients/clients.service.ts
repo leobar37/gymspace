@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { OrganizationsService } from '../organizations/organizations.service';
 import { GymsService } from '../gyms/gyms.service';
+import { PaginationService } from '../../common/services/pagination.service';
 import { CreateClientDto, UpdateClientDto, SearchClientsDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Prisma } from '@prisma/client';
@@ -12,6 +13,7 @@ export class ClientsService {
     private prismaService: PrismaService,
     private organizationsService: OrganizationsService,
     private gymsService: GymsService,
+    private paginationService: PaginationService,
   ) {}
 
   /**
@@ -19,16 +21,20 @@ export class ClientsService {
    */
   async createClient(gymId: string, dto: CreateClientDto, userId: string): Promise<any> {
     // Check if gym can add more clients
+    console.log('pas here 1');
     const canAdd = await this.organizationsService.canAddClient(gymId);
     if (!canAdd) {
       throw new BusinessException('Client limit reached for this subscription plan');
     }
 
+    console.log('pas here 2');
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
     }
+
+    console.log('pas here');
 
     // Check if email already exists in this gym
     const existingClient = await this.prismaService.gymClient.findFirst({
@@ -48,10 +54,24 @@ export class ClientsService {
     });
     const clientNumber = `C${Date.now()}-${clientCount + 1}`;
 
-    // Create client
+    // Create client - filter out fields that don't exist in schema
+    const { 
+      address, 
+      city, 
+      state, 
+      postalCode, 
+      gender, 
+      maritalStatus, 
+      occupation, 
+      customData,
+      ...validClientData 
+    } = dto;
+
     const client = await this.prismaService.gymClient.create({
       data: {
-        ...dto,
+        ...validClientData,
+        birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
+        documentId: dto.document || undefined, // Map document to documentId
         gymId,
         clientNumber,
         status: 'active',
@@ -107,11 +127,25 @@ export class ClientsService {
       }
     }
 
-    // Update client
+    // Update client - filter out fields that don't exist in schema
+    const { 
+      address, 
+      city, 
+      state, 
+      postalCode, 
+      gender, 
+      maritalStatus, 
+      occupation, 
+      customData,
+      ...validClientData 
+    } = dto;
+
     const updated = await this.prismaService.gymClient.update({
       where: { id: clientId },
       data: {
-        ...dto,
+        ...validClientData,
+        birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
+        documentId: dto.document || undefined, // Map document to documentId
         updatedByUserId: userId,
       },
       include: {
@@ -211,6 +245,14 @@ export class ClientsService {
     // Get total count
     const total = await this.prismaService.gymClient.count({ where });
 
+    // Create pagination params
+    const paginationParams = this.paginationService.createPaginationParams({
+      page: dto.page,
+      limit: dto.limit,
+      sortBy: dto.sortBy,
+      sortOrder: dto.sortOrder,
+    });
+
     // Get clients with pagination
     const clients = await this.prismaService.gymClient.findMany({
       where,
@@ -233,22 +275,18 @@ export class ClientsService {
           },
         },
       },
-      orderBy: [
+      orderBy: paginationParams.orderBy || [
         { status: 'asc' }, // Active clients first
         { name: 'asc' },
       ],
-      skip: dto.offset || 0,
-      take: dto.limit || 20,
+      ...paginationParams,
     });
 
-    return {
-      clients,
-      pagination: {
-        total,
-        limit: dto.limit || 20,
-        offset: dto.offset || 0,
-      },
-    };
+    // Return paginated response
+    return this.paginationService.paginate(clients, total, {
+      page: dto.page,
+      limit: dto.limit,
+    });
   }
 
   /**

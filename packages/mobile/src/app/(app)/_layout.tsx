@@ -29,6 +29,9 @@ export default function AppLayout() {
     return <Redirect href="/(onboarding)" />;
   }
 
+  console.log("session", {
+    gym: session.gym
+  });
   // If user doesn't have a gym (incomplete onboarding), redirect to welcome screen
   // This handles cases where tokens exist but onboarding isn't complete
   if (!session.gym || !session.gym.id) {

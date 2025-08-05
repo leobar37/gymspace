@@ -8,7 +8,7 @@ import {
   CompleteGuidedSetupDto,
   OnboardingStatusDto,
 } from './dto';
-import { Public, Allow, RequestContext } from '../../common/decorators';
+import { Public, Allow, AppCtxt } from '../../common/decorators';
 import { IRequestContext } from '@gymspace/shared';
 import { ResourceNotFoundException } from '../../common/exceptions';
 import { PrismaService } from '../../core/database/prisma.service';
@@ -74,10 +74,7 @@ export class OnboardingController {
   @ApiResponse({ status: 200, description: 'Gym settings updated successfully' })
   @ApiResponse({ status: 404, description: 'Gym not found' })
   @ApiResponse({ status: 403, description: 'Access denied' })
-  async updateGymSettings(
-    @RequestContext() context: IRequestContext,
-    @Body() dto: UpdateGymSettingsDto,
-  ) {
+  async updateGymSettings(@AppCtxt() context: IRequestContext, @Body() dto: UpdateGymSettingsDto) {
     return await this.onboardingService.updateGymSettings(context, dto);
   }
 
@@ -92,10 +89,7 @@ export class OnboardingController {
   @ApiResponse({ status: 200, description: 'Features configured successfully' })
   @ApiResponse({ status: 404, description: 'Gym not found' })
   @ApiResponse({ status: 403, description: 'Access denied' })
-  async configureFeatures(
-    @RequestContext() context: IRequestContext,
-    @Body() dto: ConfigureFeaturesDto,
-  ) {
+  async configureFeatures(@AppCtxt() context: IRequestContext, @Body() dto: ConfigureFeaturesDto) {
     return await this.onboardingService.configureFeatures(context, dto);
   }
 
@@ -125,7 +119,7 @@ export class OnboardingController {
   @ApiResponse({ status: 400, description: 'Previous steps not completed' })
   @ApiResponse({ status: 404, description: 'Gym not found' })
   async completeGuidedSetup(
-    @RequestContext() context: IRequestContext,
+    @AppCtxt() context: IRequestContext,
     @Body() dto: CompleteGuidedSetupDto,
   ) {
     return await this.onboardingService.completeGuidedSetup(context, dto);

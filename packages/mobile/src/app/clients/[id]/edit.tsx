@@ -33,8 +33,7 @@ export default function EditClientScreen() {
     <>
       <Stack.Screen 
         options={{ 
-          title: 'Editar Cliente',
-          headerBackTitle: client.name,
+          headerShown: false,
         }} 
       />
       <CreateClientForm initialData={client} isEditing={true} clientId={id} />

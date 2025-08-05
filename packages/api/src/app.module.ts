@@ -31,7 +31,6 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { RequestContextInterceptor } from './common/interceptors/request-context.interceptor';
 import { AuthGuard } from './core/auth/guards/auth.guard';
-
 // Configuration
 import configuration from './config/configuration';
 import validationSchema from './config/validation.schema';

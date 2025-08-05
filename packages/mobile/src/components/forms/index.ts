@@ -8,6 +8,7 @@ export { FormSelect } from './FormSelect';
 export { FormCheckbox } from './FormCheckbox';
 export { FormRadio } from './FormRadio';
 export { FormSwitch } from './FormSwitch';
+export { FormDatePicker } from './FormDatePicker';
 
 // Form Utilities
 export {

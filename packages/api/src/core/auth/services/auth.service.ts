@@ -126,9 +126,9 @@ export class AuthService {
         ownedOrganizations: {
           include: {
             gyms: {
-              where: { 
+              where: {
                 deletedAt: null,
-                isActive: true 
+                isActive: true,
               },
               orderBy: { createdAt: 'asc' },
               take: 1,
@@ -163,11 +163,10 @@ export class AuthService {
         return firstOrg.gyms[0];
       }
     }
-
     // If user is a collaborator with access to an active gym
     if (user.collaborators?.length > 0) {
-      const activeCollaborator = user.collaborators.find((c: any) => 
-        c.gym && c.gym.isActive && c.gym.deletedAt === null
+      const activeCollaborator = user.collaborators.find(
+        (c: any) => c.gym && c.gym.isActive && c.gym.deletedAt === null,
       );
       if (activeCollaborator) {
         return activeCollaborator.gym;
@@ -207,10 +206,6 @@ export class AuthService {
         organization: true,
       },
     });
-
-    if (!gym) {
-      throw new UnauthorizedException('Access denied to this gym');
-    }
 
     return gym;
   }
@@ -342,6 +337,10 @@ export class AuthService {
    */
   async login(dto: LoginDto): Promise<LoginResponseDto> {
     try {
+      console.log({
+        dto,
+      });
+
       // Authenticate with Supabase
       const { data: authData, error: authError } = await this.supabaseService
         .getClient()
@@ -349,6 +348,8 @@ export class AuthService {
           email: dto.email,
           password: dto.password,
         });
+
+      console.log(authError);
 
       if (authError) {
         throw new UnauthorizedException('Invalid credentials');

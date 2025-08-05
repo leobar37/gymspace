@@ -1,24 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { RequestContext } from '../../common/services/request-context.service';
-import {
-  DashboardStatsDto,
-  RecentActivityDto,
-  ExpiringContractDto,
-  ActivityType,
-} from './dto';
+import { DashboardStatsDto, RecentActivityDto, ExpiringContractDto, ActivityType } from './dto';
 import { startOfMonth, endOfMonth, startOfDay, endOfDay, addDays } from 'date-fns';
 import { BusinessException } from '../../common/exceptions/business.exception';
 
 @Injectable()
 export class DashboardService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly ctx: RequestContext,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async getDashboardStats(): Promise<DashboardStatsDto> {
- 
+  async getDashboardStats(ctx: RequestContext): Promise<DashboardStatsDto> {
+    const gymId = ctx.getGymId();
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+
     const now = new Date();
     const startOfCurrentMonth = startOfMonth(now);
     const endOfCurrentMonth = endOfMonth(now);
@@ -98,7 +94,7 @@ export class DashboardService {
             deletedAt: null,
           },
         })
-        .then(result => result._sum.finalAmount || 0),
+        .then((result) => result._sum.finalAmount || 0),
 
       // Today's check-ins
       this.prisma.checkIn.count({
@@ -154,8 +150,8 @@ export class DashboardService {
     };
   }
 
-  async getRecentActivity(limit: number = 10): Promise<RecentActivityDto[]> {
-    const gymId = this.ctx.getGymId();
+  async getRecentActivity(ctx: RequestContext, limit: number = 10): Promise<RecentActivityDto[]> {
+    const gymId = ctx.getGymId();
     if (!gymId) {
       throw new BusinessException('Gym context is required');
     }
@@ -237,7 +233,7 @@ export class DashboardService {
     const activities: RecentActivityDto[] = [];
 
     // Add check-ins
-    recentCheckIns.forEach(checkIn => {
+    recentCheckIns.forEach((checkIn) => {
       activities.push({
         id: checkIn.id,
         type: ActivityType.CHECK_IN,
@@ -249,7 +245,7 @@ export class DashboardService {
     });
 
     // Add new clients
-    recentClients.forEach(gymClient => {
+    recentClients.forEach((gymClient) => {
       activities.push({
         id: gymClient.id,
         type: ActivityType.NEW_CLIENT,
@@ -261,7 +257,7 @@ export class DashboardService {
     });
 
     // Add new contracts
-    recentContracts.forEach(contract => {
+    recentContracts.forEach((contract) => {
       activities.push({
         id: contract.id,
         type: ActivityType.NEW_CONTRACT,
@@ -273,7 +269,7 @@ export class DashboardService {
     });
 
     // Add expired contracts
-    expiredContracts.forEach(contract => {
+    expiredContracts.forEach((contract) => {
       activities.push({
         id: contract.id,
         type: ActivityType.CONTRACT_EXPIRED,
@@ -290,8 +286,11 @@ export class DashboardService {
       .slice(0, limit);
   }
 
-  async getExpiringContracts(limit: number = 10): Promise<ExpiringContractDto[]> {
-    const gymId = this.ctx.getGymId();
+  async getExpiringContracts(
+    ctx: RequestContext,
+    limit: number = 10,
+  ): Promise<ExpiringContractDto[]> {
+    const gymId = ctx.getGymId();
     if (!gymId) {
       throw new BusinessException('Gym context is required');
     }
@@ -321,7 +320,7 @@ export class DashboardService {
       },
     });
 
-    return expiringContracts.map(contract => {
+    return expiringContracts.map((contract) => {
       const daysRemaining = Math.ceil(
         (contract.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
       );
