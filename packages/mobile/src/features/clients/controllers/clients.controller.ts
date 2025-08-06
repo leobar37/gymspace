@@ -14,13 +14,15 @@ export const clientsKeys = {
 // Types
 export interface ClientFormData {
   name: string;
-  email: string;
+  email?: string; // Made optional
   phone?: string;
-  document?: string;
+  documentValue?: string;
+  documentType?: string;
   birthDate?: string;
   // address: string; // Not supported by backend yet
   notes?: string;
   // Legacy fields for backward compatibility
+  document?: string;
   documentId?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
@@ -86,12 +88,16 @@ export const useClientsController = () => {
       // Transform ClientFormData to CreateClientDto
       const createData = {
         name: data.name,
-        email: data.email || '',
+        email: data.email, // Now optional
         phone: data.phone,
-        document: data.document || data.documentId,
+        documentValue: data.documentValue || data.document || data.documentId,
+        documentType: data.documentType,
         birthDate: data.birthDate,
         address: data.address || '',
         notes: data.notes,
+        emergencyContactName: data.emergencyContactName,
+        emergencyContactPhone: data.emergencyContactPhone,
+        medicalConditions: data.medicalConditions,
       };
       const response = await sdk.clients.createClient(createData);
       return response;
@@ -110,10 +116,14 @@ export const useClientsController = () => {
         name: data.name,
         email: data.email,
         phone: data.phone,
-        document: data.document || data.documentId,
+        documentValue: data.documentValue || data.document || data.documentId,
+        documentType: data.documentType,
         birthDate: data.birthDate,
         address: data.address,
         notes: data.notes,
+        emergencyContactName: data.emergencyContactName,
+        emergencyContactPhone: data.emergencyContactPhone,
+        medicalConditions: data.medicalConditions,
       };
       const response = await sdk.clients.updateClient(id, updateData);
       return response;

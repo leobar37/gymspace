@@ -2,9 +2,10 @@ import { PaginationQueryDto } from '@gymspace/shared';
 
 export interface CreateClientDto {
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
-  document?: string;
+  documentValue?: string;
+  documentType?: string;
   birthDate?: string;
   gender?: string;
   maritalStatus?: string;
@@ -21,7 +22,8 @@ export interface UpdateClientDto {
   name?: string;
   email?: string;
   phone?: string;
-  document?: string;
+  documentValue?: string;
+  documentType?: string;
   birthDate?: string;
   gender?: string;
   maritalStatus?: string;
@@ -39,9 +41,10 @@ export interface Client {
   gymId: string;
   clientNumber: string;
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
-  document?: string;
+  documentValue?: string;
+  documentType?: string;
   birthDate?: string;
   gender?: string;
   maritalStatus?: string;

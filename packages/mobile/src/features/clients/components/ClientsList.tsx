@@ -148,7 +148,7 @@ export const ClientsList: React.FC = () => {
         {searchText ? 'No se encontraron clientes' : 'No hay clientes registrados'}
       </Text>
       {!searchText && (
-        <Button onPress={handleAddClient} className="bg-blue-600">
+        <Button onPress={handleAddClient}>
           <Icon as={UserPlusIcon} className="text-white mr-2" />
           <ButtonText>Agregar primer cliente</ButtonText>
         </Button>
@@ -208,7 +208,7 @@ export const ClientsList: React.FC = () => {
             onPress={handleAddClient}
             action="primary"
           >
-            <Icon as={UserPlusIcon} />
+            <Icon className='text-white' as={UserPlusIcon} />
           </Button>
         </View>
       )}

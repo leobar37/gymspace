@@ -71,7 +71,8 @@ export class ClientsService {
       data: {
         ...validClientData,
         birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
-        documentId: dto.document || undefined, // Map document to documentId
+        documentValue: dto.documentValue || undefined,
+        documentType: dto.documentType || undefined,
         gymId,
         clientNumber,
         status: 'active',
@@ -145,7 +146,8 @@ export class ClientsService {
       data: {
         ...validClientData,
         birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
-        documentId: dto.document || undefined, // Map document to documentId
+        documentValue: dto.documentValue || undefined,
+        documentType: dto.documentType || undefined,
         updatedByUserId: userId,
       },
       include: {
@@ -233,7 +235,7 @@ export class ClientsService {
         { name: { contains: dto.search, mode: 'insensitive' } },
         { email: { contains: dto.search, mode: 'insensitive' } },
         { phone: { contains: dto.search, mode: 'insensitive' } },
-        { documentId: { contains: dto.search, mode: 'insensitive' } },
+        { documentValue: { contains: dto.search, mode: 'insensitive' } },
       ];
     }
 

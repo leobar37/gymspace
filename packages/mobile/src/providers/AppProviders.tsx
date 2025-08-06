@@ -4,6 +4,7 @@ import { Provider as JotaiProvider } from "jotai";
 import { GluestackUIProvider } from "@gluestack-ui/themed";
 import { config } from "@/lib/gluestack-ui-config";
 import { GymSdkProvider } from "./GymSdkProvider";
+import { ConfigProvider } from "@/config/ConfigContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,7 +42,9 @@ export function AppProviders({ children }: AppProvidersProps) {
       <QueryClientProvider client={queryClient}>
         <JotaiProvider>
           <GymSdkProvider>
-            {children}
+            <ConfigProvider>
+              {children}
+            </ConfigProvider>
           </GymSdkProvider>
         </JotaiProvider>
       </QueryClientProvider>

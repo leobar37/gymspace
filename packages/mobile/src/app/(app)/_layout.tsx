@@ -89,6 +89,7 @@ export default function AppLayout() {
         options={{
           title: 'Contratos',
           headerTitle: 'Contratos',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Icon as={FileTextIcon} style={{ color, width: size, height: size }} />
           ),

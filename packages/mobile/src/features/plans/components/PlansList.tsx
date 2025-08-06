@@ -35,8 +35,8 @@ import { Heading } from '@/components/ui/heading';
 import { SearchIcon, PlusIcon, EditIcon, TrashIcon, XIcon } from 'lucide-react-native';
 import { usePlansController, SearchFilters } from '../controllers/plans.controller';
 import { MembershipPlan } from '@gymspace/sdk';
-import { formatCurrency } from '@/shared/utils/format';
 import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
+import { useFormatPrice } from '@/config/ConfigContext';
 
 interface PlanItemProps {
   plan: MembershipPlan;
@@ -45,6 +45,7 @@ interface PlanItemProps {
 }
 
 const PlanItem: React.FC<PlanItemProps> = ({ plan, onPress, onDelete }) => {
+  const formatPrice = useFormatPrice();
   const isActive = plan.status === 'active';
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -87,7 +88,7 @@ const PlanItem: React.FC<PlanItemProps> = ({ plan, onPress, onDelete }) => {
         <HStack className="gap-4 mt-1">
           <VStack>
             <Text className="text-2xl font-bold text-gray-900">
-              {formatCurrency(plan.basePrice, plan.gym?.organization?.currency || 'USD')}
+              {formatPrice(plan.basePrice)}
             </Text>
             <Text className="text-xs text-gray-500">
               por {plan.durationDays 

@@ -90,15 +90,17 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
               ${fieldState.error ? 'border-red-500' : 'border-gray-300'} 
               rounded-lg 
               px-4
-              py-3
-              min-h-[48px]
+              py-6
+              min-h-[60px]
               ${!enabled ? 'opacity-50' : ''}
             `}>
-              <HStack className="justify-between items-center">
-                <Text className={selectedOption ? 'text-gray-900' : 'text-gray-400'}>
+              <HStack className="justify-between items-center flex-1">
+                <Text className={`flex-1 ${selectedOption ? 'text-gray-900' : 'text-gray-400'}`}>
                   {selectedOption ? selectedOption.label : placeholder}
                 </Text>
-                <Icon as={ChevronDownIcon} className="text-gray-400" size="md" />
+                <View className="ml-4">
+                  <Icon as={ChevronDownIcon} className="text-gray-400" size="md" />
+                </View>
               </HStack>
             </View>
           </Pressable>
@@ -118,33 +120,34 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
         onRequestClose={() => setShowModal(false)}
       >
         <TouchableWithoutFeedback onPress={() => setShowModal(false)}>
-          <View className="flex-1 bg-black/50 justify-center items-center px-6">
+          <View className="flex-1 bg-black/50 justify-center items-center px-8">
             <TouchableWithoutFeedback>
-              <View className="bg-white rounded-2xl w-full max-w-sm overflow-hidden">
+              <View className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
                 {/* Header */}
-                <View className="px-6 py-4 border-b border-gray-200">
+                <View className="px-8 py-6 border-b border-gray-200">
                   <HStack className="justify-between items-center">
                     <Text className="text-lg font-semibold text-gray-900">
                       {label || 'Seleccionar opción'}
                     </Text>
-                    <Pressable onPress={() => setShowModal(false)}>
+                    <Pressable onPress={() => setShowModal(false)} className="p-1">
                       <Icon as={XIcon} className="text-gray-400" size="md" />
                     </Pressable>
                   </HStack>
                 </View>
                 
                 {/* Picker */}
-                <View className="h-48">
+                <View className="h-56 px-4">
                   <Picker
                     selectedValue={tempValue}
                     onValueChange={(itemValue) => setTempValue(itemValue)}
                     style={{
-                      height: Platform.OS === 'ios' ? 192 : '100%',
+                      height: Platform.OS === 'ios' ? 224 : '100%',
                       width: '100%',
                     }}
                     itemStyle={{
-                      height: 120,
-                      fontSize: 16,
+                      height: Platform.OS === 'ios' ? 56 : 48,
+                      fontSize: 18,
+                      color: '#374151',
                     }}
                   >
                     {!tempValue && (
@@ -165,8 +168,8 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
                 </View>
                 
                 {/* Footer */}
-                <View className="px-6 py-4 border-t border-gray-200">
-                  <HStack className="gap-3">
+                <View className="px-8 py-6 border-t border-gray-200">
+                  <HStack className="gap-4">
                     <Button
                       variant="outline"
                       size="sm"

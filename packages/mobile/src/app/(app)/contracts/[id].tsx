@@ -23,6 +23,7 @@ import { ContractStatus } from '@gymspace/sdk';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useFormatPrice } from '@/config/ConfigContext';
 
 // Form schemas
 const freezeSchema = z.object({
@@ -41,6 +42,7 @@ type CancelFormData = z.infer<typeof cancelSchema>;
 export default function ContractDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const formatPriceConfig = useFormatPrice();
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
@@ -93,12 +95,7 @@ export default function ContractDetailScreen() {
     return format(new Date(date), 'dd MMM yyyy', { locale: es });
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(price);
-  };
+  const formatPrice = formatPriceConfig;
 
   const handleFreeze = async (data: FreezeFormData) => {
     freezeContract(

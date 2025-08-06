@@ -394,7 +394,8 @@ model GymClient {
     clientNumber          String       @map("client_number")
     name                  String
     birthDate             DateTime?    @map("birth_date")
-    documentId            String?      @map("document_id")
+    documentValue         String?      @map("document_value")
+    documentType          String?      @map("document_type")
     phone                 String?
     email                 String?
     status                ClientStatus
@@ -422,7 +423,7 @@ model GymClient {
     convertedLeads Lead[]
 
     @@unique([gymId, clientNumber])
-    @@unique([gymId, documentId])
+    @@unique([gymId, documentValue])
     @@map("gym_clients")
 }
 

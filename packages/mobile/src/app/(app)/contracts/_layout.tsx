@@ -2,18 +2,30 @@ import { Stack } from 'expo-router';
 
 export default function ContractsLayout() {
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#ffffff',
+        },
+        headerTitleStyle: {
+          fontSize: 18,
+          fontWeight: '600',
+        },
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{
-          headerShown: false,
+          title: 'Contratos',
+          headerShown: true,
         }}
       />
       <Stack.Screen
         name="create"
         options={{
-          title: 'Crear Contrato',
-          headerBackTitle: 'Atrás',
+          title: 'Nuevo Contrato',
+          headerBackTitle: 'Cancelar',
+          presentation: 'modal',
         }}
       />
       <Stack.Screen

@@ -1,3 +1,5 @@
+// Legacy function kept for backward compatibility
+// New code should use useFormatPrice() from ConfigContext instead
 export const formatCurrency = (amount: number, currency: string = 'USD'): string => {
   const formatter = new Intl.NumberFormat('es-MX', {
     style: 'currency',

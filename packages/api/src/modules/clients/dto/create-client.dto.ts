@@ -7,9 +7,10 @@ export class CreateClientDto {
   @MinLength(3)
   name: string;
 
-  @ApiProperty({ example: 'john.doe@example.com' })
+  @ApiProperty({ example: 'john.doe@example.com', required: false })
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @ApiProperty({ example: '+1234567890', required: false })
   @IsOptional()
@@ -19,7 +20,12 @@ export class CreateClientDto {
   @ApiProperty({ example: '12345678', required: false })
   @IsOptional()
   @IsString()
-  document?: string;
+  documentValue?: string;
+
+  @ApiProperty({ example: 'DNI', required: false })
+  @IsOptional()
+  @IsString()
+  documentType?: string;
 
   @ApiProperty({ example: '1990-01-01', required: false })
   @IsOptional()

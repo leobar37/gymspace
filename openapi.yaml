@@ -2342,9 +2342,12 @@ components:
         phone:
           type: string
           example: '+1234567890'
-        document:
+        documentValue:
           type: string
           example: '12345678'
+        documentType:
+          type: string
+          example: DNI
         birthDate:
           type: string
           example: '1990-01-01'
@@ -2381,7 +2384,6 @@ components:
               - Muscle Gain
       required:
         - name
-        - email
         - address
     UpdateClientDto:
       type: object

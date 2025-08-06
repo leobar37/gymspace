@@ -42,9 +42,9 @@ import {
   StarIcon,
 } from 'lucide-react-native';
 import { usePlansController } from '@/features/plans';
-import { formatCurrency } from '@/shared/utils/format';
 import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 import { MembershipPlan } from '@gymspace/sdk';
+import { useFormatPrice } from '@/config/ConfigContext';
 
 const PlanDetailSection: React.FC<{
   title: string;
@@ -74,6 +74,7 @@ const StatCard: React.FC<{
 export default function PlanDetailScreen() {
   const { id } = useLocalSearchParams();
   const planId = typeof id === 'string' ? id : '';
+  const formatPrice = useFormatPrice();
   const { usePlanDetail, usePlanStats, updatePlan, deletePlan } = usePlansController();
   const toast = useToast();
   
@@ -255,7 +256,7 @@ export default function PlanDetailScreen() {
                 <HStack className="gap-4">
                   <VStack>
                     <Text className="text-3xl font-bold text-gray-900">
-                      {formatCurrency(plan.basePrice, plan.gym?.organization?.currency || 'USD')}
+                      {formatPrice(plan.basePrice)}
                     </Text>
                     <Text className="text-sm text-gray-500">
                       por {plan.durationDays 
@@ -283,7 +284,7 @@ export default function PlanDetailScreen() {
                   />
                   <StatCard
                     icon={DollarSignIcon}
-                    value={formatCurrency(stats.monthlyRevenue, plan.currency)}
+                    value={formatPrice(stats.monthlyRevenue)}
                     label="Ingresos mensuales"
                     color="text-blue-600"
                   />

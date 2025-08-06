@@ -18,6 +18,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FAB } from '@/components/ui/fab';
 import { ContractStatus } from '@gymspace/sdk';
 import { useContractsController, SearchFilters } from '../controllers/contracts.controller';
+import { useFormatPrice } from '@/config/ConfigContext';
 
 interface ContractsListProps {
   filters?: SearchFilters;
@@ -31,6 +32,7 @@ export const ContractsList: React.FC<ContractsListProps> = ({
   hideAddButton = false 
 }) => {
   const router = useRouter();
+  const formatPrice = useFormatPrice();
   const { useContractsList } = useContractsController();
   const [refreshing, setRefreshing] = useState(false);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>(filters);
@@ -76,12 +78,6 @@ export const ContractsList: React.FC<ContractsListProps> = ({
     return format(new Date(date), 'dd MMM yyyy', { locale: es });
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(price);
-  };
 
   const renderContractItem = useCallback(({ item }: { item: any }) => {
     const statusInfo = getStatusBadge(item.status);

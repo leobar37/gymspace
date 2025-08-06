@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import {
   FormInput,
-  FormTextarea,
   FormDatePicker,
+  FormSelect,
   FormProvider,
   useForm,
   zodResolver,
@@ -13,7 +13,6 @@ import {
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
-import { Text } from '@/components/ui/text';
 import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
 import { Icon } from '@/components/ui/icon';
@@ -21,22 +20,49 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useClientsController, ClientFormData } from '../controllers/clients.controller';
 import { router } from 'expo-router';
 import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
+import { useDocumentTypes, useDocumentValidator } from '@/config/ConfigContext';
 
-// Validation schema
-const clientSchema = z.object({
+// Create the validation schema as a function to use document validator
+const createClientSchema = (validateDocument: (type: string, value: string) => { isValid: boolean; error?: string }) => z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  birthDate: z.date().nullable().optional(),
-  document: z.string().min(6, 'Documento inválido').optional().or(z.literal('')),
-  phone: z.string().min(8, 'Teléfono inválido').optional().or(z.literal('')),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
+  birthDate: z.date().nullable().optional().or(z.undefined()),
+  documentValue: z.string().optional().or(z.literal('')).or(z.undefined()),
+  documentType: z.string().optional().or(z.undefined()),
+  phone: z.string().min(8, 'Teléfono inválido').optional().or(z.literal('')).or(z.undefined()),
+  email: z.string().email('Email inválido').optional().or(z.literal('')).or(z.undefined()),
   // address: z.string().min(1, 'La dirección es requerida'), // Not supported by backend yet
-  emergencyContactName: z.string().optional(),
-  emergencyContactPhone: z.string().optional(),
-  medicalConditions: z.string().optional(),
-  notes: z.string().optional(),
+  emergencyContactName: z.string().optional().or(z.undefined()),
+  emergencyContactPhone: z.string().optional().or(z.undefined()),
+  medicalConditions: z.string().optional().or(z.undefined()),
+  notes: z.string().optional().or(z.undefined()),
+}).refine((data) => {
+  // If document value is provided, document type must also be provided
+  if (data.documentValue && data.documentValue.trim() !== '' && !data.documentType) {
+    return false;
+  }
+  // If both are provided, validate the document
+  if (data.documentValue && data.documentType && data.documentValue.trim() !== '') {
+    const validation = validateDocument(data.documentType, data.documentValue);
+    return validation.isValid;
+  }
+  return true;
+}, {
+  message: 'Documento inválido',
+  path: ['documentValue'],
 });
 
-type ClientFormSchema = z.infer<typeof clientSchema>;
+type ClientFormSchema = {
+  name: string;
+  birthDate?: Date | null | undefined;
+  documentValue?: string | undefined;
+  documentType?: string | undefined;
+  phone?: string | undefined;
+  email?: string | undefined;
+  emergencyContactName?: string | undefined;
+  emergencyContactPhone?: string | undefined;
+  medicalConditions?: string | undefined;
+  notes?: string | undefined;
+};
 
 interface CreateClientFormProps {
   initialData?: Partial<ClientFormData>;
@@ -52,13 +78,21 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
   const { createClient, updateClient, isCreatingClient, isUpdatingClient } = useClientsController();
   const isLoading = isCreatingClient || isUpdatingClient;
   const toast = useToast();
+  const documentTypes = useDocumentTypes();
+  const validateDocument = useDocumentValidator();
+  
+  const clientSchema = React.useMemo(
+    () => createClientSchema(validateDocument),
+    [validateDocument]
+  );
 
   const methods = useForm<ClientFormSchema>({
-    resolver: zodResolver(clientSchema),
+    resolver: zodResolver(clientSchema) as any,
     defaultValues: {
       name: initialData?.name || '',
       birthDate: initialData?.birthDate ? new Date(initialData.birthDate) : null,
-      document: initialData?.document || initialData?.documentId || '',
+      documentValue: initialData?.documentValue || initialData?.document || initialData?.documentId || '',
+      documentType: initialData?.documentType || (documentTypes.length > 0 ? documentTypes[0].value : ''),
       phone: initialData?.phone || '',
       email: initialData?.email || '',
       // address: initialData?.address || '', // Not supported by backend yet
@@ -69,15 +103,16 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
     },
   });
 
-  const onSubmit = (data: ClientFormSchema) => {
+  const onSubmit = (data: any) => {
     // Convert date to string format for API and ensure required fields
     const formattedData = {
       ...data,
       birthDate: data.birthDate ? data.birthDate.toISOString().split('T')[0] : undefined,
-      // Ensure email is always a string (required by API)
-      email: data.email || '',
+      // Make email optional as specified in requirements
+      email: data.email || undefined,
       // Clean up optional fields
-      document: data.document || undefined,
+      documentValue: data.documentValue || undefined,
+      documentType: data.documentType || undefined,
       phone: data.phone || undefined,
       emergencyContactName: data.emergencyContactName || undefined,
       emergencyContactPhone: data.emergencyContactPhone || undefined,
@@ -211,12 +246,23 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                   maximumDate={new Date()}
                 />
 
+                <FormSelect
+                  name="documentType"
+                  label="Tipo de documento (opcional)"
+                  placeholder="Seleccionar tipo"
+                  options={documentTypes.map(dt => ({ 
+                    label: dt.label, 
+                    value: dt.value 
+                  }))}
+                />
+
                 <FormInput
-                  name="document"
-                  label="Documento de identidad (opcional)"
-                  placeholder="12345678"
-                  keyboardType="numeric"
+                  name="documentValue"
+                  label="Número de documento (opcional)"
+                  placeholder={documentTypes.find(dt => dt.value === methods.watch('documentType'))?.placeholder || "Ingrese número"}
+                  keyboardType="default"
                   returnKeyType="next"
+                  maxLength={documentTypes.find(dt => dt.value === methods.watch('documentType'))?.maxLength}
                 />
               </VStack>
 
@@ -285,18 +331,20 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                   Información Adicional
                 </Heading>
                 
-                <FormTextarea
+                <FormInput
                   name="medicalConditions"
                   label="Condiciones médicas (opcional)"
                   placeholder="Alergias, lesiones, medicamentos..."
-                  numberOfLines={3}
-                  maxLength={500}
+                  multiline
+                  returnKeyType="next"
                 />
 
-                <FormTextarea
+                <FormInput
                   name="notes"
                   label="Notas (opcional)"
                   placeholder="Información adicional..."
+                  multiline
+                  returnKeyType="done"
                   numberOfLines={3}
                   maxLength={500}
                 />

@@ -3777,9 +3777,13 @@
             "type": "string",
             "example": "+1234567890"
           },
-          "document": {
+          "documentValue": {
             "type": "string",
             "example": "12345678"
+          },
+          "documentType": {
+            "type": "string",
+            "example": "DNI"
           },
           "birthDate": {
             "type": "string",
@@ -3830,7 +3834,6 @@
         },
         "required": [
           "name",
-          "email",
           "address"
         ]
       },

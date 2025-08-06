@@ -1,41 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useForm, Controller } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
-
-import { Box } from '@/components/ui/box';
-import { VStack } from '@/components/ui/vstack';
-import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
-import { Text } from '@/components/ui/text';
-import { Heading } from '@/components/ui/heading';
-import { FormControl, FormControlLabel, FormControlLabelText, FormControlHelper, FormControlHelperText, FormControlError, FormControlErrorIcon, FormControlErrorText } from '@/components/ui/form-control';
-import { Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem } from '@/components/ui/select';
-import { Icon } from '@/components/ui/icon';
-import { Card, CardContent } from '@/components/ui/card';
-import { HStack } from '@/components/ui/hstack';
-import { AlertCircleIcon, ChevronDownIcon } from 'lucide-react-native';
+import { format, parse } from 'date-fns';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Alert, ScrollView, View } from 'react-native';
+import { z } from 'zod';
 import { FormInput } from '@/components/forms/FormInput';
-// Date picker not available, using text input
-import { useContractsController, ContractFormData } from '../controllers/contracts.controller';
-import { useClientsController } from '@/features/clients/controllers/clients.controller';
+import { FormSelect } from '@/components/forms/FormSelect';
+import { FormDatePicker } from '@/components/forms/FormDatePicker';
+import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { ClientSelector } from '@/features/clients/components/ClientSelector';
 import { usePlansController } from '@/features/plans/controllers/plans.controller';
+import { ContractFormData, useContractsController } from '../controllers/contracts.controller';
+import { useFormatPrice } from '@/config/ConfigContext';
 
 // Form validation schema
 const createContractSchema = z.object({
   gymClientId: z.string().min(1, 'Debe seleccionar un cliente'),
   gymMembershipPlanId: z.string().min(1, 'Debe seleccionar un plan'),
-  startDate: z.string().min(1, 'La fecha de inicio es requerida'),
-  discountPercentage: z.preprocess(
-    (val) => val === '' || val === undefined ? 0 : Number(val),
-    z.number().min(0).max(100)
-  ),
-  customPrice: z.preprocess(
-    (val) => val === '' || val === undefined ? undefined : Number(val),
-    z.number().min(0).optional()
-  ),
+  startDate: z.date({
+    required_error: 'La fecha de inicio es requerida',
+    invalid_type_error: 'Fecha inválida',
+  }),
+  discountPercentage: z.string(),
+  customPrice: z.string().optional(),
 });
 
 type CreateContractSchema = z.infer<typeof createContractSchema>;
@@ -52,30 +45,37 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   clientId,
 }) => {
   const router = useRouter();
-  const { createContract, isCreatingContract, createContractError } = useContractsController();
-  const { useClientsList } = useClientsController();
+  const formatPrice = useFormatPrice();
+  const { createContract, isCreatingContract } = useContractsController();
   const { usePlansList } = usePlansController();
   
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
-  // Load clients and plans
-  const { data: clientsData } = useClientsList({ activeOnly: true });
+  // Load plans
   const { data: plansData } = usePlansList({ activeOnly: true });
+
+  // Parse initial date if provided as string
+  const parseInitialDate = (dateStr?: string) => {
+    if (!dateStr) return new Date();
+    try {
+      return parse(dateStr, 'yyyy-MM-dd', new Date());
+    } catch {
+      return new Date();
+    }
+  };
 
   const {
     control,
     handleSubmit,
-    setValue,
     watch,
-    formState: { errors },
   } = useForm<CreateContractSchema>({
     resolver: zodResolver(createContractSchema),
     defaultValues: {
       gymClientId: clientId || initialData?.gymClientId || '',
       gymMembershipPlanId: initialData?.gymMembershipPlanId || '',
-      startDate: initialData?.startDate || format(new Date(), 'yyyy-MM-dd'),
-      discountPercentage: initialData?.discountPercentage || 0,
-      customPrice: initialData?.customPrice,
+      startDate: parseInitialDate(initialData?.startDate),
+      discountPercentage: String(initialData?.discountPercentage || 0),
+      customPrice: initialData?.customPrice ? String(initialData.customPrice) : '',
     },
   });
 
@@ -94,20 +94,24 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   const calculateFinalPrice = () => {
     if (!selectedPlan) return 0;
     
-    if (watchedCustomPrice && watchedCustomPrice > 0) {
-      return watchedCustomPrice;
+    const customPriceNum = watchedCustomPrice ? Number(watchedCustomPrice) : 0;
+    if (customPriceNum > 0) {
+      return customPriceNum;
     }
     
     const basePrice = selectedPlan.basePrice;
-    const discount = watchedDiscount || 0;
+    const discount = watchedDiscount ? Number(watchedDiscount) : 0;
     return basePrice - (basePrice * discount / 100);
   };
 
   const onSubmit = async (data: CreateContractSchema) => {
     try {
       const contractData: ContractFormData = {
-        ...data,
-        discountPercentage: data.discountPercentage || 0,
+        gymClientId: data.gymClientId,
+        gymMembershipPlanId: data.gymMembershipPlanId,
+        startDate: format(data.startDate, 'yyyy-MM-dd'),
+        discountPercentage: Number(data.discountPercentage) || 0,
+        customPrice: data.customPrice ? Number(data.customPrice) : undefined,
       };
       
       createContract(contractData, {
@@ -141,166 +145,80 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(price);
-  };
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <VStack className="p-4 gap-4">
         <Card>
-          <CardContent className="p-4">
+          <View className="p-4">
             <Heading size="md" className="mb-4">Información del contrato</Heading>
             
             {/* Client Selection */}
-            <FormControl
-              isInvalid={!!errors.gymClientId}
-              className="mb-4"
-            >
-              <FormControlLabel>
-                <FormControlLabelText>Cliente</FormControlLabelText>
-              </FormControlLabel>
-              <Controller
+            <View className="mb-4">
+              <ClientSelector
                 control={control}
                 name="gymClientId"
-                render={({ field: { onChange, value } }) => (
-                  <Select
-                    selectedValue={value}
-                    onValueChange={onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectInput 
-                        placeholder="Seleccionar cliente"
-                        value={clientsData?.data?.find(c => c.id === value)?.name || ''}
-                      />
-                      <Icon as={ChevronDownIcon} className="mr-3" />
-                    </SelectTrigger>
-                    <SelectPortal>
-                      <SelectBackdrop />
-                      <SelectContent>
-                        <SelectDragIndicatorWrapper>
-                          <SelectDragIndicator />
-                        </SelectDragIndicatorWrapper>
-                        {(clientsData?.data || []).map((client) => (
-                          <SelectItem
-                            key={client.id}
-                            label={client.name}
-                            value={client.id}
-                          />
-                        ))}
-                      </SelectContent>
-                    </SelectPortal>
-                  </Select>
-                )}
+                label="Cliente"
+                placeholder="Seleccionar cliente"
+                description="Selecciona el cliente para este contrato"
+                allowClear={true}
               />
-              {errors.gymClientId && (
-                <FormControlError>
-                  <FormControlErrorIcon as={AlertCircleIcon} />
-                  <FormControlErrorText>{errors.gymClientId.message}</FormControlErrorText>
-                </FormControlError>
-              )}
-            </FormControl>
+            </View>
 
             {/* Plan Selection */}
-            <FormControl
-              isInvalid={!!errors.gymMembershipPlanId}
-              className="mb-4"
-            >
-              <FormControlLabel>
-                <FormControlLabelText>Plan de membresía</FormControlLabelText>
-              </FormControlLabel>
-              <Controller
+            <View className="mb-4">
+              <FormSelect
                 control={control}
                 name="gymMembershipPlanId"
-                render={({ field: { onChange, value } }) => (
-                  <Select
-                    selectedValue={value}
-                    onValueChange={onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectInput 
-                        placeholder="Seleccionar plan"
-                        value={plansData?.find(p => p.id === value)?.name || ''}
-                      />
-                      <Icon as={ChevronDownIcon} className="mr-3" />
-                    </SelectTrigger>
-                    <SelectPortal>
-                      <SelectBackdrop />
-                      <SelectContent>
-                        <SelectDragIndicatorWrapper>
-                          <SelectDragIndicator />
-                        </SelectDragIndicatorWrapper>
-                        {(plansData || []).map((plan) => (
-                          <SelectItem
-                            key={plan.id}
-                            label={`${plan.name} - ${formatPrice(plan.basePrice)}`}
-                            value={plan.id}
-                          />
-                        ))}
-                      </SelectContent>
-                    </SelectPortal>
-                  </Select>
-                )}
+                label="Plan de membresía"
+                placeholder="Seleccionar plan"
+                options={(plansData || []).map(plan => ({
+                  label: `${plan.name} - ${formatPrice(plan.basePrice)}`,
+                  value: plan.id,
+                }))}
               />
-              {errors.gymMembershipPlanId && (
-                <FormControlError>
-                  <FormControlErrorIcon as={AlertCircleIcon} />
-                  <FormControlErrorText>{errors.gymMembershipPlanId.message}</FormControlErrorText>
-                </FormControlError>
-              )}
-            </FormControl>
+            </View>
 
             {/* Start Date */}
-            <FormControl
-              isInvalid={!!errors.startDate}
-              className="mb-4"
-            >
-              <FormControlLabel>
-                <FormControlLabelText>Fecha de inicio</FormControlLabelText>
-              </FormControlLabel>
-              <FormInput
+            <View className="mb-4">
+              <FormDatePicker
                 control={control}
                 name="startDate"
-                label=""
-                placeholder="YYYY-MM-DD"
-                description="Formato: YYYY-MM-DD (ej: 2024-01-15)"
+                label="Fecha de inicio"
+                placeholder="Seleccionar fecha de inicio"
+                minimumDate={new Date()}
               />
-              {errors.startDate && (
-                <FormControlError>
-                  <FormControlErrorIcon as={AlertCircleIcon} />
-                  <FormControlErrorText>{errors.startDate.message}</FormControlErrorText>
-                </FormControlError>
-              )}
-            </FormControl>
+            </View>
 
             {/* Discount */}
-            <FormInput
-              control={control}
-              name="discountPercentage"
-              label="Descuento (%)"
-              placeholder="0"
-              keyboardType="numeric"
-            />
+            <View className="mb-4">
+              <FormInput
+                control={control}
+                name="discountPercentage"
+                label="Descuento (%)"
+                placeholder="0"
+                keyboardType="numeric"
+              />
+            </View>
 
             {/* Custom Price */}
-            <FormInput
-              control={control}
-              name="customPrice"
-              label="Precio personalizado (opcional)"
-              placeholder="0.00"
-              keyboardType="numeric"
-              description="Si se especifica, este precio reemplazará el precio del plan"
-            />
-          </CardContent>
+            <View className="mb-4">
+              <FormInput
+                control={control}
+                name="customPrice"
+                label="Precio personalizado (opcional)"
+                placeholder="0.00"
+                keyboardType="numeric"
+                description="Si se especifica, este precio reemplazará el precio del plan"
+              />
+            </View>
+          </View>
         </Card>
 
         {/* Price Summary */}
         {selectedPlan && (
           <Card>
-            <CardContent className="p-4">
+            <View className="p-4">
               <Heading size="sm" className="mb-3">Resumen de precios</Heading>
               <VStack className="gap-2">
                 <HStack className="justify-between">
@@ -308,11 +226,11 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                   <Text className="font-medium">{formatPrice(selectedPlan.basePrice)}</Text>
                 </HStack>
                 
-                {watchedDiscount > 0 && !watchedCustomPrice && (
+                {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                     <Text className="font-medium text-green-600">
-                      -{formatPrice(selectedPlan.basePrice * watchedDiscount / 100)}
+                      -{formatPrice(selectedPlan.basePrice * Number(watchedDiscount) / 100)}
                     </Text>
                   </HStack>
                 )}
@@ -321,7 +239,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Precio personalizado:</Text>
                     <Text className="font-medium text-blue-600">
-                      {formatPrice(watchedCustomPrice)}
+                      {formatPrice(Number(watchedCustomPrice))}
                     </Text>
                   </HStack>
                 )}
@@ -331,7 +249,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                   <Text className="font-bold text-lg">{formatPrice(calculateFinalPrice())}</Text>
                 </HStack>
               </VStack>
-            </CardContent>
+            </View>
           </Card>
         )}
 
