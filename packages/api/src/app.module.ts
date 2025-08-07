@@ -28,6 +28,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
+import { SalesModule } from './modules/sales/sales.module';
 
 // Global providers
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
@@ -74,6 +75,7 @@ import validationSchema from './config/validation.schema';
     SubscriptionsModule,
     DashboardModule,
     ProductsModule,
+    SalesModule,
   ],
   providers: [
     {
