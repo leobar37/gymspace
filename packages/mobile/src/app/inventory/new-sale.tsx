@@ -17,9 +17,6 @@ import {
   PlusIcon,
   CheckIcon,
   XIcon,
-  UserIcon,
-  FileTextIcon,
-  CreditCardIcon,
   PackageIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
