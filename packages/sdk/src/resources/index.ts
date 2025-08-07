@@ -13,4 +13,7 @@ export * from './assets';
 export * from './public-catalog';
 export * from './health';
 export * from './onboarding';
+export * from './products';
+export * from './sales';
+export * from './suppliers';
 export * from './users';

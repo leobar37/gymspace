@@ -16,6 +16,9 @@ import {
   PublicCatalogResource,
   HealthResource,
   OnboardingResource,
+  ProductsResource,
+  SalesResource,
+  SuppliersResource,
   UsersResource,
 } from './resources';
 
@@ -38,6 +41,9 @@ export class GymSpaceSdk {
   public publicCatalog: PublicCatalogResource;
   public health: HealthResource;
   public onboarding: OnboardingResource;
+  public products: ProductsResource;
+  public sales: SalesResource;
+  public suppliers: SuppliersResource;
   public users: UsersResource;
 
   constructor(config: GymSpaceConfig) {
@@ -59,6 +65,9 @@ export class GymSpaceSdk {
     this.publicCatalog = new PublicCatalogResource(this.client);
     this.health = new HealthResource(this.client);
     this.onboarding = new OnboardingResource(this.client);
+    this.products = new ProductsResource(this.client);
+    this.sales = new SalesResource(this.client);
+    this.suppliers = new SuppliersResource(this.client);
     this.users = new UsersResource(this.client);
   }
 

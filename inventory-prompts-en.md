@@ -244,8 +244,8 @@ Implement advanced features for the point of sale system:
 - [x] Backend API development (Products)
 - [x] Backend API development (Sales)
 - [x] Backend API development (Suppliers)
-- [ ] SDK updates and TypeScript types
-- [ ] Mobile app navigation structure
+- [x] SDK updates and TypeScript types
+- [x] Mobile app navigation structure
 - [ ] Main inventory screen
 - [ ] New sale process screen
 - [ ] Sales history screen

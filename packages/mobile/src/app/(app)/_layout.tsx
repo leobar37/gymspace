@@ -7,7 +7,8 @@ import {
   HomeIcon,
   MenuIcon,
   UsersIcon,
-  PackageIcon
+  PackageIcon,
+  ShoppingCartIcon
 } from 'lucide-react-native';
 import React from 'react';
 import { Platform } from 'react-native';
@@ -92,6 +93,16 @@ export default function AppLayout() {
           headerTitle: 'Planes de Membresía',
           tabBarIcon: ({ color, size }) => (
             <Icon as={PackageIcon} style={{ color, width: size, height: size }} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="inventory"
+        options={{
+          title: 'Inventario',
+          headerTitle: 'Inventario y Ventas',
+          tabBarIcon: ({ color, size }) => (
+            <Icon as={ShoppingCartIcon} style={{ color, width: size, height: size }} />
           ),
         }}
       />

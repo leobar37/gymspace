@@ -19,6 +19,7 @@ import {
   ChevronRightIcon,
   SettingsIcon,
   FileTextIcon,
+  TruckIcon,
 } from 'lucide-react-native';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
@@ -91,6 +92,12 @@ export const ProfileMenu: React.FC = () => {
           title: 'Contratos',
           subtitle: 'Gestiona contratos y membresías',
           onPress: () => router.push('/contracts'),
+        },
+        {
+          icon: TruckIcon,
+          title: 'Proveedores',
+          subtitle: 'Gestiona proveedores de productos',
+          onPress: () => router.push('/suppliers'),
         },
       ],
     },
