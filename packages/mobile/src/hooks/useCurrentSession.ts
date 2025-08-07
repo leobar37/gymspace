@@ -54,7 +54,6 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
         if (error.status === 401) {
           const refreshedToken = await refreshToken();
           if (refreshedToken) {
-            r;
             // Retry the request with new token
             const response = await sdk.auth.getCurrentSession();
 

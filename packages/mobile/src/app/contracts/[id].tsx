@@ -105,9 +105,11 @@ export default function ContractDetailScreen() {
     freezeContract(
       { 
         id: id!, 
-        freezeStartDate: data.freezeStartDate,
-        freezeEndDate: data.freezeEndDate,
-        reason: data.reason 
+        data: {
+          freezeStartDate: data.freezeStartDate,
+          freezeEndDate: data.freezeEndDate,
+          reason: data.reason
+        }
       },
       {
         onSuccess: () => {
@@ -302,45 +304,25 @@ export default function ContractDetailScreen() {
             </ModalHeader>
             <ModalBody>
               <VStack className="gap-4">
-                <Controller
+                <FormInput
                   control={freezeForm.control}
                   name="freezeStartDate"
-                  render={({ field: { onChange, value } }) => (
-                    <FormInput
-                      label="Fecha de inicio"
-                      placeholder="YYYY-MM-DD"
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      error={freezeForm.formState.errors.freezeStartDate?.message}
-                    />
-                  )}
+                  label="Fecha de inicio"
+                  placeholder="YYYY-MM-DD"
                 />
 
-                <Controller
+                <FormInput
                   control={freezeForm.control}
                   name="freezeEndDate"
-                  render={({ field: { onChange, value } }) => (
-                    <FormInput
-                      label="Fecha de fin"
-                      placeholder="YYYY-MM-DD"
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      error={freezeForm.formState.errors.freezeEndDate?.message}
-                    />
-                  )}
+                  label="Fecha de fin"
+                  placeholder="YYYY-MM-DD"
                 />
 
-                <Controller
+                <FormTextarea
                   control={freezeForm.control}
                   name="reason"
-                  render={({ field: { onChange, value } }) => (
-                    <FormTextarea
-                      label="Motivo (opcional)"
-                      placeholder="Ingrese el motivo del congelamiento"
-                      defaultValue={value || ''}
-                      onChangeText={onChange}
-                    />
-                  )}
+                  label="Motivo (opcional)"
+                  placeholder="Ingrese el motivo del congelamiento"
                 />
               </VStack>
             </ModalBody>

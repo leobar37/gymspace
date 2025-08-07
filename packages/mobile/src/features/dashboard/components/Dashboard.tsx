@@ -237,14 +237,14 @@ export const Dashboard: React.FC = () => {
             </HStack>
             
             {recentActivity && recentActivity.length > 0 ? (
-              <>
+              <View>
                 {recentActivity.map((activity, index) => (
                   <React.Fragment key={activity.id}>
                     <ActivityItem activity={activity} />
                     {index < recentActivity.length - 1 && <Divider />}
                   </React.Fragment>
                 ))}
-              </>
+              </View>
             ) : (
               <Text className="text-center text-gray-500 py-4">
                 No hay actividad reciente

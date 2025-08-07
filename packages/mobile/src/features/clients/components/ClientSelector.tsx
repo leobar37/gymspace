@@ -258,7 +258,7 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
                             </View>
                           )}
                         </HStack>
-                        {!client.isActive && (
+                        {client.status !== 'active' && (
                           <Text className="text-xs text-orange-600 font-medium mt-1">
                             Cliente Inactivo
                           </Text>

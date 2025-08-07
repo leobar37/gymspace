@@ -22,12 +22,10 @@ export default function UserTypeSelectionScreen() {
         <VStack className="flex-1 items-center">
           {/* Logo */}
           <VStack className="items-center gap-3 mt-12 mb-6">
-            <View className="p-4 bg-white rounded-2xl shadow-sm">
+            <View className="p-4 rounded-2xl shadow-sm">
               <Logo variant="sm" width={64} height={60} />
             </View>
-            <Text className="text-2xl font-bold text-gray-900 tracking-tight">GYMSPACE</Text>
           </VStack>
-
           {/* Welcome text */}
           <VStack className="items-center gap-3 mb-10">
             <Heading className="text-center text-gray-900 text-3xl font-bold">
@@ -37,7 +35,7 @@ export default function UserTypeSelectionScreen() {
               ¿Cómo quieres empezar?
             </Text>
           </VStack>
-
+          
           {/* Action cards */}
           <VStack className="w-full gap-5">
             {/* Owner option */}
@@ -83,27 +81,27 @@ export default function UserTypeSelectionScreen() {
                 </VStack>
               </Pressable>
             </Card>
+          </VStack>
         </VStack>
-      </VStack>
 
-      {/* Bottom Section - Footer */}
-      <Center className="pb-12 pt-6">
-        <View className="bg-white rounded-full px-6 py-3 shadow-sm border border-gray-100">
-          <HStack className="gap-1.5 items-center">
-            <Text className="text-gray-700 text-base">
-              ¿Ya tienes cuenta?
-            </Text>
-            <Link href="/login" asChild>
-              <Pressable className="active:opacity-70">
-                <Text className="text-blue-600 font-bold text-base">
-                  Iniciar sesión
-                </Text>
-              </Pressable>
-            </Link>
-          </HStack>
-        </View>
-      </Center>
-    </VStack>
+        {/* Bottom Section - Footer */}
+        <Center className="pb-12 pt-6">
+          <View className="bg-white rounded-full px-6 py-3 shadow-sm border border-gray-100">
+            <HStack className="gap-1.5 items-center">
+              <Text className="text-gray-700 text-base">
+                ¿Ya tienes cuenta?
+              </Text>
+              <Link href="/login" asChild>
+                <Pressable className="active:opacity-70">
+                  <Text className="text-blue-600 font-bold text-base">
+                    Iniciar sesión
+                  </Text>
+                </Pressable>
+              </Link>
+            </HStack>
+          </View>
+        </Center>
+      </VStack>
     </SafeAreaView >
   );
 }

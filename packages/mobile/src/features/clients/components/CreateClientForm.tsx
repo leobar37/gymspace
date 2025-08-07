@@ -21,6 +21,10 @@ import { useClientsController, ClientFormData } from '../controllers/clients.con
 import { router } from 'expo-router';
 import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 import { useDocumentTypes, useDocumentValidator } from '@/config/ConfigContext';
+import { PhotoField } from '@/features/assets/components/PhotoField';
+import { usePrepareAssets } from '@/features/assets/hooks/use-prepare-assets';
+import { useGymSdk } from '@/providers/GymSdkProvider';
+import type { AssetFieldValue } from '@/features/assets/types/asset-form.types';
 
 // Create the validation schema as a function to use document validator
 const createClientSchema = (validateDocument: (type: string, value: string) => { isValid: boolean; error?: string }) => z.object({
@@ -35,6 +39,7 @@ const createClientSchema = (validateDocument: (type: string, value: string) => {
   emergencyContactPhone: z.string().optional().or(z.undefined()),
   medicalConditions: z.string().optional().or(z.undefined()),
   notes: z.string().optional().or(z.undefined()),
+  profilePhotoId: z.any().optional(), // Can be string (existing) or object (pending upload)
 }).refine((data) => {
   // If document value is provided, document type must also be provided
   if (data.documentValue && data.documentValue.trim() !== '' && !data.documentType) {
@@ -62,6 +67,7 @@ type ClientFormSchema = {
   emergencyContactPhone?: string | undefined;
   medicalConditions?: string | undefined;
   notes?: string | undefined;
+  profilePhotoId?: AssetFieldValue;
 };
 
 interface CreateClientFormProps {
@@ -76,10 +82,13 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
   clientId,
 }) => {
   const { createClient, updateClient, isCreatingClient, isUpdatingClient } = useClientsController();
-  const isLoading = isCreatingClient || isUpdatingClient;
+  const [isUploadingPhoto, setIsUploadingPhoto] = React.useState(false);
+  const isLoading = isCreatingClient || isUpdatingClient || isUploadingPhoto;
   const toast = useToast();
   const documentTypes = useDocumentTypes();
   const validateDocument = useDocumentValidator();
+  const { sdk } = useGymSdk();
+  const { prepareAssets, state: assetsState } = usePrepareAssets(sdk);
   
   const clientSchema = React.useMemo(
     () => createClientSchema(validateDocument),
@@ -100,29 +109,48 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
       emergencyContactPhone: initialData?.emergencyContactPhone || '',
       medicalConditions: initialData?.medicalConditions || '',
       notes: initialData?.notes || '',
+      profilePhotoId: initialData?.profilePhotoId || null,
     },
   });
 
-  const onSubmit = (data: any) => {
-    // Convert date to string format for API and ensure required fields
-    const formattedData = {
-      ...data,
-      birthDate: data.birthDate ? data.birthDate.toISOString().split('T')[0] : undefined,
-      // Make email optional as specified in requirements
-      email: data.email || undefined,
-      // Clean up optional fields
-      documentValue: data.documentValue || undefined,
-      documentType: data.documentType || undefined,
-      phone: data.phone || undefined,
-      emergencyContactName: data.emergencyContactName || undefined,
-      emergencyContactPhone: data.emergencyContactPhone || undefined,
-      medicalConditions: data.medicalConditions || undefined,
-      notes: data.notes || undefined,
-    };
+  const onSubmit = async (data: any) => {
+    try {
+      setIsUploadingPhoto(true);
+      
+      // Prepare assets (upload photo if it's a new file)
+      const result = await prepareAssets(
+        data,
+        {
+          profilePhotoId: {
+            description: `Foto de perfil de ${data.name}`,
+            metadata: { clientId, type: 'profile' }
+          }
+        },
+        {
+          continueOnError: true // Continue even if photo upload fails
+        }
+      );
 
-    if (isEditing && clientId) {
-      updateClient(
-        { id: clientId, data: formattedData },
+      // Convert date to string format for API and ensure required fields
+      const formattedData = {
+        ...result.values,
+        birthDate: data.birthDate ? data.birthDate.toISOString().split('T')[0] : undefined,
+        // Make email optional as specified in requirements
+        email: data.email || undefined,
+        // Clean up optional fields
+        documentValue: data.documentValue || undefined,
+        documentType: data.documentType || undefined,
+        phone: data.phone || undefined,
+        emergencyContactName: data.emergencyContactName || undefined,
+        emergencyContactPhone: data.emergencyContactPhone || undefined,
+        medicalConditions: data.medicalConditions || undefined,
+        notes: data.notes || undefined,
+        profilePhotoId: result.values.profilePhotoId || undefined,
+      };
+
+      if (isEditing && clientId) {
+        updateClient(
+          { id: clientId, data: formattedData },
         {
           onSuccess: () => {
             toast.show({
@@ -160,8 +188,8 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
           },
         }
       );
-    } else {
-      createClient(formattedData as ClientFormData, {
+      } else {
+        createClient(formattedData as ClientFormData, {
         onSuccess: () => {
           toast.show({
             placement: 'top',
@@ -197,6 +225,25 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
           });
         },
       });
+      }
+    } catch (error) {
+      console.error('Error preparing assets:', error);
+      toast.show({
+        placement: 'top',
+        duration: 4000,
+        render: ({ id }) => {
+          return (
+            <Toast nativeID={`toast-${id}`} action="error" variant="solid">
+              <ToastTitle>Error</ToastTitle>
+              <ToastDescription>
+                Error al procesar la imagen. Por favor, inténtalo de nuevo.
+              </ToastDescription>
+            </Toast>
+          );
+        },
+      });
+    } finally {
+      setIsUploadingPhoto(false);
     }
   };
 
@@ -236,6 +283,16 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                   placeholder="Juan Pérez"
                   autoFocus
                   returnKeyType="next"
+                />
+
+                <PhotoField
+                  name="profilePhotoId"
+                  control={methods.control}
+                  label="Foto de perfil"
+                  description="Opcional: Sube una foto del cliente"
+                  aspectRatio={[1, 1]}
+                  quality={0.8}
+                  allowsEditing={true}
                 />
 
                 <FormDatePicker

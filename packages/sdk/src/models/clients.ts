@@ -15,6 +15,7 @@ export interface CreateClientDto {
   postalCode?: string;
   occupation?: string;
   notes?: string;
+  profilePhotoId?: string;
   customData?: Record<string, any>;
 }
 
@@ -33,6 +34,7 @@ export interface UpdateClientDto {
   postalCode?: string;
   occupation?: string;
   notes?: string;
+  profilePhotoId?: string;
   customData?: Record<string, any>;
 }
 

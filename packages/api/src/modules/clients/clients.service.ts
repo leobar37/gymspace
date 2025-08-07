@@ -328,6 +328,11 @@ export class ClientsService {
           ],
         },
       },
+      include: {
+        contracts: {
+          where: { status: 'active' },
+        },
+      },
     });
 
     if (!client) {
@@ -336,19 +341,16 @@ export class ClientsService {
 
     const newStatus = client.status === 'active' ? 'inactive' : 'active';
 
-    // If deactivating, cancel active contracts
+    // If deactivating, check for active contracts
     if (newStatus === 'inactive') {
-      await this.prismaService.contract.updateMany({
-        where: {
-          gymClientId: clientId,
-          status: 'active',
-        },
-        data: {
-          status: 'cancelled',
-          endDate: new Date(),
-          updatedByUserId: userId,
-        },
-      });
+      const activeContractsCount = client.contracts.length;
+      
+      if (activeContractsCount > 0) {
+        throw new BusinessException(
+          'CANNOT_DEACTIVATE_CLIENT_WITH_ACTIVE_CONTRACTS',
+          `Client cannot be deactivated because they have ${activeContractsCount} active contract(s). Please cancel or complete the contracts first.`,
+        );
+      }
     }
 
     return this.prismaService.gymClient.update({
