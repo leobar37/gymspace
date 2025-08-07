@@ -1496,26 +1496,12 @@ paths:
                 file:
                   type: string
                   format: binary
-                entityType:
-                  type: string
-                  enum:
-                    - gym
-                    - user
-                    - contract
-                    - evaluation
-                    - client
-                    - collaborator
-                entityId:
-                  type: string
-                  format: uuid
                 description:
                   type: string
                 metadata:
                   type: object
               required:
                 - file
-                - entityType
-                - entityId
       responses:
         '201':
           description: Asset uploaded successfully
@@ -1560,6 +1546,24 @@ paths:
       responses:
         '200':
           description: Asset deleted successfully
+      tags:
+        - Assets
+      security:
+        - bearer: []
+  /api/v1/assets/list/by-ids:
+    get:
+      operationId: AssetsController_findByIds
+      summary: Get multiple assets by IDs
+      parameters: []
+      responses:
+        '200':
+          description: List of assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetResponseDto'
       tags:
         - Assets
       security:
@@ -1620,34 +1624,6 @@ paths:
       responses:
         '200':
           description: File stream for rendering
-      tags:
-        - Assets
-      security:
-        - bearer: []
-  /api/v1/assets/entity/{entityType}/{entityId}:
-    get:
-      operationId: AssetsController_findByEntity
-      summary: List assets for a specific entity
-      parameters:
-        - name: entityType
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: entityId
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '200':
-          description: List of assets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AssetResponseDto'
       tags:
         - Assets
       security:
@@ -2763,52 +2739,63 @@ components:
       properties:
         id:
           type: string
+          description: Unique identifier of the asset
         filename:
           type: string
+          description: Generated filename for storage
         originalName:
           type: string
+          description: Original filename uploaded by user
         fileSize:
           type: number
+          description: File size in bytes
         mimeType:
           type: string
-        entityType:
-          type: string
-        entityId:
-          type: string
+          description: MIME type of the file
         status:
           type: string
+          description: Status of the asset
           enum:
             - active
             - deleted
-        metadata:
-          type: object
         description:
           type: string
-        createdAt:
-          format: date-time
-          type: string
-        updatedAt:
-          format: date-time
-          type: string
-        uploadedBy:
+          description: Optional description
+        metadata:
           type: object
-          description: User who uploaded the asset
+          description: Additional metadata
         previewUrl:
           type: string
-          description: Signed URL for previewing the asset (valid for 7 days)
-          nullable: true
+          description: Preview URL for previewable assets (images, PDFs, videos)
+        uploadedBy:
+          type: string
+          description: User ID who uploaded the asset
+        createdAt:
+          type: string
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          description: Last update timestamp
+        filePath:
+          type: string
+          description: File path in storage
+        entityType:
+          type: string
+          description: Entity type this asset belongs to
+        entityId:
+          type: string
+          description: Entity ID this asset belongs to
       required:
         - id
         - filename
         - originalName
         - fileSize
         - mimeType
-        - entityType
-        - entityId
         - status
+        - uploadedBy
         - createdAt
         - updatedAt
-        - uploadedBy
+        - filePath
     StartOnboardingDto:
       type: object
       properties:

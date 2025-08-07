@@ -82,41 +82,12 @@ enum CommentType {
     other
 }
 
-enum AssetCategory {
-    medical_document
-    identification
-    insurance
-    contract_copy
-    other
-}
-
 enum LeadStatus {
     NEW
     CONTACTED
     INTERESTED
     CONVERTED
     LOST
-}
-
-enum ContractAssetType {
-    payment_receipt
-    contract_document
-    identification
-    other
-}
-
-enum EvaluationAssetStage {
-    initial
-    progress
-    final
-}
-
-enum EvaluationAssetCategory {
-    body_photo
-    measurement_photo
-    document
-    report
-    other
 }
 
 // Models
@@ -203,14 +174,6 @@ model User {
     completedEvaluations      Evaluation[]        @relation("EvaluationCompletedBy")
     createdEvaluationComments EvaluationComment[] @relation("EvaluationCommentCreatedBy")
     updatedEvaluationComments EvaluationComment[] @relation("EvaluationCommentUpdatedBy")
-    createdContractAssets     ContractAsset[]     @relation("ContractAssetCreatedBy")
-    updatedContractAssets     ContractAsset[]     @relation("ContractAssetUpdatedBy")
-    createdClientAssets       ClientAsset[]       @relation("ClientAssetCreatedBy")
-    updatedClientAssets       ClientAsset[]       @relation("ClientAssetUpdatedBy")
-    createdEvaluationAssets   EvaluationAsset[]   @relation("EvaluationAssetCreatedBy")
-    updatedEvaluationAssets   EvaluationAsset[]   @relation("EvaluationAssetUpdatedBy")
-    createdCommentAssets      CommentAsset[]      @relation("CommentAssetCreatedBy")
-    updatedCommentAssets      CommentAsset[]      @relation("CommentAssetUpdatedBy")
     assignedLeads             Lead[]              @relation("LeadAssignedTo")
     createdLeads              Lead[]              @relation("LeadCreatedBy")
     updatedLeads              Lead[]              @relation("LeadUpdatedBy")
@@ -268,14 +231,17 @@ model Gym {
     settings            Json?
     isActive            Boolean @default(true) @map("is_active")
     gymCode             String  @unique @map("gym_code")
-    profileAssetId      String? @map("profile_asset_id")
-    coverAssetId        String? @map("cover_asset_id")
+    
+    // Asset fields as simple text IDs
+    profilePhotoId      String? @map("profile_photo_id")
+    coverPhotoId        String? @map("cover_photo_id")
+    
     evaluationStructure Json?   @map("evaluation_structure")
 
     // Public catalog fields
     catalogVisibility  Boolean @default(false) @map("catalog_visibility")
     catalogDescription String? @map("catalog_description") @db.Text
-    catalogImages      Json?   @map("catalog_images")
+    catalogImages      Json?   @map("catalog_images") // Array of asset IDs
     catalogFeatured    Boolean @default(false) @map("catalog_featured")
     catalogPriority    Int     @default(0) @map("catalog_priority")
     socialMedia        Json?   @map("social_media")
@@ -288,8 +254,6 @@ model Gym {
 
     // Relations
     organization Organization @relation(fields: [organizationId], references: [id])
-    profileAsset Asset?       @relation("GymProfileAsset", fields: [profileAssetId], references: [id])
-    coverAsset   Asset?       @relation("GymCoverAsset", fields: [coverAssetId], references: [id])
     createdBy    User         @relation("GymCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy    User?        @relation("GymUpdatedBy", fields: [updatedByUserId], references: [id])
 
@@ -334,8 +298,11 @@ model Collaborator {
     status          CollaboratorStatus
     hiredDate       DateTime?          @map("hired_date")
     invitationId    String?            @map("invitation_id")
-    profileAssetId  String?            @map("profile_asset_id")
-    coverAssetId    String?            @map("cover_asset_id")
+    
+    // Asset fields as simple text IDs
+    profilePhotoId  String?            @map("profile_photo_id")
+    coverPhotoId    String?            @map("cover_photo_id")
+    
     description     String?            @db.Text
     specialties     Json?
     createdByUserId String             @map("created_by_user_id")
@@ -349,8 +316,6 @@ model Collaborator {
     gym          Gym         @relation(fields: [gymId], references: [id])
     role         Role        @relation(fields: [roleId], references: [id])
     invitation   Invitation? @relation(fields: [invitationId], references: [id])
-    profileAsset Asset?      @relation("CollaboratorProfileAsset", fields: [profileAssetId], references: [id])
-    coverAsset   Asset?      @relation("CollaboratorCoverAsset", fields: [coverAssetId], references: [id])
     createdBy    User        @relation("CollaboratorCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy    User?       @relation("CollaboratorUpdatedBy", fields: [updatedByUserId], references: [id])
 
@@ -399,7 +364,12 @@ model GymClient {
     phone                 String?
     email                 String?
     status                ClientStatus
-    profileAssetId        String?      @map("profile_asset_id")
+    
+    // Asset fields as simple text IDs
+    profilePhotoId        String?      @map("profile_photo_id")
+    documentFrontPhotoId  String?      @map("document_front_photo_id")
+    documentBackPhotoId   String?      @map("document_back_photo_id")
+    
     emergencyContactName  String?      @map("emergency_contact_name")
     emergencyContactPhone String?      @map("emergency_contact_phone")
     medicalConditions     String?      @map("medical_conditions") @db.Text
@@ -412,14 +382,12 @@ model GymClient {
 
     // Relations
     gym          Gym    @relation(fields: [gymId], references: [id])
-    profileAsset Asset? @relation("GymClientProfileAsset", fields: [profileAssetId], references: [id])
     createdBy    User   @relation("GymClientCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy    User?  @relation("GymClientUpdatedBy", fields: [updatedByUserId], references: [id])
 
     contracts      Contract[]
     checkIns       CheckIn[]
     evaluations    Evaluation[]
-    clientAssets   ClientAsset[]
     convertedLeads Lead[]
 
     @@unique([gymId, clientNumber])
@@ -441,6 +409,7 @@ model GymMembershipPlan {
     maxEvaluations      Int        @default(0) @map("max_evaluations")
     includesAdvisor     Boolean    @default(false) @map("includes_advisor")
     showInCatalog       Boolean    @default(false) @map("show_in_catalog")
+    assetsIds           String[]   @default([]) @map("assets_ids")
     status              PlanStatus
     createdByUserId     String     @map("created_by_user_id")
     updatedByUserId     String?    @map("updated_by_user_id")
@@ -473,6 +442,12 @@ model Contract {
     paymentFrequency    PaymentFrequency @map("payment_frequency")
     notes               String?          @db.Text
     termsAndConditions  String?          @map("terms_and_conditions") @db.Text
+    
+    // Asset fields as simple text IDs
+    contractDocumentId  String?          @map("contract_document_id")
+    paymentReceiptIds   Json?            @map("payment_receipt_ids") // Array of asset IDs
+    receiptIds          String[]         @default([]) @map("receipt_ids")
+    
     createdByUserId     String           @map("created_by_user_id")
     updatedByUserId     String?          @map("updated_by_user_id")
     approvedByUserId    String?          @map("approved_by_user_id")
@@ -491,14 +466,13 @@ model Contract {
     approvedBy        User?             @relation("ContractApprovedBy", fields: [approvedByUserId], references: [id])
     cancelledBy       User?             @relation("ContractCancelledBy", fields: [cancelledByUserId], references: [id])
 
-    contractAssets ContractAsset[]
-    evaluations    Evaluation[]
     Gym            Gym?            @relation(fields: [gymId], references: [id])
     gymId          String?
 
     @@map("contracts")
 }
 
+// Simplified Asset model - no entity relationships
 model Asset {
     id               String      @id @default(uuid())
     filename         String
@@ -506,32 +480,20 @@ model Asset {
     filePath         String      @map("file_path")
     fileSize         Int         @map("file_size")
     mimeType         String      @map("mime_type")
-    entityType       String      @map("entity_type")
-    entityId         String      @map("entity_id")
     uploadedByUserId String      @map("uploaded_by_user_id")
     metadata         Json?
     status           AssetStatus
+    description      String?     @db.Text
     createdByUserId  String      @map("created_by_user_id")
     updatedByUserId  String?     @map("updated_by_user_id")
     createdAt        DateTime    @default(now()) @map("created_at")
     updatedAt        DateTime    @updatedAt @map("updated_at")
     deletedAt        DateTime?   @map("deleted_at")
 
-    // Relations
+    // Relations - only user relations
     uploadedBy User  @relation("AssetUploadedBy", fields: [uploadedByUserId], references: [id])
     createdBy  User  @relation("AssetCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy  User? @relation("AssetUpdatedBy", fields: [updatedByUserId], references: [id])
-
-    // Reverse relations
-    gymProfiles          Gym[]             @relation("GymProfileAsset")
-    gymCovers            Gym[]             @relation("GymCoverAsset")
-    collaboratorProfiles Collaborator[]    @relation("CollaboratorProfileAsset")
-    collaboratorCovers   Collaborator[]    @relation("CollaboratorCoverAsset")
-    clientProfiles       GymClient[]       @relation("GymClientProfileAsset")
-    contractAssets       ContractAsset[]
-    clientAssets         ClientAsset[]
-    evaluationAssets     EvaluationAsset[]
-    commentAssets        CommentAsset[]
 
     @@map("assets")
 }
@@ -562,7 +524,6 @@ model CheckIn {
 model Evaluation {
     id                 String           @id @default(uuid())
     gymClientId        String           @map("gym_client_id")
-    contractId         String?          @map("contract_id")
     advisorId          String?          @map("advisor_id")
     evaluationType     EvaluationType   @map("evaluation_type")
     status             EvaluationStatus
@@ -574,6 +535,13 @@ model Evaluation {
     progressPercentage Decimal?         @map("progress_percentage") @db.Decimal(5, 2)
     goals              String?          @db.Text
     resultsSummary     String?          @map("results_summary") @db.Text
+    
+    // Asset fields as simple text IDs
+    initialPhotoIds    Json?            @map("initial_photo_ids") // Array of asset IDs
+    progressPhotoIds   Json?            @map("progress_photo_ids") // Array of asset IDs
+    finalPhotoIds      Json?            @map("final_photo_ids") // Array of asset IDs
+    documentIds        Json?            @map("document_ids") // Array of asset IDs
+    
     createdByUserId    String           @map("created_by_user_id")
     updatedByUserId    String?          @map("updated_by_user_id")
     completedByUserId  String?          @map("completed_by_user_id")
@@ -583,14 +551,12 @@ model Evaluation {
 
     // Relations
     gymClient   GymClient     @relation(fields: [gymClientId], references: [id])
-    contract    Contract?     @relation(fields: [contractId], references: [id])
     advisor     Collaborator? @relation(fields: [advisorId], references: [id])
     createdBy   User          @relation("EvaluationCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy   User?         @relation("EvaluationUpdatedBy", fields: [updatedByUserId], references: [id])
     completedBy User?         @relation("EvaluationCompletedBy", fields: [completedByUserId], references: [id])
 
     evaluationComments EvaluationComment[]
-    evaluationAssets   EvaluationAsset[]
     Gym                Gym?                @relation(fields: [gymId], references: [id])
     gymId              String?
 
@@ -603,6 +569,10 @@ model EvaluationComment {
     commentType     CommentType @map("comment_type")
     comment         String      @db.Text
     isPrivate       Boolean     @default(false) @map("is_private")
+    
+    // Asset fields as simple text IDs
+    attachmentIds   Json?       @map("attachment_ids") // Array of asset IDs
+    
     createdByUserId String      @map("created_by_user_id")
     updatedByUserId String?     @map("updated_by_user_id")
     createdAt       DateTime    @default(now()) @map("created_at")
@@ -613,97 +583,8 @@ model EvaluationComment {
     evaluation    Evaluation     @relation(fields: [evaluationId], references: [id])
     createdBy     User           @relation("EvaluationCommentCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy     User?          @relation("EvaluationCommentUpdatedBy", fields: [updatedByUserId], references: [id])
-    commentAssets CommentAsset[]
 
     @@map("evaluation_comments")
-}
-
-model ContractAsset {
-    id              String            @id @default(uuid())
-    contractId      String            @map("contract_id")
-    assetId         String            @map("asset_id")
-    assetType       ContractAssetType @map("asset_type")
-    description     String?
-    isRequired      Boolean           @default(false) @map("is_required")
-    createdByUserId String            @map("created_by_user_id")
-    updatedByUserId String?           @map("updated_by_user_id")
-    createdAt       DateTime          @default(now()) @map("created_at")
-    updatedAt       DateTime          @updatedAt @map("updated_at")
-    deletedAt       DateTime?         @map("deleted_at")
-
-    // Relations
-    contract  Contract @relation(fields: [contractId], references: [id])
-    asset     Asset    @relation(fields: [assetId], references: [id])
-    createdBy User     @relation("ContractAssetCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User?    @relation("ContractAssetUpdatedBy", fields: [updatedByUserId], references: [id])
-
-    @@map("contract_assets")
-}
-
-model ClientAsset {
-    id              String        @id @default(uuid())
-    gymClientId     String        @map("gym_client_id")
-    assetId         String        @map("asset_id")
-    assetCategory   AssetCategory @map("asset_category")
-    description     String?
-    isRequired      Boolean       @default(false) @map("is_required")
-    expirationDate  DateTime?     @map("expiration_date")
-    createdByUserId String        @map("created_by_user_id")
-    updatedByUserId String?       @map("updated_by_user_id")
-    createdAt       DateTime      @default(now()) @map("created_at")
-    updatedAt       DateTime      @updatedAt @map("updated_at")
-    deletedAt       DateTime?     @map("deleted_at")
-
-    // Relations
-    gymClient GymClient @relation(fields: [gymClientId], references: [id])
-    asset     Asset     @relation(fields: [assetId], references: [id])
-    createdBy User      @relation("ClientAssetCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User?     @relation("ClientAssetUpdatedBy", fields: [updatedByUserId], references: [id])
-
-    @@map("client_assets")
-}
-
-model EvaluationAsset {
-    id              String                  @id @default(uuid())
-    evaluationId    String                  @map("evaluation_id")
-    assetId         String                  @map("asset_id")
-    assetStage      EvaluationAssetStage    @map("asset_stage")
-    assetCategory   EvaluationAssetCategory @map("asset_category")
-    description     String?
-    measurementType String?                 @map("measurement_type")
-    createdByUserId String                  @map("created_by_user_id")
-    updatedByUserId String?                 @map("updated_by_user_id")
-    createdAt       DateTime                @default(now()) @map("created_at")
-    updatedAt       DateTime                @updatedAt @map("updated_at")
-    deletedAt       DateTime?               @map("deleted_at")
-
-    // Relations
-    evaluation Evaluation @relation(fields: [evaluationId], references: [id])
-    asset      Asset      @relation(fields: [assetId], references: [id])
-    createdBy  User       @relation("EvaluationAssetCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy  User?      @relation("EvaluationAssetUpdatedBy", fields: [updatedByUserId], references: [id])
-
-    @@map("evaluation_assets")
-}
-
-model CommentAsset {
-    id                  String    @id @default(uuid())
-    evaluationCommentId String    @map("evaluation_comment_id")
-    assetId             String    @map("asset_id")
-    description         String?
-    createdByUserId     String    @map("created_by_user_id")
-    updatedByUserId     String?   @map("updated_by_user_id")
-    createdAt           DateTime  @default(now()) @map("created_at")
-    updatedAt           DateTime  @updatedAt @map("updated_at")
-    deletedAt           DateTime? @map("deleted_at")
-
-    // Relations
-    evaluationComment EvaluationComment @relation(fields: [evaluationCommentId], references: [id])
-    asset             Asset             @relation(fields: [assetId], references: [id])
-    createdBy         User              @relation("CommentAssetCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy         User?             @relation("CommentAssetUpdatedBy", fields: [updatedByUserId], references: [id])
-
-    @@map("comment_assets")
 }
 
 model Lead {
@@ -718,6 +599,8 @@ model Lead {
     metadata            Json?
     assignedToUserId    String?    @map("assigned_to_user_id")
     notes               String?    @db.Text
+    assetId             String?    @map("asset_id")
+    assetIds            String[]   @default([]) @map("asset_ids")
     convertedToClientId String?    @map("converted_to_client_id")
     convertedAt         DateTime?  @map("converted_at")
     createdByUserId     String?    @map("created_by_user_id")

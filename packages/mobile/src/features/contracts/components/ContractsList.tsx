@@ -14,7 +14,8 @@ import { Badge, BadgeText } from '@/components/ui/badge';
 import { Divider } from '@/components/ui/divider';
 import { Spinner } from '@/components/ui/spinner';
 import { Button, ButtonText } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { View } from 'react-native';
 import { FAB } from '@/components/ui/fab';
 import { ContractStatus } from '@gymspace/sdk';
 import { useContractsController, SearchFilters } from '../controllers/contracts.controller';
@@ -89,7 +90,7 @@ export const ContractsList: React.FC<ContractsListProps> = ({
         className="mb-3"
       >
         <Card>
-          <CardContent className="p-4">
+          <View className="p-4">
             <HStack className="justify-between items-start mb-2">
               <VStack className="flex-1">
                 <Text className="text-sm text-gray-500 mb-1">
@@ -149,7 +150,7 @@ export const ContractsList: React.FC<ContractsListProps> = ({
                 </HStack>
               )}
             </VStack>
-          </CardContent>
+          </View>
         </Card>
       </Pressable>
     );

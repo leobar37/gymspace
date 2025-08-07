@@ -6,7 +6,8 @@ import {
   FileTextIcon,
   HomeIcon,
   MenuIcon,
-  UsersIcon
+  UsersIcon,
+  PackageIcon
 } from 'lucide-react-native';
 import React from 'react';
 import { Platform } from 'react-native';
@@ -85,21 +86,23 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
+        name="plans"
+        options={{
+          title: 'Planes',
+          headerTitle: 'Planes de Membresía',
+          tabBarIcon: ({ color, size }) => (
+            <Icon as={PackageIcon} style={{ color, width: size, height: size }} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="contracts"
         options={{
           title: 'Contratos',
           headerTitle: 'Contratos',
-          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Icon as={FileTextIcon} style={{ color, width: size, height: size }} />
           ),
-        }}
-      />
-      {/* Hide plans tab - only showing contracts */}
-      <Tabs.Screen
-        name="plans"
-        options={{
-          href: null,
         }}
       />
       <Tabs.Screen

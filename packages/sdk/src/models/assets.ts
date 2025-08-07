@@ -1,31 +1,24 @@
+/**
+ * Asset models for file management
+ */
+
+export interface UploadAssetDto {
+  file: File;
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
 export interface AssetResponseDto {
   id: string;
   filename: string;
   originalName: string;
   fileSize: number;
   mimeType: string;
-  entityType: string;
-  entityId: string;
   status: 'active' | 'deleted';
-  metadata?: Record<string, any>;
   description?: string;
+  metadata?: Record<string, any>;
+  previewUrl?: string;
+  uploadedBy: string;
   createdAt: string;
   updatedAt: string;
-  uploadedBy: any;
-  previewUrl?: string | null; // Generated signed URL for preview (valid for 7 days)
-}
-
-export interface UploadAssetDto {
-  file: File;
-  entityType: AssetEntityType;
-  entityId: string;
-  description?: string;
-  metadata?: Record<string, any>;
-}
-
-export type AssetEntityType = 'gym' | 'user' | 'contract' | 'evaluation' | 'client' | 'collaborator';
-
-export interface AssetDownloadUrl {
-  url: string;
-  filename: string;
 }

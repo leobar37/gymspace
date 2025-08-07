@@ -6,7 +6,6 @@ import { useForm } from 'react-hook-form';
 import { Alert, ScrollView, View } from 'react-native';
 import { z } from 'zod';
 import { FormInput } from '@/components/forms/FormInput';
-import { FormSelect } from '@/components/forms/FormSelect';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -15,20 +14,20 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ClientSelector } from '@/features/clients/components/ClientSelector';
-import { usePlansController } from '@/features/plans/controllers/plans.controller';
+import { PlanListSelector } from '@/features/plans/components/PlanListSelector';
 import { ContractFormData, useContractsController } from '../controllers/contracts.controller';
 import { useFormatPrice } from '@/config/ConfigContext';
 
 // Form validation schema
 const createContractSchema = z.object({
-  gymClientId: z.string().min(1, 'Debe seleccionar un cliente'),
-  gymMembershipPlanId: z.string().min(1, 'Debe seleccionar un plan'),
+  gymClientId: z.string().min(1, 'El cliente es requerido'),
+  gymMembershipPlanId: z.string().min(1, 'El plan es requerido'),
   startDate: z.date({
     required_error: 'La fecha de inicio es requerida',
     invalid_type_error: 'Fecha inválida',
   }),
-  discountPercentage: z.string(),
-  customPrice: z.string().optional(),
+  discountPercentage: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional().default('0'),
+  customPrice: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional(),
 });
 
 type CreateContractSchema = z.infer<typeof createContractSchema>;
@@ -47,12 +46,9 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   const router = useRouter();
   const formatPrice = useFormatPrice();
   const { createContract, isCreatingContract } = useContractsController();
-  const { usePlansList } = usePlansController();
-  
+
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
-  // Load plans
-  const { data: plansData } = usePlansList({ activeOnly: true });
 
   // Parse initial date if provided as string
   const parseInitialDate = (dateStr?: string) => {
@@ -68,8 +64,11 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
     control,
     handleSubmit,
     watch,
+    setValue,
+    formState: { isValid },
   } = useForm<CreateContractSchema>({
     resolver: zodResolver(createContractSchema),
+    mode: 'onChange', // Enable validation on change
     defaultValues: {
       gymClientId: clientId || initialData?.gymClientId || '',
       gymMembershipPlanId: initialData?.gymMembershipPlanId || '',
@@ -84,24 +83,20 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   const watchedDiscount = watch('discountPercentage');
   const watchedCustomPrice = watch('customPrice');
 
-  useEffect(() => {
-    if (watchedPlanId && plansData) {
-      const plan = plansData.find(p => p.id === watchedPlanId);
-      setSelectedPlan(plan);
-    }
-  }, [watchedPlanId, plansData]);
-
   const calculateFinalPrice = () => {
     if (!selectedPlan) return 0;
-    
+
+    // If custom price is specified and valid, use it
     const customPriceNum = watchedCustomPrice ? Number(watchedCustomPrice) : 0;
     if (customPriceNum > 0) {
       return customPriceNum;
     }
-    
-    const basePrice = selectedPlan.basePrice;
+
+    // Otherwise calculate based on plan price and discount
+    const basePrice = selectedPlan.basePrice || 0;
     const discount = watchedDiscount ? Number(watchedDiscount) : 0;
-    return basePrice - (basePrice * discount / 100);
+    const finalPrice = basePrice - (basePrice * discount / 100);
+    return finalPrice >= 0 ? finalPrice : 0;
   };
 
   const onSubmit = async (data: CreateContractSchema) => {
@@ -113,7 +108,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
         discountPercentage: Number(data.discountPercentage) || 0,
         customPrice: data.customPrice ? Number(data.customPrice) : undefined,
       };
-      
+
       createContract(contractData, {
         onSuccess: (newContract) => {
           Alert.alert(
@@ -152,30 +147,29 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
         <Card>
           <View className="p-4">
             <Heading size="md" className="mb-4">Información del contrato</Heading>
-            
             {/* Client Selection */}
             <View className="mb-4">
               <ClientSelector
                 control={control}
                 name="gymClientId"
-                label="Cliente"
+                label="Cliente *"
                 placeholder="Seleccionar cliente"
                 description="Selecciona el cliente para este contrato"
-                allowClear={true}
+                allowClear={false}
               />
             </View>
 
             {/* Plan Selection */}
             <View className="mb-4">
-              <FormSelect
+              <PlanListSelector
                 control={control}
                 name="gymMembershipPlanId"
-                label="Plan de membresía"
+                label="Plan de membresía *"
                 placeholder="Seleccionar plan"
-                options={(plansData || []).map(plan => ({
-                  label: `${plan.name} - ${formatPrice(plan.basePrice)}`,
-                  value: plan.id,
-                }))}
+                description="Selecciona el plan de membresía para este contrato"
+                allowClear={false}
+                activeOnly={true}
+                onPlanSelect={(plan) => setSelectedPlan(plan)}
               />
             </View>
 
@@ -222,20 +216,20 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
               <Heading size="sm" className="mb-3">Resumen de precios</Heading>
               <VStack className="gap-2">
                 <HStack className="justify-between">
-                  <Text className="text-gray-600">Precio base:</Text>
-                  <Text className="font-medium">{formatPrice(selectedPlan.basePrice)}</Text>
+                  <Text className="text-gray-600">Precio del plan:</Text>
+                  <Text className="font-medium">{formatPrice(selectedPlan.basePrice || 0)}</Text>
                 </HStack>
-                
+
                 {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                     <Text className="font-medium text-green-600">
-                      -{formatPrice(selectedPlan.basePrice * Number(watchedDiscount) / 100)}
+                      -{formatPrice((selectedPlan.basePrice || 0) * Number(watchedDiscount) / 100)}
                     </Text>
                   </HStack>
                 )}
-                
-                {watchedCustomPrice && (
+
+                {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Precio personalizado:</Text>
                     <Text className="font-medium text-blue-600">
@@ -243,7 +237,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                     </Text>
                   </HStack>
                 )}
-                
+
                 <HStack className="justify-between pt-2 border-t border-gray-200">
                   <Text className="font-semibold">Precio final:</Text>
                   <Text className="font-bold text-lg">{formatPrice(calculateFinalPrice())}</Text>
@@ -256,7 +250,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
         {/* Submit Button */}
         <Button
           onPress={handleSubmit(onSubmit)}
-          isDisabled={isCreatingContract}
+          isDisabled={!isValid || isCreatingContract}
           className="mt-4"
         >
           {isCreatingContract && <ButtonSpinner className="mr-2" />}

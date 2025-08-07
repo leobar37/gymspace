@@ -10,6 +10,8 @@ export default function CreateContractScreen() {
         options={{
           title: 'Nuevo Contrato',
           headerBackTitle: 'Cancelar',
+          headerShown: true,
+          headerBackVisible: true,
         }}
       />
       <SafeAreaView style={{ flex: 1 }}>

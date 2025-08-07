@@ -1,107 +1,48 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../core/database/prisma.service';
+import { StorageService } from '../../common/services/storage.service';
+import { UploadAssetDto, AssetResponseDto } from './dto';
 import { IRequestContext } from '@gymspace/shared';
-import {
-  BusinessException,
-  ResourceNotFoundException,
-  ValidationException,
-} from '../../common/exceptions';
-import { UploadAssetDto, AssetEntityType } from './dto';
 import { FileUploadResult } from './dto/fastify-file.interface';
+import { nanoid } from 'nanoid';
 import { AssetStatus } from '@prisma/client';
-import * as AWS from 'aws-sdk';
-import { randomUUID } from 'crypto';
-import * as path from 'path';
 
 @Injectable()
-export class AssetsService implements OnModuleInit {
-  private readonly logger = new Logger(AssetsService.name);
-  private s3: AWS.S3;
-  private bucket: string;
-
+export class AssetsService {
   constructor(
-    private prisma: PrismaService,
-    private configService: ConfigService,
-  ) {
-    const s3Config = this.configService.get('s3');
-
-    this.s3 = new AWS.S3({
-      endpoint: s3Config.endpoint,
-      accessKeyId: s3Config.accessKey,
-      secretAccessKey: s3Config.secretKey,
-      s3ForcePathStyle: true,
-      signatureVersion: 'v4',
-      region: s3Config.region,
-    });
-
-    this.bucket = s3Config.bucket;
-  }
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
-   * Initialize module and ensure bucket exists
+   * Upload a new asset
    */
-  async onModuleInit() {
-    try {
-      // Check if bucket exists
-      await this.s3.headBucket({ Bucket: this.bucket }).promise();
-      this.logger.log(`S3 bucket '${this.bucket}' verified successfully`);
-    } catch (error) {
-      if (error.statusCode === 404) {
-        try {
-          // Bucket doesn't exist, create it
-          await this.s3.createBucket({ Bucket: this.bucket }).promise();
-          this.logger.log(`S3 bucket '${this.bucket}' created successfully`);
-        } catch (createError) {
-          this.logger.error(
-            `Failed to create S3 bucket '${this.bucket}': ${createError.message}`,
-            createError.stack,
-          );
-          throw createError;
-        }
-      } else {
-        this.logger.error(
-          `Failed to verify S3 bucket '${this.bucket}': ${error.message}`,
-          error.stack,
-        );
-        throw error;
-      }
-    }
-  }
-
-  /**
-   * Upload a file and create asset record
-   */
-  async upload(context: IRequestContext, file: FileUploadResult, dto: UploadAssetDto) {
-    const gymId = context.getGymId();
+  async upload(
+    context: IRequestContext,
+    file: FileUploadResult,
+    dto: UploadAssetDto,
+  ): Promise<AssetResponseDto> {
     const userId = context.getUserId();
 
-    // Validate entity access based on type
-    await this.validateEntityAccess(dto.entityType, dto.entityId, gymId);
-
     // Generate unique filename
-    const fileExt = path.extname(file.filename);
-    const uniqueFilename = `${randomUUID()}${fileExt}`;
-    const filePath = `${gymId}/${dto.entityType}/${dto.entityId}/${uniqueFilename}`;
+    const fileExtension = file.filename.split('.').pop();
+    const uniqueFilename = `${nanoid()}.${fileExtension}`;
+    const filePath = `assets/${uniqueFilename}`;
 
     try {
-      // Upload to S3
-      await this.s3
-        .upload({
-          Bucket: this.bucket,
-          Key: filePath,
-          Body: file.buffer,
-          ContentType: file.mimetype,
-          Metadata: {
-            gymId,
-            entityType: dto.entityType,
-            entityId: dto.entityId,
-            uploadedBy: userId,
-          },
-        })
-        .promise();
+      // Upload to storage
+      await this.storageService.upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        metadata: {
+          originalName: file.filename,
+          uploadedBy: userId,
+          ...(dto.metadata || {}),
+        },
+      });
 
-      // Create asset record
+      // Create database record
       const asset = await this.prisma.asset.create({
         data: {
           filename: uniqueFilename,
@@ -109,132 +50,111 @@ export class AssetsService implements OnModuleInit {
           filePath,
           fileSize: file.size,
           mimeType: file.mimetype,
-          entityType: dto.entityType,
-          entityId: dto.entityId,
-          uploadedByUserId: userId,
-          metadata: dto.metadata || {},
+          description: dto.description,
+          metadata: dto.metadata,
           status: AssetStatus.active,
+          uploadedByUserId: userId,
           createdByUserId: userId,
-        },
-        include: {
-          uploadedBy: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
         },
       });
 
-      // Generate preview URL
-      const previewUrl = await this.generatePreviewUrl(asset.filePath);
-
-      return {
-        ...asset,
-        previewUrl,
-      };
+      return this.mapToDto(asset);
     } catch (error) {
-      this.logger.error(`Failed to upload asset: ${error.message}`, error.stack);
-      throw new BusinessException('Failed to upload file');
+      // Clean up storage if database save fails
+      try {
+        await this.storageService.delete(filePath);
+      } catch (cleanupError) {
+        console.error('Failed to cleanup uploaded file:', cleanupError);
+      }
+
+      throw new InternalServerErrorException('Failed to upload asset');
     }
   }
 
   /**
-   * Get asset by ID
+   * Get a single asset by ID
    */
-  async findOne(context: IRequestContext, assetId: string) {
-    const gymId = context.getGymId();
-
+  async findOne(context: IRequestContext, id: string): Promise<AssetResponseDto> {
     const asset = await this.prisma.asset.findFirst({
       where: {
-        id: assetId,
+        id,
         status: AssetStatus.active,
+        deletedAt: null,
       },
-      include: {
-        uploadedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+    });
+    if (!asset) {
+      throw new NotFoundException('Asset not found');
+    }
+    return this.mapToDto(asset);
+  }
+
+  /**
+   * Get multiple assets by IDs
+   */
+  async findByIds(context: IRequestContext, ids: string[]): Promise<AssetResponseDto[]> {
+    const assets = await this.prisma.asset.findMany({
+      where: {
+        id: { in: ids },
+        status: AssetStatus.active,
+        deletedAt: null,
       },
     });
 
-    if (!asset) {
-      throw new ResourceNotFoundException('Asset', assetId);
-    }
+    return assets.map((asset) => this.mapToDto(asset));
+  }
 
-    // Validate gym access for the entity
-    await this.validateEntityAccess(asset.entityType as AssetEntityType, asset.entityId, gymId);
+  /**
+   * Get signed download URL for an asset
+   */
+  async getDownloadUrl(
+    context: IRequestContext,
+    id: string,
+  ): Promise<{ url: string; filename: string }> {
+    const asset = await this.findOne(context, id);
 
-    // Generate preview URL for the asset
-    const previewUrl = await this.generatePreviewUrl(asset.filePath);
+    const url = await this.storageService.getSignedUrl(asset.filePath, 'download');
 
     return {
-      ...asset,
-      previewUrl,
+      url,
+      filename: asset.originalName,
     };
   }
 
   /**
-   * Get download URL for an asset
+   * Download an asset
    */
-  async getDownloadUrl(context: IRequestContext, assetId: string) {
-    const asset = await this.findOne(context, assetId);
+  async download(context: IRequestContext, id: string) {
+    const asset = await this.findOne(context, id);
 
-    try {
-      // Generate signed URL valid for 1 hour
-      const url = await this.s3.getSignedUrlPromise('getObject', {
-        Bucket: this.bucket,
-        Key: asset.filePath,
-        Expires: 3600, // 1 hour
-      });
+    const stream = await this.storageService.download(asset.filePath);
 
-      return { url, filename: asset.originalName };
-    } catch (error) {
-      this.logger.error(`Failed to generate download URL: ${error.message}`, error.stack);
-      throw new BusinessException('Failed to generate download URL');
-    }
+    return {
+      stream,
+      filename: asset.originalName,
+      mimeType: asset.mimeType,
+      fileSize: asset.fileSize,
+    };
   }
 
   /**
-   * Get asset stream for download
+   * Serve an asset for rendering (inline display)
    */
-  async download(context: IRequestContext, assetId: string) {
-    const asset = await this.findOne(context, assetId);
-
-    try {
-      const stream = this.s3
-        .getObject({
-          Bucket: this.bucket,
-          Key: asset.filePath,
-        })
-        .createReadStream();
-
-      return {
-        stream,
-        filename: asset.originalName,
-        mimeType: asset.mimeType,
-        fileSize: asset.fileSize,
-      };
-    } catch (error) {
-      this.logger.error(`Failed to download asset: ${error.message}`, error.stack);
-      throw new BusinessException('Failed to download file');
-    }
+  async serve(context: IRequestContext, id: string) {
+    // Same as download but with different headers in controller
+    return this.download(context, id);
   }
 
   /**
    * Soft delete an asset
    */
-  async delete(context: IRequestContext, assetId: string) {
-    const asset = await this.findOne(context, assetId);
+  async delete(context: IRequestContext, id: string): Promise<void> {
     const userId = context.getUserId();
 
-    // Update asset status to deleted
+    const asset = await this.findOne(context, id);
+
+    // Soft delete in database
     await this.prisma.asset.update({
-      where: { id: assetId },
+      where: { id },
       data: {
         status: AssetStatus.deleted,
         deletedAt: new Date(),
@@ -242,155 +162,41 @@ export class AssetsService implements OnModuleInit {
       },
     });
 
-    // Note: We don't delete from S3 immediately for audit purposes
-    // A scheduled task can clean up old deleted assets from S3
-
-    return { message: 'Asset deleted successfully' };
+    // Note: We're not deleting from storage immediately to allow recovery
+    // A separate cleanup job can permanently delete old soft-deleted assets
   }
 
   /**
-   * List assets for an entity
+   * Map entity to DTO
    */
-  async findByEntity(context: IRequestContext, entityType: AssetEntityType, entityId: string) {
-    const gymId = context.getGymId();
-
-    // Validate entity access
-    await this.validateEntityAccess(entityType, entityId, gymId);
-
-    const assets = await this.prisma.asset.findMany({
-      where: {
-        entityType,
-        entityId,
-        status: AssetStatus.active,
-      },
-      include: {
-        uploadedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    // Add preview URLs to all assets
-    const assetsWithUrls = await Promise.all(
-      assets.map(async (asset) => ({
-        ...asset,
-        previewUrl: await this.generatePreviewUrl(asset.filePath),
-      })),
-    );
-
-    return assetsWithUrls;
+  private mapToDto(asset: any): AssetResponseDto {
+    const baseUrl = this.configService.get('app.baseUrl');
+    return {
+      id: asset.id,
+      filename: asset.filename,
+      originalName: asset.originalName,
+      filePath: asset.filePath,
+      fileSize: asset.fileSize,
+      mimeType: asset.mimeType,
+      status: asset.status,
+      metadata: asset.metadata,
+      description: asset.description,
+      createdAt: asset.createdAt.toISOString(),
+      updatedAt: asset.updatedAt.toISOString(),
+      uploadedBy: asset.uploadedByUserId,
+      // Generate preview URL for images
+      previewUrl: this.isPreviewable(asset.mimeType)
+        ? `${baseUrl}/api/v1/assets/${asset.id}/render`
+        : null,
+    };
   }
 
   /**
-   * Validate entity access based on gym context
+   * Check if mime type is previewable
    */
-  private async validateEntityAccess(entityType: AssetEntityType, entityId: string, gymId: string) {
-    switch (entityType) {
-      case AssetEntityType.GYM:
-        const gym = await this.prisma.gym.findFirst({
-          where: { id: entityId },
-        });
-        if (!gym || gym.id !== gymId) {
-          throw new ResourceNotFoundException('Gym', entityId);
-        }
-        break;
+  private isPreviewable(mimeType: string): boolean {
+    const previewableTypes = ['image/', 'application/pdf', 'video/'];
 
-      case AssetEntityType.CLIENT:
-        const client = await this.prisma.gymClient.findFirst({
-          where: { id: entityId, gymId },
-        });
-        if (!client) {
-          throw new ResourceNotFoundException('Client', entityId);
-        }
-        break;
-
-      case AssetEntityType.CONTRACT:
-        const contract = await this.prisma.contract.findFirst({
-          where: {
-            id: entityId,
-            gymClient: { gymId },
-          },
-        });
-        if (!contract) {
-          throw new ResourceNotFoundException('Contract', entityId);
-        }
-        break;
-
-      case AssetEntityType.EVALUATION:
-        const evaluation = await this.prisma.evaluation.findFirst({
-          where: {
-            id: entityId,
-            gymClient: { gymId },
-          },
-        });
-        if (!evaluation) {
-          throw new ResourceNotFoundException('Evaluation', entityId);
-        }
-        break;
-
-      case AssetEntityType.COLLABORATOR:
-        const collaborator = await this.prisma.collaborator.findFirst({
-          where: { id: entityId, gymId },
-        });
-        if (!collaborator) {
-          throw new ResourceNotFoundException('Collaborator', entityId);
-        }
-        break;
-
-      default:
-        throw new ValidationException([{ field: 'entityType', message: 'Invalid entity type' }]);
-    }
-  }
-
-  /**
-   * Generate preview URL for a file
-   */
-  private async generatePreviewUrl(filePath: string): Promise<string | null> {
-    try {
-      // Generate a signed URL for preview (valid for 7 days for better caching)
-      const previewUrl = await this.s3.getSignedUrlPromise('getObject', {
-        Bucket: this.bucket,
-        Key: filePath,
-        Expires: 604800, // 7 days for better UX
-      });
-
-      return previewUrl;
-    } catch (error) {
-      this.logger.error(`Failed to generate preview URL: ${error.message}`, error.stack);
-      return null;
-    }
-  }
-
-  /**
-   * Serve file directly (for rendering)
-   */
-  async serve(context: IRequestContext, assetId: string) {
-    const asset = await this.findOne(context, assetId);
-
-    try {
-      const stream = this.s3
-        .getObject({
-          Bucket: this.bucket,
-          Key: asset.filePath,
-        })
-        .createReadStream();
-
-      return {
-        stream,
-        filename: asset.originalName,
-        mimeType: asset.mimeType,
-        fileSize: asset.fileSize,
-      };
-    } catch (error) {
-      this.logger.error(`Failed to serve asset: ${error.message}`, error.stack);
-      throw new BusinessException('Failed to serve file');
-    }
+    return previewableTypes.some((type) => mimeType.startsWith(type));
   }
 }

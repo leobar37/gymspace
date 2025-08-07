@@ -185,9 +185,6 @@ export class DashboardService {
           createdAt: 'desc',
         },
         take: limit,
-        include: {
-          profileAsset: true,
-        },
       }),
 
       // Recent new contracts

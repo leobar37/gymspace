@@ -19,7 +19,7 @@ export {
   hasErrors,
   getFormValues,
   watchFields,
-  fieldNames
+  fieldNames,
 } from './form-utils';
 
 // Re-export react-hook-form types for convenience
@@ -46,9 +46,8 @@ export type {
   FormState,
   DefaultValues,
   ValidationMode,
-  ReValidateMode,
   UseFormProps,
-  Resolver
+  Resolver,
 } from 'react-hook-form';
 
 // Re-export useForm and zodResolver for convenience

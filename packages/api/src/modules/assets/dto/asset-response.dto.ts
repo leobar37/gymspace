@@ -1,62 +1,84 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { AssetStatus } from '@prisma/client';
 
 export class AssetResponseDto {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Unique identifier of the asset',
+  })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Generated filename for storage',
+  })
   filename: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Original filename uploaded by user',
+  })
   originalName: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'File size in bytes',
+  })
   fileSize: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'MIME type of the file',
+  })
   mimeType: string;
 
-  @ApiProperty()
-  entityType: string;
-
-  @ApiProperty()
-  entityId: string;
-
   @ApiProperty({
-    enum: AssetStatus,
+    description: 'Status of the asset',
+    enum: ['active', 'deleted'],
   })
-  status: AssetStatus;
+  status: string;
 
   @ApiProperty({
+    description: 'Optional description',
+    required: false,
+  })
+  description?: string;
+
+  @ApiProperty({
+    description: 'Additional metadata',
     required: false,
   })
   metadata?: Record<string, any>;
 
   @ApiProperty({
+    description: 'Preview URL for previewable assets (images, PDFs, videos)',
     required: false,
   })
-  description?: string;
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
+  previewUrl?: string;
 
   @ApiProperty({
-    description: 'User who uploaded the asset',
+    description: 'User ID who uploaded the asset',
   })
-  uploadedBy: {
-    id: string;
-    name: string;
-    email: string;
-  };
+  uploadedBy: string;
 
   @ApiProperty({
-    description: 'Signed URL for previewing the asset (valid for 7 days)',
+    description: 'Creation timestamp',
+  })
+  createdAt: string;
+
+  @ApiProperty({
+    description: 'Last update timestamp',
+  })
+  updatedAt: string;
+
+  @ApiProperty({
+    description: 'File path in storage',
+  })
+  filePath: string;
+
+  @ApiProperty({
+    description: 'Entity type this asset belongs to',
     required: false,
-    nullable: true,
   })
-  previewUrl?: string | null;
+  entityType?: string;
+
+  @ApiProperty({
+    description: 'Entity ID this asset belongs to',
+    required: false,
+  })
+  entityId?: string;
 }

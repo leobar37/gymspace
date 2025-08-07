@@ -51,6 +51,9 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
   
   const selectedOption = options.find(opt => opt.value === field.value);
   
+  console.log("options", options);
+  
+
   const handleSave = () => {
     field.onChange(tempValue);
     setShowModal(false);

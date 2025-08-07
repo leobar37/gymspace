@@ -9,6 +9,7 @@ import {
   Res,
   Req,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,8 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { AssetsService } from './assets.service';
-import { UploadAssetDto, AssetResponseDto, AssetEntityType } from './dto';
-import { FileUploadResult } from './dto/fastify-file.interface';
+import { UploadAssetDto, AssetResponseDto } from './dto';
 import { Allow } from '../../common/decorators/allow.decorator';
 import { AppCtxt } from '../../common/decorators/request-context.decorator';
 import { IRequestContext } from '@gymspace/shared';
@@ -46,14 +46,6 @@ export class AssetsController {
           type: 'string',
           format: 'binary',
         },
-        entityType: {
-          type: 'string',
-          enum: Object.values(AssetEntityType),
-        },
-        entityId: {
-          type: 'string',
-          format: 'uuid',
-        },
         description: {
           type: 'string',
         },
@@ -61,7 +53,7 @@ export class AssetsController {
           type: 'object',
         },
       },
-      required: ['file', 'entityType', 'entityId'],
+      required: ['file'],
     },
   })
   @ApiResponse({
@@ -76,11 +68,6 @@ export class AssetsController {
 
       // Parse and validate DTO
       const dto = parseUploadDto<UploadAssetDto>(fields);
-
-      // Validate required fields
-      if (!dto.entityType || !dto.entityId) {
-        throw new BadRequestException('entityType and entityId are required');
-      }
 
       return this.assetsService.upload(context, file, dto);
     } catch (error) {
@@ -101,6 +88,23 @@ export class AssetsController {
   })
   async findOne(@Param('id', ParseUUIDPipe) id: string, @AppCtxt() context: IRequestContext) {
     return this.assetsService.findOne(context, id);
+  }
+
+  @Get('list/by-ids')
+  @Allow(PERMISSIONS.ASSETS_READ)
+  @ApiOperation({ summary: 'Get multiple assets by IDs' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of assets',
+    type: [AssetResponseDto],
+  })
+  async findByIds(
+    @Query('ids') ids: string | string[],
+    @AppCtxt() context: IRequestContext
+  ) {
+    // Handle both single ID and array of IDs
+    const assetIds = Array.isArray(ids) ? ids : ids.split(',');
+    return this.assetsService.findByIds(context, assetIds);
   }
 
   @Get(':id/download-url')
@@ -183,22 +187,6 @@ export class AssetsController {
     });
 
     return res.send(stream);
-  }
-
-  @Get('entity/:entityType/:entityId')
-  @Allow(PERMISSIONS.ASSETS_READ)
-  @ApiOperation({ summary: 'List assets for a specific entity' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of assets',
-    type: [AssetResponseDto],
-  })
-  async findByEntity(
-    @Param('entityType') entityType: AssetEntityType,
-    @Param('entityId', ParseUUIDPipe) entityId: string,
-    @AppCtxt() context: IRequestContext,
-  ) {
-    return this.assetsService.findByEntity(context, entityType, entityId);
   }
 
   /**

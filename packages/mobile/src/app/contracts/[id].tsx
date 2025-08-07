@@ -16,6 +16,9 @@ import { Divider } from '@/components/ui/divider';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter } from '@/components/ui/alert-dialog';
 import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton } from '@/components/ui/modal';
+import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator, ActionsheetItem, ActionsheetItemText } from '@/components/ui/actionsheet';
+import { Icon } from '@/components/ui/icon';
+import { EditIcon, XIcon, PauseIcon } from 'lucide-react-native';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
 import { useContractsController } from '@/features/contracts/controllers/contracts.controller';
@@ -45,6 +48,7 @@ export default function ContractDetailScreen() {
   const formatPriceConfig = useFormatPrice();
   const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showActionSheet, setShowActionSheet] = useState(false);
 
   const {
     useContractDetail,
@@ -133,8 +137,7 @@ export default function ContractDetailScreen() {
   };
 
   const handleRenew = () => {
-    // Navigate to renew screen (to be implemented)
-    Alert.alert('Renovar contrato', 'Esta función estará disponible próximamente');
+    router.push(`/contracts/${id}/renew`);
   };
 
   if (isLoading) {
@@ -166,6 +169,15 @@ export default function ContractDetailScreen() {
         options={{
           title: `Contrato #${contract.contractNumber}`,
           headerBackTitle: 'Atrás',
+          headerRight: () => (
+            <Button
+              onPress={() => setShowActionSheet(true)}
+              variant="link"
+              size="sm"
+            >
+              <ButtonText>Acciones</ButtonText>
+            </Button>
+          ),
         }}
       />
       <SafeAreaView style={{ flex: 1 }}>
@@ -399,6 +411,42 @@ export default function ContractDetailScreen() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Action Sheet */}
+        <Actionsheet isOpen={showActionSheet} onClose={() => setShowActionSheet(false)}>
+          <ActionsheetBackdrop />
+          <ActionsheetContent>
+            <ActionsheetDragIndicator />
+            
+            <ActionsheetItem onPress={() => {
+              setShowActionSheet(false);
+              router.push(`/contracts/${id}/edit`);
+            }}>
+              <Icon as={EditIcon} size="sm" className="mr-2" />
+              <ActionsheetItemText>Editar contrato</ActionsheetItemText>
+            </ActionsheetItem>
+
+            {contract.status === ContractStatus.ACTIVE && !isFrozen && (
+              <ActionsheetItem onPress={() => {
+                setShowActionSheet(false);
+                setShowFreezeModal(true);
+              }}>
+                <Icon as={PauseIcon} size="sm" className="mr-2" />
+                <ActionsheetItemText>Congelar contrato</ActionsheetItemText>
+              </ActionsheetItem>
+            )}
+
+            {contract.status === ContractStatus.ACTIVE && (
+              <ActionsheetItem onPress={() => {
+                setShowActionSheet(false);
+                setShowCancelDialog(true);
+              }}>
+                <Icon as={XIcon} size="sm" className="mr-2 text-red-500" />
+                <ActionsheetItemText className="text-red-500">Cancelar contrato</ActionsheetItemText>
+              </ActionsheetItem>
+            )}
+          </ActionsheetContent>
+        </Actionsheet>
       </SafeAreaView>
     </>
   );
