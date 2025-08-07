@@ -12,6 +12,7 @@ export * from './invitations';
 export * from './leads';
 export * from './assets';
 export * from './onboarding';
+export * from './users';
 
 export interface ApiResponse<T> {
   data: T;

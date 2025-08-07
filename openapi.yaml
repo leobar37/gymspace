@@ -279,6 +279,55 @@ paths:
         - Invitations
       security:
         - bearer: []
+  /api/v1/users/profile:
+    get:
+      operationId: UsersController_getProfile
+      summary: Get current user profile
+      description: Retrieves the profile information of the currently authenticated user
+      parameters: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileDto'
+        '401':
+          description: User is not authenticated
+        '404':
+          description: User not found
+      tags:
+        - Users
+      security:
+        - bearer: []
+    put:
+      operationId: UsersController_updateProfile
+      summary: Update current user profile
+      description: Updates the profile information of the currently authenticated user. Email cannot be updated through this endpoint.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileDto'
+      responses:
+        '200':
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileDto'
+        '400':
+          description: Invalid input data
+        '401':
+          description: User is not authenticated
+        '404':
+          description: User not found
+      tags:
+        - Users
+      security:
+        - bearer: []
   /api/v1/organizations/{id}:
     get:
       operationId: OrganizationsController_getOrganization
@@ -2291,6 +2340,77 @@ components:
         - name
         - phone
         - password
+    UserProfileDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        email:
+          type: string
+          description: User email address
+          example: john.doe@example.com
+        name:
+          type: string
+          description: User full name
+          example: John Doe
+        phone:
+          type: string
+          description: User phone number
+          example: '+1234567890'
+        birthDate:
+          type: string
+          description: User birth date
+          example: '1990-01-15'
+          format: date
+        userType:
+          type: string
+          description: User type
+          enum:
+            - owner
+            - collaborator
+          example: owner
+        emailVerified:
+          type: boolean
+          description: Email verification status
+          example: true
+        createdAt:
+          format: date-time
+          type: string
+          description: Account creation date
+          example: '2024-01-01T00:00:00.000Z'
+        updatedAt:
+          format: date-time
+          type: string
+          description: Last update date
+          example: '2024-01-01T00:00:00.000Z'
+      required:
+        - id
+        - email
+        - name
+        - userType
+        - emailVerified
+        - createdAt
+        - updatedAt
+    UpdateProfileDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: User full name
+          example: John Doe
+          minLength: 2
+          maxLength: 100
+        phone:
+          type: string
+          description: User phone number
+          example: '+1234567890'
+        birthDate:
+          type: string
+          description: User birth date
+          example: '1990-01-15'
+          format: date
     UpdateOrganizationDto:
       type: object
       properties:

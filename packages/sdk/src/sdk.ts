@@ -16,6 +16,7 @@ import {
   PublicCatalogResource,
   HealthResource,
   OnboardingResource,
+  UsersResource,
 } from './resources';
 
 export class GymSpaceSdk {
@@ -37,6 +38,7 @@ export class GymSpaceSdk {
   public publicCatalog: PublicCatalogResource;
   public health: HealthResource;
   public onboarding: OnboardingResource;
+  public users: UsersResource;
 
   constructor(config: GymSpaceConfig) {
     this.client = new ApiClient(config);
@@ -57,6 +59,7 @@ export class GymSpaceSdk {
     this.publicCatalog = new PublicCatalogResource(this.client);
     this.health = new HealthResource(this.client);
     this.onboarding = new OnboardingResource(this.client);
+    this.users = new UsersResource(this.client);
   }
 
   /**

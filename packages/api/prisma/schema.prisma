@@ -121,6 +121,7 @@ model User {
     password          String? // Optional - auth handled by Supabase
     name              String
     phone             String?
+    birthDate         DateTime? @map("birth_date") // Date of birth for profile
     userType          UserType  @map("user_type")
     emailVerifiedAt   DateTime? @map("email_verified_at")
     verificationCode  String?   @map("verification_code")
