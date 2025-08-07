@@ -19,7 +19,7 @@ export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Post()
-  @Allow([PERMISSIONS.SALES_CREATE])
+  @Allow(PERMISSIONS.SALES_CREATE)
   @ApiOperation({ summary: 'Create a new sale' })
   @ApiResponse({ status: 201, description: 'Sale created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
@@ -29,7 +29,7 @@ export class SalesController {
   }
 
   @Get()
-  @Allow([PERMISSIONS.SALES_READ])
+  @Allow(PERMISSIONS.SALES_READ)
   @ApiOperation({ summary: 'Search sales with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Paginated list of sales' })
   async searchSales(@Query() dto: SearchSalesDto, @AppCtxt() ctx: RequestContext) {
@@ -37,13 +37,13 @@ export class SalesController {
   }
 
   @Get('stats')
-  @Allow([PERMISSIONS.SALES_READ])
+  @Allow(PERMISSIONS.SALES_READ)
   @ApiOperation({ summary: 'Get sales statistics' })
   @ApiResponse({ status: 200, description: 'Sales statistics' })
   async getSalesStats(
+    @AppCtxt() ctx: RequestContext,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-    @AppCtxt() ctx: RequestContext,
   ) {
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
@@ -51,14 +51,14 @@ export class SalesController {
   }
 
   @Get('top-products')
-  @Allow([PERMISSIONS.SALES_READ])
+  @Allow(PERMISSIONS.SALES_READ)
   @ApiOperation({ summary: 'Get top selling products' })
   @ApiResponse({ status: 200, description: 'Top selling products with statistics' })
   async getTopSellingProducts(
+    @AppCtxt() ctx: RequestContext,
     @Query('limit') limit: string = '10',
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-    @AppCtxt() ctx: RequestContext,
   ) {
     const limitNumber = parseInt(limit, 10) || 10;
     const start = startDate ? new Date(startDate) : undefined;
@@ -67,7 +67,7 @@ export class SalesController {
   }
 
   @Get(':id')
-  @Allow([PERMISSIONS.SALES_READ])
+  @Allow(PERMISSIONS.SALES_READ)
   @ApiOperation({ summary: 'Get sale details' })
   @ApiResponse({ status: 200, description: 'Sale details with items' })
   @ApiResponse({ status: 404, description: 'Sale not found' })
@@ -76,7 +76,7 @@ export class SalesController {
   }
 
   @Put(':id')
-  @Allow([PERMISSIONS.SALES_UPDATE])
+  @Allow(PERMISSIONS.SALES_UPDATE)
   @ApiOperation({ summary: 'Update sale information' })
   @ApiResponse({ status: 200, description: 'Sale updated successfully' })
   @ApiResponse({ status: 404, description: 'Sale not found' })
@@ -89,7 +89,7 @@ export class SalesController {
   }
 
   @Put(':id/payment-status')
-  @Allow([PERMISSIONS.SALES_UPDATE])
+  @Allow(PERMISSIONS.SALES_UPDATE)
   @ApiOperation({ summary: 'Update sale payment status' })
   @ApiResponse({ status: 200, description: 'Payment status updated successfully' })
   @ApiResponse({ status: 404, description: 'Sale not found' })
@@ -102,7 +102,7 @@ export class SalesController {
   }
 
   @Delete(':id')
-  @Allow([PERMISSIONS.SALES_DELETE])
+  @Allow(PERMISSIONS.SALES_DELETE)
   @ApiOperation({ summary: 'Delete sale and restore stock' })
   @ApiResponse({ status: 200, description: 'Sale deleted successfully' })
   @ApiResponse({ status: 404, description: 'Sale not found' })

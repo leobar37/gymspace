@@ -9,3 +9,6 @@
 
 ### Component Replacements
 - CardContent component does not exist, use View with tailwind classes instead
+
+### Service Architecture
+- Add the context as first parameter in the services, and pass the complete RequestContext, instead of ids
