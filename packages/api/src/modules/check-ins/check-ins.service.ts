@@ -25,22 +25,31 @@ export class CheckInsService {
     // Verify client belongs to this gym and has active contract
     const client = await this.prismaService.gymClient.findFirst({
       where: {
-        id: dto.clientId,
+        id: dto.gymClientId,
         gymId,
+        status: 'active', // Check client is active
       },
       include: {
         contracts: {
-          where: { status: 'active' },
+          where: { 
+            status: 'active',
+            startDate: { lte: new Date() },
+            endDate: { gte: new Date() }
+          },
         },
       },
     });
 
     if (!client) {
-      throw new ResourceNotFoundException('Client', dto.clientId);
+      throw new ResourceNotFoundException('Client', dto.gymClientId);
+    }
+
+    if (client.status !== 'active') {
+      throw new BusinessException('Client is not active');
     }
 
     if (client.contracts.length === 0) {
-      throw new BusinessException('Client does not have an active contract');
+      throw new BusinessException('Client does not have an active contract or contract has expired');
     }
 
     // Check if client already checked in today
@@ -51,7 +60,7 @@ export class CheckInsService {
 
     const existingCheckIn = await this.prismaService.checkIn.findFirst({
       where: {
-        gymClientId: dto.clientId,
+        gymClientId: dto.gymClientId,
         gymId,
         createdAt: {
           gte: today,
@@ -67,7 +76,7 @@ export class CheckInsService {
     // Create check-in
     const checkIn = await this.prismaService.checkIn.create({
       data: {
-        gymClientId: dto.clientId,
+        gymClientId: dto.gymClientId,
         gymId,
         notes: dto.notes,
         registeredByUserId: userId,
@@ -79,6 +88,14 @@ export class CheckInsService {
             id: true,
             name: true,
             email: true,
+            clientNumber: true,
+            status: true,
+          },
+        },
+        registeredBy: {
+          select: {
+            id: true,
+            name: true,
           },
         },
       },
@@ -336,6 +353,64 @@ export class CheckInsService {
         attendanceRate: (recentCheckIns.length / 30) * 100,
         lastCheckIn: checkIns[0]?.createdAt || null,
       },
+    };
+  }
+
+  /**
+   * Get clients currently in the gym (checked in today)
+   */
+  async getCurrentlyInGym(gymId: string, userId: string) {
+    // Verify gym access
+    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+    if (!hasAccess) {
+      throw new ResourceNotFoundException('Gym', gymId);
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const checkIns = await this.prismaService.checkIn.findMany({
+      where: {
+        gymId,
+        createdAt: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+      include: {
+        gymClient: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            clientNumber: true,
+            status: true,
+            profilePhotoId: true,
+          },
+        },
+        registeredBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Get unique clients (in case of multiple check-ins per day, which shouldn't happen)
+    const uniqueClients = new Map();
+    checkIns.forEach((checkIn) => {
+      if (!uniqueClients.has(checkIn.gymClientId)) {
+        uniqueClients.set(checkIn.gymClientId, checkIn);
+      }
+    });
+
+    return {
+      total: uniqueClients.size,
+      clients: Array.from(uniqueClients.values()),
     };
   }
 

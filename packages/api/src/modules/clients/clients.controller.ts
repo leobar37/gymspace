@@ -70,4 +70,15 @@ export class ClientsController {
   async getClientStats(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.clientsService.getClientStats(id, ctx.getUserId());
   }
+
+  @Get('search/check-in')
+  @Allow(PERMISSIONS.CLIENTS_READ)
+  @ApiOperation({ summary: 'Search clients for check-in (includes contract validation)' })
+  @ApiResponse({ status: 200, description: 'List of clients with membership status' })
+  async searchClientsForCheckIn(@Query() dto: SearchClientsDto, @AppCtxt() ctx: RequestContext) {
+    // Force include contract status for check-in searches
+    dto.includeContractStatus = true;
+    dto.activeOnly = true; // Only show active clients
+    return await this.clientsService.searchClients(ctx.getGymId()!, dto, ctx.getUserId()!);
+  }
 }

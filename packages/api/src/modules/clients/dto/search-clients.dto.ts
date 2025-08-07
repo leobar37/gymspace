@@ -22,7 +22,11 @@ export class PaginationQueryDto {
 }
 
 export class SearchClientsDto extends PartialType(PaginationQueryDto) {
-  @ApiProperty({ example: 'john', required: false })
+  @ApiProperty({ 
+    example: 'john', 
+    required: false,
+    description: 'Search by name, email, client number or document'
+  })
   @IsOptional()
   @IsString()
   search?: string;
@@ -32,4 +36,32 @@ export class SearchClientsDto extends PartialType(PaginationQueryDto) {
   @IsBoolean()
   @Transform(({ value }) => value === 'true' || value === true)
   activeOnly?: boolean;
+
+  @ApiProperty({ 
+    example: 'CL001', 
+    required: false,
+    description: 'Search by exact client number'
+  })
+  @IsOptional()
+  @IsString()
+  clientNumber?: string;
+
+  @ApiProperty({ 
+    example: '12345678', 
+    required: false,
+    description: 'Search by document ID'
+  })
+  @IsOptional()
+  @IsString()
+  documentId?: string;
+
+  @ApiProperty({ 
+    example: true, 
+    required: false,
+    description: 'Include contract status in response'
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  includeContractStatus?: boolean;
 }

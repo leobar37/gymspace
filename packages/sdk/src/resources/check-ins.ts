@@ -5,7 +5,10 @@ import {
   SearchCheckInsParams,
   GetCheckInStatsParams,
   CheckInStats,
-  GetClientCheckInHistoryParams
+  GetClientCheckInHistoryParams,
+  CurrentlyInGymResponse,
+  CheckInListResponse,
+  ClientCheckInHistory
 } from '../models/check-ins';
 import { RequestOptions, PaginatedResponseDto } from '../types';
 
@@ -19,8 +22,12 @@ export class CheckInsResource extends BaseResource {
   async searchCheckIns(
     params?: SearchCheckInsParams,
     options?: RequestOptions
-  ): Promise<PaginatedResponseDto<CheckIn>> {
-    return this.paginate<CheckIn>(this.basePath, params, options);
+  ): Promise<CheckInListResponse> {
+    return this.client.get<CheckInListResponse>(this.basePath, params, options);
+  }
+
+  async getCurrentlyInGym(options?: RequestOptions): Promise<CurrentlyInGymResponse> {
+    return this.client.get<CurrentlyInGymResponse>(`${this.basePath}/current`, undefined, options);
   }
 
   async getCheckIn(id: string, options?: RequestOptions): Promise<CheckIn> {
@@ -46,8 +53,8 @@ export class CheckInsResource extends BaseResource {
     clientId: string,
     params?: GetClientCheckInHistoryParams,
     options?: RequestOptions
-  ): Promise<PaginatedResponseDto<CheckIn>> {
-    return this.paginate<CheckIn>(
+  ): Promise<ClientCheckInHistory> {
+    return this.client.get<ClientCheckInHistory>(
       `${this.basePath}/client/${clientId}/history`,
       params,
       options

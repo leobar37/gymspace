@@ -876,6 +876,7 @@
             "name": "search",
             "required": false,
             "in": "query",
+            "description": "Search by name, email, client number or document",
             "schema": {
               "example": "john",
               "type": "string"
@@ -885,6 +886,36 @@
             "name": "activeOnly",
             "required": false,
             "in": "query",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "clientNumber",
+            "required": false,
+            "in": "query",
+            "description": "Search by exact client number",
+            "schema": {
+              "example": "CL001",
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": false,
+            "in": "query",
+            "description": "Search by document ID",
+            "schema": {
+              "example": "12345678",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeContractStatus",
+            "required": false,
+            "in": "query",
+            "description": "Include contract status in response",
             "schema": {
               "example": true,
               "type": "boolean"
@@ -1042,6 +1073,125 @@
           },
           "404": {
             "description": "Client not found"
+          }
+        },
+        "tags": [
+          "Clients"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clients/search/check-in": {
+      "get": {
+        "operationId": "ClientsController_searchClientsForCheckIn",
+        "summary": "Search clients for check-in (includes contract validation)",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort order",
+            "schema": {
+              "default": "desc",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by name, email, client number or document",
+            "schema": {
+              "example": "john",
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "clientNumber",
+            "required": false,
+            "in": "query",
+            "description": "Search by exact client number",
+            "schema": {
+              "example": "CL001",
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": false,
+            "in": "query",
+            "description": "Search by document ID",
+            "schema": {
+              "example": "12345678",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeContractStatus",
+            "required": false,
+            "in": "query",
+            "description": "Include contract status in response",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of clients with membership status"
           }
         },
         "tags": [
@@ -1964,6 +2114,29 @@
           },
           "404": {
             "description": "Check-in not found"
+          }
+        },
+        "tags": [
+          "Check-ins"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/check-ins/current": {
+      "get": {
+        "operationId": "CheckInsController_getCurrentlyInGym",
+        "summary": "Get clients currently in the gym",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of clients currently in gym"
           }
         },
         "tags": [
@@ -4209,9 +4382,10 @@
       "CreateCheckInDto": {
         "type": "object",
         "properties": {
-          "clientId": {
+          "gymClientId": {
             "type": "string",
-            "example": "123e4567-e89b-12d3-a456-426614174000"
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "ID of the gym client checking in"
           },
           "notes": {
             "type": "string",
@@ -4219,7 +4393,7 @@
           }
         },
         "required": [
-          "clientId"
+          "gymClientId"
         ]
       },
       "CreateLeadDto": {

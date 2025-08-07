@@ -236,7 +236,17 @@ export class ClientsService {
         { email: { contains: dto.search, mode: 'insensitive' } },
         { phone: { contains: dto.search, mode: 'insensitive' } },
         { documentValue: { contains: dto.search, mode: 'insensitive' } },
+        { clientNumber: { contains: dto.search, mode: 'insensitive' } },
       ];
+    }
+
+    // Apply specific filters
+    if (dto.clientNumber) {
+      where.clientNumber = dto.clientNumber;
+    }
+
+    if (dto.documentId) {
+      where.documentValue = dto.documentId;
     }
 
     // Apply active filter
@@ -255,28 +265,41 @@ export class ClientsService {
       sortOrder: dto.sortOrder,
     });
 
-    // Get clients with pagination
-    const clients = await this.prismaService.gymClient.findMany({
-      where,
-      include: {
-        contracts: {
-          where: { status: 'active' },
-          include: {
-            gymMembershipPlan: {
-              select: {
-                id: true,
-                name: true,
-              },
+    // Determine what to include based on request
+    const includeOptions: any = {
+      _count: {
+        select: {
+          evaluations: true,
+          checkIns: true,
+        },
+      },
+    };
+
+    // Include contract status if requested
+    if (dto.includeContractStatus) {
+      includeOptions.contracts = {
+        where: { 
+          status: 'active',
+          startDate: { lte: new Date() },
+          endDate: { gte: new Date() }
+        },
+        include: {
+          gymMembershipPlan: {
+            select: {
+              id: true,
+              name: true,
             },
           },
         },
-        _count: {
-          select: {
-            evaluations: true,
-            checkIns: true,
-          },
-        },
-      },
+        orderBy: { endDate: 'desc' },
+        take: 1,
+      };
+    }
+
+    // Get clients with pagination
+    const clients = await this.prismaService.gymClient.findMany({
+      where,
+      include: includeOptions,
       orderBy: paginationParams.orderBy || [
         { status: 'asc' }, // Active clients first
         { name: 'asc' },

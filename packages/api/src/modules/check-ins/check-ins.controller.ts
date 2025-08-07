@@ -46,6 +46,14 @@ export class CheckInsController {
     return await this.checkInsService.searchCheckIns(ctx.getGymId()!, dto, ctx.getUserId());
   }
 
+  @Get('current')
+  @Allow(PERMISSIONS.CHECKINS_READ)
+  @ApiOperation({ summary: 'Get clients currently in the gym' })
+  @ApiResponse({ status: 200, description: 'List of clients currently in gym' })
+  async getCurrentlyInGym(@AppCtxt() ctx: RequestContext) {
+    return await this.checkInsService.getCurrentlyInGym(ctx.getGymId()!, ctx.getUserId());
+  }
+
   @Get('stats/:period')
   @Allow(PERMISSIONS.CHECKINS_READ)
   @ApiOperation({ summary: 'Get gym check-in statistics' })

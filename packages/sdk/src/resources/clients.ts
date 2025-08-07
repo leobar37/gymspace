@@ -4,7 +4,8 @@ import {
   CreateClientDto, 
   UpdateClientDto, 
   ClientStats,
-  SearchClientsParams 
+  SearchClientsParams,
+  ClientSearchForCheckInResponse
 } from '../models/clients';
 import { RequestOptions, PaginatedResponseDto } from '../types';
 
@@ -40,5 +41,17 @@ export class ClientsResource extends BaseResource {
 
   async getClientStats(id: string, options?: RequestOptions): Promise<ClientStats> {
     return this.client.get<ClientStats>(`${this.basePath}/${id}/stats`, undefined, options);
+  }
+
+  async searchClientsForCheckIn(
+    params?: SearchClientsParams,
+    options?: RequestOptions
+  ): Promise<ClientSearchForCheckInResponse> {
+    // This endpoint automatically includes contract status and only active clients
+    return this.client.get<ClientSearchForCheckInResponse>(
+      `${this.basePath}/search/check-in`,
+      params,
+      options
+    );
   }
 }

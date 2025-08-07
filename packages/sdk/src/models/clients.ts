@@ -48,16 +48,34 @@ export interface Client {
   birthDate?: string;
   gender?: string;
   maritalStatus?: string;
-  address: string;
+  address?: string;
   city?: string;
   state?: string;
   postalCode?: string;
   occupation?: string;
   notes?: string;
   customData?: Record<string, any>;
-  isActive: boolean;
+  status: 'active' | 'inactive';
+  profilePhotoId?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  medicalConditions?: string;
   createdAt: string;
   updatedAt: string;
+  contracts?: Array<{
+    id: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+    gymMembershipPlan?: {
+      id: string;
+      name: string;
+    };
+  }>;
+  _count?: {
+    evaluations: number;
+    checkIns: number;
+  };
 }
 
 export interface ClientStats {
@@ -73,4 +91,17 @@ export interface ClientStats {
 export interface SearchClientsParams extends PaginationQueryDto {
   search?: string;
   activeOnly?: boolean;
+  clientNumber?: string;
+  documentId?: string;
+  includeContractStatus?: boolean;
+}
+
+export interface ClientSearchForCheckInResponse {
+  data: Client[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }

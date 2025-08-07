@@ -21,6 +21,7 @@ import {
   CheckCircleIcon,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { CheckInButton } from './CheckInButton';
 
 interface StatCardProps {
   title: string;
@@ -149,14 +150,15 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-gray-50"
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-      }
-    >
-      <VStack className="p-4 gap-6">
+    <View className="flex-1">
+      <ScrollView
+        className="flex-1 bg-gray-50"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
+        <VStack className="p-4 gap-6">
         <VStack className="gap-1">
           <Heading className="text-2xl font-bold text-gray-900">
             Panel de Control
@@ -282,5 +284,9 @@ export const Dashboard: React.FC = () => {
         </Card>
       </VStack>
     </ScrollView>
+    
+    {/* Floating Check-in Button */}
+    <CheckInButton />
+    </View>
   );
 };
