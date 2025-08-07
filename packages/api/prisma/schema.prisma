@@ -90,6 +90,16 @@ enum LeadStatus {
     LOST
 }
 
+enum ProductStatus {
+    active
+    inactive
+}
+
+enum PaymentStatus {
+    paid
+    unpaid
+}
+
 // Models
 model SubscriptionPlan {
     id               String    @id @default(uuid())
@@ -178,6 +188,16 @@ model User {
     assignedLeads             Lead[]              @relation("LeadAssignedTo")
     createdLeads              Lead[]              @relation("LeadCreatedBy")
     updatedLeads              Lead[]              @relation("LeadUpdatedBy")
+    createdProductCategories  ProductCategory[]   @relation("ProductCategoryCreatedBy")
+    updatedProductCategories  ProductCategory[]   @relation("ProductCategoryUpdatedBy")
+    createdProducts           Product[]           @relation("ProductCreatedBy")
+    updatedProducts           Product[]           @relation("ProductUpdatedBy")
+    createdSuppliers          Supplier[]          @relation("SupplierCreatedBy")
+    updatedSuppliers          Supplier[]          @relation("SupplierUpdatedBy")
+    createdSales              Sale[]              @relation("SaleCreatedBy")
+    updatedSales              Sale[]              @relation("SaleUpdatedBy")
+    createdSaleItems          SaleItem[]          @relation("SaleItemCreatedBy")
+    updatedSaleItems          SaleItem[]          @relation("SaleItemUpdatedBy")
 
     @@map("users")
 }
@@ -266,6 +286,10 @@ model Gym {
     evaluations     Evaluation[]
     contracts       Contract[]
     leads           Lead[]
+    productCategories ProductCategory[]
+    products        Product[]
+    suppliers       Supplier[]
+    sales           Sale[]
 
     @@map("gyms")
 }
@@ -618,4 +642,122 @@ model Lead {
     updatedBy         User?      @relation("LeadUpdatedBy", fields: [updatedByUserId], references: [id])
 
     @@map("leads")
+}
+
+// Inventory and Point of Sale Models
+
+model ProductCategory {
+    id              String    @id @default(uuid())
+    gymId           String    @map("gym_id")
+    name            String
+    description     String?   @db.Text
+    color           String?
+    createdByUserId String    @map("created_by_user_id")
+    updatedByUserId String?   @map("updated_by_user_id")
+    createdAt       DateTime  @default(now()) @map("created_at")
+    updatedAt       DateTime  @updatedAt @map("updated_at")
+    deletedAt       DateTime? @map("deleted_at")
+
+    // Relations
+    gym       Gym       @relation(fields: [gymId], references: [id])
+    createdBy User      @relation("ProductCategoryCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy User?     @relation("ProductCategoryUpdatedBy", fields: [updatedByUserId], references: [id])
+    products  Product[]
+
+    @@map("product_categories")
+}
+
+model Product {
+    id              String        @id @default(uuid())
+    gymId           String        @map("gym_id")
+    categoryId      String?       @map("category_id")
+    name            String
+    description     String?       @db.Text
+    price           Decimal       @db.Decimal(10, 2)
+    stock           Int           @default(0)
+    imageId         String?       @map("image_id") // Asset ID
+    status          ProductStatus @default(active)
+    createdByUserId String        @map("created_by_user_id")
+    updatedByUserId String?       @map("updated_by_user_id")
+    createdAt       DateTime      @default(now()) @map("created_at")
+    updatedAt       DateTime      @updatedAt @map("updated_at")
+    deletedAt       DateTime?     @map("deleted_at")
+
+    // Relations
+    gym       Gym              @relation(fields: [gymId], references: [id])
+    category  ProductCategory? @relation(fields: [categoryId], references: [id])
+    createdBy User             @relation("ProductCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy User?            @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id])
+    saleItems SaleItem[]
+
+    @@map("products")
+}
+
+model Supplier {
+    id              String    @id @default(uuid())
+    gymId           String    @map("gym_id")
+    name            String
+    contactInfo     String?   @map("contact_info") @db.Text
+    phone           String?
+    email           String?
+    address         String?   @db.Text
+    createdByUserId String    @map("created_by_user_id")
+    updatedByUserId String?   @map("updated_by_user_id")
+    createdAt       DateTime  @default(now()) @map("created_at")
+    updatedAt       DateTime  @updatedAt @map("updated_at")
+    deletedAt       DateTime? @map("deleted_at")
+
+    // Relations
+    gym       Gym   @relation(fields: [gymId], references: [id])
+    createdBy User  @relation("SupplierCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy User? @relation("SupplierUpdatedBy", fields: [updatedByUserId], references: [id])
+
+    @@map("suppliers")
+}
+
+model Sale {
+    id              String        @id @default(uuid())
+    gymId           String        @map("gym_id")
+    saleNumber      String        @map("sale_number")
+    total           Decimal       @db.Decimal(10, 2)
+    paymentStatus   PaymentStatus @default(unpaid) @map("payment_status")
+    saleDate        DateTime      @default(now()) @map("sale_date")
+    customerName    String?       @map("customer_name")
+    notes           String?       @db.Text
+    createdByUserId String        @map("created_by_user_id")
+    updatedByUserId String?       @map("updated_by_user_id")
+    createdAt       DateTime      @default(now()) @map("created_at")
+    updatedAt       DateTime      @updatedAt @map("updated_at")
+    deletedAt       DateTime?     @map("deleted_at")
+
+    // Relations
+    gym       Gym        @relation(fields: [gymId], references: [id])
+    createdBy User       @relation("SaleCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy User?      @relation("SaleUpdatedBy", fields: [updatedByUserId], references: [id])
+    saleItems SaleItem[]
+
+    @@unique([gymId, saleNumber])
+    @@map("sales")
+}
+
+model SaleItem {
+    id              String    @id @default(uuid())
+    saleId          String    @map("sale_id")
+    productId       String    @map("product_id")
+    quantity        Int
+    unitPrice       Decimal   @map("unit_price") @db.Decimal(10, 2)
+    total           Decimal   @db.Decimal(10, 2)
+    createdByUserId String    @map("created_by_user_id")
+    updatedByUserId String?   @map("updated_by_user_id")
+    createdAt       DateTime  @default(now()) @map("created_at")
+    updatedAt       DateTime  @updatedAt @map("updated_at")
+    deletedAt       DateTime? @map("deleted_at")
+
+    // Relations
+    sale      Sale    @relation(fields: [saleId], references: [id])
+    product   Product @relation(fields: [productId], references: [id])
+    createdBy User    @relation("SaleItemCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy User?   @relation("SaleItemUpdatedBy", fields: [updatedByUserId], references: [id])
+
+    @@map("sale_items")
 }
