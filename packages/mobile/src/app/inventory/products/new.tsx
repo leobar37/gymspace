@@ -18,7 +18,7 @@ export default function NewProductScreen() {
   const handleSubmit = async (data: CreateProductDto) => {
     try {
       const newProduct = await createProductMutation.mutateAsync(data);
-      
+
       Alert.alert(
         'Producto creado',
         `El producto "${newProduct.name}" ha sido creado exitosamente.`,
@@ -45,8 +45,8 @@ export default function NewProductScreen() {
       '¿Estás seguro de que quieres cancelar? Los cambios no guardados se perderán.',
       [
         { text: 'Continuar editando', style: 'cancel' },
-        { 
-          text: 'Cancelar', 
+        {
+          text: 'Cancelar',
           style: 'destructive',
           onPress: () => router.back(),
         },
@@ -55,31 +55,13 @@ export default function NewProductScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <VStack className="flex-1">
-        {/* Header */}
-        <HStack className="justify-between items-center p-4 bg-white border-b border-gray-200">
-          <HStack space="md" className="items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onPress={() => router.back()}
-            >
-              <Icon as={ArrowLeftIcon} className="w-5 h-5 text-gray-600" />
-            </Button>
-            <Text className="text-xl font-semibold text-gray-900">
-              Nuevo Producto
-            </Text>
-          </HStack>
-        </HStack>
-
-        {/* Form */}
-        <ProductForm
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          isLoading={createProductMutation.isPending}
-        />
-      </VStack>
-    </SafeAreaView>
+    <VStack className="flex-1">
+      {/* Form */}
+      <ProductForm
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isLoading={createProductMutation.isPending}
+      />
+    </VStack>
   );
 }

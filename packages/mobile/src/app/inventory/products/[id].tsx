@@ -11,6 +11,7 @@ import { View } from '@/components/ui/view';
 import { VStack } from '@/components/ui/vstack';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { useDeleteProduct, useProduct, useUpdateProduct, useUpdateStock } from '@/hooks/useProducts';
+import { AssetPreview } from '@/features/assets/components/AssetPreview';
 import type { UpdateProductDto } from '@gymspace/sdk';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
@@ -245,11 +246,14 @@ export default function ProductDetailScreen() {
           {/* Product Image */}
           <Card className="bg-white border border-gray-200">
             <View className="h-48 bg-gray-100 rounded-t-lg items-center justify-center">
-              {product.imageUrl ? (
-                <View className="w-full h-full bg-gray-200 rounded-t-lg items-center justify-center">
-                  <Icon as={ImageIcon} className="w-12 h-12 text-gray-400" />
-                  <Text className="text-gray-500 text-sm mt-2">Imagen: {product.imageUrl}</Text>
-                </View>
+              {product.imageId ? (
+                <AssetPreview
+                  assetId={product.imageId}
+                  width={undefined}
+                  height={192}
+                  className="w-full rounded-t-lg"
+                  resizeMode="contain"
+                />
               ) : (
                 <Icon as={PackageIcon} className="w-16 h-16 text-gray-400" />
               )}

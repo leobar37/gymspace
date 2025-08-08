@@ -9,11 +9,12 @@ import { View } from '@/components/ui/view';
 import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
 import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
-import { PlusIcon, PackageIcon, InfoIcon } from 'lucide-react-native';
+import { PlusIcon, PackageIcon, InfoIcon, ChevronLeftIcon } from 'lucide-react-native';
 import { useProducts } from '@/hooks/useProducts';
 import { ProductCard } from '@/components/inventory/ProductCard';
 import { ProductFilters } from '@/components/inventory/ProductFilters';
 import { router } from 'expo-router';
+import { useRequireAuth } from '@/controllers/auth.controller';
 import type { Product, SearchProductsParams } from '@gymspace/sdk';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -23,6 +24,9 @@ const CARDS_PER_ROW = 2;
 const CARD_WIDTH = (screenWidth - (CONTAINER_PADDING * 2) - (CARD_PADDING * (CARDS_PER_ROW + 1))) / CARDS_PER_ROW;
 
 export default function ProductsScreen() {
+  // Check authentication and redirect if not authenticated
+  const { isAuthenticated, isLoadingSession } = useRequireAuth();
+  
   const [filters, setFilters] = useState<SearchProductsParams>({ page: 1, limit: 20 });
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,7 +63,7 @@ export default function ProductsScreen() {
 
   const handleProductPress = useCallback((product: Product) => {
     // Navigate to product detail or add to cart
-    router.push(`/(app)/inventory/products/${product.id}`);
+    router.push(`/inventory/products/${product.id}`);
   }, []);
 
   const handleProductLongPress = useCallback((product: Product) => {
@@ -68,7 +72,7 @@ export default function ProductsScreen() {
   }, []);
 
   const handleAddProduct = useCallback(() => {
-    router.push('/(app)/inventory/products/new');
+    router.push('/inventory/products/new');
   }, []);
 
   const handleLoadMore = useCallback(() => {
@@ -103,19 +107,20 @@ export default function ProductsScreen() {
 
   const renderHeader = useCallback(() => (
     <VStack space="sm">
-      <ProductFilters
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        onSearch={handleSearch}
-        showFilters={showFilters}
-        onToggleFilters={handleToggleFilters}
-      />
-      
-      {/* Add Product Button */}
-      <HStack className="justify-between items-center px-4">
-        <Text className="text-lg font-semibold text-gray-900">
-          Productos
-        </Text>
+      {/* Back Button and Title */}
+      <HStack className="items-center justify-between px-4 py-2">
+        <HStack className="items-center">
+          <Button
+            className='text-white'
+            size="sm"
+            onPress={() => router.back()}
+          >
+            <Icon as={ChevronLeftIcon} className="w-5 h-5 text-gray-700" />
+          </Button>
+          <Text className="text-xl font-semibold text-gray-900 ml-2">
+            Productos
+          </Text>
+        </HStack>
         <Button
           size="sm"
           onPress={handleAddProduct}
@@ -124,6 +129,14 @@ export default function ProductsScreen() {
           <ButtonText>Agregar</ButtonText>
         </Button>
       </HStack>
+
+      <ProductFilters
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        onSearch={handleSearch}
+        showFilters={showFilters}
+        onToggleFilters={handleToggleFilters}
+      />
 
       {/* Results Summary */}
       {data && (
@@ -199,6 +212,24 @@ export default function ProductsScreen() {
       </View>
     );
   }, [isFetching, data?.hasNextPage]);
+
+  // Show loading while checking authentication
+  if (isLoadingSession) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+        <View className="flex-1 items-center justify-center">
+          <Spinner size="large" />
+          <Text className="text-gray-600 mt-4">Verificando sesión...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // If not authenticated, the useRequireAuth hook will redirect
+  // So we can return null here to prevent flash of content
+  if (!isAuthenticated) {
+    return null;
+  }
 
   // Show loading state on initial load
   if (isLoading && !data) {

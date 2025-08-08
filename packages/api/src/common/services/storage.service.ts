@@ -1,23 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
 import { Readable } from 'stream';
 
 @Injectable()
-export class StorageService {
+export class StorageService implements OnModuleInit {
   private s3: AWS.S3;
-  private bucket: string;
+  private bucket: string = 'assets'; // Fixed bucket name for assets
 
   constructor(private readonly configService: ConfigService) {
     this.s3 = new AWS.S3({
-      endpoint: this.configService.get('storage.endpoint'),
-      accessKeyId: this.configService.get('storage.accessKey'),
-      secretAccessKey: this.configService.get('storage.secretKey'),
+      endpoint: this.configService.get('s3.endpoint'),
+      accessKeyId: this.configService.get('s3.accessKey'),
+      secretAccessKey: this.configService.get('s3.secretKey'),
       s3ForcePathStyle: true, // Required for MinIO
       signatureVersion: 'v4',
     });
+  }
 
-    this.bucket = this.configService.get('storage.bucket');
+  async onModuleInit() {
+    // Ensure the assets bucket exists
+    await this.ensureBucketExists();
+  }
+
+  private async ensureBucketExists(): Promise<void> {
+    try {
+      await this.s3.headBucket({ Bucket: this.bucket }).promise();
+      console.log(`Bucket "${this.bucket}" already exists`);
+    } catch (error) {
+      if (error.code === 'NotFound' || error.code === 'NoSuchBucket') {
+        console.log(`Creating bucket "${this.bucket}"...`);
+        await this.s3.createBucket({ Bucket: this.bucket }).promise();
+        console.log(`Bucket "${this.bucket}" created successfully`);
+      } else {
+        console.error(`Error checking bucket "${this.bucket}":`, error);
+        throw error;
+      }
+    }
   }
 
   async upload(

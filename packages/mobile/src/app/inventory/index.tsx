@@ -16,7 +16,8 @@ import {
   TrendingUpIcon,
   AlertTriangleIcon,
   TagIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ArrowLeftIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useFormatPrice } from '@/config/ConfigContext';
@@ -24,33 +25,42 @@ import { useFormatPrice } from '@/config/ConfigContext';
 export default function InventoryScreen() {
   const formatPrice = useFormatPrice();
   const handleNewSale = () => {
-    router.push('/(app)/inventory/new-sale');
+    router.push('/inventory/new-sale');
   };
 
   const handleViewProducts = () => {
-    router.push('/(app)/inventory/products');
+    router.push('/inventory/products');
   };
 
   const handleSalesHistory = () => {
-    router.push('/(app)/inventory/sales-history');
+    router.push('/inventory/sales-history');
   };
 
   const handleReports = () => {
-    router.push('/(app)/inventory/reports');
+    router.push('/inventory/reports');
   };
 
   const handleLowStock = () => {
-    router.push('/(app)/inventory/low-stock');
+    router.push('/inventory/low-stock');
   };
 
   const handleCategories = () => {
-    router.push('/(app)/inventory/categories');
+    router.push('/inventory/categories');
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'bottom']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
+          {/* Back Button */}
+          <Pressable 
+            onPress={() => router.push('/(app)/')}
+            className="flex-row items-center mb-2"
+          >
+            <Icon as={ArrowLeftIcon} className="w-5 h-5 text-gray-700 mr-2" />
+            <Text className="text-gray-700 font-medium">Volver al Dashboard</Text>
+          </Pressable>
+
           {/* New Sale Button - Prominent */}
           <Card className="bg-blue-500 border-blue-600 shadow-lg">
             <Pressable 

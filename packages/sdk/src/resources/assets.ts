@@ -45,6 +45,13 @@ export class AssetsResource extends BaseResource {
   }
 
   /**
+   * Get all assets for the current gym
+   */
+  async findAll(): Promise<AssetResponseDto[]> {
+    return await this.client.get<AssetResponseDto[]>('/assets');
+  }
+
+  /**
    * Delete an asset
    */
   async delete(id: string): Promise<void> {

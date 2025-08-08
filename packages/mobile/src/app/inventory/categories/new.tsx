@@ -47,9 +47,6 @@ export default function NewCategoryScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
           <VStack space="sm" className="mb-4">
-            <Text className="text-gray-800 text-2xl font-bold">
-              Nueva Categoría
-            </Text>
             <Text className="text-gray-600">
               Crea una nueva categoría para organizar tus productos
             </Text>

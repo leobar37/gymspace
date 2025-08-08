@@ -1,10 +1,14 @@
 // Components
 export { PhotoField } from './components/PhotoField';
+export { AssetSelector } from './components/AssetSelector';
+export { AssetPreview } from './components/AssetPreview';
+export { AssetModal } from './components/AssetModal';
 
 // Controllers
 export {
   assetsKeys,
   useUploadAsset,
+  useAllAssets,
   useAssetsByIds,
   useAsset,
   useDeleteAsset,
@@ -14,7 +18,8 @@ export {
   createAssetUploadHandler,
 } from './controllers/assets.controller';
 
-
+// Stores
+export { useAssetsStore } from './stores/assets.store';
 
 // Types
 export type {

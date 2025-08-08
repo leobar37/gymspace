@@ -80,7 +80,7 @@ function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="clients"
+        name="../clients"
         options={{
           title: 'Clientes',
           headerTitle: 'Clientes',
@@ -90,7 +90,7 @@ function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="inventory"
+        name="../inventory"
         options={{
           title: 'Inventario',
           headerTitle: 'Inventario y Ventas',
@@ -100,7 +100,7 @@ function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="contracts"
+        name="../contracts"
         options={{
           title: 'Contratos',
           headerTitle: 'Contratos',

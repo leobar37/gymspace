@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, RefreshControl, View, Pressable } from 'react-native';
 import { useDashboardController } from '../controllers/dashboard.controller';
+import { useRequireAuth } from '@/controllers/auth.controller';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -125,6 +126,9 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
 };
 
 export const Dashboard: React.FC = () => {
+  // Check authentication and redirect if not authenticated
+  const { isAuthenticated, isLoadingSession } = useRequireAuth();
+  
   const formatPrice = useFormatPrice();
   const {
     stats,
@@ -141,6 +145,22 @@ export const Dashboard: React.FC = () => {
     await refreshDashboard();
     setRefreshing(false);
   };
+
+  // Show loading while checking authentication
+  if (isLoadingSession) {
+    return (
+      <VStack className="flex-1 items-center justify-center bg-gray-50">
+        <Spinner className="text-blue-600" />
+        <Text className="text-gray-600 mt-2">Verificando sesión...</Text>
+      </VStack>
+    );
+  }
+
+  // If not authenticated, the useRequireAuth hook will redirect
+  // So we can return null here to prevent flash of content
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (isLoadingStats) {
     return (

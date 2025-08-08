@@ -41,6 +41,21 @@ export function useUploadAsset() {
 }
 
 /**
+ * Hook to get all assets for the current gym
+ */
+export function useAllAssets(enabled = true) {
+  const sdk = useGymSdk();
+
+  return useQuery({
+    queryKey: assetsKeys.lists(),
+    queryFn: async () => {
+      return await sdk.sdk.assets.findAll();
+    },
+    enabled,
+  });
+}
+
+/**
  * Hook to get multiple assets by IDs
  */
 export function useAssetsByIds(assetIds: string[], enabled = true) {

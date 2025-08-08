@@ -114,7 +114,7 @@ export default function NewSaleScreen() {
             text: 'Ver ventas',
             onPress: () => {
               resetCart();
-              router.push('/(app)/inventory/sales-history');
+              router.push('/inventory/sales-history');
             },
           },
         ]

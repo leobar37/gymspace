@@ -34,7 +34,6 @@ export default function InventoryLayout() {
         name="products/new"
         options={{
           title: 'Nuevo Producto',
-          presentation: 'modal',
         }}
       />
       <Stack.Screen
@@ -47,7 +46,6 @@ export default function InventoryLayout() {
         name="new-sale"
         options={{
           title: 'Nueva Venta',
-          presentation: 'modal',
         }}
       />
       <Stack.Screen
@@ -72,6 +70,24 @@ export default function InventoryLayout() {
         name="reports"
         options={{
           title: 'Reportes',
+        }}
+      />
+      <Stack.Screen
+        name="categories"
+        options={{
+          title: 'Categorías',
+        }}
+      />
+      <Stack.Screen
+        name="categories/new"
+        options={{
+          title: 'Nueva Categoría',
+        }}
+      />
+      <Stack.Screen
+        name="categories/[id]/edit"
+        options={{
+          title: 'Editar Categoría',
         }}
       />
     </Stack>

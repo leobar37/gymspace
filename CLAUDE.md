@@ -19,4 +19,3 @@
 - use TanStack Query for data fetching and caching
 - use tailwind for styling
 - never add styles to the button, use the default styles of the library and its variants
-

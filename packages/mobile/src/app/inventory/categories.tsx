@@ -13,7 +13,8 @@ import {
   TagIcon,
   EditIcon,
   TrashIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ArrowLeftIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useCategoriesController } from '@/features/categories/controllers/categories.controller';
@@ -43,11 +44,11 @@ export default function CategoriesScreen() {
   } = useCategoriesStore();
 
   const handleAddCategory = () => {
-    router.push('/(app)/inventory/categories/new');
+    router.push('/inventory/categories/new');
   };
 
   const handleEditCategory = (categoryId: string) => {
-    router.push(`/(app)/inventory/categories/${categoryId}/edit`);
+    router.push(`/inventory/categories/${categoryId}/edit`);
   };
 
   const handleDeleteCategory = async () => {
@@ -116,6 +117,15 @@ export default function CategoriesScreen() {
     <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
+          {/* Back Button */}
+          <Pressable 
+            onPress={() => router.push('/inventory')}
+            className="flex-row items-center mb-2"
+          >
+            <Icon as={ArrowLeftIcon} className="w-5 h-5 text-gray-700 mr-2" />
+            <Text className="text-gray-700 font-medium">Volver al Inventario</Text>
+          </Pressable>
+
           {/* Header with Add Button */}
           <HStack className="justify-between items-center mb-2">
             <Text className="text-gray-800 text-xl font-bold">

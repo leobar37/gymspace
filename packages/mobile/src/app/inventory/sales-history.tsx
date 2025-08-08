@@ -58,7 +58,7 @@ export default function SalesHistoryScreen() {
   }, []);
 
   const handleSalePress = useCallback((sale: Sale) => {
-    router.push(`/(app)/inventory/sales/${sale.id}`);
+    router.push(`/inventory/sales/${sale.id}`);
   }, []);
 
   const handleLoadMore = useCallback(() => {
@@ -202,7 +202,7 @@ export default function SalesHistoryScreen() {
 
           {!hasFilters && (
             <Button
-              onPress={() => router.push('/(app)/inventory/new-sale')}
+              onPress={() => router.push('/inventory/new-sale')}
               className="bg-blue-600 mt-4"
             >
               <Icon as={ShoppingCartIcon} className="w-4 h-4 text-white mr-2" />

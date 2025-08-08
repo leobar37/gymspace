@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useAuthToken } from '@/hooks/useAuthToken';
+import { router } from 'expo-router';
 
 // Query keys factory pattern for better type safety and organization
 export const authKeys = {
@@ -12,10 +14,10 @@ export const authKeys = {
 };
 
 export const useAuthController = () => {
-  const { sdk, setAuthToken, setCurrentGymId, clearAuth, isAuthenticated } = useGymSdk();
+  const { sdk, setCurrentGymId, isAuthenticated } = useGymSdk();
   const queryClient = useQueryClient();
   const { storeTokens, clearStoredTokens } = useAuthToken();
-  
+
   // Use the new session hook for current user and gym data
   const {
     session,
@@ -46,9 +48,9 @@ export const useAuthController = () => {
       await storeTokens({
         accessToken: response.access_token,
         refreshToken: response.refresh_token,
-        expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours from now
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
       });
-      
+
       // Refetch session to get current user data
       await refetchSession();
     },
@@ -66,7 +68,7 @@ export const useAuthController = () => {
     onSuccess: () => {
       // Clear session cache
       clearSessionCache();
-      
+
       // Clear all other cached data
       queryClient.clear();
     },
@@ -79,34 +81,51 @@ export const useAuthController = () => {
     gym,
     organization,
     permissions,
-    
+
     // Authentication state
     isAuthenticated: !!session?.isAuthenticated,
     isLoadingSession,
     isSessionError,
     sessionError,
-    
+
     // User role helpers
     isOwner,
     isCollaborator,
     hasPermission,
-    
+
     // Mutations
     login: loginMutation.mutate,
     isLoggingIn: loginMutation.isPending,
     loginError: loginMutation.error,
-    
+
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
-    
+
     // Utility functions
     refetchSession,
     clearSessionCache,
-    
+
     // Gym context management
     setCurrentGymId: async (gymId: string) => {
       await setCurrentGymId(gymId);
       await refetchSession(); // Refetch session with new gym context
     },
   };
+};
+
+// Hook to check authentication and redirect if needed
+export const useRequireAuth = (redirectTo: string = '/auth/login') => {
+  const { isAuthenticated, isLoadingSession } = useAuthController();
+
+  useEffect(() => {
+    // Don't redirect while loading session
+    if (isLoadingSession) return;
+
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      router.replace(redirectTo);
+    }
+  }, [isAuthenticated, isLoadingSession, redirectTo]);
+
+  return { isAuthenticated, isLoadingSession };
 };
