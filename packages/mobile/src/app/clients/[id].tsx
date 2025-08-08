@@ -1,30 +1,3 @@
-import React, { useState } from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import { useClientsController } from '@/features/clients/controllers/clients.controller';
-import { ClientCheckInsSection } from '@/features/clients/components/ClientCheckInsSection';
-import { ClientStatisticsSection } from '@/features/clients/components/ClientStatisticsSection';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { Card } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge, BadgeText } from '@/components/ui/badge';
-import { Spinner } from '@/components/ui/spinner';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { Image } from '@/components/ui/image';
-import { useAsset } from '@/features/assets/controllers/assets.controller';
-import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogCloseButton,
-  AlertDialogFooter,
-  AlertDialogBody,
-} from '@/components/ui/alert-dialog';
 import {
   Actionsheet,
   ActionsheetBackdrop,
@@ -35,19 +8,44 @@ import {
   ActionsheetItemText,
 } from '@/components/ui/actionsheet';
 import {
-  PhoneIcon,
-  MailIcon,
-  CalendarIcon,
-  EditIcon,
-  MoreHorizontalIcon,
-  TrashIcon,
-  ChevronLeftIcon,
-  UserIcon,
-  CheckCircleIcon,
-  BarChart3Icon,
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogBody,
+  AlertDialogCloseButton,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallbackText, AvatarImage } from '@/components/ui/avatar';
+import { Badge, BadgeText } from '@/components/ui/badge';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { useAsset } from '@/features/assets/controllers/assets.controller';
+import { ClientCheckInsSection } from '@/features/clients/components/ClientCheckInsSection';
+import { ClientStatisticsSection } from '@/features/clients/components/ClientStatisticsSection';
+import { useClientsController } from '@/features/clients/controllers/clients.controller';
+import { router, useLocalSearchParams } from 'expo-router';
+import {
   AlertTriangleIcon,
+  BarChart3Icon,
+  CalendarIcon,
+  CheckCircleIcon,
+  ChevronLeftIcon,
+  EditIcon,
+  MailIcon,
+  MoreHorizontalIcon,
+  PhoneIcon,
+  TrashIcon,
+  UserIcon,
 } from 'lucide-react-native';
-import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TabType = 'info' | 'checkins' | 'stats';
 
@@ -147,7 +145,7 @@ export default function ClientDetailScreen() {
               <Icon as={ChevronLeftIcon} size="xl" />
             </Pressable>
             <Text className="text-lg font-semibold ml-2" numberOfLines={1}>
-              {client.name}
+              {client?.name || 'Cliente'}
             </Text>
           </HStack>
           <Pressable onPress={handleMorePress} className="p-2">
@@ -218,27 +216,25 @@ export default function ClientDetailScreen() {
                 {profilePhoto?.previewUrl ? (
                   <AvatarImage 
                     source={{ uri: profilePhoto.previewUrl }} 
-                    alt={client.name}
+                    alt={client?.name || 'Client'}
                   />
                 ) : null}
-                <AvatarFallback>
-                  <Text className="text-xl font-semibold text-gray-600">
-                    {client.name.split(' ').map((n: string) => n[0]).join('')}
-                  </Text>
-                </AvatarFallback>
+                <AvatarFallbackText>
+                  {client?.name ? client.name.split(' ').map((n: string) => n[0]).join('') : '?'}
+                </AvatarFallbackText>
               </Avatar>
               <VStack className="flex-1">
                 <Text className="text-xl font-semibold text-gray-900">
-                  {client.name}
+                  {client?.name || 'Sin nombre'}
                 </Text>
                 <Text className="text-sm text-gray-600">
-                  Cliente #{client.clientNumber}
+                  Cliente #{client?.clientNumber || 'N/A'}
                 </Text>
                 <Badge
                   variant="solid"
-                  action={client.status === 'active' ? 'success' : 'muted'}
+                  action={client?.status === 'active' ? 'success' : 'muted'}
                 >
-                  <BadgeText>{client.status === 'active' ? 'Activo' : 'Inactivo'}</BadgeText>
+                  <BadgeText>{client?.status === 'active' ? 'Activo' : 'Inactivo'}</BadgeText>
                 </Badge>
               </VStack>
             </HStack>

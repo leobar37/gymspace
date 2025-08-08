@@ -3,22 +3,26 @@ import { Command, CommandRunner } from 'nest-commander';
 import { AuthService } from '../core/auth/services/auth.service';
 import { PrismaService } from '../core/database/prisma.service';
 import { OnboardingService } from '../modules/onboarding/onboarding.service';
+import { ProductsService } from '../modules/products/products.service';
+import { ClientsService } from '../modules/clients/clients.service';
 
 @Command({
   name: 'setup-user',
-  description: 'Create a default admin user with complete onboarding',
+  description: 'Create a default admin user with complete onboarding, products, and clients',
 })
 export class SetupDefaultUserCommand extends CommandRunner {
   constructor(
     private readonly onboardingService: OnboardingService,
     private readonly authService: AuthService,
     private readonly prismaService: PrismaService,
+    private readonly productsService: ProductsService,
+    private readonly clientsService: ClientsService,
   ) {
     super();
   }
 
   async run(): Promise<void> {
-    console.log('🚀 Starting default user setup...\n');
+    console.log('🚀 Starting default setup: user, products, and clients...\n');
 
     // Debug logging
     console.log('Services:', {
@@ -215,6 +219,137 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       console.log('✅ Guided setup completed');
 
+      // Step 6: Initialize default products
+      console.log('\n📦 Creating default products...');
+      const defaultProducts = [
+        {
+          name: 'Proteína Whey',
+          description: 'Proteína de suero de leche premium para desarrollo muscular',
+          price: 120.00,
+          currency: 'PEN',
+          stock: 50,
+          barcode: 'PROT001',
+          sku: 'WHY-001',
+        },
+        {
+          name: 'Creatina Monohidratada',
+          description: 'Creatina pura para mejorar rendimiento y fuerza',
+          price: 85.00,
+          currency: 'PEN',
+          stock: 30,
+          barcode: 'CREA001',
+          sku: 'CRE-001',
+        },
+        {
+          name: 'BCAA Aminoácidos',
+          description: 'Aminoácidos de cadena ramificada para recuperación muscular',
+          price: 95.00,
+          currency: 'PEN',
+          stock: 25,
+          barcode: 'BCAA001',
+          sku: 'BCA-001',
+        },
+        {
+          name: 'Pre-Entreno',
+          description: 'Fórmula pre-entrenamiento para energía y enfoque',
+          price: 110.00,
+          currency: 'PEN',
+          stock: 20,
+          barcode: 'PRE001',
+          sku: 'PRE-001',
+        },
+        {
+          name: 'Botella de Agua Deportiva',
+          description: 'Botella de 1 litro con logo del gimnasio',
+          price: 25.00,
+          currency: 'PEN',
+          stock: 100,
+          barcode: 'BOT001',
+          sku: 'BOT-001',
+        },
+      ];
+
+      for (const product of defaultProducts) {
+        try {
+          await this.productsService.createProduct(
+            onboardingResult.gym.id,
+            product,
+            onboardingResult.user.id,
+          );
+          console.log(`✅ Producto creado: ${product.name}`);
+        } catch (error) {
+          console.log(`⚠️  Error creando producto ${product.name}:`, error.message);
+        }
+      }
+
+      // Step 7: Initialize default clients
+      console.log('\n👥 Creating default clients...');
+      const defaultClients = [
+        {
+          name: 'Carlos Rodriguez',
+          email: 'carlos.rodriguez@example.com',
+          phone: '+51987654321',
+          documentType: 'dni',
+          documentValue: '12345678',
+          birthDate: '1990-05-15',
+          address: 'Av. Javier Prado 123, San Isidro',
+          notes: 'Contacto de emergencia: María Rodriguez - +51987654322',
+        },
+        {
+          name: 'Ana García',
+          email: 'ana.garcia@example.com',
+          phone: '+51987654323',
+          documentType: 'dni',
+          documentValue: '87654321',
+          birthDate: '1995-08-20',
+          address: 'Calle Los Álamos 456, Miraflores',
+          notes: 'Contacto de emergencia: Pedro García - +51987654324',
+        },
+        {
+          name: 'Luis Mendoza',
+          email: 'luis.mendoza@example.com',
+          phone: '+51987654325',
+          documentType: 'dni',
+          documentValue: '23456789',
+          birthDate: '1988-12-10',
+          address: 'Jr. Las Flores 789, Surco',
+          notes: 'Contacto de emergencia: Sofia Mendoza - +51987654326',
+        },
+        {
+          name: 'María Torres',
+          email: 'maria.torres@example.com',
+          phone: '+51987654327',
+          documentType: 'dni',
+          documentValue: '34567890',
+          birthDate: '1992-03-25',
+          address: 'Av. Larco 321, Barranco',
+          notes: 'Contacto de emergencia: Juan Torres - +51987654328',
+        },
+        {
+          name: 'Roberto Vargas',
+          email: 'roberto.vargas@example.com',
+          phone: '+51987654329',
+          documentType: 'dni',
+          documentValue: '45678901',
+          birthDate: '1985-11-18',
+          address: 'Calle Las Palmeras 654, San Borja',
+          notes: 'Contacto de emergencia: Carmen Vargas - +51987654330',
+        },
+      ];
+
+      for (const client of defaultClients) {
+        try {
+          await this.clientsService.createClient(
+            onboardingResult.gym.id,
+            client,
+            onboardingResult.user.id,
+          );
+          console.log(`✅ Cliente creado: ${client.name}`);
+        } catch (error) {
+          console.log(`⚠️  Error creando cliente ${client.name}:`, error.message);
+        }
+      }
+
       // Display the created user information
       console.log('\n========================================');
       console.log('🎉 USUARIO CREADO EXITOSAMENTE! 🎉');
@@ -230,6 +365,8 @@ export class SetupDefaultUserCommand extends CommandRunner {
       console.log('🇵🇪 País: Perú');
       console.log('💰 Moneda: PEN (Soles)');
       console.log('🕐 Zona Horaria: America/Lima');
+      console.log('📦 Productos Creados: 5');
+      console.log('👥 Clientes Creados: 5');
       console.log('========================================\n');
 
       console.log('ℹ️  Ahora puede iniciar sesión con estas credenciales y comenzar a usar el sistema.');

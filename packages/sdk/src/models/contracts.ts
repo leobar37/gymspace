@@ -1,4 +1,5 @@
-import { PaginationQueryDto, ContractStatus } from '@gymspace/shared';
+import { ContractStatus } from '@gymspace/shared';
+import { PaginationQueryDto } from '../types';
 
 export interface CreateContractDto {
   gymClientId: string;

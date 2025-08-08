@@ -1,4 +1,4 @@
-import { PaginationQueryDto } from '@gymspace/shared';
+import { PaginationQueryDto } from '../types';
 
 // Product Category Models
 export interface CreateProductCategoryDto {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView, ScrollView, Alert } from 'react-native';
+import { ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -170,7 +171,6 @@ export default function ContractDetailScreen() {
       <Stack.Screen
         options={{
           title: `Contrato #${contract.contractNumber}`,
-          headerBackTitle: 'Atrás',
           headerRight: () => (
             <Button
               onPress={() => setShowActionSheet(true)}
@@ -182,7 +182,7 @@ export default function ContractDetailScreen() {
           ),
         }}
       />
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView className="flex-1" edges={['bottom']}>
         <ScrollView className="flex-1 bg-gray-50">
           <VStack className="p-4 gap-4">
             {/* Status Card */}

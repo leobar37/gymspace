@@ -20,6 +20,7 @@ import {
   SettingsIcon,
   FileTextIcon,
   TruckIcon,
+  PackageIcon,
 } from 'lucide-react-native';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
@@ -87,6 +88,12 @@ export const ProfileMenu: React.FC = () => {
     {
       title: 'Gestión',
       items: [
+        {
+          icon: PackageIcon,
+          title: 'Planes',
+          subtitle: 'Gestiona planes de membresía',
+          onPress: () => router.push('/plans'),
+        },
         {
           icon: FileTextIcon,
           title: 'Contratos',

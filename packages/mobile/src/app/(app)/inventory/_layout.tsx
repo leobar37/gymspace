@@ -7,10 +7,6 @@ export default function InventoryLayout() {
       screenOptions={{
         headerStyle: {
           backgroundColor: '#ffffff',
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 1,
-          borderBottomColor: '#e5e7eb',
         },
         headerTitleStyle: {
           fontSize: 18,
@@ -18,12 +14,35 @@ export default function InventoryLayout() {
         },
         headerTintColor: '#374151',
         animation: 'slide_from_right',
+        headerBackTitle: ' ',
+        headerBackTitleVisible: false,
       }}
     >
+      <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen
         name="products"
         options={{
           title: 'Productos',
+          headerBackTitle: ' ',
+          headerBackTitleVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="products/new"
+        options={{
+          title: 'Nuevo Producto',
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="products/[id]"
+        options={{
+          title: 'Detalle de Producto',
         }}
       />
       <Stack.Screen
@@ -40,7 +59,7 @@ export default function InventoryLayout() {
         }}
       />
       <Stack.Screen
-        name="sale-detail"
+        name="sales/[id]"
         options={{
           title: 'Detalle de Venta',
         }}
@@ -55,19 +74,6 @@ export default function InventoryLayout() {
         name="reports"
         options={{
           title: 'Reportes',
-        }}
-      />
-      <Stack.Screen
-        name="product-detail"
-        options={{
-          title: 'Detalle de Producto',
-        }}
-      />
-      <Stack.Screen
-        name="product-form"
-        options={{
-          title: 'Gestionar Producto',
-          presentation: 'modal',
         }}
       />
     </Stack>

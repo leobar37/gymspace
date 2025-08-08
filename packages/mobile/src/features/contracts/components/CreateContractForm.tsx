@@ -27,7 +27,7 @@ const createContractSchema = z.object({
     invalid_type_error: 'Fecha inválida',
   }),
   discountPercentage: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional().default('0'),
-  customPrice: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional(),
+  finalPrice: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional(),
 });
 
 type CreateContractSchema = z.infer<typeof createContractSchema>;
@@ -74,22 +74,22 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
       gymMembershipPlanId: initialData?.gymMembershipPlanId || '',
       startDate: parseInitialDate(initialData?.startDate),
       discountPercentage: String(initialData?.discountPercentage || 0),
-      customPrice: initialData?.customPrice ? String(initialData.customPrice) : '',
+      finalPrice: initialData?.finalPrice ? String(initialData.finalPrice) : '',
     },
   });
 
   // Watch for plan changes to update pricing
   const watchedPlanId = watch('gymMembershipPlanId');
   const watchedDiscount = watch('discountPercentage');
-  const watchedCustomPrice = watch('customPrice');
+  const watchedFinalPrice = watch('finalPrice');
 
   const calculateFinalPrice = () => {
     if (!selectedPlan) return 0;
 
-    // If custom price is specified and valid, use it
-    const customPriceNum = watchedCustomPrice ? Number(watchedCustomPrice) : 0;
-    if (customPriceNum > 0) {
-      return customPriceNum;
+    // If final price is specified and valid, use it
+    const finalPriceNum = watchedFinalPrice ? Number(watchedFinalPrice) : 0;
+    if (finalPriceNum > 0) {
+      return finalPriceNum;
     }
 
     // Otherwise calculate based on plan price and discount
@@ -106,7 +106,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
         gymMembershipPlanId: data.gymMembershipPlanId,
         startDate: format(data.startDate, 'yyyy-MM-dd'),
         discountPercentage: Number(data.discountPercentage) || 0,
-        customPrice: data.customPrice ? Number(data.customPrice) : undefined,
+        finalPrice: data.finalPrice ? Number(data.finalPrice) : undefined,
       };
 
       createContract(contractData, {
@@ -199,7 +199,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
             <View className="mb-4">
               <FormInput
                 control={control}
-                name="customPrice"
+                name="finalPrice"
                 label="Precio personalizado (opcional)"
                 placeholder="0.00"
                 keyboardType="numeric"
@@ -220,7 +220,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                   <Text className="font-medium">{formatPrice(selectedPlan.basePrice || 0)}</Text>
                 </HStack>
 
-                {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
+                {Number(watchedDiscount) > 0 && !watchedFinalPrice && (
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                     <Text className="font-medium text-green-600">
@@ -229,11 +229,11 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                   </HStack>
                 )}
 
-                {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
+                {watchedFinalPrice && Number(watchedFinalPrice) > 0 && (
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Precio personalizado:</Text>
                     <Text className="font-medium text-blue-600">
-                      {formatPrice(Number(watchedCustomPrice))}
+                      {formatPrice(Number(watchedFinalPrice))}
                     </Text>
                   </HStack>
                 )}

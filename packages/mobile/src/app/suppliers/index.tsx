@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { FlatList, RefreshControl, Alert } from 'react-native';
+import { FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
@@ -87,7 +87,7 @@ export default function SuppliersScreen() {
       <HStack className="justify-between items-center">
         <HStack space="md" className="items-center flex-1">
           <Button
-            variant="ghost"
+            variant="link"
             size="sm"
             onPress={() => router.back()}
           >

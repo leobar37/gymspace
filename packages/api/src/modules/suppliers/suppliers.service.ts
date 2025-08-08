@@ -192,7 +192,7 @@ export class SuppliersService {
     const orderBy: Prisma.SupplierOrderByWithRelationInput = {};
     orderBy[sortBy as keyof Prisma.SupplierOrderByWithRelationInput] = sortOrder;
 
-    const { skip, take } = this.paginationService.getSkipTake(page, limit);
+    const { skip, take } = this.paginationService.createPaginationParams({ page, limit });
 
     const [suppliers, total] = await Promise.all([
       this.prisma.supplier.findMany({
@@ -209,12 +209,7 @@ export class SuppliersService {
       this.prisma.supplier.count({ where }),
     ]);
 
-    return this.paginationService.paginate({
-      data: suppliers,
-      total,
-      page,
-      limit,
-    });
+    return this.paginationService.paginate(suppliers, total, { page, limit });
   }
 
   async getSupplierStats(gymId: string) {

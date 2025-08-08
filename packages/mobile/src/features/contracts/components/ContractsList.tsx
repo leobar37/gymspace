@@ -16,7 +16,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { View } from 'react-native';
-import { FAB } from '@/components/ui/fab';
+import { Fab, FabIcon } from '@/components/ui/fab';
+import { PlusIcon } from 'lucide-react-native';
 import { ContractStatus } from '@gymspace/sdk';
 import { useContractsController, SearchFilters } from '../controllers/contracts.controller';
 import { useFormatPrice } from '@/config/ConfigContext';
@@ -235,12 +236,13 @@ export const ContractsList: React.FC<ContractsListProps> = ({
       />
 
       {!hideAddButton && data?.data && data.data.length > 0 && (
-        <FAB
+        <Fab
           onPress={handleAddPress}
           placement="bottom right"
-          renderInPortal={false}
           size="md"
-        />
+        >
+          <FabIcon as={PlusIcon} />
+        </Fab>
       )}
     </Box>
   );

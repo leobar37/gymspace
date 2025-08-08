@@ -1,16 +1,16 @@
+import { ProductForm } from '@/components/inventory/ProductForm';
+import { Button } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { useCreateProduct } from '@/hooks/useProducts';
+import type { CreateProductDto } from '@gymspace/sdk';
+import { router } from 'expo-router';
+import { ArrowLeftIcon } from 'lucide-react-native';
 import React from 'react';
 import { Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { ArrowLeftIcon } from 'lucide-react-native';
-import { router } from 'expo-router';
-import { useCreateProduct } from '@/hooks/useProducts';
-import { ProductForm } from '@/components/inventory/ProductForm';
-import type { CreateProductDto } from '@gymspace/sdk';
 
 export default function NewProductScreen() {
   const createProductMutation = useCreateProduct();

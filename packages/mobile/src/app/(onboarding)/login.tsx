@@ -188,7 +188,6 @@ export default function LoginScreen() {
                       </Pressable>
                     </Link>
                   </HStack>
-
                   <GluestackButton
                     onPress={methods.handleSubmit(onSubmit)}
                     disabled={loginMutation.isPending}

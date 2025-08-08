@@ -1,4 +1,4 @@
-import { PaginationQueryDto } from '@gymspace/shared';
+import { PaginationQueryDto } from '../types';
 
 // Supplier Models
 export interface CreateSupplierDto {

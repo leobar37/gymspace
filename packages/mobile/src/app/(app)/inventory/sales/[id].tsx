@@ -104,7 +104,7 @@ export default function SaleDetailScreen() {
           text: 'Duplicar',
           onPress: () => {
             // TODO: Implement sale duplication
-            router.push('/inventory/new-sale');
+            router.push('/(app)/inventory/new-sale');
           },
         },
       ]

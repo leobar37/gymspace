@@ -49,6 +49,7 @@ export default function NewSaleScreen() {
   const { data: productsData, isLoading: loadingProducts } = useProducts({ 
     status: 'active',
     inStock: true,
+    page: 1,
     limit: 50 
   });
   const createSaleMutation = useCreateSale();
@@ -113,7 +114,7 @@ export default function NewSaleScreen() {
             text: 'Ver ventas',
             onPress: () => {
               resetCart();
-              router.push('/inventory/sales-history');
+              router.push('/(app)/inventory/sales-history');
             },
           },
         ]

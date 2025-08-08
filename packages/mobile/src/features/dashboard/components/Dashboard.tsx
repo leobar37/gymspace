@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { CheckInButton } from './CheckInButton';
+import { useFormatPrice } from '@/config/ConfigContext';
 
 interface StatCardProps {
   title: string;
@@ -124,6 +125,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
 };
 
 export const Dashboard: React.FC = () => {
+  const formatPrice = useFormatPrice();
   const {
     stats,
     isLoadingStats,
@@ -200,7 +202,7 @@ export const Dashboard: React.FC = () => {
             <View className="w-1/2 px-2 mb-4">
               <StatCard
                 title="Ingresos del Mes"
-                value={`$${stats?.monthlyRevenue?.toFixed(2) || '0.00'}`}
+                value={formatPrice(stats?.monthlyRevenue || 0)}
                 icon={DollarSignIcon}
                 iconColor="bg-orange-600"
               />

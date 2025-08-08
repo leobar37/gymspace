@@ -22,7 +22,7 @@ export class ProductsController {
 
   // Product Categories Endpoints
   @Post('categories')
-  @Allow([PERMISSIONS.PRODUCT_CATEGORIES_CREATE])
+  @Allow(PERMISSIONS.PRODUCT_CATEGORIES_CREATE)
   @ApiOperation({ summary: 'Create a new product category' })
   @ApiResponse({ status: 201, description: 'Category created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -32,7 +32,7 @@ export class ProductsController {
   }
 
   @Get('categories')
-  @Allow([PERMISSIONS.PRODUCT_CATEGORIES_READ])
+  @Allow(PERMISSIONS.PRODUCT_CATEGORIES_READ)
   @ApiOperation({ summary: 'Get all product categories' })
   @ApiResponse({ status: 200, description: 'List of categories' })
   async getCategories(@AppCtxt() ctx: RequestContext) {
@@ -40,7 +40,7 @@ export class ProductsController {
   }
 
   @Put('categories/:id')
-  @Allow([PERMISSIONS.PRODUCT_CATEGORIES_UPDATE])
+  @Allow(PERMISSIONS.PRODUCT_CATEGORIES_UPDATE)
   @ApiOperation({ summary: 'Update product category' })
   @ApiResponse({ status: 200, description: 'Category updated successfully' })
   @ApiResponse({ status: 404, description: 'Category not found' })
@@ -53,7 +53,7 @@ export class ProductsController {
   }
 
   @Delete('categories/:id')
-  @Allow([PERMISSIONS.PRODUCT_CATEGORIES_DELETE])
+  @Allow(PERMISSIONS.PRODUCT_CATEGORIES_DELETE)
   @ApiOperation({ summary: 'Delete product category' })
   @ApiResponse({ status: 200, description: 'Category deleted successfully' })
   @ApiResponse({ status: 404, description: 'Category not found' })
@@ -64,7 +64,7 @@ export class ProductsController {
 
   // Product Endpoints
   @Post()
-  @Allow([PERMISSIONS.PRODUCTS_CREATE])
+  @Allow(PERMISSIONS.PRODUCTS_CREATE)
   @ApiOperation({ summary: 'Create a new product' })
   @ApiResponse({ status: 201, description: 'Product created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -74,7 +74,7 @@ export class ProductsController {
   }
 
   @Get()
-  @Allow([PERMISSIONS.PRODUCTS_READ])
+  @Allow(PERMISSIONS.PRODUCTS_READ)
   @ApiOperation({ summary: 'Search products with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Paginated list of products' })
   async searchProducts(@Query() dto: SearchProductsDto, @AppCtxt() ctx: RequestContext) {
@@ -82,7 +82,7 @@ export class ProductsController {
   }
 
   @Get('low-stock')
-  @Allow([PERMISSIONS.PRODUCTS_READ])
+  @Allow(PERMISSIONS.PRODUCTS_READ)
   @ApiOperation({ summary: 'Get products with low stock' })
   @ApiResponse({ status: 200, description: 'List of products with low stock' })
   async getLowStockProducts(
@@ -94,7 +94,7 @@ export class ProductsController {
   }
 
   @Get(':id')
-  @Allow([PERMISSIONS.PRODUCTS_READ])
+  @Allow(PERMISSIONS.PRODUCTS_READ)
   @ApiOperation({ summary: 'Get product details' })
   @ApiResponse({ status: 200, description: 'Product details' })
   @ApiResponse({ status: 404, description: 'Product not found' })
@@ -103,7 +103,7 @@ export class ProductsController {
   }
 
   @Put(':id')
-  @Allow([PERMISSIONS.PRODUCTS_UPDATE])
+  @Allow(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Update product information' })
   @ApiResponse({ status: 200, description: 'Product updated successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
@@ -117,7 +117,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  @Allow([PERMISSIONS.PRODUCTS_DELETE])
+  @Allow(PERMISSIONS.PRODUCTS_DELETE)
   @ApiOperation({ summary: 'Delete product' })
   @ApiResponse({ status: 200, description: 'Product deleted successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
@@ -126,7 +126,7 @@ export class ProductsController {
   }
 
   @Patch(':id/toggle-status')
-  @Allow([PERMISSIONS.PRODUCTS_UPDATE])
+  @Allow(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Toggle product active/inactive status' })
   @ApiResponse({ status: 200, description: 'Product status toggled successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
@@ -135,7 +135,7 @@ export class ProductsController {
   }
 
   @Patch(':id/stock')
-  @Allow([PERMISSIONS.PRODUCTS_UPDATE])
+  @Allow(PERMISSIONS.PRODUCTS_UPDATE)
   @ApiOperation({ summary: 'Update product stock quantity' })
   @ApiResponse({ status: 200, description: 'Stock updated successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })

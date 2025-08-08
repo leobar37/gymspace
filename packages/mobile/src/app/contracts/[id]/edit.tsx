@@ -1,27 +1,24 @@
-import React from 'react';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native';
-import { Alert, ScrollView } from 'react-native';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { Alert, SafeAreaView, ScrollView } from 'react-native';
+import { z } from 'zod';
 
+import { FormDatePicker } from '@/components/forms/FormDatePicker';
+import { FormInput } from '@/components/forms/FormInput';
 import { Box } from '@/components/ui/box';
-import { Text } from '@/components/ui/text';
-import { Spinner } from '@/components/ui/spinner';
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
-import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
-import { FormInput } from '@/components/forms/FormInput';
-import { FormDatePicker } from '@/components/forms/FormDatePicker';
-import { useContractsController } from '@/features/contracts/controllers/contracts.controller';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useGymSdk } from '@/providers/GymSdkProvider';
-import { contractsKeys } from '@/features/contracts/controllers/contracts.controller';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useFormatPrice } from '@/config/ConfigContext';
+import { contractsKeys, useContractsController } from '@/features/contracts/controllers/contracts.controller';
+import { useGymSdk } from '@/providers/GymSdkProvider';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Form validation schema  
 const editContractSchema = z.object({
@@ -34,7 +31,7 @@ const editContractSchema = z.object({
     invalid_type_error: 'Fecha inválida',
   }),
   discountPercentage: z.string(),
-  customPrice: z.string().optional(),
+  finalPrice: z.string().optional(),
 });
 
 type EditContractSchema = z.infer<typeof editContractSchema>;
@@ -91,25 +88,25 @@ export default function EditContractScreen() {
       startDate: contract ? new Date(contract.startDate) : new Date(),
       endDate: contract ? new Date(contract.endDate) : new Date(),
       discountPercentage: String(contract?.discountPercentage || 0),
-      customPrice: contract?.customPrice ? String(contract.customPrice) : '',
+      finalPrice: contract?.finalPrice ? String(contract.finalPrice) : '',
     },
     values: contract ? {
       startDate: new Date(contract.startDate),
       endDate: new Date(contract.endDate),
       discountPercentage: String(contract.discountPercentage || 0),
-      customPrice: contract.customPrice ? String(contract.customPrice) : '',
+      finalPrice: contract.finalPrice ? String(contract.finalPrice) : '',
     } : undefined,
   });
 
   const watchedDiscount = watch('discountPercentage');
-  const watchedCustomPrice = watch('customPrice');
+  const watchedFinalPrice = watch('finalPrice');
 
   const calculateFinalPrice = () => {
     if (!contract) return 0;
     
-    const customPriceNum = watchedCustomPrice ? Number(watchedCustomPrice) : 0;
-    if (customPriceNum > 0) {
-      return customPriceNum;
+    const finalPriceNum = watchedFinalPrice ? Number(watchedFinalPrice) : 0;
+    if (finalPriceNum > 0) {
+      return finalPriceNum;
     }
     
     const basePrice = contract.price;
@@ -120,7 +117,7 @@ export default function EditContractScreen() {
   const onSubmit = async (data: EditContractSchema) => {
     const updateData = {
       discountPercentage: Number(data.discountPercentage) || 0,
-      customPrice: data.customPrice ? Number(data.customPrice) : undefined,
+      finalPrice: data.finalPrice ? Number(data.finalPrice) : undefined,
     };
     
     updateContractMutation.mutate(updateData);
@@ -208,7 +205,7 @@ export default function EditContractScreen() {
 
                   <FormInput
                     control={control}
-                    name="customPrice"
+                    name="finalPrice"
                     label="Precio personalizado (opcional)"
                     placeholder="0.00"
                     keyboardType="numeric"
@@ -228,7 +225,7 @@ export default function EditContractScreen() {
                     <Text className="font-medium">{formatPrice(contract.price)}</Text>
                   </HStack>
                   
-                  {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
+                  {Number(watchedDiscount) > 0 && !watchedFinalPrice && (
                     <HStack className="justify-between">
                       <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                       <Text className="font-medium text-green-600">
@@ -237,11 +234,11 @@ export default function EditContractScreen() {
                     </HStack>
                   )}
                   
-                  {watchedCustomPrice && (
+                  {watchedFinalPrice && (
                     <HStack className="justify-between">
                       <Text className="text-gray-600">Precio personalizado:</Text>
                       <Text className="font-medium text-blue-600">
-                        {formatPrice(Number(watchedCustomPrice))}
+                        {formatPrice(Number(watchedFinalPrice))}
                       </Text>
                     </HStack>
                   )}

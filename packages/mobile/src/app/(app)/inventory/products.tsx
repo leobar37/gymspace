@@ -48,16 +48,18 @@ export default function ProductsScreen() {
   }, []);
 
   const handleSearch = useCallback((search: string) => {
-    setSearchTerm(search);
-    setFilters(prev => ({
-      ...prev,
-      page: 1, // Reset to first page when searching
-    }));
-  }, []);
+    if (search !== searchTerm) {
+      setSearchTerm(search);
+      setFilters(prev => ({
+        ...prev,
+        page: 1, // Reset to first page when searching
+      }));
+    }
+  }, [searchTerm]);
 
   const handleProductPress = useCallback((product: Product) => {
     // Navigate to product detail or add to cart
-    router.push(`/inventory/products/${product.id}`);
+    router.push(`/(app)/inventory/products/${product.id}`);
   }, []);
 
   const handleProductLongPress = useCallback((product: Product) => {
@@ -66,7 +68,7 @@ export default function ProductsScreen() {
   }, []);
 
   const handleAddProduct = useCallback(() => {
-    router.push('/inventory/products/new');
+    router.push('/(app)/inventory/products/new');
   }, []);
 
   const handleLoadMore = useCallback(() => {
@@ -95,6 +97,10 @@ export default function ProductsScreen() {
     </View>
   ), [handleProductPress, handleProductLongPress]);
 
+  const handleToggleFilters = useCallback(() => {
+    setShowFilters(prev => !prev);
+  }, []);
+
   const renderHeader = useCallback(() => (
     <VStack space="sm">
       <ProductFilters
@@ -102,7 +108,7 @@ export default function ProductsScreen() {
         onFiltersChange={handleFiltersChange}
         onSearch={handleSearch}
         showFilters={showFilters}
-        onToggleFilters={() => setShowFilters(!showFilters)}
+        onToggleFilters={handleToggleFilters}
       />
       
       {/* Add Product Button */}
@@ -113,10 +119,9 @@ export default function ProductsScreen() {
         <Button
           size="sm"
           onPress={handleAddProduct}
-          className="bg-blue-600"
         >
-          <Icon as={PlusIcon} className="w-4 h-4 text-white mr-2" />
-          <ButtonText className="text-white">Agregar</ButtonText>
+          <Icon as={PlusIcon} className="w-4 h-4 mr-2 text-white" />
+          <ButtonText>Agregar</ButtonText>
         </Button>
       </HStack>
 
@@ -141,6 +146,7 @@ export default function ProductsScreen() {
     handleFiltersChange,
     handleSearch,
     handleAddProduct,
+    handleToggleFilters,
   ]);
 
   const renderEmptyState = useCallback(() => {
@@ -170,10 +176,10 @@ export default function ProductsScreen() {
           {!hasFilters && (
             <Button
               onPress={handleAddProduct}
-              className="bg-blue-600 mt-4"
+              className="mt-4"
             >
-              <Icon as={PlusIcon} className="w-4 h-4 text-white mr-2" />
-              <ButtonText className="text-white">Agregar Producto</ButtonText>
+              <Icon as={PlusIcon} className="w-4 h-4 mr-2 text-white" />
+              <ButtonText>Agregar Producto</ButtonText>
             </Button>
           )}
         </VStack>
@@ -194,9 +200,23 @@ export default function ProductsScreen() {
     );
   }, [isFetching, data?.hasNextPage]);
 
+  // Show loading state on initial load
+  if (isLoading && !data) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+        <VStack className="flex-1 p-4">
+          <View className="flex-1 items-center justify-center">
+            <Spinner size="large" />
+            <Text className="text-gray-600 mt-4">Cargando productos...</Text>
+          </View>
+        </VStack>
+      </SafeAreaView>
+    );
+  }
+
   if (isError) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50">
+      <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
         <VStack className="flex-1 p-4">
           {renderHeader()}
           <View className="flex-1 items-center justify-center">
@@ -220,7 +240,7 @@ export default function ProductsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
       <FlatList
         data={data?.items || []}
         renderItem={renderProductCard}
@@ -234,10 +254,10 @@ export default function ProductsScreen() {
           paddingBottom: 20,
           flexGrow: data?.items?.length === 0 ? 1 : undefined,
         }}
-        columnWrapperStyle={undefined} // Let custom styling handle spacing
+        // columnWrapperStyle not needed when using custom spacing
         refreshControl={
           <RefreshControl
-            refreshing={isLoading && !isFetching}
+            refreshing={isFetching && !isLoading}
             onRefresh={refetch}
             tintColor="#3B82F6"
           />

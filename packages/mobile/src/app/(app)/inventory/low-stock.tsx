@@ -6,7 +6,7 @@ import { Text } from '@/components/ui/text';
 
 export default function LowStockScreen() {
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
       <ScrollView>
         <VStack space="md" className="p-4">
           <Text className="text-center text-gray-600 text-lg">

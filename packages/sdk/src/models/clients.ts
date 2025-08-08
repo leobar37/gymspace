@@ -1,4 +1,4 @@
-import { PaginationQueryDto } from '@gymspace/shared';
+import { PaginationQueryDto } from '../types';
 
 export interface CreateClientDto {
   name: string;

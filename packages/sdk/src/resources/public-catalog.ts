@@ -1,6 +1,6 @@
 import { BaseResource } from './base';
 import { RequestOptions, PaginatedResponseDto } from '../types';
-import { PaginationQueryDto } from '@gymspace/shared';
+import { PaginationQueryDto } from '../types';
 
 export interface SearchCatalogParams extends PaginationQueryDto {
   search?: string;

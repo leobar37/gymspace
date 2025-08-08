@@ -337,7 +337,7 @@ export class SalesService {
     const orderBy: Prisma.SaleOrderByWithRelationInput = {};
     orderBy[sortBy as keyof Prisma.SaleOrderByWithRelationInput] = sortOrder;
 
-    const { skip, take } = this.paginationService.getSkipTake(page, limit);
+    const { skip, take } = this.paginationService.createPaginationParams({ page, limit });
 
     const [sales, total] = await Promise.all([
       this.prisma.sale.findMany({
@@ -359,12 +359,7 @@ export class SalesService {
       this.prisma.sale.count({ where }),
     ]);
 
-    return this.paginationService.paginate({
-      data: sales,
-      total,
-      page,
-      limit,
-    });
+    return this.paginationService.paginate(sales, total, { page, limit });
   }
 
   async updatePaymentStatus(saleId: string, dto: UpdatePaymentStatusDto, userId: string) {

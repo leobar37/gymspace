@@ -1,19 +1,16 @@
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { AppProviders } from "@/providers/AppProviders";
 import { Stack } from "expo-router";
-import { useEffect } from "react";
+import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../../global.css";
+import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 
-export default function RootLayout() {
-  useEffect(() => {
-    // Any global setup can go here
-  }, []);
-
+function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <GluestackUIProvider mode="light">
+    <GluestackUIProvider>
+      <SafeAreaProvider>
         <GestureHandlerRootView className="flex-1">
           <AppProviders>
             <Stack screenOptions={{ headerShown: false }}>
@@ -23,7 +20,10 @@ export default function RootLayout() {
             </Stack>
           </AppProviders>
         </GestureHandlerRootView>
-      </GluestackUIProvider>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </GluestackUIProvider>
+
   );
 }
+
+export default React.memo(RootLayout);

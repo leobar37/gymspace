@@ -335,7 +335,7 @@ export class ProductsService {
       orderBy[sortBy as keyof Prisma.ProductOrderByWithRelationInput] = sortOrder;
     }
 
-    const { skip, take } = this.paginationService.getSkipTake(page, limit);
+    const { skip, take } = this.paginationService.createPaginationParams({ page, limit });
 
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
@@ -355,12 +355,7 @@ export class ProductsService {
       this.prisma.product.count({ where }),
     ]);
 
-    return this.paginationService.paginate({
-      data: products,
-      total,
-      page,
-      limit,
-    });
+    return this.paginationService.paginate(products, total, { page, limit });
   }
 
   async toggleProductStatus(productId: string, userId: string) {

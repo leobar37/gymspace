@@ -1,20 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView } from 'react-native';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Input, InputField } from '@/components/ui/input';
-import { Button, ButtonText } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Pressable } from '@/components/ui/pressable';
 import { Icon } from '@/components/ui/icon';
 import { 
-  SearchIcon, 
   FilterIcon, 
-  XIcon,
-  ChevronDownIcon 
+  XIcon
 } from 'lucide-react-native';
-import type { ProductCategory, SearchProductsParams } from '@gymspace/sdk';
+import type { SearchProductsParams } from '@gymspace/sdk';
 import { useProductCategories } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -37,13 +35,16 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
   const { data: categories = [] } = useProductCategories();
   
   // Debounce search to avoid excessive API calls
-  const debouncedSearch = useDebounce((value: string) => {
-    onSearch(value);
-  }, 300);
+  const debouncedSearchText = useDebounce(searchText, 300);
+
+  useEffect(() => {
+    if (debouncedSearchText !== filters.search) {
+      onSearch(debouncedSearchText);
+    }
+  }, [debouncedSearchText]);
 
   const handleSearchChange = (value: string) => {
     setSearchText(value);
-    debouncedSearch(value);
   };
 
   const handleCategoryToggle = (categoryId: string) => {
@@ -64,7 +65,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
 
   const clearFilters = () => {
     setSearchText('');
-    onFiltersChange({});
+    onFiltersChange({ page: 1, limit: 20 });
     onSearch('');
   };
 

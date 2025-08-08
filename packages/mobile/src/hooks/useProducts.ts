@@ -6,8 +6,7 @@ import type {
   ProductCategory,
   SearchProductsParams, 
   CreateProductDto,
-  UpdateProductDto,
-  PaginatedResponseDto 
+  UpdateProductDto
 } from '@gymspace/sdk';
 
 // Query key factories
@@ -27,7 +26,7 @@ export interface UseProductsOptions extends SearchProductsParams {
   gcTime?: number;
 }
 
-export function useProducts(options: UseProductsOptions = {}) {
+export function useProducts(options: UseProductsOptions = { page: 1, limit: 20 }) {
   const { sdk } = useGymSdk();
   const {
     enabled = true,

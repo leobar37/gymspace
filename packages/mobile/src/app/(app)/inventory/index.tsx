@@ -14,33 +14,41 @@ import {
   ShoppingCartIcon, 
   HistoryIcon,
   TrendingUpIcon,
-  AlertTriangleIcon
+  AlertTriangleIcon,
+  TagIcon,
+  ChevronRightIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useFormatPrice } from '@/config/ConfigContext';
 
 export default function InventoryScreen() {
+  const formatPrice = useFormatPrice();
   const handleNewSale = () => {
-    router.push('/inventory/new-sale');
+    router.push('/(app)/inventory/new-sale');
   };
 
   const handleViewProducts = () => {
-    router.push('/inventory/products');
+    router.push('/(app)/inventory/products');
   };
 
   const handleSalesHistory = () => {
-    router.push('/inventory/sales-history');
+    router.push('/(app)/inventory/sales-history');
   };
 
   const handleReports = () => {
-    router.push('/inventory/reports');
+    router.push('/(app)/inventory/reports');
   };
 
   const handleLowStock = () => {
-    router.push('/inventory/low-stock');
+    router.push('/(app)/inventory/low-stock');
+  };
+
+  const handleCategories = () => {
+    router.push('/(app)/inventory/categories');
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
           {/* New Sale Button - Prominent */}
@@ -69,7 +77,7 @@ export default function InventoryScreen() {
             <Card className="flex-1 bg-green-50 border-green-200">
               <VStack space="xs" className="p-4 items-center">
                 <Icon as={TrendingUpIcon} className="w-8 h-8 text-green-600" />
-                <Text className="text-green-800 text-lg font-bold">$2,450</Text>
+                <Text className="text-green-800 text-lg font-bold">{formatPrice(2450)}</Text>
                 <Text className="text-green-600 text-xs text-center">
                   Ventas del día
                 </Text>
@@ -110,7 +118,27 @@ export default function InventoryScreen() {
                       </Text>
                     </VStack>
                   </HStack>
-                  <Icon as={PlusIcon} className="w-5 h-5 text-gray-400" />
+                  <Icon as={ChevronRightIcon} className="w-5 h-5 text-gray-400" />
+                </Pressable>
+              </Card>
+
+              <Card>
+                <Pressable 
+                  onPress={handleCategories}
+                  className="p-4 flex-row items-center justify-between"
+                >
+                  <HStack space="md" className="items-center flex-1">
+                    <Icon as={TagIcon} className="w-6 h-6 text-indigo-600" />
+                    <VStack className="flex-1">
+                      <Text className="text-gray-800 font-medium">
+                        Ver Categorías
+                      </Text>
+                      <Text className="text-gray-500 text-sm">
+                        Gestionar categorías de productos
+                      </Text>
+                    </VStack>
+                  </HStack>
+                  <Icon as={ChevronRightIcon} className="w-5 h-5 text-gray-400" />
                 </Pressable>
               </Card>
 
@@ -130,7 +158,7 @@ export default function InventoryScreen() {
                       </Text>
                     </VStack>
                   </HStack>
-                  <Icon as={PlusIcon} className="w-5 h-5 text-gray-400" />
+                  <Icon as={ChevronRightIcon} className="w-5 h-5 text-gray-400" />
                 </Pressable>
               </Card>
 
@@ -150,7 +178,7 @@ export default function InventoryScreen() {
                       </Text>
                     </VStack>
                   </HStack>
-                  <Icon as={PlusIcon} className="w-5 h-5 text-gray-400" />
+                  <Icon as={ChevronRightIcon} className="w-5 h-5 text-gray-400" />
                 </Pressable>
               </Card>
 
@@ -170,7 +198,7 @@ export default function InventoryScreen() {
                       </Text>
                     </VStack>
                   </HStack>
-                  <Icon as={PlusIcon} className="w-5 h-5 text-gray-400" />
+                  <Icon as={ChevronRightIcon} className="w-5 h-5 text-gray-400" />
                 </Pressable>
               </Card>
             </VStack>

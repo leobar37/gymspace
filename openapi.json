@@ -3468,6 +3468,1195 @@
           }
         ]
       }
+    },
+    "/api/v1/products/categories": {
+      "post": {
+        "operationId": "ProductsController_createCategory",
+        "summary": "Create a new product category",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "409": {
+            "description": "Category name already exists"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "ProductsController_getCategories",
+        "summary": "Get all product categories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of categories"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/categories/{id}": {
+      "put": {
+        "operationId": "ProductsController_updateCategory",
+        "summary": "Update product category",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated successfully"
+          },
+          "404": {
+            "description": "Category not found"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ProductsController_deleteCategory",
+        "summary": "Delete product category",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category deleted successfully"
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "409": {
+            "description": "Cannot delete category with products"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products": {
+      "post": {
+        "operationId": "ProductsController_createProduct",
+        "summary": "Create a new product",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "409": {
+            "description": "Product name already exists"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "ProductsController_searchProducts",
+        "summary": "Search products with filters and pagination",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search term for product name or description",
+            "schema": {
+              "example": "protein",
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by category ID",
+            "schema": {
+              "example": "uuid-category-id",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by product status",
+            "schema": {
+              "example": "active",
+              "enum": [
+                "active",
+                "inactive"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "inStock",
+            "required": false,
+            "in": "query",
+            "description": "Only show products with stock > 0",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "minPrice",
+            "required": false,
+            "in": "query",
+            "description": "Minimum price filter",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxPrice",
+            "required": false,
+            "in": "query",
+            "description": "Maximum price filter",
+            "schema": {
+              "example": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "example": "name",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "example": "asc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of products"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/low-stock": {
+      "get": {
+        "operationId": "ProductsController_getLowStockProducts",
+        "summary": "Get products with low stock",
+        "parameters": [
+          {
+            "name": "threshold",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of products with low stock"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/{id}": {
+      "get": {
+        "operationId": "ProductsController_getProduct",
+        "summary": "Get product details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "ProductsController_updateProduct",
+        "summary": "Update product information",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated successfully"
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "409": {
+            "description": "Product name already exists"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ProductsController_deleteProduct",
+        "summary": "Delete product",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product deleted successfully"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/{id}/toggle-status": {
+      "patch": {
+        "operationId": "ProductsController_toggleProductStatus",
+        "summary": "Toggle product active/inactive status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product status toggled successfully"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/{id}/stock": {
+      "patch": {
+        "operationId": "ProductsController_updateStock",
+        "summary": "Update product stock quantity",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stock updated successfully"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        },
+        "tags": [
+          "Products"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/sales": {
+      "post": {
+        "operationId": "SalesController_createSale",
+        "summary": "Create a new sale",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSaleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sale created successfully"
+          },
+          "400": {
+            "description": "Bad request - validation failed"
+          },
+          "409": {
+            "description": "Insufficient stock or invalid product"
+          }
+        },
+        "tags": [
+          "Sales"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "SalesController_searchSales",
+        "summary": "Search sales with filters and pagination",
+        "parameters": [
+          {
+            "name": "customerName",
+            "required": false,
+            "in": "query",
+            "description": "Search by customer name",
+            "schema": {
+              "example": "John",
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status",
+            "schema": {
+              "example": "paid",
+              "enum": [
+                "paid",
+                "unpaid"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (YYYY-MM-DD)",
+            "schema": {
+              "example": "2024-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (YYYY-MM-DD)",
+            "schema": {
+              "example": "2024-12-31",
+              "type": "string"
+            }
+          },
+          {
+            "name": "minTotal",
+            "required": false,
+            "in": "query",
+            "description": "Minimum total amount filter",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxTotal",
+            "required": false,
+            "in": "query",
+            "description": "Maximum total amount filter",
+            "schema": {
+              "example": 1000,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "example": "saleDate",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "example": "desc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of sales"
+          }
+        },
+        "tags": [
+          "Sales"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/sales/stats": {
+      "get": {
+        "operationId": "SalesController_getSalesStats",
+        "summary": "Get sales statistics",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sales statistics"
+          }
+        },
+        "tags": [
+          "Sales"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/sales/top-products": {
+      "get": {
+        "operationId": "SalesController_getTopSellingProducts",
+        "summary": "Get top selling products",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top selling products with statistics"
+          }
+        },
+        "tags": [
+          "Sales"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/sales/{id}": {
+      "get": {
+        "operationId": "SalesController_getSale",
+        "summary": "Get sale details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sale details with items"
+          },
+          "404": {
+            "description": "Sale not found"
+          }
+        },
+        "tags": [
+          "Sales"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "SalesController_updateSale",
+        "summary": "Update sale information",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSaleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sale updated successfully"
+          },
+          "404": {
+            "description": "Sale not found"
+          }
+        },
+        "tags": [
+          "Sales"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "SalesController_deleteSale",
+        "summary": "Delete sale and restore stock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sale deleted successfully"
+          },
+          "404": {
+            "description": "Sale not found"
+          }
+        },
+        "tags": [
+          "Sales"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/sales/{id}/payment-status": {
+      "put": {
+        "operationId": "SalesController_updatePaymentStatus",
+        "summary": "Update sale payment status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePaymentStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment status updated successfully"
+          },
+          "404": {
+            "description": "Sale not found"
+          }
+        },
+        "tags": [
+          "Sales"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/suppliers": {
+      "post": {
+        "operationId": "SuppliersController_createSupplier",
+        "summary": "Create a new supplier",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplierDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Supplier created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "409": {
+            "description": "Supplier name or email already exists"
+          }
+        },
+        "tags": [
+          "Suppliers"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "SuppliersController_searchSuppliers",
+        "summary": "Search suppliers with filters and pagination",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search term for supplier name, email, or contact info",
+            "schema": {
+              "example": "acme",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "example": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Sort field",
+            "schema": {
+              "example": "name",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "example": "asc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of suppliers"
+          }
+        },
+        "tags": [
+          "Suppliers"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/suppliers/stats": {
+      "get": {
+        "operationId": "SuppliersController_getSupplierStats",
+        "summary": "Get supplier statistics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Supplier statistics including contact completeness"
+          }
+        },
+        "tags": [
+          "Suppliers"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/suppliers/{id}": {
+      "get": {
+        "operationId": "SuppliersController_getSupplier",
+        "summary": "Get supplier details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supplier details"
+          },
+          "404": {
+            "description": "Supplier not found"
+          }
+        },
+        "tags": [
+          "Suppliers"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "SuppliersController_updateSupplier",
+        "summary": "Update supplier information",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplierDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supplier updated successfully"
+          },
+          "404": {
+            "description": "Supplier not found"
+          },
+          "409": {
+            "description": "Supplier name or email already exists"
+          }
+        },
+        "tags": [
+          "Suppliers"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "SuppliersController_deleteSupplier",
+        "summary": "Delete supplier",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supplier deleted successfully"
+          },
+          "404": {
+            "description": "Supplier not found"
+          }
+        },
+        "tags": [
+          "Suppliers"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "info": {
@@ -5689,6 +6878,320 @@
           "endDate",
           "daysRemaining"
         ]
+      },
+      "CreateProductCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Supplements",
+            "description": "Category name"
+          },
+          "description": {
+            "type": "string",
+            "example": "Nutritional supplements and vitamins"
+          },
+          "color": {
+            "type": "string",
+            "example": "#FF5733",
+            "description": "Category color in hex format"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateProductCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Supplements",
+            "description": "Category name"
+          },
+          "description": {
+            "type": "string",
+            "example": "Nutritional supplements and vitamins"
+          },
+          "color": {
+            "type": "string",
+            "example": "#FF5733",
+            "description": "Category color in hex format"
+          }
+        }
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Protein Powder",
+            "description": "Product name"
+          },
+          "description": {
+            "type": "string",
+            "example": "High-quality whey protein powder for muscle building"
+          },
+          "price": {
+            "type": "number",
+            "example": 29.99,
+            "description": "Product price"
+          },
+          "stock": {
+            "type": "number",
+            "example": 100,
+            "description": "Initial stock quantity"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "uuid-category-id",
+            "description": "Product category ID"
+          },
+          "imageId": {
+            "type": "string",
+            "example": "uuid-asset-id",
+            "description": "Product image asset ID"
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "description": "Product status"
+          }
+        },
+        "required": [
+          "name",
+          "price"
+        ]
+      },
+      "UpdateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Protein Powder",
+            "description": "Product name"
+          },
+          "description": {
+            "type": "string",
+            "example": "High-quality whey protein powder for muscle building"
+          },
+          "price": {
+            "type": "number",
+            "example": 29.99,
+            "description": "Product price"
+          },
+          "stock": {
+            "type": "number",
+            "example": 100,
+            "description": "Initial stock quantity"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "uuid-category-id",
+            "description": "Product category ID"
+          },
+          "imageId": {
+            "type": "string",
+            "example": "uuid-asset-id",
+            "description": "Product image asset ID"
+          },
+          "status": {
+            "type": "string",
+            "example": "active",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "description": "Product status"
+          }
+        }
+      },
+      "UpdateStockDto": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "example": 10,
+            "description": "Quantity to add (positive) or remove (negative) from stock"
+          }
+        },
+        "required": [
+          "quantity"
+        ]
+      },
+      "SaleItemDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "example": "uuid-product-id",
+            "description": "Product ID"
+          },
+          "quantity": {
+            "type": "number",
+            "example": 2,
+            "description": "Quantity of product"
+          },
+          "unitPrice": {
+            "type": "number",
+            "example": 29.99,
+            "description": "Unit price at time of sale"
+          }
+        },
+        "required": [
+          "productId",
+          "quantity",
+          "unitPrice"
+        ]
+      },
+      "CreateSaleDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "Array of sale items",
+            "example": [
+              {
+                "productId": "uuid-product-id",
+                "quantity": 2,
+                "unitPrice": 29.99
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SaleItemDto"
+            }
+          },
+          "customerName": {
+            "type": "string",
+            "example": "John Doe",
+            "description": "Customer name"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Customer requested extra packaging",
+            "description": "Sale notes"
+          },
+          "paymentStatus": {
+            "type": "string",
+            "example": "paid",
+            "enum": [
+              "paid",
+              "unpaid"
+            ],
+            "description": "Payment status"
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "UpdateSaleDto": {
+        "type": "object",
+        "properties": {
+          "customerName": {
+            "type": "string",
+            "example": "John Doe",
+            "description": "Customer name"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Updated notes",
+            "description": "Sale notes"
+          },
+          "paymentStatus": {
+            "type": "string",
+            "example": "paid",
+            "enum": [
+              "paid",
+              "unpaid"
+            ],
+            "description": "Payment status"
+          }
+        }
+      },
+      "UpdatePaymentStatusDto": {
+        "type": "object",
+        "properties": {
+          "paymentStatus": {
+            "type": "string",
+            "example": "paid",
+            "enum": [
+              "paid",
+              "unpaid"
+            ],
+            "description": "New payment status"
+          }
+        },
+        "required": [
+          "paymentStatus"
+        ]
+      },
+      "CreateSupplierDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Acme Supplements Inc.",
+            "description": "Supplier name"
+          },
+          "contactInfo": {
+            "type": "string",
+            "example": "Premium supplement distributor with 20+ years of experience",
+            "description": "Supplier contact information and description"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1-555-123-4567",
+            "description": "Supplier phone number"
+          },
+          "email": {
+            "type": "string",
+            "example": "sales@acmesupplements.com",
+            "description": "Supplier email"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Industrial Ave, Business District, NY 10001",
+            "description": "Supplier address"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateSupplierDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Acme Supplements Inc.",
+            "description": "Supplier name"
+          },
+          "contactInfo": {
+            "type": "string",
+            "example": "Premium supplement distributor with 20+ years of experience",
+            "description": "Supplier contact information and description"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+1-555-123-4567",
+            "description": "Supplier phone number"
+          },
+          "email": {
+            "type": "string",
+            "example": "sales@acmesupplements.com",
+            "description": "Supplier email"
+          },
+          "address": {
+            "type": "string",
+            "example": "123 Industrial Ave, Business District, NY 10001",
+            "description": "Supplier address"
+          }
+        }
       }
     }
   }

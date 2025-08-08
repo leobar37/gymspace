@@ -28,7 +28,7 @@ const renewContractSchema = z.object({
     invalid_type_error: 'Fecha inválida',
   }),
   discountPercentage: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional().default('0'),
-  customPrice: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional(),
+  finalPrice: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional(),
 });
 
 type RenewContractFormData = z.infer<typeof renewContractSchema>;
@@ -55,13 +55,13 @@ export default function RenewContractScreen() {
     defaultValues: {
       startDate: new Date(),
       discountPercentage: '0',
-      customPrice: '',
+      finalPrice: '',
     },
   });
   
   // Watch form values for price calculation
   const watchedDiscount = watch('discountPercentage');
-  const watchedCustomPrice = watch('customPrice');
+  const watchedFinalPrice = watch('finalPrice');
   
   // Set default values when contract is loaded
   useEffect(() => {
@@ -85,10 +85,10 @@ export default function RenewContractScreen() {
   const calculateFinalPrice = () => {
     if (!selectedPlan || !selectedPlan.basePrice) return 0;
     
-    // If custom price is specified and valid, use it
-    const customPriceNum = watchedCustomPrice ? Number(watchedCustomPrice) : 0;
-    if (customPriceNum > 0) {
-      return customPriceNum;
+    // If final price is specified and valid, use it
+    const finalPriceNum = watchedFinalPrice ? Number(watchedFinalPrice) : 0;
+    if (finalPriceNum > 0) {
+      return finalPriceNum;
     }
     
     // Otherwise calculate based on plan price and discount
@@ -131,7 +131,7 @@ export default function RenewContractScreen() {
           data: {
             startDate: format(data.startDate, 'yyyy-MM-dd'),
             discountPercentage: Number(data.discountPercentage) || 0,
-            customPrice: data.customPrice ? Number(data.customPrice) : undefined,
+            finalPrice: data.finalPrice ? Number(data.finalPrice) : undefined,
           }
         },
         {
@@ -271,7 +271,7 @@ export default function RenewContractScreen() {
                 <View className="mb-4">
                   <FormInput
                     control={control}
-                    name="customPrice"
+                    name="finalPrice"
                     label="Precio personalizado (opcional)"
                     placeholder="0.00"
                     keyboardType="numeric"
@@ -297,7 +297,7 @@ export default function RenewContractScreen() {
                       <Text className="font-medium">{formatPrice(Number(selectedPlan.basePrice) || 0)}</Text>
                     </HStack>
                     
-                    {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
+                    {Number(watchedDiscount) > 0 && !watchedFinalPrice && (
                       <HStack className="justify-between">
                         <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                         <Text className="font-medium text-green-600">
@@ -306,11 +306,11 @@ export default function RenewContractScreen() {
                       </HStack>
                     )}
                     
-                    {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
+                    {watchedFinalPrice && Number(watchedFinalPrice) > 0 && (
                       <HStack className="justify-between">
                         <Text className="text-gray-600">Precio personalizado:</Text>
                         <Text className="font-medium text-blue-600">
-                          {formatPrice(Number(watchedCustomPrice))}
+                          {formatPrice(Number(watchedFinalPrice))}
                         </Text>
                       </HStack>
                     )}

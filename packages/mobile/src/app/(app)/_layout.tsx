@@ -7,13 +7,12 @@ import {
   HomeIcon,
   MenuIcon,
   UsersIcon,
-  PackageIcon,
   ShoppingCartIcon
 } from 'lucide-react-native';
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, View, ActivityIndicator } from 'react-native';
 
-export default function AppLayout() {
+function AppLayout() {
   const { isAuthenticated } = useGymSdk();
   const { session, isLoading: isSessionLoading, isError } = useCurrentSession();
   // If user is not authenticated, redirect to onboarding
@@ -21,9 +20,13 @@ export default function AppLayout() {
     return <Redirect href="/(onboarding)" />;
   }
 
-  // While loading session data, don't render anything
+  // While loading session data, show a loading indicator instead of null
   if (isSessionLoading) {
-    return null;
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#2563eb" />
+      </View>
+    );
   }
 
   // If session fetch failed or user doesn't have a valid session, redirect to onboarding
@@ -87,16 +90,6 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="plans"
-        options={{
-          title: 'Planes',
-          headerTitle: 'Planes de Membresía',
-          tabBarIcon: ({ color, size }) => (
-            <Icon as={PackageIcon} style={{ color, width: size, height: size }} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="inventory"
         options={{
           title: 'Inventario',
@@ -126,6 +119,23 @@ export default function AppLayout() {
           ),
         }}
       />
+      {/* Hidden tabs - accessible through More menu or navigation */}
+      <Tabs.Screen
+        name="plans"
+        options={{
+          href: null, // Hide from tab bar
+          headerTitle: 'Planes de Membresía',
+        }}
+      />
+      <Tabs.Screen
+        name="suppliers"
+        options={{
+          href: null, // Hide from tab bar
+          headerTitle: 'Proveedores',
+        }}
+      />
     </Tabs>
   );
 }
+
+export default React.memo(AppLayout);

@@ -44,11 +44,11 @@ export function SupplierCard({ supplier, onPress, showDetails = true }: Supplier
                 </Text>
               </HStack>
               
-              {supplier.contactName && (
+              {supplier.contactInfo && (
                 <HStack space="xs" className="items-center mt-1">
                   <Icon as={UserIcon} className="w-4 h-4 text-gray-500" />
                   <Text className="text-sm text-gray-700">
-                    {supplier.contactName}
+                    {supplier.contactInfo}
                   </Text>
                 </HStack>
               )}
@@ -91,26 +91,6 @@ export function SupplierCard({ supplier, onPress, showDetails = true }: Supplier
                 )}
               </VStack>
 
-              {/* Notes */}
-              {supplier.notes && (
-                <Text className="text-sm text-gray-500 bg-gray-50 p-2 rounded" numberOfLines={2}>
-                  {supplier.notes}
-                </Text>
-              )}
-
-              {/* Product Count (if available) */}
-              {supplier.products && supplier.products.length > 0 && (
-                <HStack className="justify-between items-center pt-2 border-t border-gray-100">
-                  <Text className="text-xs text-gray-500">
-                    Productos suministrados:
-                  </Text>
-                  <Badge variant="outline" size="sm">
-                    <BadgeText className="text-gray-700">
-                      {supplier.products.length} producto{supplier.products.length !== 1 ? 's' : ''}
-                    </BadgeText>
-                  </Badge>
-                </HStack>
-              )}
             </>
           )}
         </VStack>

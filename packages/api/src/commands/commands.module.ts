@@ -28,6 +28,7 @@ import { AssetsModule } from '../modules/assets/assets.module';
 import { OnboardingModule } from '../modules/onboarding/onboarding.module';
 import { SubscriptionsModule } from '../modules/subscriptions/subscriptions.module';
 import { DashboardModule } from '../modules/dashboard/dashboard.module';
+import { ProductsModule } from '../modules/products/products.module';
 
 // Configuration
 import configuration from '../config/configuration';
@@ -67,6 +68,7 @@ import validationSchema from '../config/validation.schema';
     OnboardingModule,
     SubscriptionsModule,
     DashboardModule,
+    ProductsModule,
   ],
   providers: [SetupDefaultUserCommand, TestCommand],
 })

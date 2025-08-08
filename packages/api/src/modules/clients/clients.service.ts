@@ -21,13 +21,11 @@ export class ClientsService {
    */
   async createClient(gymId: string, dto: CreateClientDto, userId: string): Promise<any> {
     // Check if gym can add more clients
-    console.log('pas here 1');
     const canAdd = await this.organizationsService.canAddClient(gymId);
     if (!canAdd) {
       throw new BusinessException('Client limit reached for this subscription plan');
     }
 
-    console.log('pas here 2');
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
@@ -75,6 +73,7 @@ export class ClientsService {
         documentType: dto.documentType || undefined,
         gymId,
         clientNumber,
+        name: dto.name.trim(),
         status: 'active',
         // Registration date is handled by createdAt
         createdByUserId: userId,

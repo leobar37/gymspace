@@ -12,12 +12,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { FormControl, FormControlLabel, FormControlLabelText, FormControlHelper, FormControlHelperText, FormControlError, FormControlErrorText } from '@/components/ui/form-control';
 import { 
   SaveIcon, 
-  XIcon,
-  BuildingIcon,
-  PhoneIcon,
-  MailIcon,
-  MapPinIcon,
-  UserIcon
+  XIcon
 } from 'lucide-react-native';
 import type { Supplier, CreateSupplierDto, UpdateSupplierDto } from '@gymspace/sdk';
 
@@ -30,16 +25,15 @@ interface SupplierFormProps {
 
 interface FormData {
   name: string;
-  contactName: string;
+  contactInfo: string;
   phone: string;
   email: string;
   address: string;
-  notes: string;
 }
 
 interface FormErrors {
   name?: string;
-  contactName?: string;
+  contactInfo?: string;
   phone?: string;
   email?: string;
 }
@@ -47,11 +41,10 @@ interface FormErrors {
 export function SupplierForm({ supplier, onSubmit, onCancel, isLoading = false }: SupplierFormProps) {
   const [formData, setFormData] = useState<FormData>({
     name: supplier?.name || '',
-    contactName: supplier?.contactName || '',
+    contactInfo: supplier?.contactInfo || '',
     phone: supplier?.phone || '',
     email: supplier?.email || '',
     address: supplier?.address || '',
-    notes: supplier?.notes || '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -78,8 +71,8 @@ export function SupplierForm({ supplier, onSubmit, onCancel, isLoading = false }
       newErrors.name = 'El nombre debe tener al menos 3 caracteres';
     }
 
-    if (!formData.contactName.trim()) {
-      newErrors.contactName = 'El nombre de contacto es requerido';
+    if (!formData.contactInfo.trim()) {
+      newErrors.contactInfo = 'La información de contacto es requerida';
     }
 
     if (!formData.phone.trim()) {
@@ -106,11 +99,10 @@ export function SupplierForm({ supplier, onSubmit, onCancel, isLoading = false }
     try {
       const data: CreateSupplierDto | UpdateSupplierDto = {
         name: formData.name.trim(),
-        contactName: formData.contactName.trim(),
+        contactInfo: formData.contactInfo.trim(),
         phone: formData.phone.trim(),
         email: formData.email.trim() || undefined,
         address: formData.address.trim() || undefined,
-        notes: formData.notes.trim() || undefined,
       };
 
       await onSubmit(data);
@@ -164,21 +156,21 @@ export function SupplierForm({ supplier, onSubmit, onCancel, isLoading = false }
               )}
             </FormControl>
 
-            {/* Contact Name */}
-            <FormControl isInvalid={!!errors.contactName}>
+            {/* Contact Info */}
+            <FormControl isInvalid={!!errors.contactInfo}>
               <FormControlLabel>
-                <FormControlLabelText>Nombre de Contacto *</FormControlLabelText>
+                <FormControlLabelText>Información de Contacto *</FormControlLabelText>
               </FormControlLabel>
               <Input>
                 <InputField
-                  placeholder="Ej: Juan Pérez"
-                  value={formData.contactName}
-                  onChangeText={(value) => handleFieldChange('contactName', value)}
+                  placeholder="Ej: Juan Pérez - Gerente de Ventas"
+                  value={formData.contactInfo}
+                  onChangeText={(value) => handleFieldChange('contactInfo', value)}
                 />
               </Input>
-              {errors.contactName && (
+              {errors.contactInfo && (
                 <FormControlError>
-                  <FormControlErrorText>{errors.contactName}</FormControlErrorText>
+                  <FormControlErrorText>{errors.contactInfo}</FormControlErrorText>
                 </FormControlError>
               )}
             </FormControl>
@@ -250,34 +242,6 @@ export function SupplierForm({ supplier, onSubmit, onCancel, isLoading = false }
           </VStack>
         </Card>
 
-        {/* Additional Information */}
-        <Card className="bg-white border border-gray-200">
-          <VStack space="md" className="p-4">
-            <Text className="text-lg font-semibold text-gray-900">
-              Información Adicional
-            </Text>
-
-            {/* Notes */}
-            <FormControl>
-              <FormControlLabel>
-                <FormControlLabelText>Notas</FormControlLabelText>
-              </FormControlLabel>
-              <Textarea>
-                <TextareaInput
-                  placeholder="Notas adicionales sobre el proveedor (opcional)"
-                  value={formData.notes}
-                  onChangeText={(value) => handleFieldChange('notes', value)}
-                  numberOfLines={4}
-                />
-              </Textarea>
-              <FormControlHelper>
-                <FormControlHelperText>
-                  Información adicional como términos de pago, horarios de atención, etc.
-                </FormControlHelperText>
-              </FormControlHelper>
-            </FormControl>
-          </VStack>
-        </Card>
 
         {/* Action Buttons */}
         <HStack space="md" className="pb-4">

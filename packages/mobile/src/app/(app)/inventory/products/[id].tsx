@@ -1,45 +1,44 @@
-import React, { useState } from 'react';
-import { ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
+import { ProductForm } from '@/components/inventory/ProductForm';
+import { AlertIcon, AlertText, Alert as UIAlert } from '@/components/ui/alert';
+import { Badge, BadgeText } from '@/components/ui/badge';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { View } from '@/components/ui/view';
+import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { Badge, BadgeText } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { Alert as UIAlert, AlertIcon, AlertText } from '@/components/ui/alert';
+import { Text } from '@/components/ui/text';
+import { View } from '@/components/ui/view';
+import { VStack } from '@/components/ui/vstack';
+import { useFormatPrice } from '@/config/ConfigContext';
+import { useDeleteProduct, useProduct, useUpdateProduct, useUpdateStock } from '@/hooks/useProducts';
+import type { UpdateProductDto } from '@gymspace/sdk';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
+  AlertTriangleIcon,
   ArrowLeftIcon,
-  EditIcon,
-  TrashIcon,
-  PackageIcon,
-  TagIcon,
   DollarSignIcon,
+  EditIcon,
   HashIcon,
   ImageIcon,
-  AlertTriangleIcon,
   InfoIcon,
+  MinusIcon,
+  PackageIcon,
   PlusIcon,
-  MinusIcon
+  TagIcon,
+  TrashIcon
 } from 'lucide-react-native';
-import { useLocalSearchParams, router } from 'expo-router';
-import { useProduct, useUpdateProduct, useDeleteProduct, useUpdateStock } from '@/hooks/useProducts';
-import { useFormatPrice } from '@/config/ConfigContext';
-import { ProductForm } from '@/components/inventory/ProductForm';
-import { QuantitySelector } from '@/components/inventory/QuantitySelector';
-import type { UpdateProductDto } from '@gymspace/sdk';
+import React, { useState } from 'react';
+import { Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const formatPrice = useFormatPrice();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [showStockAdjustment, setShowStockAdjustment] = useState(false);
   const [stockAdjustment, setStockAdjustment] = useState(0);
-  
+
   const { data: product, isLoading, isError, error, refetch } = useProduct(id!);
   const updateProductMutation = useUpdateProduct();
   const deleteProductMutation = useDeleteProduct();
@@ -51,12 +50,12 @@ export default function ProductDetailScreen() {
         id: id!,
         data,
       });
-      
+
       Alert.alert(
         'Producto actualizado',
         `El producto "${updatedProduct.name}" ha sido actualizado exitosamente.`
       );
-      
+
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating product:', error);
@@ -66,7 +65,7 @@ export default function ProductDetailScreen() {
 
   const handleDelete = () => {
     if (!product) return;
-    
+
     Alert.alert(
       'Eliminar producto',
       `¿Estás seguro de que quieres eliminar "${product.name}"? Esta acción no se puede deshacer.`,
@@ -95,9 +94,9 @@ export default function ProductDetailScreen() {
 
   const handleStockAdjustment = async () => {
     if (!product || stockAdjustment === 0) return;
-    
+
     const newStock = product.stock + stockAdjustment;
-    
+
     if (newStock < 0) {
       Alert.alert('Error', 'El stock no puede ser negativo.');
       return;
@@ -108,12 +107,12 @@ export default function ProductDetailScreen() {
         id: id!,
         quantity: newStock,
       });
-      
+
       Alert.alert(
         'Stock actualizado',
         `Stock actualizado a ${newStock} unidades.`
       );
-      
+
       setShowStockAdjustment(false);
       setStockAdjustment(0);
     } catch (error) {
@@ -149,7 +148,7 @@ export default function ProductDetailScreen() {
             <Icon as={ArrowLeftIcon} className="w-4 h-4 text-gray-600 mr-2" />
             <ButtonText className="text-gray-600">Volver</ButtonText>
           </Button>
-          
+
           <View className="flex-1 items-center justify-center">
             <UIAlert action="error" variant="solid" className="max-w-sm">
               <AlertIcon as={InfoIcon} />
@@ -220,7 +219,7 @@ export default function ProductDetailScreen() {
               <Icon as={ArrowLeftIcon} className="w-4 h-4 text-gray-600 mr-2" />
               <ButtonText className="text-gray-600">Volver</ButtonText>
             </Button>
-            
+
             <HStack space="xs">
               <Button
                 variant="outline"
@@ -230,7 +229,7 @@ export default function ProductDetailScreen() {
                 <Icon as={EditIcon} className="w-4 h-4 text-gray-600 mr-1" />
                 <ButtonText className="text-gray-600">Editar</ButtonText>
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -255,7 +254,7 @@ export default function ProductDetailScreen() {
                 <Icon as={PackageIcon} className="w-16 h-16 text-gray-400" />
               )}
             </View>
-            
+
             <VStack space="sm" className="p-4">
               {/* Product Name and Status */}
               <HStack className="justify-between items-start">
@@ -266,8 +265,8 @@ export default function ProductDetailScreen() {
                   {product.category && (
                     <HStack space="xs" className="items-center mt-1">
                       <Icon as={TagIcon} className="w-4 h-4 text-gray-500" />
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         size="sm"
                         style={{ backgroundColor: product.category.color + '20' || '#f3f4f6' }}
                       >
@@ -278,9 +277,9 @@ export default function ProductDetailScreen() {
                     </HStack>
                   )}
                 </VStack>
-                
+
                 <VStack space="xs" className="items-end">
-                  <Badge 
+                  <Badge
                     variant={isInactive ? "solid" : "outline"}
                     className={isInactive ? 'bg-gray-500' : 'bg-green-100 border-green-200'}
                   >
@@ -288,13 +287,13 @@ export default function ProductDetailScreen() {
                       {isInactive ? 'Inactivo' : 'Activo'}
                     </BadgeText>
                   </Badge>
-                  
+
                   {isOutOfStock && (
                     <Badge variant="solid" className="bg-red-500">
                       <BadgeText className="text-white">Sin Stock</BadgeText>
                     </Badge>
                   )}
-                  
+
                   {!isOutOfStock && isLowStock && (
                     <Badge variant="solid" className="bg-orange-500">
                       <BadgeText className="text-white">Stock Bajo</BadgeText>
@@ -323,19 +322,17 @@ export default function ProductDetailScreen() {
                 </Text>
               </VStack>
             </Card>
-            
+
             <Card className="flex-1 bg-white border border-gray-200">
               <VStack space="xs" className="p-4 items-center">
-                <Icon 
-                  as={HashIcon} 
-                  className={`w-8 h-8 ${
-                    isOutOfStock ? 'text-red-600' : isLowStock ? 'text-orange-600' : 'text-green-600'
-                  }`} 
+                <Icon
+                  as={HashIcon}
+                  className={`w-8 h-8 ${isOutOfStock ? 'text-red-600' : isLowStock ? 'text-orange-600' : 'text-green-600'
+                    }`}
                 />
                 <Text className="text-gray-600 text-sm">Stock</Text>
-                <Text className={`text-2xl font-bold ${
-                  isOutOfStock ? 'text-red-600' : isLowStock ? 'text-orange-600' : 'text-gray-900'
-                }`}>
+                <Text className={`text-2xl font-bold ${isOutOfStock ? 'text-red-600' : isLowStock ? 'text-orange-600' : 'text-gray-900'
+                  }`}>
                   {product.stock}
                 </Text>
               </VStack>
@@ -349,7 +346,7 @@ export default function ProductDetailScreen() {
                 <Text className="text-lg font-semibold text-gray-900">
                   Ajustar Stock
                 </Text>
-                
+
                 {!showStockAdjustment && (
                   <Button
                     variant="outline"
@@ -361,7 +358,7 @@ export default function ProductDetailScreen() {
                   </Button>
                 )}
               </HStack>
-              
+
               {showStockAdjustment && (
                 <VStack space="md">
                   <HStack space="md" className="items-center">
@@ -373,20 +370,19 @@ export default function ProductDetailScreen() {
                     >
                       <Icon as={MinusIcon} className="w-4 h-4 text-red-600" />
                     </Button>
-                    
+
                     <VStack className="flex-1 items-center">
                       <Text className="text-sm text-gray-600">Ajuste</Text>
-                      <Text className={`text-2xl font-bold ${
-                        stockAdjustment > 0 ? 'text-green-600' : 
-                        stockAdjustment < 0 ? 'text-red-600' : 'text-gray-900'
-                      }`}>
+                      <Text className={`text-2xl font-bold ${stockAdjustment > 0 ? 'text-green-600' :
+                          stockAdjustment < 0 ? 'text-red-600' : 'text-gray-900'
+                        }`}>
                         {stockAdjustment > 0 ? '+' : ''}{stockAdjustment}
                       </Text>
                       <Text className="text-sm text-gray-500">
                         Nuevo stock: {product.stock + stockAdjustment}
                       </Text>
                     </VStack>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -396,7 +392,7 @@ export default function ProductDetailScreen() {
                       <Icon as={PlusIcon} className="w-4 h-4 text-green-600" />
                     </Button>
                   </HStack>
-                  
+
                   <HStack space="md">
                     <Button
                       variant="outline"
@@ -408,7 +404,7 @@ export default function ProductDetailScreen() {
                     >
                       <ButtonText>Cancelar</ButtonText>
                     </Button>
-                    
+
                     <Button
                       className="flex-1 bg-blue-600"
                       onPress={handleStockAdjustment}
@@ -428,7 +424,7 @@ export default function ProductDetailScreen() {
                   </HStack>
                 </VStack>
               )}
-              
+
               {isLowStock && !showStockAdjustment && (
                 <HStack space="sm" className="items-center bg-orange-50 p-3 rounded-lg">
                   <Icon as={AlertTriangleIcon} className="w-5 h-5 text-orange-600" />
@@ -446,13 +442,13 @@ export default function ProductDetailScreen() {
               <Text className="text-lg font-semibold text-gray-900">
                 Información Adicional
               </Text>
-              
+
               <VStack space="sm">
                 <HStack className="justify-between">
                   <Text className="text-gray-600">ID del Producto</Text>
                   <Text className="text-gray-900 font-mono text-sm">{product.id}</Text>
                 </HStack>
-                
+
                 {product.createdAt && (
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Fecha de Creación</Text>
@@ -461,7 +457,7 @@ export default function ProductDetailScreen() {
                     </Text>
                   </HStack>
                 )}
-                
+
                 {product.updatedAt && (
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Última Actualización</Text>

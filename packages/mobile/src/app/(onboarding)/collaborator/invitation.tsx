@@ -8,7 +8,6 @@ import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useOnboardingStore } from '@/store/onboarding';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -20,7 +19,6 @@ import { ActivityIndicator, Pressable, SafeAreaView, View } from 'react-native';
 export default function InvitationValidationScreen() {
   const { token } = useLocalSearchParams<{ token?: string }>();
   const { setInvitationToken, setInvitationData } = useOnboardingStore();
-  const { sdk } = useGymSdk();
   const [invitationToken, setLocalInvitationToken] = useState(token || '');
 
   // Validate invitation query

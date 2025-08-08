@@ -48,7 +48,7 @@ export class GymSpaceSdk {
 
   constructor(config: GymSpaceConfig) {
     this.client = new ApiClient(config);
-
+    
     // Initialize resources
     this.auth = new AuthResource(this.client);
     this.organizations = new OrganizationsResource(this.client);

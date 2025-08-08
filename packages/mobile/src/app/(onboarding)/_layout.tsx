@@ -2,9 +2,6 @@ import React from 'react';
 import { Stack } from 'expo-router';
 
 export default function OnboardingLayout() {
-  // No authentication checks here to prevent redirect loops
-  // The app layout handles authentication and redirects appropriately
-  
   return (
     <Stack
       screenOptions={{

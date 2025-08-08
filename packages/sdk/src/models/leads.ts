@@ -1,4 +1,5 @@
-import { PaginationQueryDto, LeadStatus } from '@gymspace/shared';
+import { LeadStatus } from '@gymspace/shared';
+import { PaginationQueryDto } from '../types';
 
 export interface CreateLeadDto {
   name: string;
