@@ -161,14 +161,9 @@ export const Dashboard: React.FC = () => {
         }
       >
         <VStack className="p-4 gap-6">
-        <VStack className="gap-1">
-          <Heading className="text-2xl font-bold text-gray-900">
-            Panel de Control
-          </Heading>
-          <Text className="text-gray-600">
-            {`Resumen de tu gimnasio al ${new Date().toLocaleDateString()}`}
-          </Text>
-        </VStack>
+        <Text className="text-gray-600 mb-2">
+          {`Resumen de tu gimnasio al ${new Date().toLocaleDateString()}`}
+        </Text>
 
         <VStack className="gap-4">
           <View className="flex-row flex-wrap -mx-2">

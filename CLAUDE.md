@@ -14,6 +14,9 @@
 - Add the context as first parameter in the services, and pass the complete RequestContext, instead of 
 
 ## Preferences
-- always respond in eglish
-
+- always respond in english
+- use zustand to handle complicated state management
+- use TanStack Query for data fetching and caching
+- use tailwind for styling
+- never add styles to the button, use the default styles of the library and its variants
 

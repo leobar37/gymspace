@@ -15,7 +15,6 @@ export default function InventoryLayout() {
         headerTintColor: '#374151',
         animation: 'slide_from_right',
         headerBackTitle: ' ',
-        headerBackTitleVisible: false,
       }}
     >
       <Stack.Screen
@@ -29,7 +28,6 @@ export default function InventoryLayout() {
         options={{
           title: 'Productos',
           headerBackTitle: ' ',
-          headerBackTitleVisible: false,
         }}
       />
       <Stack.Screen
