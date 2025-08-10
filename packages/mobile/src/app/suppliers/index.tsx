@@ -61,7 +61,7 @@ export default function SuppliersScreen() {
   }, []);
 
   const handleAddSupplier = useCallback(() => {
-    router.push('/suppliers/new');
+    router.push('/suppliers/create');
   }, []);
 
   const handleLoadMore = useCallback(() => {
@@ -100,11 +100,11 @@ export default function SuppliersScreen() {
         
         <Button
           size="sm"
+          variant="solid"
           onPress={handleAddSupplier}
-          className="bg-blue-600"
         >
-          <Icon as={PlusIcon} className="w-4 h-4 text-white mr-2" />
-          <ButtonText className="text-white">Agregar</ButtonText>
+          <Icon as={PlusIcon} className="w-4 h-4 mr-2" />
+          <ButtonText>Agregar</ButtonText>
         </Button>
       </HStack>
 
@@ -126,7 +126,6 @@ export default function SuppliersScreen() {
           variant="outline"
           size="sm"
           onPress={handleSearch}
-          className="border-gray-300"
         >
           <Icon as={SearchIcon} className="w-4 h-4 text-gray-600" />
         </Button>
@@ -136,7 +135,6 @@ export default function SuppliersScreen() {
             variant="outline"
             size="sm"
             onPress={handleClearSearch}
-            className="border-red-300"
           >
             <ButtonText className="text-red-600">Limpiar</ButtonText>
           </Button>
@@ -193,10 +191,9 @@ export default function SuppliersScreen() {
           {!hasSearch && (
             <Button
               onPress={handleAddSupplier}
-              className="bg-blue-600 mt-4"
             >
-              <Icon as={PlusIcon} className="w-4 h-4 text-white mr-2" />
-              <ButtonText className="text-white">Agregar Proveedor</ButtonText>
+              <Icon as={PlusIcon} className="w-4 h-4 mr-2" />
+              <ButtonText>Agregar Proveedor</ButtonText>
             </Button>
           )}
         </VStack>
