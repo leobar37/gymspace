@@ -12,11 +12,11 @@ export class AssetsResource extends BaseResource {
   }): Promise<AssetResponseDto> {
     const formData = new FormData();
     formData.append('file', data.file);
-    
+
     if (data.description) {
       formData.append('description', data.description);
     }
-    
+
     if (data.metadata) {
       formData.append('metadata', JSON.stringify(data.metadata));
     }
@@ -39,8 +39,13 @@ export class AssetsResource extends BaseResource {
    * Get multiple assets by IDs
    */
   async findByIds(ids: string[]): Promise<AssetResponseDto[]> {
-    return await this.client.get<AssetResponseDto[]>('/assets/list/by-ids', {
-      params: { ids: ids.join(',') },
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+
+    // El segundo parámetro del get son los params directamente
+    return await this.client.get<AssetResponseDto[]>('/assets/by-ids', {
+      ids: ids.join(',')
     });
   }
 
@@ -62,9 +67,7 @@ export class AssetsResource extends BaseResource {
    * Get a signed download URL for an asset
    */
   async getDownloadUrl(id: string): Promise<{ url: string; filename: string }> {
-    return await this.client.get<{ url: string; filename: string }>(
-      `/assets/${id}/download-url`
-    );
+    return await this.client.get<{ url: string; filename: string }>(`/assets/${id}/download-url`);
   }
 
   /**
@@ -74,7 +77,7 @@ export class AssetsResource extends BaseResource {
     const response = await this.client.get<ArrayBuffer>(`/assets/${id}/download`, {
       responseType: 'arraybuffer',
     });
-    
+
     return new Blob([response]);
   }
 
@@ -93,7 +96,7 @@ export class AssetsResource extends BaseResource {
     const response = await this.client.get<ArrayBuffer>(`/assets/${id}/render`, {
       responseType: 'arraybuffer',
     });
-    
+
     return new Blob([response]);
   }
 }

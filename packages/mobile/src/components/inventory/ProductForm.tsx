@@ -12,12 +12,11 @@ import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
 import { SaveIcon, XIcon } from 'lucide-react-native';
 import { useFormatPrice } from '@/config/ConfigContext';
-import { useProductCategories } from '@/hooks/useProducts';
 import { AssetSelector } from '@/features/assets/components/AssetSelector';
+import { CategorySelector } from '@/features/categories/components/CategorySelector';
 import { FormProvider } from '@/components/forms/FormProvider';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
-import { FormSelect } from '@/components/forms/FormSelect';
 import { FormSwitch } from '@/components/forms/FormSwitch';
 import type { Product, CreateProductDto, UpdateProductDto } from '@gymspace/sdk';
 
@@ -55,7 +54,6 @@ interface ProductFormProps {
 
 export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) {
   const formatPrice = useFormatPrice();
-  const { data: categories, isLoading: loadingCategories } = useProductCategories();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Initialize react-hook-form with Zod resolver
@@ -106,17 +104,9 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
     }
   });
 
-  const isFormLoading = isLoading || isSubmitting || loadingCategories;
+  const isFormLoading = isLoading || isSubmitting;
   const priceValue = watch('price');
   const isActiveValue = watch('isActive');
-
-  // Prepare category options for the select
-  const categoryOptions = React.useMemo(() => {
-    return categories?.map(cat => ({
-      label: cat.name,
-      value: cat.id
-    })) || [];
-  }, [categories]);
 
   return (
     <FormProvider {...methods}>
@@ -147,13 +137,12 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
               />
 
               {/* Category */}
-              <FormSelect
+              <CategorySelector
                 name="categoryId"
                 control={control}
                 label="Categoría *"
                 placeholder="Selecciona una categoría"
-                options={categoryOptions}
-                enabled={!loadingCategories}
+                enabled={!isFormLoading}
               />
             </VStack>
           </Card>

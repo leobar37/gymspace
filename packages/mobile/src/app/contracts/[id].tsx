@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, Alert } from 'react-native';
+import { ScrollView, Alert, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
@@ -19,7 +18,8 @@ import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader
 import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton } from '@/components/ui/modal';
 import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator, ActionsheetItem, ActionsheetItemText } from '@/components/ui/actionsheet';
 import { Icon } from '@/components/ui/icon';
-import { EditIcon, XIcon, PauseIcon } from 'lucide-react-native';
+import { Pressable } from '@/components/ui/pressable';
+import { EditIcon, XIcon, PauseIcon, ArrowLeft, MoreVertical } from 'lucide-react-native';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
 import { useContractsController } from '@/features/contracts/controllers/contracts.controller';
@@ -170,19 +170,36 @@ export default function ContractDetailScreen() {
     <>
       <Stack.Screen
         options={{
-          title: `Contrato #${contract.contractNumber}`,
-          headerRight: () => (
-            <Button
-              onPress={() => setShowActionSheet(true)}
-              variant="link"
-              size="sm"
-            >
-              <ButtonText>Acciones</ButtonText>
-            </Button>
-          ),
+          headerShown: false,
         }}
       />
-      <SafeAreaView className="flex-1" edges={['bottom']}>
+      <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
+        {/* Custom Header */}
+        <HStack className="p-4 items-center justify-between border-b border-gray-200">
+          <HStack className="flex-1 items-center">
+            <Pressable
+              onPress={() => router.back()}
+              className="flex-row items-center"
+            >
+              <Icon as={ArrowLeft} size="md" className="text-gray-700 mr-2" />
+              <Text className="text-base text-blue-600">Contratos</Text>
+            </Pressable>
+          </HStack>
+          
+          <View className="flex-1 items-center">
+            <Text className="text-lg font-semibold">Contrato #{contract.contractNumber}</Text>
+          </View>
+          
+          <View className="flex-1 items-end">
+            <Pressable
+              onPress={() => setShowActionSheet(true)}
+              className="p-2"
+            >
+              <Icon as={MoreVertical} size="md" className="text-gray-700" />
+            </Pressable>
+          </View>
+        </HStack>
+        
         <ScrollView className="flex-1 bg-gray-50">
           <VStack className="p-4 gap-4">
             {/* Status Card */}

@@ -51,7 +51,7 @@ export function useAllAssets(enabled = true) {
     queryFn: async () => {
       return await sdk.sdk.assets.findAll();
     },
-    enabled,
+    enabled: enabled && !sdk.isLoading && sdk.isAuthenticated,
   });
 }
 
@@ -62,12 +62,24 @@ export function useAssetsByIds(assetIds: string[], enabled = true) {
   const sdk = useGymSdk();
 
   return useQuery({
-    queryKey: [...assetsKeys.lists(), { ids: assetIds }],
+    queryKey: ['assets', 'byIds', ...assetIds],
     queryFn: async () => {
-      if (!assetIds || assetIds.length === 0) return [];
-      return await sdk.sdk.assets.findByIds(assetIds);
+      if (!assetIds || assetIds.length === 0) {
+        return [];
+      }
+      
+      // Filter out any empty or invalid IDs
+      const validIds = assetIds.filter(id => id && typeof id === 'string' && id.trim().length > 0);
+      
+      if (validIds.length === 0) {
+        return [];
+      }
+      
+      return await sdk.sdk.assets.findByIds(validIds);
     },
-    enabled: enabled && assetIds && assetIds.length > 0,
+    enabled: Boolean(enabled && assetIds.length > 0 && !sdk.isLoading && sdk.isAuthenticated),
+    staleTime: 0, // Always refetch
+    gcTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 }
 
@@ -81,7 +93,7 @@ export function useAsset(assetId: string, enabled = true) {
     queryFn: async () => {
       return await sdk.sdk.assets.findOne(assetId);
     },
-    enabled: enabled && !!assetId,
+    enabled: enabled && !!assetId && !sdk.isLoading && sdk.isAuthenticated,
   });
 }
 
@@ -147,9 +159,19 @@ export function useDownloadAsset() {
 /**
  * Hook to get render URL for an asset (for preview)
  */
-export function useAssetRenderUrl(assetId: string) {
+export function useAssetRenderUrl(assetId: string | null | undefined) {
   const sdk = useGymSdk();
-  if (!assetId) return null;
+  
+  // Return null if no assetId provided
+  if (!assetId) {
+    return null;
+  }
+  
+  // Only generate URL if we have a valid ID and SDK is ready
+  if (sdk.isLoading || !sdk.isAuthenticated) {
+    return null;
+  }
+  
   return sdk.sdk.assets.getRenderUrl(assetId);
 }
 

@@ -51,12 +51,12 @@ export const ContractsList: React.FC<ContractsListProps> = ({
     if (onContractPress) {
       onContractPress(contractId);
     } else {
-      router.push(`/contracts/${contractId}`);
+      router.push(`../contracts/${contractId}`);
     }
   }, [onContractPress, router]);
 
   const handleAddPress = useCallback(() => {
-    router.push('/contracts/create');
+    router.push('../contracts/create');
   }, [router]);
 
   const getStatusBadge = (status: ContractStatus) => {

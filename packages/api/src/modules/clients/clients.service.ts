@@ -6,6 +6,7 @@ import { PaginationService } from '../../common/services/pagination.service';
 import { CreateClientDto, UpdateClientDto, SearchClientsDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Prisma } from '@prisma/client';
+import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
 export class ClientsService {
@@ -19,7 +20,10 @@ export class ClientsService {
   /**
    * Create a new client (CU-006)
    */
-  async createClient(gymId: string, dto: CreateClientDto, userId: string): Promise<any> {
+  async createClient(ctx: RequestContext, dto: CreateClientDto): Promise<any> {
+    const gymId = ctx.getGymId()!;
+    const userId = ctx.getUserId()!;
+    
     // Check if gym can add more clients
     const canAdd = await this.organizationsService.canAddClient(gymId);
     if (!canAdd) {
@@ -94,7 +98,9 @@ export class ClientsService {
   /**
    * Update client information (CU-007)
    */
-  async updateClient(clientId: string, dto: UpdateClientDto, userId: string): Promise<any> {
+  async updateClient(ctx: RequestContext, clientId: string, dto: UpdateClientDto): Promise<any> {
+    const userId = ctx.getUserId()!;
+    
     // Verify client exists and user has access
     const client = await this.prismaService.gymClient.findFirst({
       where: {
@@ -165,7 +171,9 @@ export class ClientsService {
   /**
    * Get client by ID
    */
-  async getClient(clientId: string, userId: string): Promise<any> {
+  async getClient(ctx: RequestContext, clientId: string): Promise<any> {
+    const userId = ctx.getUserId()!;
+    
     const client = await this.prismaService.gymClient.findFirst({
       where: {
         id: clientId,
@@ -217,7 +225,10 @@ export class ClientsService {
   /**
    * Search clients in a gym
    */
-  async searchClients(gymId: string, dto: SearchClientsDto, userId: string) {
+  async searchClients(ctx: RequestContext, dto: SearchClientsDto) {
+    const gymId = ctx.getGymId()!;
+    const userId = ctx.getUserId()!;
+    
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
@@ -316,7 +327,9 @@ export class ClientsService {
   /**
    * Toggle client status (activate/deactivate)
    */
-  async toggleClientStatus(clientId: string, userId: string): Promise<any> {
+  async toggleClientStatus(ctx: RequestContext, clientId: string): Promise<any> {
+    const userId = ctx.getUserId()!;
+    
     const client = await this.prismaService.gymClient.findFirst({
       where: {
         id: clientId,
@@ -364,8 +377,8 @@ export class ClientsService {
   /**
    * Get client statistics
    */
-  async getClientStats(clientId: string, userId: string) {
-    const client = await this.getClient(clientId, userId);
+  async getClientStats(ctx: RequestContext, clientId: string) {
+    const client = await this.getClient(ctx, clientId);
 
     const [totalCheckIns, monthlyCheckIns, totalEvaluations, activeContracts, totalSpent] =
       await Promise.all([

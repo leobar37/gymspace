@@ -5,6 +5,7 @@ import { PrismaService } from '../core/database/prisma.service';
 import { OnboardingService } from '../modules/onboarding/onboarding.service';
 import { ProductsService } from '../modules/products/products.service';
 import { ClientsService } from '../modules/clients/clients.service';
+import { RequestContext } from '../common/services/request-context.service';
 
 @Command({
   name: 'setup-user',
@@ -116,16 +117,26 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       // Step 3: Update gym settings (minimal setup for demo)
       console.log('\n⚙️  Configuring gym settings...');
-      const context = {
-        user: { id: onboardingResult.user.id, userType: UserType.OWNER },
-        getUserId: () => onboardingResult.user.id,
-        getUser: () => ({ id: onboardingResult.user.id, userType: UserType.OWNER }),
-        getGymId: () => onboardingResult.gym.id,
-        getCache: () => null,
-        getPermissions: () => [],
-      };
+      
+      // Create a proper RequestContext for service calls
+      const context = new RequestContext()
+        .forUser({
+          id: onboardingResult.user.id,
+          email: onboardingResult.user.email,
+          name: onboardingResult.user.name,
+          userType: UserType.OWNER,
+        } as any)
+        .withGym({
+          id: onboardingResult.gym.id,
+          name: onboardingResult.gym.name,
+        } as any)
+        .withOrganization({
+          id: onboardingResult.organization.id,
+          name: onboardingResult.organization.name,
+        } as any)
+        .withPermissions([]);
 
-      await this.onboardingService.updateGymSettings(context as any, {
+      await this.onboardingService.updateGymSettings(context, {
         gymId: onboardingResult.gym.id,
         name: 'Gimnasio Elite Lima',
         address: 'Av. Javier Prado Este 4200',
@@ -165,7 +176,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       // Step 4: Configure features
       console.log('\n🎨 Configuring gym features...');
-      await this.onboardingService.configureFeatures(context as any, {
+      await this.onboardingService.configureFeatures(context, {
         gymId: onboardingResult.gym.id,
         clientManagement: {
           enabled: true,
@@ -213,7 +224,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       // Step 5: Complete guided setup
       console.log('\n🏁 Completing guided setup...');
-      await this.onboardingService.completeGuidedSetup(context as any, {
+      await this.onboardingService.completeGuidedSetup(context, {
         gymId: onboardingResult.gym.id,
       });
 
@@ -271,10 +282,11 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       for (const product of defaultProducts) {
         try {
+          // Remove currency from product data as it's not part of the Product model
+          const { currency, ...productData } = product;
           await this.productsService.createProduct(
-            onboardingResult.gym.id,
-            product,
-            onboardingResult.user.id,
+            context,
+            productData as any,
           );
           console.log(`✅ Producto creado: ${product.name}`);
         } catch (error) {
@@ -340,9 +352,8 @@ export class SetupDefaultUserCommand extends CommandRunner {
       for (const client of defaultClients) {
         try {
           await this.clientsService.createClient(
-            onboardingResult.gym.id,
+            context,
             client,
-            onboardingResult.user.id,
           );
           console.log(`✅ Cliente creado: ${client.name}`);
         } catch (error) {

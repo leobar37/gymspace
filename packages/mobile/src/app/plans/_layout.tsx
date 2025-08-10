@@ -4,12 +4,6 @@ export default function PlansLayout() {
   return (
     <Stack>
       <Stack.Screen
-        name="index"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
         name="create"
         options={{
           title: 'Crear Plan',

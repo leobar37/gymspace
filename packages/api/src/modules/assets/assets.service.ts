@@ -25,6 +25,7 @@ export class AssetsService {
     dto: UploadAssetDto,
   ): Promise<AssetResponseDto> {
     const userId = context.getUserId();
+    const gymId = context.getGymId();
 
     // Generate unique filename
     const fileExtension = file.filename.split('.').pop();
@@ -38,6 +39,7 @@ export class AssetsService {
         metadata: {
           originalName: file.filename,
           uploadedBy: userId,
+          gymId: gymId,
           ...(dto.metadata || {}),
         },
       });
@@ -47,7 +49,7 @@ export class AssetsService {
         data: {
           filename: uniqueFilename,
           originalName: file.filename,
-          filePath,
+          filePath: filePath,
           fileSize: file.size,
           mimeType: file.mimetype,
           description: dto.description,
@@ -55,6 +57,7 @@ export class AssetsService {
           status: AssetStatus.active,
           uploadedByUserId: userId,
           createdByUserId: userId,
+          gymId: gymId,  // IMPORTANTE: Asociar el asset al gimnasio
         },
       });
 
@@ -72,9 +75,30 @@ export class AssetsService {
   }
 
   /**
+   * Get all assets for the current context
+   */
+  async findAll(context: IRequestContext): Promise<AssetResponseDto[]> {
+    const gymId = context.getGymId();
+    
+    const assets = await this.prisma.asset.findMany({
+      where: {
+        gymId: gymId,
+        status: AssetStatus.active,
+        deletedAt: null,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return assets.map((asset) => this.mapToDto(asset));
+  }
+
+  /**
    * Get a single asset by ID
    */
   async findOne(context: IRequestContext, id: string): Promise<AssetResponseDto> {
+    // Assets have unique IDs, so we don't need to filter by gymId
     const asset = await this.prisma.asset.findFirst({
       where: {
         id,
@@ -92,12 +116,18 @@ export class AssetsService {
    * Get multiple assets by IDs
    */
   async findByIds(context: IRequestContext, ids: string[]): Promise<AssetResponseDto[]> {
+    // Get the gym ID from context
+    const gymId = context.getGymId();
+    
+    const whereClause: any = {
+      id: { in: ids },
+      gymId: gymId,  // Filter by gymId
+      status: AssetStatus.active,
+      deletedAt: null,
+    };
+    
     const assets = await this.prisma.asset.findMany({
-      where: {
-        id: { in: ids },
-        status: AssetStatus.active,
-        deletedAt: null,
-      },
+      where: whereClause,
     });
 
     return assets.map((asset) => this.mapToDto(asset));
@@ -150,7 +180,7 @@ export class AssetsService {
   async delete(context: IRequestContext, id: string): Promise<void> {
     const userId = context.getUserId();
 
-    const asset = await this.findOne(context, id);
+    await this.findOne(context, id);  // Validate gym ownership
 
     // Soft delete in database
     await this.prisma.asset.update({

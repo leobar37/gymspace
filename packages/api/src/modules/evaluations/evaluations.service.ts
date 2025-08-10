@@ -5,6 +5,7 @@ import { ClientsService } from '../clients/clients.service';
 import { CreateEvaluationDto, UpdateEvaluationDto } from './dto';
 import { ResourceNotFoundException } from '../../common/exceptions';
 import { Evaluation } from '@prisma/client';
+import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
 export class EvaluationsService {
@@ -240,7 +241,9 @@ export class EvaluationsService {
    */
   async getClientEvaluations(clientId: string, userId: string, limit = 12) {
     // Verify access through client
-    await this.clientsService.getClient(clientId, userId);
+    // Create a RequestContext for the ClientsService call
+    const requestContext = new RequestContext().forUser({ id: userId } as any);
+    await this.clientsService.getClient(requestContext, clientId);
 
     const evaluations = await this.prismaService.evaluation.findMany({
       where: { gymClientId: clientId },

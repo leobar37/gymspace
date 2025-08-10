@@ -74,38 +74,49 @@ function AppLayout() {
         options={{
           title: 'Inicio',
           headerTitle: 'Panel de Control',
-          tabBarIcon: ({ color, size }) => (
-            <Icon as={HomeIcon} style={{ color, width: size, height: size }} />
+          tabBarIcon: ({ color }) => (
+            <Icon as={HomeIcon} className="w-6 h-6" style={{ color }} />
           ),
         }}
       />
       <Tabs.Screen
-        name="../clients"
+        name="clients"
         options={{
           title: 'Clientes',
           headerTitle: 'Clientes',
-          tabBarIcon: ({ color, size }) => (
-            <Icon as={UsersIcon} style={{ color, width: size, height: size }} />
+          tabBarIcon: ({ color }) => (
+            <Icon as={UsersIcon} className="w-6 h-6" style={{ color }} />
           ),
         }}
       />
       <Tabs.Screen
-        name="../inventory"
+        name="inventory"
         options={{
           title: 'Inventario',
           headerTitle: 'Inventario y Ventas',
-          tabBarIcon: ({ color, size }) => (
-            <Icon as={ShoppingCartIcon} style={{ color, width: size, height: size }} />
+          tabBarIcon: ({ color }) => (
+            <Icon as={ShoppingCartIcon} className="w-6 h-6" style={{ color }} />
           ),
         }}
       />
       <Tabs.Screen
-        name="../contracts"
+        name="contracts"
         options={{
           title: 'Contratos',
           headerTitle: 'Contratos',
-          tabBarIcon: ({ color, size }) => (
-            <Icon as={FileTextIcon} style={{ color, width: size, height: size }} />
+          tabBarIcon: ({ color }) => (
+            <Icon as={FileTextIcon} className="w-6 h-6" style={{ color }} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="plans"
+        options={{
+          title: 'Planes',
+          headerTitle: 'Planes',
+          tabBarIcon: ({ color }) => (
+            <Icon as={FileTextIcon} className="w-6 h-6" style={{ color }} />
           ),
         }}
       />
@@ -114,28 +125,13 @@ function AppLayout() {
         options={{
           title: 'Más',
           headerTitle: 'Más opciones',
-          tabBarIcon: ({ color, size }) => (
-            <Icon as={MenuIcon} style={{ color, width: size, height: size }} />
+          tabBarIcon: ({ color }) => (
+            <Icon as={MenuIcon} className="w-6 h-6" style={{ color }} />
           ),
-        }}
-      />
-      {/* Hidden tabs - accessible through More menu or navigation */}
-      <Tabs.Screen
-        name="plans"
-        options={{
-          href: null, // Hide from tab bar
-          headerTitle: 'Planes de Membresía',
-        }}
-      />
-      <Tabs.Screen
-        name="suppliers"
-        options={{
-          href: null, // Hide from tab bar
-          headerTitle: 'Proveedores',
         }}
       />
     </Tabs>
   );
 }
 
-export default React.memo(AppLayout);
+export default AppLayout

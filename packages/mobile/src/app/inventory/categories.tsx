@@ -119,7 +119,7 @@ export default function CategoriesScreen() {
         <VStack space="md" className="p-4">
           {/* Back Button */}
           <Pressable 
-            onPress={() => router.push('/inventory')}
+            onPress={() => router.back()}
             className="flex-row items-center mb-2"
           >
             <Icon as={ArrowLeftIcon} className="w-5 h-5 text-gray-700 mr-2" />

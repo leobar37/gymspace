@@ -286,6 +286,7 @@ model Gym {
     evaluations     Evaluation[]
     contracts       Contract[]
     leads           Lead[]
+    assets          Asset[]
     productCategories ProductCategory[]
     products        Product[]
     suppliers       Supplier[]
@@ -505,6 +506,7 @@ model Asset {
     filePath         String      @map("file_path")
     fileSize         Int         @map("file_size")
     mimeType         String      @map("mime_type")
+    gymId            String      @map("gym_id")
     uploadedByUserId String      @map("uploaded_by_user_id")
     metadata         Json?
     status           AssetStatus
@@ -515,7 +517,8 @@ model Asset {
     updatedAt        DateTime    @updatedAt @map("updated_at")
     deletedAt        DateTime?   @map("deleted_at")
 
-    // Relations - only user relations
+    // Relations
+    gym        Gym   @relation(fields: [gymId], references: [id])
     uploadedBy User  @relation("AssetUploadedBy", fields: [uploadedByUserId], references: [id])
     createdBy  User  @relation("AssetCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy  User? @relation("AssetUpdatedBy", fields: [updatedByUserId], references: [id])

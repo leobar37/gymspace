@@ -1,27 +1,25 @@
-import React, { useState, useCallback } from 'react';
-import { FlatList, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { View } from '@/components/ui/view';
-import { Spinner } from '@/components/ui/spinner';
-import { Icon } from '@/components/ui/icon';
-import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
-import { Button, ButtonText } from '@/components/ui/button';
-import { 
-  ShoppingCartIcon, 
-  InfoIcon,
-  TrendingUpIcon,
-  DollarSignIcon,
-  CalendarIcon 
-} from 'lucide-react-native';
-import { router } from 'expo-router';
-import { useSales } from '@/hooks/useSales';
-import { useFormatPrice } from '@/config/ConfigContext';
 import { SaleHistoryItem } from '@/components/inventory/SaleHistoryItem';
 import { SalesFilters } from '@/components/inventory/SalesFilters';
+import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
+import { Button, ButtonText } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { View } from '@/components/ui/view';
+import { VStack } from '@/components/ui/vstack';
+import { useFormatPrice } from '@/config/ConfigContext';
+import { useSales } from '@/hooks/useSales';
 import type { Sale, SearchSalesParams } from '@gymspace/sdk';
+import { router } from 'expo-router';
+import {
+  DollarSignIcon,
+  InfoIcon,
+  ShoppingCartIcon
+} from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import { FlatList, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SalesHistoryScreen() {
   const formatPrice = useFormatPrice();

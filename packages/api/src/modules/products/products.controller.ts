@@ -28,7 +28,7 @@ export class ProductsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 409, description: 'Category name already exists' })
   async createCategory(@Body() dto: CreateProductCategoryDto, @AppCtxt() ctx: RequestContext) {
-    return await this.productsService.createCategory(ctx.getGymId()!, dto, ctx.getUserId()!);
+    return await this.productsService.createCategory(ctx, dto);
   }
 
   @Get('categories')
@@ -36,7 +36,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Get all product categories' })
   @ApiResponse({ status: 200, description: 'List of categories' })
   async getCategories(@AppCtxt() ctx: RequestContext) {
-    return await this.productsService.getCategories(ctx.getGymId()!);
+    return await this.productsService.getCategories(ctx);
   }
 
   @Put('categories/:id')
@@ -49,7 +49,7 @@ export class ProductsController {
     @Body() dto: UpdateProductCategoryDto,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.productsService.updateCategory(id, dto, ctx.getUserId()!);
+    return await this.productsService.updateCategory(ctx, id, dto);
   }
 
   @Delete('categories/:id')
@@ -59,7 +59,7 @@ export class ProductsController {
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 409, description: 'Cannot delete category with products' })
   async deleteCategory(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.productsService.deleteCategory(id, ctx.getUserId()!);
+    return await this.productsService.deleteCategory(ctx, id);
   }
 
   // Product Endpoints
@@ -70,7 +70,7 @@ export class ProductsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 409, description: 'Product name already exists' })
   async createProduct(@Body() dto: CreateProductDto, @AppCtxt() ctx: RequestContext) {
-    return await this.productsService.createProduct(ctx.getGymId()!, dto, ctx.getUserId()!);
+    return await this.productsService.createProduct(ctx, dto);
   }
 
   @Get()
@@ -78,7 +78,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Search products with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Paginated list of products' })
   async searchProducts(@Query() dto: SearchProductsDto, @AppCtxt() ctx: RequestContext) {
-    return await this.productsService.searchProducts(ctx.getGymId()!, dto, ctx.getUserId()!);
+    return await this.productsService.searchProducts(ctx, dto);
   }
 
   @Get('low-stock')
@@ -90,7 +90,7 @@ export class ProductsController {
     @AppCtxt() ctx: RequestContext,
   ) {
     const thresholdNumber = parseInt(threshold, 10) || 10;
-    return await this.productsService.getLowStockProducts(ctx.getGymId()!, thresholdNumber);
+    return await this.productsService.getLowStockProducts(ctx, thresholdNumber);
   }
 
   @Get(':id')
@@ -99,7 +99,7 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'Product details' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async getProduct(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.productsService.getProduct(id, ctx.getUserId());
+    return await this.productsService.getProduct(ctx, id);
   }
 
   @Put(':id')
@@ -113,7 +113,7 @@ export class ProductsController {
     @Body() dto: UpdateProductDto,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.productsService.updateProduct(id, dto, ctx.getUserId()!);
+    return await this.productsService.updateProduct(ctx, id, dto);
   }
 
   @Delete(':id')
@@ -122,7 +122,7 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'Product deleted successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async deleteProduct(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.productsService.deleteProduct(id, ctx.getUserId()!);
+    return await this.productsService.deleteProduct(ctx, id);
   }
 
   @Patch(':id/toggle-status')
@@ -131,7 +131,7 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'Product status toggled successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async toggleProductStatus(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.productsService.toggleProductStatus(id, ctx.getUserId()!);
+    return await this.productsService.toggleProductStatus(ctx, id);
   }
 
   @Patch(':id/stock')
@@ -144,6 +144,6 @@ export class ProductsController {
     @Body() dto: UpdateStockDto,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.productsService.updateStock(id, dto.quantity, ctx.getUserId()!);
+    return await this.productsService.updateStock(ctx, id, dto.quantity);
   }
 }

@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import React from 'react';
 
-export default function ContractsLayout() {
+export default function ClientsLayout() {
   return (
     <Stack
       screenOptions={{
@@ -26,25 +26,19 @@ export default function ContractsLayout() {
       <Stack.Screen
         name="create"
         options={{
-          title: 'Nuevo Contrato',
+          title: 'Nuevo Cliente',
         }}
       />
       <Stack.Screen
         name="[id]"
         options={{
-          title: 'Detalle del Contrato',
+          title: 'Detalle del Cliente',
         }}
       />
       <Stack.Screen
         name="[id]/edit"
         options={{
-          title: 'Editar Contrato',
-        }}
-      />
-      <Stack.Screen
-        name="[id]/renew"
-        options={{
-          title: 'Renovar Contrato',
+          title: 'Editar Cliente',
         }}
       />
     </Stack>

@@ -11,6 +11,7 @@ interface GymSdkContextValue {
   setAuthToken: (token: string | null) => Promise<void>;
   setCurrentGymId: (gymId: string | null) => Promise<void>;
   clearAuth: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const GymSdkContext = createContext<GymSdkContextValue | undefined>(undefined);
@@ -107,15 +108,12 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
       setAuthToken,
       setCurrentGymId,
       clearAuth,
+      isLoading,
     }),
-    [sdk, authToken, currentGymId]
+    [sdk, authToken, currentGymId, isLoading]
   );
 
-  // Don't render children until auth data is loaded
-  if (isLoading) {
-    return null;
-  }
-
+  // Always provide the context, even while loading
   return <GymSdkContext.Provider value={value}>{children}</GymSdkContext.Provider>;
 }
 

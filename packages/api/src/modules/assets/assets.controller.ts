@@ -4,7 +4,6 @@ import {
   Get,
   Delete,
   Param,
-  Body,
   ParseUUIDPipe,
   Res,
   Req,
@@ -24,6 +23,7 @@ import { AssetsService } from './assets.service';
 import { UploadAssetDto, AssetResponseDto } from './dto';
 import { Allow } from '../../common/decorators/allow.decorator';
 import { AppCtxt } from '../../common/decorators/request-context.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { IRequestContext } from '@gymspace/shared';
 import { PERMISSIONS } from '@gymspace/shared';
 import { parseMultipartUpload, parseUploadDto } from './utils/multipart.util';
@@ -78,6 +78,43 @@ export class AssetsController {
     }
   }
 
+  @Get()
+  @Allow(PERMISSIONS.ASSETS_READ)
+  @ApiOperation({ summary: 'Get all assets for the current gym' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all assets',
+    type: [AssetResponseDto],
+  })
+  async findAll(@AppCtxt() context: IRequestContext) {
+    return this.assetsService.findAll(context);
+  }
+
+  @Get('by-ids')
+  @Allow(PERMISSIONS.ASSETS_READ)
+  @ApiOperation({ summary: 'Get multiple assets by IDs' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of assets',
+    type: [AssetResponseDto],
+  })
+  async findByIds(@Query('ids') ids: string | string[], @AppCtxt() context: IRequestContext) {
+    // Return empty array if no IDs provided
+    if (!ids) {
+      return [];
+    }
+
+    // Handle both single ID and array of IDs
+    const assetIds = Array.isArray(ids) ? ids : ids.split(',').filter((id) => id.trim());
+
+    // Return empty array if no valid IDs after filtering
+    if (assetIds.length === 0) {
+      return [];
+    }
+
+    return this.assetsService.findByIds(context, assetIds);
+  }
+
   @Get(':id')
   @Allow(PERMISSIONS.ASSETS_READ)
   @ApiOperation({ summary: 'Get asset by ID' })
@@ -88,23 +125,6 @@ export class AssetsController {
   })
   async findOne(@Param('id', ParseUUIDPipe) id: string, @AppCtxt() context: IRequestContext) {
     return this.assetsService.findOne(context, id);
-  }
-
-  @Get('list/by-ids')
-  @Allow(PERMISSIONS.ASSETS_READ)
-  @ApiOperation({ summary: 'Get multiple assets by IDs' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of assets',
-    type: [AssetResponseDto],
-  })
-  async findByIds(
-    @Query('ids') ids: string | string[],
-    @AppCtxt() context: IRequestContext
-  ) {
-    // Handle both single ID and array of IDs
-    const assetIds = Array.isArray(ids) ? ids : ids.split(',');
-    return this.assetsService.findByIds(context, assetIds);
   }
 
   @Get(':id/download-url')
@@ -163,22 +183,21 @@ export class AssetsController {
   }
 
   @Get(':id/render')
-  @Allow(PERMISSIONS.ASSETS_READ)
+  @Public()
   @ApiOperation({ summary: 'Render/serve asset file directly (for preview)' })
   @ApiResponse({
     status: 200,
     description: 'File stream for rendering',
   })
-  async render(
-    @Param('id', ParseUUIDPipe) id: string,
-    @AppCtxt() context: IRequestContext,
-    @Res() res: FastifyReply,
-  ) {
+  async render(@Param('id', ParseUUIDPipe) id: string, @Res() res: FastifyReply) {
+    // Create a minimal context for public rendering
+    const context = { getUserId: () => 'public' } as IRequestContext;
+
     const { stream, filename, mimeType, fileSize } = await this.assetsService.serve(context, id);
 
     // Set appropriate headers for rendering in browser
     const contentDisposition = this.getContentDisposition(mimeType, filename);
-    
+
     res.headers({
       'Content-Type': mimeType,
       'Content-Disposition': contentDisposition,
@@ -194,18 +213,10 @@ export class AssetsController {
    */
   private getContentDisposition(mimeType: string, filename: string): string {
     // Images, PDFs, and videos should be displayed inline
-    const inlineTypes = [
-      'image/',
-      'application/pdf',
-      'video/',
-      'text/plain',
-      'text/html',
-    ];
+    const inlineTypes = ['image/', 'application/pdf', 'video/', 'text/plain', 'text/html'];
 
-    const shouldInline = inlineTypes.some(type => mimeType.startsWith(type));
-    
-    return shouldInline 
-      ? `inline; filename="${filename}"`
-      : `attachment; filename="${filename}"`;
+    const shouldInline = inlineTypes.some((type) => mimeType.startsWith(type));
+
+    return shouldInline ? `inline; filename="${filename}"` : `attachment; filename="${filename}"`;
   }
 }

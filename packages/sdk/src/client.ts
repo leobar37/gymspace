@@ -135,9 +135,6 @@ export class ApiClient {
     options?: RequestOptions & AxiosRequestConfig,
   ): Promise<T> {
     const { headers, ...axiosConfig } = options || {};
-    console.log({
-      data,
-    });
 
     const config: AxiosRequestConfig = {
       method,

@@ -1677,6 +1677,42 @@ paths:
         - Assets
       security:
         - bearer: []
+  /api/v1/assets:
+    get:
+      operationId: AssetsController_findAll
+      summary: Get all assets for the current gym
+      parameters: []
+      responses:
+        '200':
+          description: List of all assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetResponseDto'
+      tags:
+        - Assets
+      security:
+        - bearer: []
+  /api/v1/assets/by-ids:
+    get:
+      operationId: AssetsController_findByIds
+      summary: Get multiple assets by IDs
+      parameters: []
+      responses:
+        '200':
+          description: List of assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetResponseDto'
+      tags:
+        - Assets
+      security:
+        - bearer: []
   /api/v1/assets/{id}:
     get:
       operationId: AssetsController_findOne
@@ -1710,24 +1746,6 @@ paths:
       responses:
         '200':
           description: Asset deleted successfully
-      tags:
-        - Assets
-      security:
-        - bearer: []
-  /api/v1/assets/list/by-ids:
-    get:
-      operationId: AssetsController_findByIds
-      summary: Get multiple assets by IDs
-      parameters: []
-      responses:
-        '200':
-          description: List of assets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AssetResponseDto'
       tags:
         - Assets
       security:

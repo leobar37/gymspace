@@ -10,8 +10,8 @@ import { Text } from '@/components/ui/text';
 import { View } from '@/components/ui/view';
 import { VStack } from '@/components/ui/vstack';
 import { useFormatPrice } from '@/config/ConfigContext';
-import { useDeleteProduct, useProduct, useUpdateProduct, useUpdateStock } from '@/hooks/useProducts';
 import { AssetPreview } from '@/features/assets/components/AssetPreview';
+import { useDeleteProduct, useProduct, useUpdateProduct, useUpdateStock } from '@/hooks/useProducts';
 import type { UpdateProductDto } from '@gymspace/sdk';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
@@ -20,7 +20,6 @@ import {
   DollarSignIcon,
   EditIcon,
   HashIcon,
-  ImageIcon,
   InfoIcon,
   MinusIcon,
   PackageIcon,

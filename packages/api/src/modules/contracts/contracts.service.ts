@@ -7,6 +7,7 @@ import { CreateContractDto, RenewContractDto, FreezeContractDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Contract, Prisma } from '@prisma/client';
 import { ContractStatus, IRequestContext } from '@gymspace/shared';
+import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
 export class ContractsService {
@@ -509,7 +510,9 @@ export class ContractsService {
     const userId = context.getUserId();
     
     // Verify access through client
-    await this.clientsService.getClient(clientId, userId);
+    // Create a RequestContext for the ClientsService call
+    const requestContext = new RequestContext().forUser({ id: userId } as any);
+    await this.clientsService.getClient(requestContext, clientId);
 
     const contracts = await this.prismaService.contract.findMany({
       where: { gymClientId: clientId },

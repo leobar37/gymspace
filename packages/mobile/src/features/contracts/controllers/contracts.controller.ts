@@ -27,6 +27,7 @@ export interface ContractFormData {
   discountPercentage?: number;
   finalPrice?: number;
   metadata?: Record<string, any>;
+  attachmentIds?: string[];
 }
 
 export interface RenewFormData {

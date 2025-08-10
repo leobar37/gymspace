@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { PaginationService } from '../../common/services/pagination.service';
-import { 
-  CreateProductDto, 
-  UpdateProductDto, 
-  SearchProductsDto, 
-  CreateProductCategoryDto, 
-  UpdateProductCategoryDto 
+import {
+  CreateProductDto,
+  UpdateProductDto,
+  SearchProductsDto,
+  CreateProductCategoryDto,
+  UpdateProductCategoryDto,
 } from './dto';
 import { ResourceNotFoundException, BusinessException } from '../../common/exceptions';
 import { Prisma, ProductStatus } from '@prisma/client';
+import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
 export class ProductsService {
@@ -19,7 +20,10 @@ export class ProductsService {
   ) {}
 
   // Product Categories Methods
-  async createCategory(gymId: string, dto: CreateProductCategoryDto, userId: string) {
+  async createCategory(ctx: RequestContext, dto: CreateProductCategoryDto) {
+    const gymId = ctx.getGymId()!;
+    const userId = ctx.getUserId()!;
+    
     // Check for duplicate category name within gym
     const existingCategory = await this.prisma.productCategory.findFirst({
       where: {
@@ -42,7 +46,9 @@ export class ProductsService {
     });
   }
 
-  async updateCategory(categoryId: string, dto: UpdateProductCategoryDto, userId: string) {
+  async updateCategory(ctx: RequestContext, categoryId: string, dto: UpdateProductCategoryDto) {
+    const userId = ctx.getUserId()!;
+    
     const category = await this.prisma.productCategory.findFirst({
       where: {
         id: categoryId,
@@ -79,7 +85,9 @@ export class ProductsService {
     });
   }
 
-  async deleteCategory(categoryId: string, userId: string) {
+  async deleteCategory(ctx: RequestContext, categoryId: string) {
+    const userId = ctx.getUserId()!;
+    
     const category = await this.prisma.productCategory.findFirst({
       where: {
         id: categoryId,
@@ -113,7 +121,9 @@ export class ProductsService {
     });
   }
 
-  async getCategories(gymId: string) {
+  async getCategories(ctx: RequestContext) {
+    const gymId = ctx.getGymId()!;
+    
     return this.prisma.productCategory.findMany({
       where: {
         gymId,
@@ -135,7 +145,10 @@ export class ProductsService {
   }
 
   // Product Methods
-  async createProduct(gymId: string, dto: CreateProductDto, userId: string) {
+  async createProduct(ctx: RequestContext, dto: CreateProductDto) {
+    const gymId = ctx.getGymId()!;
+    const userId = ctx.getUserId()!;
+    
     // Validate category exists if provided
     if (dto.categoryId) {
       const category = await this.prisma.productCategory.findFirst({
@@ -164,13 +177,20 @@ export class ProductsService {
       throw new BusinessException('Product with this name already exists');
     }
 
+    // Filter out any unknown fields from DTO
+    const { name, description, price, stock, categoryId, imageId, status } = dto;
+    
     return this.prisma.product.create({
       data: {
-        ...dto,
+        name,
+        description,
+        price,
+        stock: stock ?? 0,
+        categoryId,
+        imageId,
+        status: status ?? ProductStatus.active,
         gymId,
         createdByUserId: userId,
-        stock: dto.stock ?? 0,
-        status: dto.status ?? ProductStatus.active,
       },
       include: {
         category: true,
@@ -178,7 +198,9 @@ export class ProductsService {
     });
   }
 
-  async updateProduct(productId: string, dto: UpdateProductDto, userId: string) {
+  async updateProduct(ctx: RequestContext, productId: string, dto: UpdateProductDto) {
+    const userId = ctx.getUserId()!;
+    
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -221,19 +243,30 @@ export class ProductsService {
       }
     }
 
+    // Filter out any unknown fields from DTO
+    const { name, description, price, stock, categoryId, imageId, status } = dto;
+    const updateData: any = { updatedByUserId: userId };
+    
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (price !== undefined) updateData.price = price;
+    if (stock !== undefined) updateData.stock = stock;
+    if (categoryId !== undefined) updateData.categoryId = categoryId;
+    if (imageId !== undefined) updateData.imageId = imageId;
+    if (status !== undefined) updateData.status = status;
+
     return this.prisma.product.update({
       where: { id: productId },
-      data: {
-        ...dto,
-        updatedByUserId: userId,
-      },
+      data: updateData,
       include: {
         category: true,
       },
     });
   }
 
-  async deleteProduct(productId: string, userId: string) {
+  async deleteProduct(ctx: RequestContext, productId: string) {
+    const userId = ctx.getUserId()!;
+    
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -254,7 +287,9 @@ export class ProductsService {
     });
   }
 
-  async getProduct(productId: string, userId?: string) {
+  async getProduct(ctx: RequestContext, productId: string) {
+    // Context is passed for consistency but not currently used
+    // Could be used in the future for gym-specific validation
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -278,7 +313,9 @@ export class ProductsService {
     return product;
   }
 
-  async searchProducts(gymId: string, dto: SearchProductsDto, userId: string) {
+  async searchProducts(ctx: RequestContext, dto: SearchProductsDto) {
+    const gymId = ctx.getGymId()!;
+    
     const {
       search,
       categoryId,
@@ -358,7 +395,9 @@ export class ProductsService {
     return this.paginationService.paginate(products, total, { page, limit });
   }
 
-  async toggleProductStatus(productId: string, userId: string) {
+  async toggleProductStatus(ctx: RequestContext, productId: string) {
+    const userId = ctx.getUserId()!;
+    
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -370,9 +409,8 @@ export class ProductsService {
       throw new ResourceNotFoundException('Product not found');
     }
 
-    const newStatus = product.status === ProductStatus.active 
-      ? ProductStatus.inactive 
-      : ProductStatus.active;
+    const newStatus =
+      product.status === ProductStatus.active ? ProductStatus.inactive : ProductStatus.active;
 
     return this.prisma.product.update({
       where: { id: productId },
@@ -386,7 +424,9 @@ export class ProductsService {
     });
   }
 
-  async updateStock(productId: string, quantity: number, userId: string) {
+  async updateStock(ctx: RequestContext, productId: string, quantity: number) {
+    const userId = ctx.getUserId()!;
+    
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -412,7 +452,9 @@ export class ProductsService {
     });
   }
 
-  async getLowStockProducts(gymId: string, threshold: number = 10) {
+  async getLowStockProducts(ctx: RequestContext, threshold: number = 10) {
+    const gymId = ctx.getGymId()!;
+    
     return this.prisma.product.findMany({
       where: {
         gymId,

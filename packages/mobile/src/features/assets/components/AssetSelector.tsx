@@ -1,15 +1,13 @@
 import React from 'react';
-import { View, ActivityIndicator, Dimensions, Pressable } from 'react-native';
+import { View, ActivityIndicator, Dimensions, Pressable, FlatList } from 'react-native';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { Icon } from '@/components/ui/icon';
 import { ImageIcon } from 'lucide-react-native';
-import Carousel from 'react-native-reanimated-carousel';
 import { useAssetsStore } from '../stores/assets.store';
 import { useAssetsByIds } from '../controllers/assets.controller';
 import { AssetPreview } from './AssetPreview';
-import { AssetModal } from './AssetModal';
 
 interface AssetSelectorProps {
   name: string;
@@ -63,6 +61,7 @@ export function AssetSelector({
   
   const screenWidth = Dimensions.get('window').width;
   const carouselWidth = screenWidth - 32; // Account for padding
+  const itemWidth = Math.floor((carouselWidth - 8) / 2); // Width for each item in 2-column grid with gap
   
   return (
     <>
@@ -97,34 +96,48 @@ export function AssetSelector({
                     </View>
                   </Pressable>
                 ) : (
-                  // Multiple assets - show carousel
-                  <View className="w-full h-48">
-                    <Carousel
-                      loop
-                      width={carouselWidth}
-                      height={192}
-                      autoPlay={false}
-                      data={assets}
-                      scrollAnimationDuration={1000}
-                      renderItem={({ item }) => (
-                        <Pressable 
-                          onPress={() => handleOpenSelector(onChange)}
-                          className="flex-1 mx-1"
-                        >
-                          <AssetPreview
-                            asset={item}
-                            width={carouselWidth - 8}
-                            height={192}
-                            resizeMode="contain"
-                            className="rounded-lg"
-                          />
-                        </Pressable>
-                      )}
-                    />
-                    <Text className="text-center text-xs text-gray-500 mt-1">
-                      Desliza para ver los {assets.length} archivos
-                    </Text>
-                  </View>
+                  // Multiple assets - show 2x2 grid using FlatList
+                  <Pressable onPress={() => handleOpenSelector(onChange)}>
+                    <View className="w-full">
+                      <FlatList
+                        data={assets.slice(0, 4)}
+                        renderItem={({ item, index }) => (
+                          <View style={{ flex: 1, padding: 8 }}>
+                            <View style={{ position: 'relative' }}>
+                              <View 
+                                style={{
+                                  borderRadius: 12,
+                                  overflow: 'hidden',
+                                  backgroundColor: '#f3f4f6'
+                                }}
+                              >
+                                <AssetPreview
+                                  asset={item}
+                                  width={undefined}
+                                  height={undefined}
+                                  resizeMode="cover"
+                                />
+                              </View>
+                              {/* Show +N overlay on the 4th item if there are more */}
+                              {index === 3 && assets.length > 4 && (
+                                <View className="absolute inset-0 bg-black/60 rounded-xl items-center justify-center">
+                                  <Text className="text-white text-lg font-bold">+{assets.length - 4}</Text>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+                        )}
+                        keyExtractor={(item) => item.id}
+                        numColumns={2}
+                        scrollEnabled={false}
+                        columnWrapperStyle={{ paddingHorizontal: 4 }}
+                        contentContainerStyle={{ paddingVertical: 4 }}
+                      />
+                      <Text className="text-center text-xs text-gray-500 mt-2">
+                        {assets.length} archivo{assets.length !== 1 ? 's' : ''} seleccionado{assets.length !== 1 ? 's' : ''}
+                      </Text>
+                    </View>
+                  </Pressable>
                 )}
               </View>
             ) : (
@@ -145,9 +158,6 @@ export function AssetSelector({
           </VStack>
         )}
       />
-      
-      {/* Global Asset Modal */}
-      <AssetModal />
     </>
   );
 }

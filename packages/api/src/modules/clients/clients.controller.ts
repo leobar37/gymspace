@@ -20,7 +20,7 @@ export class ClientsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 403, description: 'Forbidden - Client limit reached' })
   async createClient(@Body() dto: CreateClientDto, @AppCtxt() ctx: RequestContext) {
-    return await this.clientsService.createClient(ctx.getGymId()!, dto, ctx.getUserId()!);
+    return await this.clientsService.createClient(ctx, dto);
   }
 
   @Get(':id')
@@ -29,7 +29,7 @@ export class ClientsController {
   @ApiResponse({ status: 200, description: 'Client details' })
   @ApiResponse({ status: 404, description: 'Client not found' })
   async getClient(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.clientsService.getClient(id, ctx.getUserId());
+    return await this.clientsService.getClient(ctx, id);
   }
 
   @Put(':id')
@@ -42,7 +42,7 @@ export class ClientsController {
     @Body() dto: UpdateClientDto,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.clientsService.updateClient(id, dto, ctx.getUserId());
+    return await this.clientsService.updateClient(ctx, id, dto);
   }
 
   @Get()
@@ -50,7 +50,7 @@ export class ClientsController {
   @ApiOperation({ summary: 'Search clients in gym' })
   @ApiResponse({ status: 200, description: 'List of clients' })
   async searchClients(@Query() dto: SearchClientsDto, @AppCtxt() ctx: RequestContext) {
-    return await this.clientsService.searchClients(ctx.getGymId()!, dto, ctx.getUserId()!);
+    return await this.clientsService.searchClients(ctx, dto);
   }
 
   @Put(':id/toggle-status')
@@ -59,7 +59,7 @@ export class ClientsController {
   @ApiResponse({ status: 200, description: 'Client status toggled successfully' })
   @ApiResponse({ status: 404, description: 'Client not found' })
   async toggleClientStatus(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.clientsService.toggleClientStatus(id, ctx.getUserId());
+    return await this.clientsService.toggleClientStatus(ctx, id);
   }
 
   @Get(':id/stats')
@@ -68,7 +68,7 @@ export class ClientsController {
   @ApiResponse({ status: 200, description: 'Client statistics' })
   @ApiResponse({ status: 404, description: 'Client not found' })
   async getClientStats(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.clientsService.getClientStats(id, ctx.getUserId());
+    return await this.clientsService.getClientStats(ctx, id);
   }
 
   @Get('search/check-in')
@@ -79,6 +79,6 @@ export class ClientsController {
     // Force include contract status for check-in searches
     dto.includeContractStatus = true;
     dto.activeOnly = true; // Only show active clients
-    return await this.clientsService.searchClients(ctx.getGymId()!, dto, ctx.getUserId()!);
+    return await this.clientsService.searchClients(ctx, dto);
   }
 }

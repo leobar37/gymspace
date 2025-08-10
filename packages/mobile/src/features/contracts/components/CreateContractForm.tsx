@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, parse } from 'date-fns';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
 import { Alert, ScrollView, View } from 'react-native';
 import { z } from 'zod';
 import { FormInput } from '@/components/forms/FormInput';
@@ -15,6 +15,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ClientSelector } from '@/features/clients/components/ClientSelector';
 import { PlanListSelector } from '@/features/plans/components/PlanListSelector';
+import { AssetSelector } from '@/features/assets/components/AssetSelector';
 import { ContractFormData, useContractsController } from '../controllers/contracts.controller';
 import { useFormatPrice } from '@/config/ConfigContext';
 
@@ -28,6 +29,7 @@ const createContractSchema = z.object({
   }),
   discountPercentage: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional().default('0'),
   finalPrice: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional(),
+  attachmentIds: z.array(z.string()).optional().default([]),
 });
 
 type CreateContractSchema = z.infer<typeof createContractSchema>;
@@ -60,13 +62,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
     }
   };
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { isValid },
-  } = useForm<CreateContractSchema>({
+  const methods = useForm<CreateContractSchema>({
     resolver: zodResolver(createContractSchema),
     mode: 'onChange', // Enable validation on change
     defaultValues: {
@@ -75,11 +71,18 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
       startDate: parseInitialDate(initialData?.startDate),
       discountPercentage: String(initialData?.discountPercentage || 0),
       finalPrice: initialData?.finalPrice ? String(initialData.finalPrice) : '',
+      attachmentIds: [],
     },
   });
 
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { isValid },
+  } = methods;
+
   // Watch for plan changes to update pricing
-  const watchedPlanId = watch('gymMembershipPlanId');
   const watchedDiscount = watch('discountPercentage');
   const watchedFinalPrice = watch('finalPrice');
 
@@ -107,6 +110,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
         startDate: format(data.startDate, 'yyyy-MM-dd'),
         discountPercentage: Number(data.discountPercentage) || 0,
         finalPrice: data.finalPrice ? Number(data.finalPrice) : undefined,
+        attachmentIds: data.attachmentIds || [],
       };
 
       createContract(contractData, {
@@ -121,7 +125,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                   if (onSuccess) {
                     onSuccess(newContract.id);
                   } else {
-                    router.replace(`/contracts/${newContract.id}`);
+                    router.replace(`../contracts/${newContract.id}`);
                   }
                 },
               },
@@ -142,8 +146,9 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
 
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <VStack className="p-4 gap-4">
+    <FormProvider {...methods}>
+      <ScrollView className="flex-1 bg-gray-50">
+        <VStack className="p-4 gap-4">
         <Card>
           <View className="p-4">
             <Heading size="md" className="mb-4">Información del contrato</Heading>
@@ -206,6 +211,15 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                 description="Si se especifica, este precio reemplazará el precio del plan"
               />
             </View>
+
+            {/* Attachments */}
+            <View className="mb-4">
+              <AssetSelector
+                name="attachmentIds"
+                multi={true}
+                label="Documentos adjuntos (opcional)"
+              />
+            </View>
           </View>
         </Card>
 
@@ -258,5 +272,6 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
         </Button>
       </VStack>
     </ScrollView>
+    </FormProvider>
   );
 };

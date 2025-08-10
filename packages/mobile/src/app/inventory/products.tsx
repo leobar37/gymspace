@@ -115,7 +115,7 @@ export default function ProductsScreen() {
             size="sm"
             onPress={() => router.back()}
           >
-            <Icon as={ChevronLeftIcon} className="w-5 h-5 text-gray-700" />
+            <Icon as={ChevronLeftIcon} className="w-5 h-5 text-white" />
           </Button>
           <Text className="text-xl font-semibold text-gray-900 ml-2">
             Productos
@@ -271,7 +271,7 @@ export default function ProductsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-gray-50" >
       <FlatList
         data={data?.items || []}
         renderItem={renderProductCard}
