@@ -177,6 +177,7 @@ model User {
     uploadedAssets            Asset[]             @relation("AssetUploadedBy")
     createdAssets             Asset[]             @relation("AssetCreatedBy")
     updatedAssets             Asset[]             @relation("AssetUpdatedBy")
+    files                     File[]              @relation("UserFiles")
     registeredCheckIns        CheckIn[]           @relation("CheckInRegisteredBy")
     createdCheckIns           CheckIn[]           @relation("CheckInCreatedBy")
     updatedCheckIns           CheckIn[]           @relation("CheckInUpdatedBy")
@@ -524,6 +525,27 @@ model Asset {
     updatedBy  User? @relation("AssetUpdatedBy", fields: [updatedByUserId], references: [id])
 
     @@map("assets")
+}
+
+model File {
+    id               String    @id @default(uuid())
+    filename         String
+    originalName     String    @map("original_name")
+    filePath         String    @map("file_path")
+    fileSize         Int       @map("file_size")
+    mimeType         String    @map("mime_type")
+    userId           String    @map("user_id")
+    metadata         Json?
+    status           String    @default("active")
+    description      String?   @db.Text
+    createdAt        DateTime  @default(now()) @map("created_at")
+    updatedAt        DateTime  @updatedAt @map("updated_at")
+    deletedAt        DateTime? @map("deleted_at")
+    
+    // Relations
+    user User @relation("UserFiles", fields: [userId], references: [id])
+    
+    @@map("files")
 }
 
 model CheckIn {

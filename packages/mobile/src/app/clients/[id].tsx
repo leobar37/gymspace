@@ -25,7 +25,7 @@ import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useAsset } from '@/features/assets/controllers/assets.controller';
+import { useFile } from '@/features/files/controllers/files.controller';
 import { ClientCheckInsSection } from '@/features/clients/components/ClientCheckInsSection';
 import { ClientStatisticsSection } from '@/features/clients/components/ClientStatisticsSection';
 import { useClientsController } from '@/features/clients/controllers/clients.controller';
@@ -67,7 +67,7 @@ export default function ClientDetailScreen() {
   const { data: stats } = useClientStats(id);
   
   // Fetch the profile photo if it exists
-  const { data: profilePhoto } = useAsset(
+  const { data: profilePhoto } = useFile(
     client?.profilePhotoId || '',
     !!client?.profilePhotoId
   );

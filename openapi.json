@@ -2989,6 +2989,260 @@
         ]
       }
     },
+    "/api/v1/files/upload": {
+      "post": {
+        "operationId": "FilesController_upload",
+        "summary": "Upload a new file with unique identifier generation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The file to upload"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Optional description for the file"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "Optional metadata for the file"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid file or parameters"
+          },
+          "413": {
+            "description": "File too large"
+          }
+        },
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/files": {
+      "get": {
+        "operationId": "FilesController_findAll",
+        "summary": "Get all files for the current user",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of user files",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FileResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/files/{id}": {
+      "get": {
+        "operationId": "FilesController_findOne",
+        "summary": "Get file by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found"
+          }
+        },
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "FilesController_delete",
+        "summary": "Soft delete a file",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted successfully"
+          },
+          "404": {
+            "description": "File not found"
+          }
+        },
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/files/by-ids": {
+      "get": {
+        "operationId": "FilesController_findByIds",
+        "summary": "Get multiple files by IDs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of files",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FileResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/files/{id}/download": {
+      "get": {
+        "operationId": "FilesController_download",
+        "summary": "Download file",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File stream"
+          },
+          "404": {
+            "description": "File not found"
+          }
+        },
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/files/{id}/render": {
+      "get": {
+        "operationId": "FilesController_render",
+        "summary": "Render/serve file directly (for preview)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File stream for rendering"
+          },
+          "404": {
+            "description": "File not found"
+          }
+        },
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/onboarding/start": {
       "post": {
         "operationId": "OnboardingController_startOnboarding",
@@ -4757,12 +5011,16 @@
   ],
   "servers": [
     {
-      "url": "http://localhost:3000/api/v1",
-      "description": "Development server"
+      "url": "http://localhost:5200/api/v1",
+      "description": "Development (localhost)"
+    },
+    {
+      "url": "http://192.168.100.17:5200/api/v1",
+      "description": "Development (LAN)"
     },
     {
       "url": "https://api.gymspace.com/api/v1",
-      "description": "Production server"
+      "description": "Production"
     }
   ],
   "components": {
@@ -5359,8 +5617,7 @@
           }
         },
         "required": [
-          "name",
-          "address"
+          "name"
         ]
       },
       "UpdateClientDto": {
@@ -5938,6 +6195,90 @@
           "createdAt",
           "updatedAt",
           "filePath"
+        ]
+      },
+      "FileResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the file",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Generated unique filename",
+            "example": "a1b2c3d4e5f6.jpg"
+          },
+          "originalName": {
+            "type": "string",
+            "description": "Original filename as uploaded",
+            "example": "profile_photo.jpg"
+          },
+          "filePath": {
+            "type": "string",
+            "description": "Path to the file in storage",
+            "example": "files/a1b2c3d4e5f6.jpg"
+          },
+          "fileSize": {
+            "type": "number",
+            "description": "File size in bytes",
+            "example": 1024000
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type of the file",
+            "example": "image/jpeg"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the file",
+            "example": "active"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional metadata",
+            "example": {
+              "category": "profile"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description",
+            "example": "Client profile photo"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Date when the file was created",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Date when the file was last updated",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID who owns the file",
+            "example": "user-123"
+          },
+          "previewUrl": {
+            "type": "string",
+            "description": "Preview URL for the file if it is previewable",
+            "example": "https://api.example.com/api/v1/files/f47ac10b-58cc-4372-a567-0e02b2c3d479/render"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "originalName",
+          "filePath",
+          "fileSize",
+          "mimeType",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "userId"
         ]
       },
       "StartOnboardingDto": {

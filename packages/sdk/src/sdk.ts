@@ -13,6 +13,7 @@ import {
   InvitationsResource,
   LeadsResource,
   AssetsResource,
+  FilesResource,
   PublicCatalogResource,
   HealthResource,
   OnboardingResource,
@@ -38,6 +39,7 @@ export class GymSpaceSdk {
   public invitations: InvitationsResource;
   public leads: LeadsResource;
   public assets: AssetsResource;
+  public files: FilesResource;
   public publicCatalog: PublicCatalogResource;
   public health: HealthResource;
   public onboarding: OnboardingResource;
@@ -62,6 +64,7 @@ export class GymSpaceSdk {
     this.invitations = new InvitationsResource(this.client);
     this.leads = new LeadsResource(this.client);
     this.assets = new AssetsResource(this.client);
+    this.files = new FilesResource(this.client);
     this.publicCatalog = new PublicCatalogResource(this.client);
     this.health = new HealthResource(this.client);
     this.onboarding = new OnboardingResource(this.client);

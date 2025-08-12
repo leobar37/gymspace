@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import { View, ScrollView, KeyboardAvoidingView, Platform, Pressable, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { z } from 'zod';
 import {
   FormInput,
@@ -21,10 +22,7 @@ import { useClientsController, ClientFormData } from '../controllers/clients.con
 import { router } from 'expo-router';
 import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 import { useDocumentTypes, useDocumentValidator } from '@/config/ConfigContext';
-import { PhotoField } from '@/features/assets/components/PhotoField';
-import { usePrepareAssets } from '@/features/assets/hooks/use-prepare-assets';
-import { useGymSdk } from '@/providers/GymSdkProvider';
-import type { AssetFieldValue } from '@/features/assets/types/asset-form.types';
+import { FileSelector } from '@/features/files/components/FileSelector';
 
 // Create the validation schema as a function to use document validator
 const createClientSchema = (validateDocument: (type: string, value: string) => { isValid: boolean; error?: string }) => z.object({
@@ -34,12 +32,12 @@ const createClientSchema = (validateDocument: (type: string, value: string) => {
   documentType: z.string().optional().or(z.undefined()),
   phone: z.string().min(8, 'Teléfono inválido').optional().or(z.literal('')).or(z.undefined()),
   email: z.string().email('Email inválido').optional().or(z.literal('')).or(z.undefined()),
-  // address: z.string().min(1, 'La dirección es requerida'), // Not supported by backend yet
+  address: z.string().optional().or(z.literal('')).or(z.undefined()),
   emergencyContactName: z.string().optional().or(z.undefined()),
   emergencyContactPhone: z.string().optional().or(z.undefined()),
   medicalConditions: z.string().optional().or(z.undefined()),
   notes: z.string().optional().or(z.undefined()),
-  profilePhotoId: z.any().optional(), // Can be string (existing) or object (pending upload)
+  profilePhotoId: z.string().nullable().optional(), // File ID for profile photo
 }).refine((data) => {
   // If document value is provided, document type must also be provided
   if (data.documentValue && data.documentValue.trim() !== '' && !data.documentType) {
@@ -63,11 +61,12 @@ type ClientFormSchema = {
   documentType?: string | undefined;
   phone?: string | undefined;
   email?: string | undefined;
+  address?: string | undefined;
   emergencyContactName?: string | undefined;
   emergencyContactPhone?: string | undefined;
   medicalConditions?: string | undefined;
   notes?: string | undefined;
-  profilePhotoId?: AssetFieldValue;
+  profilePhotoId?: FileFieldValue;
 };
 
 interface CreateClientFormProps {
@@ -82,13 +81,10 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
   clientId,
 }) => {
   const { createClient, updateClient, isCreatingClient, isUpdatingClient } = useClientsController();
-  const [isUploadingPhoto, setIsUploadingPhoto] = React.useState(false);
-  const isLoading = isCreatingClient || isUpdatingClient || isUploadingPhoto;
+  const isLoading = isCreatingClient || isUpdatingClient;
   const toast = useToast();
   const documentTypes = useDocumentTypes();
   const validateDocument = useDocumentValidator();
-  const { sdk } = useGymSdk();
-  const { prepareAssets, state: assetsState } = usePrepareAssets(sdk);
   
   const clientSchema = React.useMemo(
     () => createClientSchema(validateDocument),
@@ -104,7 +100,7 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
       documentType: initialData?.documentType || (documentTypes.length > 0 ? documentTypes[0].value : ''),
       phone: initialData?.phone || '',
       email: initialData?.email || '',
-      // address: initialData?.address || '', // Not supported by backend yet
+      address: initialData?.address || '',
       emergencyContactName: initialData?.emergencyContactName || '',
       emergencyContactPhone: initialData?.emergencyContactPhone || '',
       medicalConditions: initialData?.medicalConditions || '',
@@ -114,39 +110,23 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
   });
 
   const onSubmit = async (data: any) => {
-    try {
-      setIsUploadingPhoto(true);
-      
-      // Prepare assets (upload photo if it's a new file)
-      const result = await prepareAssets(
-        data,
-        {
-          profilePhotoId: {
-            description: `Foto de perfil de ${data.name}`,
-            metadata: { clientId, type: 'profile' }
-          }
-        },
-        {
-          continueOnError: true // Continue even if photo upload fails
-        }
-      );
-
-      // Convert date to string format for API and ensure required fields
-      const formattedData = {
-        ...result.values,
-        birthDate: data.birthDate ? data.birthDate.toISOString().split('T')[0] : undefined,
-        // Make email optional as specified in requirements
-        email: data.email || undefined,
-        // Clean up optional fields
-        documentValue: data.documentValue || undefined,
-        documentType: data.documentType || undefined,
-        phone: data.phone || undefined,
-        emergencyContactName: data.emergencyContactName || undefined,
-        emergencyContactPhone: data.emergencyContactPhone || undefined,
-        medicalConditions: data.medicalConditions || undefined,
-        notes: data.notes || undefined,
-        profilePhotoId: result.values.profilePhotoId || undefined,
-      };
+    // Convert date to string format for API and ensure required fields
+    const formattedData = {
+      name: data.name,
+      birthDate: data.birthDate ? data.birthDate.toISOString().split('T')[0] : undefined,
+      // Make email optional as specified in requirements
+      email: data.email || undefined,
+      // Clean up optional fields
+      documentValue: data.documentValue || undefined,
+      documentType: data.documentType || undefined,
+      phone: data.phone || undefined,
+      address: data.address || undefined,
+      emergencyContactName: data.emergencyContactName || undefined,
+      emergencyContactPhone: data.emergencyContactPhone || undefined,
+      medicalConditions: data.medicalConditions || undefined,
+      notes: data.notes || undefined,
+      profilePhotoId: data.profilePhotoId || undefined,
+    };
 
       if (isEditing && clientId) {
         updateClient(
@@ -226,39 +206,22 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
         },
       });
       }
-    } catch (error) {
-      console.error('Error preparing assets:', error);
-      toast.show({
-        placement: 'top',
-        duration: 4000,
-        render: ({ id }) => {
-          return (
-            <Toast nativeID={`toast-${id}`} action="error" variant="solid">
-              <ToastTitle>Error</ToastTitle>
-              <ToastDescription>
-                Error al procesar la imagen. Por favor, inténtalo de nuevo.
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
-    } finally {
-      setIsUploadingPhoto(false);
-    }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAwareScrollView
         className="flex-1"
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+        extraScrollHeight={Platform.OS === 'ios' ? 20 : 100}
+        extraHeight={Platform.OS === 'android' ? 150 : 0}
+        enableResetScrollToCoords={false}
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View className="flex-1 p-4">
+        <View className="flex-1 p-4">
           <FormProvider {...methods}>
             <VStack className="gap-6">
               {/* Back Button and Title */}
@@ -285,14 +248,9 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                   returnKeyType="next"
                 />
 
-                <PhotoField
+                <FileSelector
                   name="profilePhotoId"
-                  control={methods.control}
                   label="Foto de perfil"
-                  description="Opcional: Sube una foto del cliente"
-                  aspectRatio={[1, 1]}
-                  quality={0.8}
-                  allowsEditing={true}
                 />
 
                 <FormDatePicker
@@ -350,7 +308,7 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
 
                 <FormInput
                   name="address"
-                  label="Dirección"
+                  label="Dirección (opcional)"
                   placeholder="Av. Principal 123, Distrito"
                   returnKeyType="next"
                 />
@@ -414,7 +372,7 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                 size="lg"
                 action="primary"
                 variant="solid"
-                className="w-full mt-6"
+                className="w-full mt-6 mb-8"
               >
                 {isLoading ? (
                   <>
@@ -432,8 +390,7 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
             </VStack>
           </FormProvider>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

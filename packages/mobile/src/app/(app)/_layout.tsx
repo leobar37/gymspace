@@ -47,13 +47,17 @@ function AppLayout() {
         tabBarActiveTintColor: '#2563eb',
         tabBarInactiveTintColor: '#6b7280',
         tabBarStyle: {
-          paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 20,
           paddingTop: 10,
-          height: Platform.OS === 'ios' ? 85 : 65,
+          height: Platform.OS === 'ios' ? 95 : 75,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '500',
+          marginBottom: Platform.OS === 'ios' ? 5 : 3,
+        },
+        tabBarIconStyle: {
+          marginBottom: Platform.OS === 'ios' ? -5 : -3,
         },
         headerShown: true,
         headerStyle: {

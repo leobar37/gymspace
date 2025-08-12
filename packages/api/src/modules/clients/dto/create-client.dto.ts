@@ -42,9 +42,10 @@ export class CreateClientDto {
   @IsString()
   maritalStatus?: string;
 
-  @ApiProperty({ example: '123 Main St' })
+  @ApiProperty({ example: '123 Main St', required: false })
+  @IsOptional()
   @IsString()
-  address: string;
+  address?: string;
 
   @ApiProperty({ example: 'New York', required: false })
   @IsOptional()

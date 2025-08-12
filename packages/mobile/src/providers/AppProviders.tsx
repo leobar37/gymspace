@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider as JotaiProvider } from "jotai";
 import React from "react";
 import { GymSdkProvider } from "./GymSdkProvider";
-import { GlobalAssetModal } from "@/features/assets/components/GlobalAssetModal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,8 +45,6 @@ export function AppProviders({ children }: AppProvidersProps) {
             <ConfigProvider>
               <CartProvider>
                 {children}
-                {/* Global Asset Modal - rendered once at app level */}
-                <GlobalAssetModal />
               </CartProvider>
             </ConfigProvider>
           </GymSdkProvider>

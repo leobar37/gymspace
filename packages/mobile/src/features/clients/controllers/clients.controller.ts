@@ -19,7 +19,7 @@ export interface ClientFormData {
   documentValue?: string;
   documentType?: string;
   birthDate?: string;
-  // address: string; // Not supported by backend yet
+  address?: string;
   notes?: string;
   // Legacy fields for backward compatibility
   document?: string;
@@ -27,6 +27,7 @@ export interface ClientFormData {
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   medicalConditions?: string;
+  profilePhotoId?: string;
 }
 
 export interface SearchFilters {
@@ -93,7 +94,7 @@ export const useClientsController = () => {
         documentValue: data.documentValue || data.document || data.documentId,
         documentType: data.documentType,
         birthDate: data.birthDate,
-        address: data.address || '',
+        address: data.address,
         notes: data.notes,
         emergencyContactName: data.emergencyContactName,
         emergencyContactPhone: data.emergencyContactPhone,

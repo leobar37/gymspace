@@ -71,19 +71,30 @@ export const useAssetsStore = create<AssetsStore>((set, get) => ({
     const { modal } = get();
     const { selectedAssets, isMulti } = modal;
     
+    console.log('[AssetsStore] toggleAssetSelection called:', {
+      assetId,
+      currentSelectedAssets: selectedAssets,
+      isMulti
+    });
+    
     let newSelection: string[];
     
     if (isMulti) {
       // Multi-selection mode
       if (selectedAssets.includes(assetId)) {
         newSelection = selectedAssets.filter(id => id !== assetId);
+        console.log('[AssetsStore] Multi mode - Removing asset from selection');
       } else {
         newSelection = [...selectedAssets, assetId];
+        console.log('[AssetsStore] Multi mode - Adding asset to selection');
       }
     } else {
       // Single selection mode
       newSelection = selectedAssets[0] === assetId ? [] : [assetId];
+      console.log('[AssetsStore] Single mode - Setting selection to:', newSelection);
     }
+    
+    console.log('[AssetsStore] New selection will be:', newSelection);
     
     set({
       modal: {
@@ -91,6 +102,8 @@ export const useAssetsStore = create<AssetsStore>((set, get) => ({
         selectedAssets: newSelection,
       },
     });
+    
+    console.log('[AssetsStore] State updated - new selectedAssets:', newSelection);
   },
   
   setSelectedAssets: (assetIds: string[]) => {

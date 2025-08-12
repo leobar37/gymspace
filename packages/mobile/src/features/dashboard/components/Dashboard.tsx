@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDashboardController } from '../controllers/dashboard.controller';
 import { CheckInButton } from './CheckInButton';
 
@@ -171,9 +172,9 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <View className="flex-1">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
       <ScrollView
-        className="flex-1 bg-gray-50"
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
@@ -303,6 +304,6 @@ export const Dashboard: React.FC = () => {
 
       {/* Floating Check-in Button */}
       <CheckInButton />
-    </View>
+    </SafeAreaView>
   );
 };

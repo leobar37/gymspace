@@ -50,3 +50,5 @@
 - use tailwind for styling
 - never add styles to the button, use the default styles of the library and its variants
 - always pass the complete RequestContext to the services
+- nevear addd examples unless i ask for it
+- not add README.md after do something

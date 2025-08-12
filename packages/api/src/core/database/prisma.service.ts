@@ -14,6 +14,7 @@ const SOFT_DELETE_MODELS = [
   'GymMembershipPlan',
   'Contract',
   'Asset',
+  'File',
   'CheckIn',
   'Evaluation',
   'EvaluationComment',
@@ -179,6 +180,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   public readonly gymMembershipPlan: ExtendedPrismaClient['gymMembershipPlan'];
   public readonly contract: ExtendedPrismaClient['contract'];
   public readonly asset: ExtendedPrismaClient['asset'];
+  public readonly file: ExtendedPrismaClient['file'];
   public readonly checkIn: ExtendedPrismaClient['checkIn'];
   public readonly evaluation: ExtendedPrismaClient['evaluation'];
   public readonly evaluationComment: ExtendedPrismaClient['evaluationComment'];
@@ -214,6 +216,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     this.gymMembershipPlan = this.extendedClient.gymMembershipPlan;
     this.contract = this.extendedClient.contract;
     this.asset = this.extendedClient.asset;
+    this.file = this.extendedClient.file;
     this.checkIn = this.extendedClient.checkIn;
     this.evaluation = this.extendedClient.evaluation;
     this.evaluationComment = this.extendedClient.evaluationComment;

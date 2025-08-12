@@ -4,6 +4,7 @@ import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GlobalModals } from "@/components/GlobalModals";
 import "../../global.css";
 
 function RootLayout() {
@@ -11,11 +12,14 @@ function RootLayout() {
     <SafeAreaProvider>
       <GestureHandlerRootView className="flex-1">
         <AppProviders>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(onboarding)" />
-            <Stack.Screen name="(app)" />
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-          </Stack>
+          <>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(onboarding)" />
+              <Stack.Screen name="(app)" />
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+            </Stack>
+            <GlobalModals />
+          </>
         </AppProviders>
       </GestureHandlerRootView>
     </SafeAreaProvider>

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, HttpCode, HttpStatus, Headers } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from '../../core/auth/services/auth.service';
 import {
@@ -14,11 +14,15 @@ import {
 import { Public } from '../../common/decorators';
 import { AppCtxt } from '../../common/decorators/request-context.decorator';
 import { IRequestContext } from '@gymspace/shared';
+import { CacheService } from '../../core/cache/cache.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly cacheService: CacheService,
+  ) {}
 
   @Post('register/owner')
   @Public()
@@ -130,6 +134,34 @@ export class AuthController {
       organization: context.organization,
       permissions: context.permissions,
       isAuthenticated: true,
+    };
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout current user and invalidate token' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  @ApiResponse({ status: 401, description: 'User not authenticated' })
+  async logout(
+    @Headers('authorization') authorization: string,
+    @AppCtxt() context: IRequestContext,
+  ) {
+    if (authorization) {
+      const token = authorization.replace('Bearer ', '');
+      
+      // Blacklist the token to prevent further use
+      // Token will be blacklisted for 24 hours (86400 seconds)
+      await this.cacheService.blacklistToken(token, 86400000); // 24 hours in milliseconds
+      
+      // Invalidate user's cached auth data
+      if (context.user?.id) {
+        await this.cacheService.invalidateUserAuthCache(context.user.id);
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Logged out successfully',
     };
   }
 }

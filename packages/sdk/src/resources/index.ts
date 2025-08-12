@@ -10,6 +10,7 @@ export * from './check-ins';
 export * from './invitations';
 export * from './leads';
 export * from './assets';
+export * from './files';
 export * from './public-catalog';
 export * from './health';
 export * from './onboarding';

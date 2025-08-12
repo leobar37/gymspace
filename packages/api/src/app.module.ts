@@ -23,6 +23,7 @@ import { CheckInsModule } from './modules/check-ins/check-ins.module';
 import { PublicCatalogModule } from './modules/public-catalog/public-catalog.module';
 import { LeadsModule } from './modules/leads/leads.module';
 import { AssetsModule } from './modules/assets/assets.module';
+import { FilesModule } from './modules/files/files.module';
 import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
@@ -72,6 +73,7 @@ import validationSchema from './config/validation.schema';
     PublicCatalogModule,
     LeadsModule,
     AssetsModule,
+    FilesModule,
     OnboardingModule,
     SubscriptionsModule,
     DashboardModule,

@@ -11,7 +11,7 @@ import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
-import { Pressable } from '@/components/ui/pressable';
+import { Pressable } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { X as CloseIcon, Plus as PlusIcon, Check as CheckIcon } from 'lucide-react-native';
 import { FlatList, View, ActivityIndicator, Alert } from 'react-native';
@@ -34,9 +34,18 @@ export function AssetModal() {
   const deleteAssetMutation = useDeleteAsset();
   const uploadAssetMutation = useUploadAsset();
 
+  // Monitor selectedAssets changes
+  React.useEffect(() => {
+    console.log('[AssetModal] selectedAssets changed:', modal.selectedAssets);
+  }, [modal.selectedAssets]);
+
   // Sort assets to show selected ones first - must be called before any conditional returns
   const sortedAssets = React.useMemo(() => {
-    console.log('[AssetModal] Computing sortedAssets, assets:', assets?.length);
+    console.log('[AssetModal] Computing sortedAssets:', {
+      assetsLength: assets?.length,
+      selectedAssets: modal.selectedAssets,
+      isMulti: modal.isMulti
+    });
     if (!assets) return [];
 
     return [...assets].sort((a, b) => {
@@ -132,12 +141,23 @@ export function AssetModal() {
 
   const renderAssetItem = ({ item }: { item: AssetResponseDto }) => {
     const isSelected = modal.selectedAssets.includes(item.id);
-    console.log('[AssetModal] renderAssetItem called for:', item.id, item.originalName);
+    console.log('[AssetModal] renderAssetItem:', {
+      assetId: item.id,
+      assetName: item.originalName,
+      isSelected,
+      currentSelectedAssets: modal.selectedAssets,
+      isMulti: modal.isMulti
+    });
     
     return (
       <View style={{ flex: 1, padding: 8 }}>
         <Pressable
-          onPress={() => toggleAssetSelection(item.id)}
+          onPress={() => {
+            console.log('[AssetModal] Asset pressed:', item.id);
+            console.log('[AssetModal] Before toggle - selectedAssets:', modal.selectedAssets);
+            toggleAssetSelection(item.id);
+            console.log('[AssetModal] toggleAssetSelection called for:', item.id);
+          }}
           onLongPress={() => handleDeleteAsset(item.id)}
           style={{ 
             width: '100%',

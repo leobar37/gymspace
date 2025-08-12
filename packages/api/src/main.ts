@@ -8,6 +8,7 @@ import fastifyMultipart from '@fastify/multipart';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import { networkInterfaces } from 'os';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -22,11 +23,6 @@ async function bootstrap() {
   // Global prefix
   const apiPrefix = configService.get<string>('API_PREFIX', 'api/v1');
   app.setGlobalPrefix(apiPrefix);
-
-  // app.enableVersioning({
-  //   type: VersioningType.URI,
-  //   defaultVersion: '1',
-  // });
 
   // Security
   await app.register(fastifyHelmet as any, {
@@ -51,9 +47,16 @@ async function bootstrap() {
     },
   });
 
-  // CORS
+  // CORS (relax in dev for mobile LAN access)
+  const nodeEnv = configService.get<string>('NODE_ENV', 'development');
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN', 'http://localhost:3001'),
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // allow mobile apps / curl
+      if (nodeEnv === 'development') return cb(null, true);
+      const allowed = configService.get<string>('CORS_ORIGIN', 'http://localhost:3001');
+      if (allowed === '*' || origin.startsWith(allowed)) return cb(null, true);
+      cb(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Gym-Id'],
@@ -65,15 +68,31 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
+      transformOptions: { enableImplicitConversion: true },
     }),
   );
 
-  
+  // Determine port early for Swagger server URLs
+  const port = configService.get<number>('PORT', 3000);
+
+  // Helper to find first LAN IPv4
+  const getFirstLanIp = () => {
+    const nets = networkInterfaces();
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name] || []) {
+        if (net.family === 'IPv4' && !net.internal) {
+          if (net.address.startsWith('192.168.') || net.address.startsWith('10.') || net.address.startsWith('172.')) {
+            return net.address;
+          }
+        }
+      }
+    }
+    return null;
+  };
+  const lanIp = getFirstLanIp();
+
   // Swagger documentation
-  const config = new DocumentBuilder()
+  let swaggerBuilder = new DocumentBuilder()
     .setTitle('GymSpace API')
     .setDescription('The GymSpace Gym Management System API')
     .setVersion('1.0')
@@ -92,71 +111,48 @@ async function bootstrap() {
     .addTag('Public Catalog', 'Public gym catalog')
     .addTag('Dashboard', 'Dashboard statistics and metrics')
     .addTag('Health', 'Health check endpoints')
-    .addServer(`http://localhost:3000/${apiPrefix}`, 'Development server')
-    .addServer(`https://api.gymspace.com/${apiPrefix}`, 'Production server')
-    .build();
+    .addServer(`http://localhost:${port}/${apiPrefix}`, 'Development (localhost)');
 
+  if (lanIp) {
+    swaggerBuilder = swaggerBuilder.addServer(`http://${lanIp}:${port}/${apiPrefix}`, 'Development (LAN)');
+  }
+
+  swaggerBuilder = swaggerBuilder.addServer(`https://api.gymspace.com/${apiPrefix}`, 'Production');
+
+  const config = swaggerBuilder.build();
   const document = SwaggerModule.createDocument(app, config);
 
-  // Add additional OpenAPI properties
-  document.info.contact = {
-    name: 'GymSpace API Support',
-    email: 'support@gymspace.com',
-  };
-
-  document.info.license = {
-    name: 'MIT',
-  };
+  document.info.contact = { name: 'GymSpace API Support', email: 'support@gymspace.com' };
+  document.info.license = { name: 'MIT' };
 
   SwaggerModule.setup(`${apiPrefix}/docs`, app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-      tagsSorter: 'alpha',
-      operationsSorter: 'alpha',
-    },
+    swaggerOptions: { persistAuthorization: true, tagsSorter: 'alpha', operationsSorter: 'alpha' },
   });
 
   // Generate OpenAPI files in development mode
-  const nodeEnv = configService.get<string>('NODE_ENV', 'development');
   if (nodeEnv === 'development') {
     try {
       const rootDir = join(__dirname, '../../..');
       const outputPathJson = join(rootDir, 'openapi.json');
       const outputPathYaml = join(rootDir, 'openapi.yaml');
-
-      // Write JSON specification
       writeFileSync(outputPathJson, JSON.stringify(document, null, 2));
-      console.log(`📄 OpenAPI JSON generated: ${outputPathJson}`);
-
-      // Convert to YAML and write
       const yaml = require('js-yaml');
-      const yamlContent = yaml.dump(document, {
-        lineWidth: -1,
-        noRefs: true,
-        sortKeys: false,
-      });
-
+      const yamlContent = yaml.dump(document, { lineWidth: -1, noRefs: true, sortKeys: false });
       writeFileSync(outputPathYaml, yamlContent);
-      console.log(`📄 OpenAPI YAML generated: ${outputPathYaml}`);
-
-      // Log summary
       const paths = Object.keys(document.paths || {});
-      const totalEndpoints = paths.reduce((count, path) => {
-        return count + Object.keys(document.paths[path]).length;
-      }, 0);
-
+      const totalEndpoints = paths.reduce((c, p) => c + Object.keys(document.paths[p]).length, 0);
       console.log(`📊 API Summary: ${paths.length} paths, ${totalEndpoints} endpoints`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('⚠️  Failed to generate OpenAPI files:', error.message);
     }
   }
 
-  // Start server
-  const port = configService.get<number>('PORT', 3000);
   await app.listen(port, '0.0.0.0');
 
-  console.log(`🚀 Application is running on: http://localhost:${port}/${apiPrefix}`);
-  console.log(`📚 Swagger docs available at: http://localhost:${port}/${apiPrefix}/docs`);
+  console.log(`🚀 Application running:`);
+  console.log(`   Local:   http://localhost:${port}/${apiPrefix}`);
+  if (lanIp) console.log(`   LAN:     http://${lanIp}:${port}/${apiPrefix}`);
+  console.log(`📚 Swagger: http://localhost:${port}/${apiPrefix}/docs` + (lanIp ? ` | http://${lanIp}:${port}/${apiPrefix}/docs` : ''));
 }
 
 bootstrap();
