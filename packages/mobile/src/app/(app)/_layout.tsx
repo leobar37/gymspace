@@ -96,7 +96,7 @@ function AppLayout() {
       <Tabs.Screen
         name="inventory"
         options={{
-          title: '',
+          title: 'Inventario',
           headerTitle: 'Inventario y Ventas',
           tabBarIcon: ({ color }) => (
             <Icon as={ShoppingCartIcon} className="w-6 h-6" style={{ color }} />

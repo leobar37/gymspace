@@ -6,7 +6,6 @@ import { SetupDefaultUserCommand } from './setup-default-user.command';
 import { TestCommand } from './test.command';
 
 // Core modules
-import { DatabaseModule } from '../core/database/database.module';
 import { AuthModule } from '../core/auth/auth.module';
 import { CacheModule } from '../core/cache/cache.module';
 import { CommonModule } from '../common/common.module';
@@ -45,7 +44,6 @@ import validationSchema from '../config/validation.schema';
     }),
 
     // Core modules
-    DatabaseModule,
     AuthModule,
     CacheModule,
     CommonModule,

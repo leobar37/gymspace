@@ -91,7 +91,7 @@ export function AssetSelector({
                         width={carouselWidth}
                         height={192}
                         resizeMode="contain"
-                        className="rounded-lg"
+                        className="w-full h-full"
                       />
                     </View>
                   </Pressable>
@@ -102,10 +102,11 @@ export function AssetSelector({
                       <FlatList
                         data={assets.slice(0, 4)}
                         renderItem={({ item, index }) => (
-                          <View style={{ flex: 1, padding: 8 }}>
-                            <View style={{ position: 'relative' }}>
+                          <View style={{ flex: 1, padding: 4 }}>
+                            <View style={{ position: 'relative', aspectRatio: 1 }}>
                               <View 
                                 style={{
+                                  flex: 1,
                                   borderRadius: 12,
                                   overflow: 'hidden',
                                   backgroundColor: '#f3f4f6'
@@ -113,9 +114,10 @@ export function AssetSelector({
                               >
                                 <AssetPreview
                                   asset={item}
-                                  width={undefined}
-                                  height={undefined}
+                                  width={itemWidth - 8}
+                                  height={itemWidth - 8}
                                   resizeMode="cover"
+                                  className="w-full h-full"
                                 />
                               </View>
                               {/* Show +N overlay on the 4th item if there are more */}

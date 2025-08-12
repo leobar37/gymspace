@@ -26,10 +26,10 @@ import type { UpdateProductDto } from '@gymspace/sdk';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { 
-    isEditing, 
-    setIsEditing, 
-    reset 
+  const {
+    isEditing,
+    setIsEditing,
+    reset
   } = useProductDetailStore();
 
   // Queries and Mutations
@@ -52,6 +52,7 @@ export default function ProductDetailScreen() {
         id: id!,
         data
       });
+      refetch()
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating product:', error);
@@ -82,7 +83,7 @@ export default function ProductDetailScreen() {
 
   const handleStockAdjustment = async (adjustment: number) => {
     if (!product) return;
-    
+
     const newStock = product.stock + adjustment;
     await updateStockMutation.mutateAsync({
       id: id!,
@@ -114,7 +115,7 @@ export default function ProductDetailScreen() {
           >
             <ButtonText className="text-white">Volver</ButtonText>
           </Button>
-          
+
           <View className="flex-1 items-center justify-center">
             <UIAlert action="error" className="max-w-sm">
               <AlertIcon as={InfoIcon} />
@@ -161,13 +162,13 @@ export default function ProductDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
           {/* Header with actions */}
-          <ProductHeader 
+          <ProductHeader
             onEdit={() => setIsEditing(true)}
             onDelete={handleDelete}
           />
 
           {/* Product Image */}
-          <ProductImage 
+          <ProductImage
             imageId={product.imageId}
             productName={product.name}
           />

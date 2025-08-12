@@ -19,6 +19,7 @@ interface AssetPreviewProps {
   assetId?: string;
   width?: number;
   height?: number;
+  size?: 'small' | 'medium' | 'large' | 'full';
   className?: string;
   showLoading?: boolean;
   resizeMode?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
@@ -29,6 +30,7 @@ export function AssetPreview({
   assetId,
   width,
   height,
+  size,
   className = '',
   showLoading = true,
   resizeMode = 'cover',
@@ -36,11 +38,40 @@ export function AssetPreview({
   // Construct the render URL directly without using hooks
   const renderUrl = getAssetRenderUrl(assetId || asset?.id);
 
+  console.log("AssetPreview renderUrl:", renderUrl);
+  
   const assetData = asset;
 
-  // Default dimensions if not provided
-  const imageWidth = width || 200;
-  const imageHeight = height || 200;
+  // Determine dimensions based on size prop or explicit width/height
+  let imageWidth = width;
+  let imageHeight = height;
+  
+  if (size && !width && !height) {
+    switch (size) {
+      case 'small':
+        imageWidth = 80;
+        imageHeight = 80;
+        break;
+      case 'medium':
+        imageWidth = 150;
+        imageHeight = 150;
+        break;
+      case 'large':
+        imageWidth = 300;
+        imageHeight = 300;
+        break;
+      case 'full':
+        // Will use flex: 1
+        break;
+      default:
+        imageWidth = 200;
+        imageHeight = 200;
+    }
+  }
+  
+  // Default dimensions if still not provided
+  imageWidth = imageWidth || 200;
+  imageHeight = imageHeight || 200;
 
   if (!renderUrl && !assetData?.previewUrl) {
     return (
@@ -64,10 +95,15 @@ export function AssetPreview({
   });
 
   // Using expo-image for better performance and caching
+  // Use specific dimensions or flex: 1 for 'full' size
+  const imageStyle = size === 'full' && !width && !height 
+    ? { flex: 1 }
+    : { width: imageWidth, height: imageHeight };
+
   return (
     <Image
       source={{ uri: url }}
-      style={{ width: imageWidth, height: imageHeight }}
+      style={imageStyle}
       className={className}
       contentFit={resizeMode as ImageContentFit}
       transition={200}
@@ -77,7 +113,7 @@ export function AssetPreview({
       cachePolicy="memory-disk"
       priority="high"
       onError={(error) => {
-        console.error('Error loading asset preview:', error);
+        console.error('Error loading asset preview:', error, 'URL:', url);
       }}
       onLoad={() => {
         console.log('Image loaded successfully:', url);

@@ -75,7 +75,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
     control,
     handleSubmit,
     watch,
-    formState: { errors }
+    formState: { errors, isDirty }
   } = methods;
 
   const handleFormSubmit = handleSubmit(async (data) => {
@@ -234,7 +234,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
             </Button>
             <Button
               onPress={handleFormSubmit}
-              disabled={isFormLoading}
+              disabled={product ? (isFormLoading || !isDirty) : isFormLoading}
             >
               {isFormLoading ? (
                 <HStack space="sm" className="items-center">

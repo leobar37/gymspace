@@ -14,17 +14,18 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   imageId, 
   productName 
 }) => {
+  
   return (
     <Card className="bg-white border border-gray-200">
-      <View className="h-48 bg-gray-100 rounded-t-lg items-center justify-center">
+      <View className="h-48 bg-gray-100 rounded-t-lg items-center justify-center overflow-hidden">
         {imageId ? (
-          <AssetPreview
-            assetId={imageId}
-            width={undefined}
-            height={192}
-            className="w-full rounded-t-lg"
-            resizeMode="contain"
-          />
+          <View className="w-full h-full">
+            <AssetPreview
+              assetId={imageId}
+              resizeMode="contain"
+              showLoading={true}
+            />
+          </View>
         ) : (
           <Icon as={PackageIcon} className="w-16 h-16 text-gray-400" />
         )}

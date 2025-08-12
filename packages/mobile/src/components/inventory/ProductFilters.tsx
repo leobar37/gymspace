@@ -96,7 +96,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
           onPress={onToggleFilters}
           className="px-3"
         >
-          <Icon as={FilterIcon} className="w-5 h-5" />
+          <Icon as={FilterIcon} className="w-5 h-5 text-gray-600" />
         </Button>
 
         {hasActiveFilters && (

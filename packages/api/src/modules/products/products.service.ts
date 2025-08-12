@@ -438,12 +438,10 @@ export class ProductsService {
       throw new ResourceNotFoundException('Product not found');
     }
 
-    const newStock = Math.max(0, product.stock + quantity);
-
     return this.prisma.product.update({
       where: { id: productId },
       data: {
-        stock: newStock,
+        stock: quantity ,
         updatedByUserId: userId,
       },
       include: {

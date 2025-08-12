@@ -34,11 +34,6 @@ export function AssetModal() {
   const deleteAssetMutation = useDeleteAsset();
   const uploadAssetMutation = useUploadAsset();
 
-  // Monitor selectedAssets changes
-  React.useEffect(() => {
-    console.log('[AssetModal] selectedAssets changed:', modal.selectedAssets);
-  }, [modal.selectedAssets]);
-
   // Sort assets to show selected ones first - must be called before any conditional returns
   const sortedAssets = React.useMemo(() => {
     console.log('[AssetModal] Computing sortedAssets:', {
@@ -180,6 +175,7 @@ export function AssetModal() {
               width={undefined}
               height={undefined}
               resizeMode="cover"
+              className="w-full h-full"
             />
           </View>
           {isSelected && (
@@ -221,14 +217,44 @@ export function AssetModal() {
           </HStack>
         </ModalHeader>
 
-        <View style={{ flex: 1, minHeight: 400 }}>
+        <View style={{ flex: 1, minHeight: 400, position: 'relative' }}>
+          {/* Loading overlay when uploading */}
+          {uploadAssetMutation.isPending && (
+            <View style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000,
+            }}>
+              <View style={{
+                backgroundColor: 'white',
+                padding: 20,
+                borderRadius: 12,
+                alignItems: 'center',
+              }}>
+                <ActivityIndicator size="large" color="#6366f1" />
+                <Text className="mt-2 text-gray-700">Subiendo archivo...</Text>
+              </View>
+            </View>
+          )}
+          
           {isLoading ? (
             <View className="flex-1 items-center justify-center py-8">
               <ActivityIndicator size="large" />
             </View>
           ) : sortedAssets.length === 0 ? (
             <VStack space="md" className="flex-1 p-4">
-              <Button onPress={handleAddAsset} variant="outline" className="self-start">
+              <Button 
+                onPress={handleAddAsset} 
+                variant="outline" 
+                className="self-start"
+                isDisabled={uploadAssetMutation.isPending}
+              >
                 <HStack space="xs" className="items-center">
                   <Icon as={PlusIcon} />
                   <ButtonText>Agregar Archivo</ButtonText>
@@ -236,7 +262,12 @@ export function AssetModal() {
               </Button>
               <View className="flex-1 items-center justify-center py-8">
                 <Text className="text-gray-500">No hay archivos disponibles</Text>
-                <Button onPress={handleAddAsset} variant="link" className="mt-2">
+                <Button 
+                  onPress={handleAddAsset} 
+                  variant="link" 
+                  className="mt-2"
+                  isDisabled={uploadAssetMutation.isPending}
+                >
                   <ButtonText>Agrega tu primer archivo</ButtonText>
                 </Button>
               </View>
@@ -253,7 +284,12 @@ export function AssetModal() {
                 contentContainerStyle={{ paddingBottom: 24, paddingTop: 12, minHeight: 300 }}
                 ListHeaderComponent={
                   <View className="p-4 pb-2">
-                    <Button onPress={handleAddAsset} variant="outline" className="self-start">
+                    <Button 
+                      onPress={handleAddAsset} 
+                      variant="outline" 
+                      className="self-start"
+                      isDisabled={uploadAssetMutation.isPending}
+                    >
                       <HStack space="xs" className="items-center">
                         <Icon as={PlusIcon} />
                         <ButtonText>Agregar Archivo</ButtonText>

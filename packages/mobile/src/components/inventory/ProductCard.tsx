@@ -6,10 +6,10 @@ import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Icon } from '@/components/ui/icon';
-import { Image } from '@/components/ui/image';
 import { View } from '@/components/ui/view';
 import { PackageIcon, AlertTriangleIcon } from 'lucide-react-native';
 import { useFormatPrice } from '@/config/ConfigContext';
+import { AssetPreview } from '@/features/assets/components/AssetPreview';
 import type { Product } from '@gymspace/sdk';
 
 interface ProductCardProps {
@@ -51,11 +51,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Product Image */}
           <View className={`${compact ? 'h-20' : 'h-24'} w-full bg-gray-100 rounded-lg items-center justify-center overflow-hidden`}>
             {product.imageId ? (
-              <Image 
-                source={{ uri: product.imageId }} 
-                className="w-full h-full"
+              <AssetPreview
+                assetId={product.imageId}
+                size="full"
                 resizeMode="cover"
-                alt={product.name}
+                showLoading={false}
               />
             ) : (
               <Icon 
