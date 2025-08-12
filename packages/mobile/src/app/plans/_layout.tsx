@@ -24,6 +24,13 @@ export default function PlansLayout() {
           headerBackTitle: 'Atrás',
         }}
       />
+      <Stack.Screen
+        name="plans"
+        options={{
+          title: 'Editar Plan',
+          headerBackTitle: 'Atrás',
+        }}
+      />
     </Stack>
   );
 }

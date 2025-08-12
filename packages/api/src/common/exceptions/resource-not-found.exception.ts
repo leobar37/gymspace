@@ -3,8 +3,8 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 export class ResourceNotFoundException extends HttpException {
   constructor(resource: string, identifier?: string | number) {
     const message = identifier
-      ? `${resource} with identifier '${identifier}' not found`
-      : `${resource} not found`;
+      ? `${resource} con identificador '${identifier}' no encontrado`
+      : `${resource} no encontrado`;
 
     super(
       {

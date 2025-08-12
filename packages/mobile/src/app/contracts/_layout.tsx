@@ -47,6 +47,13 @@ export default function ContractsLayout() {
           title: 'Renovar Contrato',
         }}
       />
+      <Stack.Screen
+        name="expiring"
+        options={{
+          title: 'Contratos por Vencer 2',
+          headerShown: false
+        }}
+      />
     </Stack>
   );
 }

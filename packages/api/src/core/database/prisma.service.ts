@@ -23,30 +23,36 @@ const SOFT_DELETE_MODELS = [
 // Create a function to generate the extended Prisma client
 function createExtendedPrismaClient(configService: ConfigService) {
   const databaseUrl = configService.get<string>('database.url');
-  
+
   // Parse the URL to add connection pool settings
   const url = new URL(databaseUrl);
-  
+
   // Add connection pool parameters to ensure efficient connection management
   // These settings help prevent connection pool exhaustion
-  url.searchParams.set('connection_limit', configService.get<number>('database.connectionLimit', 25).toString());
-  url.searchParams.set('pool_timeout', configService.get<number>('database.poolTimeout', 20).toString());
-  url.searchParams.set('connect_timeout', configService.get<number>('database.connectTimeout', 10).toString());
-  url.searchParams.set('socket_timeout', configService.get<number>('database.socketTimeout', 30).toString());
-  
+  url.searchParams.set(
+    'connection_limit',
+    configService.get<number>('database.connectionLimit', 25).toString(),
+  );
+  url.searchParams.set(
+    'pool_timeout',
+    configService.get<number>('database.poolTimeout', 20).toString(),
+  );
+  url.searchParams.set(
+    'connect_timeout',
+    configService.get<number>('database.connectTimeout', 10).toString(),
+  );
+  url.searchParams.set(
+    'socket_timeout',
+    configService.get<number>('database.socketTimeout', 30).toString(),
+  );
+
   const prismaClient = new PrismaClient({
     datasources: {
       db: {
+        
         url: url.toString(),
       },
     },
-    log: configService.get<string>('nodeEnv') === 'development'
-      ? [
-          { emit: 'event', level: 'query' },
-          { emit: 'event', level: 'error' },
-          { emit: 'event', level: 'warn' },
-        ]
-      : [{ emit: 'event', level: 'error' }],
   });
 
   return {
@@ -114,7 +120,9 @@ function createExtendedPrismaClient(configService: ConfigService) {
           async delete({ model, args, query }) {
             if (SOFT_DELETE_MODELS.includes(model as any)) {
               // Instead of using delete, we'll use update to soft delete
-              const modelDelegate = (prismaClient as any)[model.charAt(0).toLowerCase() + model.slice(1)];
+              const modelDelegate = (prismaClient as any)[
+                model.charAt(0).toLowerCase() + model.slice(1)
+              ];
               return modelDelegate.update({
                 where: args.where,
                 data: { deletedAt: new Date() },
@@ -127,7 +135,9 @@ function createExtendedPrismaClient(configService: ConfigService) {
           async deleteMany({ model, args, query }) {
             if (SOFT_DELETE_MODELS.includes(model as any)) {
               // Instead of using deleteMany, we'll use updateMany to soft delete
-              const modelDelegate = (prismaClient as any)[model.charAt(0).toLowerCase() + model.slice(1)];
+              const modelDelegate = (prismaClient as any)[
+                model.charAt(0).toLowerCase() + model.slice(1)
+              ];
               return modelDelegate.updateMany({
                 where: args.where,
                 data: { deletedAt: new Date() },
@@ -217,14 +227,16 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     // Track instance creation to detect multiple instances
     PrismaService.instanceCount++;
     this.instanceId = PrismaService.instanceCount;
-    
+
     if (PrismaService.instanceCount > 1) {
-      this.logger.warn(`Multiple PrismaService instances detected! Instance #${this.instanceId}. This can cause connection pool exhaustion.`);
+      this.logger.warn(
+        `Multiple PrismaService instances detected! Instance #${this.instanceId}. This can cause connection pool exhaustion.`,
+      );
       this.logger.warn(`Total instances created: ${PrismaService.instanceCount}`);
     }
-    
+
     this.logger.log(`Creating PrismaService instance #${this.instanceId}`);
-    
+
     // Create the base and extended clients
     const clients = createExtendedPrismaClient(configService);
     this.baseClient = clients.base;
@@ -269,11 +281,15 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
 
     this.baseClient.$on('error' as never, (e: any) => {
       this.logger.error(`Prisma Error: ${e.message}`, e.target);
-      
+
       // Log specific connection pool errors
       if (e.message?.includes('connection pool') || e.message?.includes('connection limit')) {
-        this.logger.error('🚨 CONNECTION POOL EXHAUSTION DETECTED! This indicates multiple PrismaService instances or connection leaks.');
-        this.logger.error(`Current instance ID: ${this.instanceId}, Total instances: ${PrismaService.instanceCount}`);
+        this.logger.error(
+          '🚨 CONNECTION POOL EXHAUSTION DETECTED! This indicates multiple PrismaService instances or connection leaks.',
+        );
+        this.logger.error(
+          `Current instance ID: ${this.instanceId}, Total instances: ${PrismaService.instanceCount}`,
+        );
       }
     });
 
@@ -339,7 +355,10 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
 
     // Handle unhandled promise rejections
     process.on('unhandledRejection', async (reason, promise) => {
-      this.logger.error('Unhandled promise rejection, closing database connection...', { reason, promise });
+      this.logger.error('Unhandled promise rejection, closing database connection...', {
+        reason,
+        promise,
+      });
       await this.disconnect();
       process.exit(1);
     });

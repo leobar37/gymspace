@@ -12,6 +12,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { CheckCircleIcon, XIcon, SearchIcon, UserIcon } from 'lucide-react-native';
 import { useCheckInForm } from '@/controllers/check-ins.controller';
 import { useClientsController } from '@/features/clients/controllers/clients.controller';
+import { ErrorView } from '@/shared/components/ErrorView';
 
 export const CheckInButton: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -19,13 +20,14 @@ export const CheckInButton: React.FC = () => {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [selectedClientName, setSelectedClientName] = useState<string>('');
   const [notes, setNotes] = useState('');
-  
+  const [error, setError] = useState<Error | null>(null);
+
   const { handleCheckIn, isLoading: isCheckingIn } = useCheckInForm();
   const { useClientsList } = useClientsController();
-  
+
   // Only search when query is long enough
   const shouldSearch = useMemo(() => searchQuery.length > 2, [searchQuery]);
-  
+
   // Search clients when typing
   const { data: searchResults, isLoading: isSearching } = useClientsList(
     shouldSearch ? {
@@ -38,8 +40,9 @@ export const CheckInButton: React.FC = () => {
 
   const handleCreateCheckIn = async () => {
     if (!selectedClientId) return;
-    
+
     try {
+      setError(null);
       await handleCheckIn(selectedClientId, notes.trim() || undefined);
       // Reset form and close modal on success
       setSelectedClientId(null);
@@ -47,19 +50,40 @@ export const CheckInButton: React.FC = () => {
       setSearchQuery('');
       setNotes('');
       setIsModalVisible(false);
-    } catch (error) {
-      // Error is handled by the controller with toast
+    } catch (err) {
+      // Capture the error to show error screen
+      setError(err instanceof Error ? err : new Error('Error al registrar check-in'));
     }
   };
 
-  const openModal = () => setIsModalVisible(true);
+  const openModal = () => {
+    setError(null);
+    setIsModalVisible(true);
+  };
+  
   const closeModal = () => {
     setIsModalVisible(false);
     setSelectedClientId(null);
     setSelectedClientName('');
     setSearchQuery('');
     setNotes('');
+    setError(null);
   };
+
+  const handleRetry = () => {
+    setError(null);
+  };
+
+  const handleBackFromError = () => {
+    setError(null);
+    setSelectedClientId(null);
+    setSelectedClientName('');
+    setSearchQuery('');
+    setNotes('');
+  };
+
+  console.log("error", error);
+  
 
   return (
     <>
@@ -100,6 +124,16 @@ export const CheckInButton: React.FC = () => {
             </VStack>
 
             {/* Modal Content */}
+            {error ? (
+              <ErrorView
+                title="Error al registrar Check-in"
+                error={error}
+                onRetry={handleRetry}
+                onBack={handleBackFromError}
+                retryText="Intentar de nuevo"
+                backText="Volver al inicio"
+              />
+            ) : (
             <ScrollView className="flex-1 p-6" showsVerticalScrollIndicator={false}>
               <VStack className="gap-6">
                 {/* Search Input */}
@@ -203,7 +237,7 @@ export const CheckInButton: React.FC = () => {
                   <Button
                     variant="solid"
                     size="md"
-                    className="flex-1 bg-green-600"
+                    className='flex-1'
                     onPress={handleCreateCheckIn}
                     disabled={!selectedClientId || isCheckingIn}
                   >
@@ -211,13 +245,14 @@ export const CheckInButton: React.FC = () => {
                       <Spinner className="text-white" />
                     ) : (
                       <ButtonText className="text-white">
-                        Registrar Check-in
+                        Check-in
                       </ButtonText>
                     )}
                   </Button>
                 </HStack>
               </VStack>
             </ScrollView>
+            )}
           </View>
         </View>
       </Modal>

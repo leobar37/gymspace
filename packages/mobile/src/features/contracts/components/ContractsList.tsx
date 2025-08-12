@@ -26,12 +26,14 @@ interface ContractsListProps {
   filters?: SearchFilters;
   onContractPress?: (contractId: string) => void;
   hideAddButton?: boolean;
+  availableStatuses?: { value: ContractStatus | undefined; label: string }[];
 }
 
 export const ContractsList: React.FC<ContractsListProps> = ({ 
   filters = {}, 
   onContractPress,
-  hideAddButton = false 
+  hideAddButton = false,
+  availableStatuses
 }) => {
   const router = useRouter();
   const formatPrice = useFormatPrice();
@@ -171,7 +173,7 @@ export const ContractsList: React.FC<ContractsListProps> = ({
   );
 
   const renderStatusFilter = () => {
-    const statuses = [
+    const statuses = availableStatuses || [
       { value: undefined, label: 'Todos' },
       { value: ContractStatus.ACTIVE, label: 'Activos' },
       { value: ContractStatus.PENDING, label: 'Pendientes' },

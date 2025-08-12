@@ -41,8 +41,8 @@ interface ClientCardProps {
 
 const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress }) => {
   const hasActiveContract = client.contracts?.length > 0;
-  
-  console.log("client", client);
+  // Nuevo flag derivado del status
+  const isActive = client.status === 'active';
   
   return (
     <Card className="mb-3 p-4">
@@ -67,14 +67,13 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
             </VStack>
           </HStack>
         </Pressable>
-        
         <VStack className="items-end gap-1">
           <HStack className="items-center gap-2">
             <Badge
               variant="solid"
-              action={client.isActive ? 'success' : 'muted'}
+              action={isActive ? 'success' : 'muted'}
             >
-              <BadgeText>{client.isActive ? 'Activo' : 'Inactivo'}</BadgeText>
+              <BadgeText>{isActive ? 'Activo' : 'Inactivo'}</BadgeText>
             </Badge>
             <Pressable onPress={() => onActionPress(client)} className="p-1">
               <Icon as={MoreHorizontalIcon} />

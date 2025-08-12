@@ -2,6 +2,7 @@ import React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
+import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { 
   CreateCheckInDto, 
   SearchCheckInsParams,
@@ -17,10 +18,11 @@ const QUERY_KEYS = {
 } as const;
 
 export const useCheckInsController = () => {
-  const { sdk, currentGymId } = useGymSdk();
+  const { sdk } = useGymSdk();
+  const { gym } = useCurrentSession();
   const queryClient = useQueryClient();
   const toast = useToast();
-  const gymId = currentGymId;
+  const gymId = gym?.id;
 
   // Create a new check-in
   const createCheckIn = useMutation({

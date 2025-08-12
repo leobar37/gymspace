@@ -16,7 +16,12 @@ export class CheckInsService {
    * Create a check-in (CU-009)
    */
   async createCheckIn(gymId: string, dto: CreateCheckInDto, userId: string): Promise<CheckIn> {
-    // Verify gym access
+    console.log({
+      gymId,
+      dto,
+      userId,
+    });
+    
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
@@ -43,13 +48,12 @@ export class CheckInsService {
     if (!client) {
       throw new ResourceNotFoundException('Client', dto.gymClientId);
     }
-
     if (client.status !== 'active') {
-      throw new BusinessException('Client is not active');
+      throw new BusinessException('El cliente no está activo');
     }
 
     if (client.contracts.length === 0) {
-      throw new BusinessException('Client does not have an active contract or contract has expired');
+      throw new BusinessException('El cliente no tiene un contrato activo o el contrato ha expirado');
     }
 
     // Check if client already checked in today

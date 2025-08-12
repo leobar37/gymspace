@@ -20,7 +20,6 @@ export default function PlansScreen() {
             <Icon as={ArrowLeft} className="w-6 h-6 text-gray-700" />
           </Pressable>
         </HStack>
-        
         <PlansList />
       </View>
     </SafeAreaView>
