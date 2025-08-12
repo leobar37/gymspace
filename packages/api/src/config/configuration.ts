@@ -13,10 +13,10 @@ export default () => ({
   // Database
   database: {
     url: process.env.DATABASE_URL,
-    connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '25', 10),
-    poolTimeout: parseInt(process.env.DB_POOL_TIMEOUT || '20', 10),
-    connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '10', 10),
-    socketTimeout: parseInt(process.env.DB_SOCKET_TIMEOUT || '30', 10),
+    connectionLimit: parseInt(process.env.DATABASE_CONNECTION_LIMIT || '10', 10), // Reduced from 25 to 10 to force better practices
+    poolTimeout: parseInt(process.env.DATABASE_POOL_TIMEOUT || '10', 10), // Reduced from 20 to 10
+    connectTimeout: parseInt(process.env.DATABASE_CONNECT_TIMEOUT || '5', 10), // Reduced from 10 to 5
+    socketTimeout: parseInt(process.env.DATABASE_SOCKET_TIMEOUT || '10', 10), // Reduced from 30 to 10
   },
 
   // Redis

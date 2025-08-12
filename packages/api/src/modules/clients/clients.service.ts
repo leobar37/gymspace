@@ -377,16 +377,46 @@ export class ClientsService {
    * Get client statistics
    */
   async getClientStats(ctx: RequestContext, clientId: string) {
-    const client = await this.getClient(ctx, clientId);
+    // Use a single transaction for ALL database operations
+    const result = await this.prismaService.$transaction(async (tx) => {
+      // Get client with related data
+      const client = await tx.gymClient.findUnique({
+        where: { 
+          id: clientId,
+          gymId: ctx.gym.id,
+          deletedAt: null,
+        },
+        include: {
+          checkIns: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+          evaluations: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+      });
 
-    const [totalCheckIns, monthlyCheckIns, totalEvaluations, activeContracts, totalSpent] =
-      await Promise.all([
+      if (!client) {
+        throw new ResourceNotFoundException('Client not found');
+      }
+
+      // Perform all counts and queries in parallel within the transaction
+      const [
+        totalCheckIns,
+        monthlyCheckIns,
+        totalEvaluations,
+        activeContracts,
+        membershipHistory,
+        totalSpentData,
+      ] = await Promise.all([
         // Total check-ins
-        this.prismaService.checkIn.count({
+        tx.checkIn.count({
           where: { gymClientId: clientId },
         }),
         // Monthly check-ins (current month)
-        this.prismaService.checkIn.count({
+        tx.checkIn.count({
           where: {
             gymClientId: clientId,
             createdAt: {
@@ -395,32 +425,59 @@ export class ClientsService {
           },
         }),
         // Total evaluations
-        this.prismaService.evaluation.count({
+        tx.evaluation.count({
           where: { gymClientId: clientId },
         }),
         // Active contracts
-        this.prismaService.contract.count({
+        tx.contract.count({
           where: { gymClientId: clientId, status: 'active' },
         }),
-        // Total spent (sum of all contract payments)
-        this.calculateTotalSpent(clientId),
+        // Membership history
+        tx.contract.findMany({
+          where: { gymClientId: clientId },
+          include: {
+            gymMembershipPlan: {
+              select: {
+                id: true,
+                name: true,
+                basePrice: true,
+              },
+            },
+          },
+          orderBy: { startDate: 'desc' },
+          take: 5,
+        }),
+        // Total spent - aggregate sum
+        tx.contract.aggregate({
+          where: { gymClientId: clientId },
+          _sum: {
+            finalAmount: true,
+          },
+        }),
       ]);
 
-    // Get membership history
-    const membershipHistory = await this.prismaService.contract.findMany({
-      where: { gymClientId: clientId },
-      include: {
-        gymMembershipPlan: {
-          select: {
-            id: true,
-            name: true,
-            basePrice: true,
-          },
-        },
-      },
-      orderBy: { startDate: 'desc' },
-      take: 5,
+      const totalSpent = totalSpentData._sum.finalAmount || 0;
+
+      return {
+        client,
+        totalCheckIns,
+        monthlyCheckIns,
+        totalEvaluations,
+        activeContracts,
+        membershipHistory,
+        totalSpent,
+      };
     });
+
+    const {
+      client,
+      totalCheckIns,
+      monthlyCheckIns,
+      totalEvaluations,
+      activeContracts,
+      membershipHistory,
+      totalSpent,
+    } = result;
 
     return {
       client: {
@@ -450,7 +507,7 @@ export class ClientsService {
   /**
    * Calculate total amount spent by client
    */
-  private async calculateTotalSpent(clientId: string): Promise<number> {
+  private async _calculateTotalSpent(clientId: string): Promise<number> {
     const contracts = await this.prismaService.contract.findMany({
       where: { gymClientId: clientId },
       include: {
