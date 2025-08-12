@@ -23,17 +23,19 @@ interface ConfigContextValue {
 const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
 
 export function ConfigProvider({ children }: { children: React.ReactNode }) {
-  const { gym, organization } = useCurrentSession();
+  const { organization } = useCurrentSession();
 
-  // Get country code from gym or organization settings
+  // Get country code from gym or organization settings - stable reference
+  const organizationCountry = organization?.country;
+  
   const countryCode = useMemo(() => {
     // First check organization settings for country (this is where country is stored)
-    if (organization?.country) {
-      return organization.country as string;
+    if (organizationCountry) {
+      return organizationCountry as string;
     }
     // Default to Peru as an example
     return 'PE';
-  }, [gym, organization]);
+  }, [organizationCountry]);
 
   const contextValue = useMemo(
     () => ({

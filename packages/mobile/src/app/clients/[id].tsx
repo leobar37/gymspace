@@ -142,7 +142,7 @@ export default function ClientDetailScreen() {
         <HStack className="items-center justify-between px-4 py-3">
           <HStack className="items-center flex-1">
             <Pressable onPress={() => router.back()} className="p-2 -ml-2">
-              <Icon as={ChevronLeftIcon} size="xl" />
+              <Icon as={ChevronLeftIcon} size="xl" className='text-black' />
             </Pressable>
             <Text className="text-lg font-semibold ml-2" numberOfLines={1}>
               {client?.name || 'Cliente'}
@@ -205,7 +205,7 @@ export default function ClientDetailScreen() {
       </View>
       
       <ScrollView className="flex-1">
-        <VStack className="p-4 gap-4">
+        <VStack className="px-4 pb-4 pt-2 gap-4">
           {/* Tab Content */}
           {activeTab === 'info' ? (
             <>

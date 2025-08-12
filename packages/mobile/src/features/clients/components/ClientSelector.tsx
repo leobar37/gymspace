@@ -48,6 +48,7 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [tempValue, setTempValue] = useState(field.value || '');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   
   const { useClientsList, useClientDetail } = useClientsController();
   
@@ -57,8 +58,21 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
     limit: 50
   });
   
-  // Fetch selected client details
-  const { data: selectedClient } = useClientDetail(field.value as string);
+  // Only fetch selected client details when field.value exists and is not empty
+  const { data: clientDetailData } = useClientDetail(
+    field.value && typeof field.value === 'string' && field.value.length > 0 
+      ? field.value 
+      : undefined
+  );
+  
+  // Update selectedClient when clientDetailData changes
+  useEffect(() => {
+    if (clientDetailData) {
+      setSelectedClient(clientDetailData);
+    } else if (!field.value) {
+      setSelectedClient(null);
+    }
+  }, [clientDetailData, field.value]);
   
   const clients = useMemo(() => {
     return clientsData?.data || [];
@@ -66,8 +80,14 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
   
   const handleSave = () => {
     field.onChange(tempValue);
-    const selectedClient = clients.find(c => c.id === tempValue);
-    onClientSelect?.(selectedClient || null);
+    const selected = clients.find(c => c.id === tempValue);
+    if (selected) {
+      setSelectedClient(selected);
+      onClientSelect?.(selected);
+    } else {
+      setSelectedClient(null);
+      onClientSelect?.(null);
+    }
     setShowModal(false);
   };
   
@@ -79,6 +99,7 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
   
   const handleClear = () => {
     field.onChange('');
+    setSelectedClient(null);
     onClientSelect?.(null);
   };
   

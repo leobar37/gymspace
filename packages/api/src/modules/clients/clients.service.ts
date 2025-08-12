@@ -311,8 +311,7 @@ export class ClientsService {
       where,
       include: includeOptions,
       orderBy: paginationParams.orderBy || [
-        { status: 'asc' }, // Active clients first
-        { name: 'asc' },
+        { createdAt: 'desc' }, // Most recent clients first
       ],
       ...paginationParams,
     });

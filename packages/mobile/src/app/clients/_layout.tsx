@@ -32,7 +32,7 @@ export default function ClientsLayout() {
       <Stack.Screen
         name="[id]"
         options={{
-          title: 'Detalle del Cliente',
+          headerShown: false,
         }}
       />
       <Stack.Screen

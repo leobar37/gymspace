@@ -14,7 +14,7 @@ import {
   EditIcon,
   TrashIcon,
   ChevronRightIcon,
-  ArrowLeftIcon
+  ChevronLeftIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useCategoriesController } from '@/features/categories/controllers/categories.controller';
@@ -84,6 +84,18 @@ export default function CategoriesScreen() {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
+        {/* Header with Back Button */}
+        <HStack className="items-center mb-2 p-4">
+          <Pressable
+            onPress={() => router.push('/inventory')}
+            className="p-2 -ml-2 rounded-lg"
+          >
+            <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
+          </Pressable>
+          <Text className="text-xl font-bold text-gray-900 ml-2">
+            Categorías de Productos
+          </Text>
+        </HStack>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#3B82F6" />
           <Text className="text-gray-600 mt-4">Cargando categorías...</Text>
@@ -95,6 +107,18 @@ export default function CategoriesScreen() {
   if (error) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
+        {/* Header with Back Button */}
+        <HStack className="items-center mb-2 p-4">
+          <Pressable
+            onPress={() => router.push('/inventory')}
+            className="p-2 -ml-2 rounded-lg"
+          >
+            <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
+          </Pressable>
+          <Text className="text-xl font-bold text-gray-900 ml-2">
+            Categorías de Productos
+          </Text>
+        </HStack>
         <View className="flex-1 items-center justify-center p-4">
           <Icon as={TagIcon} className="w-16 h-16 text-gray-400 mb-4" />
           <Text className="text-gray-800 text-lg font-semibold mb-2">
@@ -114,27 +138,28 @@ export default function CategoriesScreen() {
   const categoriesList = categories || [];
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
-          {/* Back Button */}
-          <Pressable 
-            onPress={() => router.back()}
-            className="flex-row items-center mb-2"
-          >
-            <Icon as={ArrowLeftIcon} className="w-5 h-5 text-gray-700 mr-2" />
-            <Text className="text-gray-700 font-medium">Volver al Inventario</Text>
-          </Pressable>
-
-          {/* Header with Add Button */}
-          <HStack className="justify-between items-center mb-2">
-            <Text className="text-gray-800 text-xl font-bold">
+          {/* Header with Back Button */}
+          <HStack className="items-center mb-2">
+            <Pressable
+              onPress={() => router.push('/inventory')}
+              className="p-2 -ml-2 rounded-lg"
+            >
+              <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
+            </Pressable>
+            <Text className="text-xl font-bold text-gray-900 ml-2">
               Categorías de Productos
             </Text>
+          </HStack>
+
+          {/* Add Button */}
+          <HStack className="justify-end items-center mb-2">
             <Button 
               size="sm" 
+              variant="solid"
               onPress={handleAddCategory}
-              className="bg-blue-500"
             >
               <ButtonIcon as={PlusIcon} className="mr-2" />
               <ButtonText>Nueva</ButtonText>

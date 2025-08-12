@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { ScrollView, Alert, FlatList, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VStack } from '@/components/ui/vstack';
@@ -17,7 +17,8 @@ import {
   PlusIcon,
   CheckIcon,
   XIcon,
-  PackageIcon
+  PackageIcon,
+  ChevronLeftIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useCart } from '@/contexts/CartContext';
@@ -26,7 +27,14 @@ import { useCreateSale } from '@/hooks/useSales';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { ProductCard } from '@/components/inventory/ProductCard';
 import { CartItem } from '@/components/inventory/CartItem';
-import type { Product, CreateSaleDto, SaleItemDto } from '@gymspace/sdk';
+import { ClientSelector } from '@/features/clients/components/ClientSelector';
+import { useForm, FormProvider } from 'react-hook-form';
+import type { Product, CreateSaleDto, SaleItemDto, Client } from '@gymspace/sdk';
+
+interface SaleFormData {
+  clientId?: string;
+  notes?: string;
+}
 
 export default function NewSaleScreen() {
   const formatPrice = useFormatPrice();
@@ -45,6 +53,14 @@ export default function NewSaleScreen() {
 
   const [showProductSelection, setShowProductSelection] = useState(false);
   const [isProcessingSale, setIsProcessingSale] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  const methods = useForm<SaleFormData>({
+    defaultValues: {
+      clientId: '',
+      notes: '',
+    },
+  });
 
   const { data: productsData, isLoading: loadingProducts } = useProducts({ 
     status: 'active',
@@ -53,6 +69,19 @@ export default function NewSaleScreen() {
     limit: 50 
   });
   const createSaleMutation = useCreateSale();
+
+  // Update customer name when client is selected
+  useEffect(() => {
+    if (selectedClient) {
+      setCustomerName(selectedClient.name);
+    } else {
+      setCustomerName('');
+    }
+  }, [selectedClient]); // setCustomerName should be stable, no need in deps
+
+  const handleClientSelect = useCallback((client: Client | null) => {
+    setSelectedClient(client);
+  }, []);
 
   const handleAddProduct = useCallback((product: Product) => {
     if (product.stock && product.stock <= 0) {
@@ -153,24 +182,32 @@ export default function NewSaleScreen() {
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
-          {/* Header */}
+          {/* Header with Back Button */}
+          <HStack className="items-center mb-2">
+            <Pressable
+              onPress={() => router.back()}
+              className="p-2 -ml-2 rounded-lg"
+            >
+              <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
+            </Pressable>
+            <Text className="text-xl font-bold text-gray-900 ml-2">
+              Nueva Venta
+            </Text>
+          </HStack>
+
+          {/* Cart Summary */}
           <HStack className="justify-between items-center">
-            <VStack>
-              <Text className="text-xl font-bold text-gray-900">
-                Nueva Venta
-              </Text>
-              <Text className="text-gray-600">
-                {itemCount} producto{itemCount !== 1 ? 's' : ''} en el carrito
-              </Text>
-            </VStack>
+            <Text className="text-gray-600">
+              {itemCount} producto{itemCount !== 1 ? 's' : ''} en el carrito
+            </Text>
             
             <Button
               variant="outline"
               size="sm"
               onPress={() => setShowProductSelection(true)}
             >
-              <Icon as={PlusIcon} className="w-4 h-4 text-blue-600 mr-2" />
-              <ButtonText className="text-blue-600">Agregar</ButtonText>
+              <Icon as={PlusIcon} className="w-4 h-4 mr-2 text-black" />
+              <ButtonText>Agregar</ButtonText>
             </Button>
           </HStack>
 
@@ -202,10 +239,10 @@ export default function NewSaleScreen() {
                   </VStack>
                   <Button
                     onPress={() => setShowProductSelection(true)}
-                    className="bg-blue-600"
+                    variant="solid"
                   >
-                    <Icon as={PlusIcon} className="w-4 h-4 text-white mr-2" />
-                    <ButtonText className="text-white">Agregar productos</ButtonText>
+                    <Icon as={PlusIcon} className="w-4 h-4 mr-2" />
+                    <ButtonText>Agregar productos</ButtonText>
                   </Button>
                 </VStack>
               </Card>
@@ -214,37 +251,34 @@ export default function NewSaleScreen() {
 
           {/* Sale Details */}
           {hasItems && (
-            <VStack space="md">
-              {/* Customer Name */}
-              <VStack space="xs">
-                <Text className="text-sm font-medium text-gray-700">
-                  Cliente (opcional)
-                </Text>
-                <Input>
-                  <InputField
-                    placeholder="Nombre del cliente"
-                    value={state.customerName}
-                    onChangeText={setCustomerName}
-                  />
-                </Input>
-              </VStack>
+            <FormProvider {...methods}>
+              <VStack space="md">
+                {/* Client Selector */}
+                <ClientSelector
+                  name="clientId"
+                  control={methods.control}
+                  label="Cliente (opcional)"
+                  placeholder="Seleccionar cliente"
+                  allowClear={true}
+                  onClientSelect={handleClientSelect}
+                />
 
-              {/* Notes */}
-              <VStack space="xs">
-                <Text className="text-sm font-medium text-gray-700">
-                  Notas (opcional)
-                </Text>
-                <Input>
-                  <InputField
-                    placeholder="Notas adicionales"
-                    value={state.notes}
-                    onChangeText={setNotes}
-                    multiline
-                    numberOfLines={3}
-                    textAlignVertical="top"
-                  />
-                </Input>
-              </VStack>
+                {/* Notes */}
+                <VStack space="xs">
+                  <Text className="text-sm font-medium text-gray-700">
+                    Notas (opcional)
+                  </Text>
+                  <Input>
+                    <InputField
+                      placeholder="Notas adicionales"
+                      value={state.notes}
+                      onChangeText={setNotes}
+                      multiline
+                      numberOfLines={3}
+                      textAlignVertical="top"
+                    />
+                  </Input>
+                </VStack>
 
               {/* Payment Status */}
               <VStack space="xs">
@@ -278,23 +312,24 @@ export default function NewSaleScreen() {
               <Button
                 onPress={handleCompleteSale}
                 disabled={isProcessingSale}
-                className="bg-green-600 disabled:bg-gray-400"
+                variant="solid"
               >
                 {isProcessingSale ? (
                   <HStack space="sm" className="items-center">
-                    <Spinner size="small" color="white" />
-                    <ButtonText className="text-white">Procesando...</ButtonText>
+                    <Spinner size="small" />
+                    <ButtonText>Procesando...</ButtonText>
                   </HStack>
                 ) : (
                   <HStack space="sm" className="items-center">
-                    <Icon as={CheckIcon} className="w-5 h-5 text-white" />
-                    <ButtonText className="text-white font-semibold">
+                    <Icon as={CheckIcon} className="w-5 h-5" />
+                    <ButtonText className="font-semibold">
                       Completar Venta
                     </ButtonText>
                   </HStack>
                 )}
               </Button>
-            </VStack>
+              </VStack>
+            </FormProvider>
           )}
         </VStack>
       </ScrollView>

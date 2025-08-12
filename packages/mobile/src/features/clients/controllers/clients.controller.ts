@@ -58,14 +58,15 @@ export const useClientsController = () => {
   };
 
   // Get client details
-  const useClientDetail = (clientId: string) => {
+  const useClientDetail = (clientId: string | undefined) => {
     return useQuery({
-      queryKey: clientsKeys.detail(clientId),
+      queryKey: clientId ? clientsKeys.detail(clientId) : ['client-detail-empty'],
       queryFn: async () => {
+        if (!clientId) return null;
         const response = await sdk.clients.getClient(clientId);
         return response;
       },
-      enabled: !!clientId,
+      enabled: !!clientId && clientId.length > 0,
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };

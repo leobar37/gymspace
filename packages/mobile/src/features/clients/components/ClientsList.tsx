@@ -42,6 +42,8 @@ interface ClientCardProps {
 const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress }) => {
   const hasActiveContract = client.contracts?.length > 0;
   
+  console.log("client", client);
+  
   return (
     <Card className="mb-3 p-4">
       <HStack className="items-center justify-between">

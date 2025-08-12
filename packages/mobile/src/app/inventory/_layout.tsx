@@ -18,13 +18,61 @@ export default function InventoryLayout() {
       }}
     >
       <Stack.Screen
-        name="index"
+        name="products"
         options={{
           headerShown: false,
         }}
       />
       <Stack.Screen
-        name="products"
+        name="new-sale"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="low-stock"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="reports"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="sales-history"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="categories"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="categories/new"
+        options={{
+          title: 'Nueva Categoría',
+        }}
+      />
+      <Stack.Screen
+        name="categories/[id]/edit"
+        options={{
+          title: 'Editar Categoría',
+        }}
+      />
+      <Stack.Screen
+        name="sales/[id]"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="products/[id]"
         options={{
           headerShown: false,
         }}

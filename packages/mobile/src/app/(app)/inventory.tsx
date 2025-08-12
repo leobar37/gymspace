@@ -51,16 +51,12 @@ export default function InventoryScreen() {
   };
 
   return (
-    <View>
+    <SafeAreaView className='flex-1 bg-gray-50' edges={['bottom']}>
       <HStack className="px-4 py-3 bg-white border-b border-gray-200 items-center">
         <Pressable onPress={handleBack} className="p-2">
           <Icon as={ArrowLeftIcon} className="w-6 h-6 text-gray-700" />
         </Pressable>
-        <Text className="flex-1 text-lg font-semibold text-gray-900 ml-2">
-          Inventario
-        </Text>
       </HStack>
-
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
           {/* New Sale Button - Prominent */}
@@ -217,6 +213,6 @@ export default function InventoryScreen() {
           </VStack>
         </VStack>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

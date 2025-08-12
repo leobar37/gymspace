@@ -27,14 +27,15 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSale, useUpdatePaymentStatus } from '@/hooks/useSales';
 import { useFormatPrice } from '@/config/ConfigContext';
-// PaymentStatus is just 'paid' | 'unpaid' as defined in the Sale model
+import { Pressable } from '@/components/ui/pressable';
 
 export default function SaleDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id: string }>();
+  const id = params.id as string;
   const formatPrice = useFormatPrice();
   const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
 
-  const { data: sale, isLoading, isError, error, refetch } = useSale(id!);
+  const { data: sale, isLoading, isError, error, refetch } = useSale(id);
   const updatePaymentMutation = useUpdatePaymentStatus();
 
   const formatDate = (dateString: string) => {
@@ -111,13 +112,24 @@ export default function SaleDetailScreen() {
     );
   };
 
-  const handleEditSale = () => {
-    Alert.alert(
-      'Editar venta',
-      'La función de edición estará disponible próximamente',
-      [{ text: 'OK' }]
+
+  if (!id) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <VStack className="flex-1 p-4">
+          <Pressable
+            onPress={() => router.back()}
+            className="p-2 -ml-2 rounded-lg mb-4"
+          >
+            <Icon as={ArrowLeftIcon} className="w-6 h-6 text-gray-700" />
+          </Pressable>
+          <View className="flex-1 items-center justify-center">
+            <Text className="text-gray-600">ID de venta no válido</Text>
+          </View>
+        </VStack>
+      </SafeAreaView>
     );
-  };
+  }
 
   if (isLoading) {
     return (
@@ -134,15 +146,12 @@ export default function SaleDetailScreen() {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
         <VStack className="flex-1 p-4">
-          <Button
-            variant="outline"
-            size="sm"
+          <Pressable
             onPress={() => router.back()}
-            className="self-start mb-4"
+            className="p-2 -ml-2 rounded-lg mb-4"
           >
-            <Icon as={ArrowLeftIcon} className="w-4 h-4 text-gray-600 mr-2" />
-            <ButtonText className="text-gray-600">Volver</ButtonText>
-          </Button>
+            <Icon as={ArrowLeftIcon} className="w-6 h-6 text-gray-700" />
+          </Pressable>
           
           <View className="flex-1 items-center justify-center">
             <UIAlert action="error" variant="solid" className="max-w-sm">
@@ -172,34 +181,23 @@ export default function SaleDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
           {/* Header */}
-          <HStack className="justify-between items-center">
-            <Button
-              variant="outline"
-              size="sm"
+          <HStack className="justify-between items-center mb-2">
+            <Pressable
               onPress={() => router.back()}
+              className="p-2 -ml-2 rounded-lg"
             >
-              <Icon as={ArrowLeftIcon} className="w-4 h-4 text-gray-600 mr-2" />
-              <ButtonText className="text-gray-600">Volver</ButtonText>
-            </Button>
-            
+              <Icon as={ArrowLeftIcon} className="w-6 h-6 text-gray-700" />
+            </Pressable>
+            <Text className="text-xl font-bold text-gray-900 flex-1 ml-2">
+              Detalle de Venta
+            </Text>
             <HStack space="xs">
-              <Button
-                variant="outline"
-                size="sm"
-                onPress={handleEditSale}
-              >
-                <Icon as={EditIcon} className="w-4 h-4 text-gray-600 mr-1" />
-                <ButtonText className="text-gray-600">Editar</ButtonText>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
+              <Pressable
                 onPress={handleDuplicateSale}
+                className="p-2 rounded-lg"
               >
-                <Icon as={CopyIcon} className="w-4 h-4 text-gray-600 mr-1" />
-                <ButtonText className="text-gray-600">Duplicar</ButtonText>
-              </Button>
+                <Icon as={CopyIcon} className="w-5 h-5 text-gray-600" />
+              </Pressable>
             </HStack>
           </HStack>
 
@@ -320,7 +318,7 @@ export default function SaleDetailScreen() {
                         </VStack>
                         
                         <Text className="text-base font-semibold text-gray-900">
-                          {formatPrice(item.total)}
+                          {formatPrice(item.unitPrice * item.quantity)}
                         </Text>
                       </HStack>
                     </Card>

@@ -15,10 +15,12 @@ import { router } from 'expo-router';
 import {
   DollarSignIcon,
   InfoIcon,
-  ShoppingCartIcon
+  ShoppingCartIcon,
+  ChevronLeftIcon
 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { FlatList, RefreshControl } from 'react-native';
+import { Pressable } from '@/components/ui/pressable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SalesHistoryScreen() {
@@ -71,7 +73,7 @@ export default function SalesHistoryScreen() {
 
   const getTodaysSalesTotal = () => {
     if (!data?.items) return 0;
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -87,7 +89,7 @@ export default function SalesHistoryScreen() {
 
   const getTodaysSalesCount = () => {
     if (!data?.items) return 0;
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -109,6 +111,18 @@ export default function SalesHistoryScreen() {
 
   const renderHeader = useCallback(() => (
     <VStack space="md">
+      {/* Header with Back Button */}
+      <HStack className="items-center mb-2">
+        <Pressable
+          onPress={() => router.back()}
+          className="p-2 -ml-2 rounded-lg"
+        >
+          <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
+        </Pressable>
+        <Text className="text-xl font-bold text-gray-900 ml-2">
+          Historial de Ventas
+        </Text>
+      </HStack>
       {/* Quick Stats */}
       <HStack space="sm">
         <View className="flex-1 bg-green-50 border border-green-200 rounded-lg p-3">
@@ -124,7 +138,7 @@ export default function SalesHistoryScreen() {
             </VStack>
           </HStack>
         </View>
-        
+
         <View className="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-3">
           <HStack space="sm" className="items-center">
             <Icon as={ShoppingCartIcon} className="w-5 h-5 text-blue-600" />
@@ -148,7 +162,7 @@ export default function SalesHistoryScreen() {
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
       />
-      
+
       {/* Results Summary */}
       {data && (
         <HStack className="justify-between items-center">
@@ -185,13 +199,13 @@ export default function SalesHistoryScreen() {
           <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center">
             <Icon as={ShoppingCartIcon} className="w-10 h-10 text-gray-400" />
           </View>
-          
+
           <VStack space="xs" className="items-center">
             <Text className="text-lg font-medium text-gray-900 text-center">
               {hasFilters ? 'No se encontraron ventas' : 'No hay ventas registradas'}
             </Text>
             <Text className="text-gray-600 text-center">
-              {hasFilters 
+              {hasFilters
                 ? 'Intenta ajustar los filtros de búsqueda'
                 : 'Las ventas aparecerán aquí una vez que realices tu primera venta'
               }
@@ -200,11 +214,12 @@ export default function SalesHistoryScreen() {
 
           {!hasFilters && (
             <Button
+              variant="solid"
               onPress={() => router.push('/inventory/new-sale')}
-              className="bg-blue-600 mt-4"
+              className="mt-4"
             >
-              <Icon as={ShoppingCartIcon} className="w-4 h-4 text-white mr-2" />
-              <ButtonText className="text-white">Nueva Venta</ButtonText>
+              <Icon as={ShoppingCartIcon} className="w-4 h-4 mr-2" />
+              <ButtonText>Nueva Venta</ButtonText>
             </Button>
           )}
         </VStack>
@@ -227,7 +242,7 @@ export default function SalesHistoryScreen() {
 
   if (isError) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+      <SafeAreaView className="flex-1 bg-gray-50">
         <VStack className="flex-1 p-4">
           {renderHeader()}
           <View className="flex-1 items-center justify-center">
@@ -251,7 +266,7 @@ export default function SalesHistoryScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-gray-50" >
       <FlatList
         data={data?.items || []}
         renderItem={renderSaleItem}
@@ -259,7 +274,7 @@ export default function SalesHistoryScreen() {
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         ListFooterComponent={renderFooter}
-        contentContainerStyle={{ 
+        contentContainerStyle={{
           padding: 16,
           paddingBottom: 20,
           flexGrow: data?.items?.length === 0 ? 1 : undefined,

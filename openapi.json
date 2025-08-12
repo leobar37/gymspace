@@ -301,6 +301,33 @@
         ]
       }
     },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "summary": "Logout current user and invalidate token",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logout successful"
+          },
+          "401": {
+            "description": "User not authenticated"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/api/v1/invitations": {
       "post": {
         "operationId": "InvitationsController_createInvitation",
