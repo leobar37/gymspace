@@ -26,7 +26,7 @@ export default function ContractsLayout() {
       <Stack.Screen
         name="create"
         options={{
-          title: 'Nuevo Contrato',
+          headerShown: false
         }}
       />
       <Stack.Screen

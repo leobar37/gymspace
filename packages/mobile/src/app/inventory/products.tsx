@@ -1,21 +1,21 @@
-import React, { useState, useCallback } from 'react';
-import { FlatList, RefreshControl, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { Button, ButtonText } from '@/components/ui/button';
-import { View } from '@/components/ui/view';
-import { Spinner } from '@/components/ui/spinner';
-import { Icon } from '@/components/ui/icon';
-import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
-import { PlusIcon, PackageIcon, InfoIcon, ChevronLeftIcon } from 'lucide-react-native';
-import { useProducts } from '@/hooks/useProducts';
 import { ProductCard } from '@/components/inventory/ProductCard';
 import { ProductFilters } from '@/components/inventory/ProductFilters';
-import { router } from 'expo-router';
+import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
+import { Button, ButtonText } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { View } from '@/components/ui/view';
+import { VStack } from '@/components/ui/vstack';
 import { useRequireAuth } from '@/controllers/auth.controller';
+import { useProducts } from '@/hooks/useProducts';
 import type { Product, SearchProductsParams } from '@gymspace/sdk';
+import { router } from 'expo-router';
+import { ChevronLeftIcon, InfoIcon, PackageIcon, PlusIcon } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import { Dimensions, FlatList, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width: screenWidth } = Dimensions.get('window');
 const CARD_PADDING = 8;
@@ -26,7 +26,7 @@ const CARD_WIDTH = (screenWidth - (CONTAINER_PADDING * 2) - (CARD_PADDING * (CAR
 export default function ProductsScreen() {
   // Check authentication and redirect if not authenticated
   const { isAuthenticated, isLoadingSession } = useRequireAuth();
-  
+
   const [filters, setFilters] = useState<SearchProductsParams>({ page: 1, limit: 20 });
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,6 +50,8 @@ export default function ProductsScreen() {
       page: 1, // Reset to first page when filters change
     }));
   }, []);
+
+  console.log("data", JSON.stringify(data?.items?.slice(0, 1), null, 3));
 
   const handleSearch = useCallback((search: string) => {
     if (search !== searchTerm) {
@@ -85,8 +87,8 @@ export default function ProductsScreen() {
   }, [data?.hasNextPage, isFetching]);
 
   const renderProductCard = useCallback(({ item, index }: { item: Product; index: number }) => (
-    <View 
-      style={{ 
+    <View
+      style={{
         width: CARD_WIDTH,
         marginLeft: index % CARDS_PER_ROW === 0 ? 0 : CARD_PADDING,
         marginBottom: CARD_PADDING,
@@ -173,13 +175,13 @@ export default function ProductsScreen() {
           <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center">
             <Icon as={PackageIcon} className="w-10 h-10 text-gray-400" />
           </View>
-          
+
           <VStack space="xs" className="items-center">
             <Text className="text-lg font-medium text-gray-900 text-center">
               {hasFilters ? 'No se encontraron productos' : 'No hay productos'}
             </Text>
             <Text className="text-gray-600 text-center">
-              {hasFilters 
+              {hasFilters
                 ? 'Intenta ajustar los filtros de búsqueda'
                 : 'Comienza agregando tu primer producto al inventario'
               }
@@ -280,7 +282,7 @@ export default function ProductsScreen() {
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmptyState}
         ListFooterComponent={renderFooter}
-        contentContainerStyle={{ 
+        contentContainerStyle={{
           paddingHorizontal: CONTAINER_PADDING,
           paddingBottom: 20,
           flexGrow: data?.items?.length === 0 ? 1 : undefined,

@@ -20,9 +20,9 @@ import { Icon } from '@/components/ui/icon';
 import { ChevronLeft } from 'lucide-react-native';
 import { useClientsController, ClientFormData } from '../controllers/clients.controller';
 import { router } from 'expo-router';
-import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 import { useDocumentTypes, useDocumentValidator } from '@/config/ConfigContext';
 import { FileSelector } from '@/features/files/components/FileSelector';
+import { useLoadingScreen } from '@/shared/loading-screen/useLoadingScreen';
 
 // Create the validation schema as a function to use document validator
 const createClientSchema = (validateDocument: (type: string, value: string) => { isValid: boolean; error?: string }) => z.object({
@@ -66,7 +66,7 @@ type ClientFormSchema = {
   emergencyContactPhone?: string | undefined;
   medicalConditions?: string | undefined;
   notes?: string | undefined;
-  profilePhotoId?: FileFieldValue;
+  profilePhotoId?: string | null;
 };
 
 interface CreateClientFormProps {
@@ -82,9 +82,9 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
 }) => {
   const { createClient, updateClient, isCreatingClient, isUpdatingClient } = useClientsController();
   const isLoading = isCreatingClient || isUpdatingClient;
-  const toast = useToast();
   const documentTypes = useDocumentTypes();
   const validateDocument = useDocumentValidator();
+  const { execute } = useLoadingScreen();
   
   const clientSchema = React.useMemo(
     () => createClientSchema(validateDocument),
@@ -128,84 +128,66 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
       profilePhotoId: data.profilePhotoId || undefined,
     };
 
+    // Helper function to extract error message from API response
+    const extractErrorMessage = (error: any): string => {
+      // Check for API error response
+      if (error?.response?.data?.message) {
+        return error.response.data.message;
+      }
+      // Check for error.message
+      if (error?.message) {
+        return error.message;
+      }
+      // Default error message
+      return isEditing ? 'No se pudo actualizar el cliente' : 'No se pudo crear el cliente';
+    };
+
+    const promise = new Promise<void>((resolve, reject) => {
       if (isEditing && clientId) {
         updateClient(
           { id: clientId, data: formattedData },
-        {
-          onSuccess: () => {
-            toast.show({
-              placement: 'top',
-              duration: 3000,
-              render: ({ id }) => {
-                return (
-                  <Toast nativeID={`toast-${id}`} action="success" variant="solid">
-                    <ToastTitle>Cliente actualizado</ToastTitle>
-                    <ToastDescription>
-                      Los datos del cliente se actualizaron correctamente
-                    </ToastDescription>
-                  </Toast>
-                );
-              },
-            });
-            router.back();
-          },
-          onError: (error) => {
-            console.error('Update client error:', error);
-            toast.show({
-              placement: 'top',
-              duration: 4000,
-              render: ({ id }) => {
-                return (
-                  <Toast nativeID={`toast-${id}`} action="error" variant="solid">
-                    <ToastTitle>Error</ToastTitle>
-                    <ToastDescription>
-                      No se pudo actualizar el cliente
-                    </ToastDescription>
-                  </Toast>
-                );
-              },
-            });
-          },
-        }
-      );
+          {
+            onSuccess: () => {
+              resolve();
+            },
+            onError: (error) => {
+              console.error('Update client error:', error);
+              reject(error);
+            },
+          }
+        );
       } else {
         createClient(formattedData as ClientFormData, {
-        onSuccess: () => {
-          toast.show({
-            placement: 'top',
-            duration: 3000,
-            render: ({ id }) => {
-              return (
-                <Toast nativeID={`toast-${id}`} action="success" variant="solid">
-                  <ToastTitle>Cliente creado</ToastTitle>
-                  <ToastDescription>
-                    El cliente se registró correctamente
-                  </ToastDescription>
-                </Toast>
-              );
-            },
-          });
-          router.back();
-        },
-        onError: (error) => {
-          console.error('Create client error:', error);
-          toast.show({
-            placement: 'top',
-            duration: 4000,
-            render: ({ id }) => {
-              return (
-                <Toast nativeID={`toast-${id}`} action="error" variant="solid">
-                  <ToastTitle>Error</ToastTitle>
-                  <ToastDescription>
-                    No se pudo crear el cliente
-                  </ToastDescription>
-                </Toast>
-              );
-            },
-          });
-        },
-      });
+          onSuccess: () => {
+            resolve();
+          },
+          onError: (error) => {
+            console.error('Create client error:', error);
+            reject(error);
+          },
+        });
       }
+    });
+
+    await execute(promise, {
+      action: isEditing ? 'Actualizando cliente...' : 'Creando cliente...',
+      successMessage: isEditing 
+        ? 'Los datos del cliente se actualizaron correctamente' 
+        : 'El cliente se registró correctamente',
+      errorFormatter: extractErrorMessage,
+      hideOnSuccess: true,
+      hideDelay: 1500,
+      onSuccess: () => {
+        router.back();
+      },
+      errorActions: [
+        {
+          label: 'Cerrar',
+          onPress: () => {},
+          variant: 'solid',
+        },
+      ],
+    });
   };
 
   return (

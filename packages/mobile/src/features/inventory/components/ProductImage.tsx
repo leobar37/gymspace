@@ -22,7 +22,8 @@ export const ProductImage: React.FC<ProductImageProps> = ({
           <View className="w-full h-full">
             <AssetPreview
               assetId={imageId}
-              resizeMode="contain"
+              resizeMode="cover"
+              size="large"
               showLoading={true}
             />
           </View>

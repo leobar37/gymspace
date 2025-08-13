@@ -3649,6 +3649,13 @@ components:
           type: number
           example: 49.99
           description: Custom price override
+        receiptIds:
+          example:
+            - 123e4567-e89b-12d3-a456-426614174002
+          description: Array of asset IDs for contract receipts
+          type: array
+          items:
+            type: string
         metadata:
           type: object
           example:

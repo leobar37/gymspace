@@ -14,11 +14,12 @@ import { VStack } from '@/components/ui/vstack';
 import { Pressable } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { X as CloseIcon, Plus as PlusIcon, Check as CheckIcon } from 'lucide-react-native';
-import { FlatList, View, ActivityIndicator, Alert } from 'react-native';
+import { FlatList, View, ActivityIndicator, Alert, ActionSheetIOS, Platform } from 'react-native';
 import { useAssetsStore } from '../stores/assets.store';
 import { useAllAssets, useDeleteAsset, useUploadAsset } from '../controllers/assets.controller';
 import { AssetPreview } from './AssetPreview';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import type { AssetResponseDto } from '@gymspace/sdk';
 
 export function AssetModal() {
@@ -70,8 +71,46 @@ export function AssetModal() {
     closeModal();
   };
 
-  const handleAddAsset = async () => {
+  const requestMediaLibraryPermissions = async () => {
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permisos necesarios',
+        'Se necesita acceso a tu galería de fotos para seleccionar imágenes. Por favor, habilita los permisos en la configuración de tu dispositivo.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Abrir Configuración', onPress: () => ImagePicker.openSettings() },
+        ]
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const requestCameraPermissions = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permisos necesarios',
+        'Se necesita acceso a tu cámara para tomar fotos. Por favor, habilita los permisos en la configuración de tu dispositivo.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Abrir Configuración', onPress: () => ImagePicker.openSettings() },
+        ]
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const pickImageFromLibrary = async () => {
     try {
+      // Request permissions first
+      const hasPermission = await requestMediaLibraryPermissions();
+      if (!hasPermission) {
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images', 'videos'],
         allowsEditing: false,
@@ -100,9 +139,154 @@ export function AssetModal() {
         refetch();
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'No se pudo cargar el archivo');
+      console.error('Error picking image from library:', error);
+      Alert.alert('Error', 'No se pudo seleccionar la imagen de la galería');
     }
+  };
+
+  const takePhotoWithCamera = async () => {
+    try {
+      // Request camera permissions first
+      const hasPermission = await requestCameraPermissions();
+      if (!hasPermission) {
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: false,
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        const asset = result.assets[0];
+        const file = {
+          uri: asset.uri,
+          type: 'image/jpeg',
+          name: `photo_${Date.now()}.jpg`,
+        } as any;
+
+        await uploadAssetMutation.mutateAsync({
+          file,
+          metadata: {
+            width: asset.width,
+            height: asset.height,
+          },
+        });
+
+        refetch();
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'No se pudo tomar la foto');
+    }
+  };
+
+  const checkPermissionsAndShowOptions = async () => {
+    // Check current permission status without requesting
+    const mediaLibraryStatus = await MediaLibrary.getPermissionsAsync();
+    const cameraStatus = await ImagePicker.getCameraPermissionsAsync();
+
+    const hasMediaLibraryPermission = mediaLibraryStatus.status === 'granted';
+    const hasCameraPermission = cameraStatus.status === 'granted';
+
+    // If neither permission is granted, ask which one they want to use first
+    if (!hasMediaLibraryPermission && !hasCameraPermission) {
+      Alert.alert(
+        'Permisos necesarios',
+        'Para subir fotos, necesitas dar permisos de acceso a la galería o cámara. ¿Qué deseas hacer?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { 
+            text: 'Usar Galería', 
+            onPress: async () => {
+              const granted = await requestMediaLibraryPermissions();
+              if (granted) {
+                pickImageFromLibrary();
+              }
+            }
+          },
+          { 
+            text: 'Usar Cámara', 
+            onPress: async () => {
+              const granted = await requestCameraPermissions();
+              if (granted) {
+                takePhotoWithCamera();
+              }
+            }
+          },
+        ],
+        { cancelable: true }
+      );
+      return;
+    }
+
+    // Show options based on available permissions
+    const options = ['Cancelar'];
+    const actions: (() => void)[] = [];
+    
+    if (hasMediaLibraryPermission) {
+      options.push('Seleccionar de Galería');
+      actions.push(pickImageFromLibrary);
+    }
+    
+    if (hasCameraPermission) {
+      options.push('Tomar Foto');
+      actions.push(takePhotoWithCamera);
+    }
+
+    // If only one permission is available but not the other, also add option to request the other
+    if (hasMediaLibraryPermission && !hasCameraPermission) {
+      options.push('Habilitar Cámara');
+      actions.push(async () => {
+        const granted = await requestCameraPermissions();
+        if (granted) {
+          takePhotoWithCamera();
+        }
+      });
+    } else if (!hasMediaLibraryPermission && hasCameraPermission) {
+      options.push('Habilitar Galería');
+      actions.push(async () => {
+        const granted = await requestMediaLibraryPermissions();
+        if (granted) {
+          pickImageFromLibrary();
+        }
+      });
+    }
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex > 0 && buttonIndex <= actions.length) {
+            actions[buttonIndex - 1]();
+          }
+        }
+      );
+    } else {
+      // For Android, create alert options
+      const alertOptions = actions.map((action, index) => ({
+        text: options[index + 1], // Skip 'Cancelar' which is at index 0
+        onPress: action,
+      }));
+      
+      Alert.alert(
+        'Seleccionar imagen',
+        'Elige de dónde quieres seleccionar la imagen',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          ...alertOptions,
+        ],
+        { cancelable: true }
+      );
+    }
+  };
+
+  const handleAddAsset = () => {
+    checkPermissionsAndShowOptions();
   };
 
   const handleDeleteAsset = (assetId: string) => {
@@ -268,7 +452,7 @@ export function AssetModal() {
                   className="mt-2"
                   isDisabled={uploadAssetMutation.isPending}
                 >
-                  <ButtonText>Agrega tu primer archivo</ButtonText>
+                  <ButtonText>Subir o tomar foto</ButtonText>
                 </Button>
               </View>
             </VStack>
@@ -292,7 +476,7 @@ export function AssetModal() {
                     >
                       <HStack space="xs" className="items-center">
                         <Icon as={PlusIcon} />
-                        <ButtonText>Agregar Archivo</ButtonText>
+                        <ButtonText>Subir o Tomar Foto</ButtonText>
                       </HStack>
                     </Button>
                   </View>

@@ -29,8 +29,8 @@ const createContractSchema = z.object({
     invalid_type_error: 'Fecha inválida',
   }),
   discountPercentage: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional().default('0'),
-  finalPrice: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional(),
-  attachmentIds: z.array(z.string()).optional().default([]),
+  customPrice: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional(),
+  receiptIds: z.array(z.string()).optional().default([]),
 });
 
 type CreateContractSchema = z.infer<typeof createContractSchema>;
@@ -53,6 +53,8 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
 
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
+  console.log("inicialData", JSON.stringify(initialData, null, 2));
+
 
   // Parse initial date if provided as string
   const parseInitialDate = (dateStr?: string) => {
@@ -72,8 +74,8 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
       gymMembershipPlanId: initialData?.gymMembershipPlanId || '',
       startDate: parseInitialDate(initialData?.startDate),
       discountPercentage: String(initialData?.discountPercentage || 0),
-      finalPrice: initialData?.finalPrice ? String(initialData.finalPrice) : '',
-      attachmentIds: [],
+      customPrice: initialData?.customPrice ? String(initialData.customPrice) : '',
+      receiptIds: [],
     },
   });
 
@@ -86,15 +88,15 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
 
   // Watch for plan changes to update pricing
   const watchedDiscount = watch('discountPercentage');
-  const watchedFinalPrice = watch('finalPrice');
+  const watchedCustomPrice = watch('customPrice');
 
   const calculateFinalPrice = () => {
     if (!selectedPlan) return 0;
 
-    // If final price is specified and valid, use it
-    const finalPriceNum = watchedFinalPrice ? Number(watchedFinalPrice) : 0;
-    if (finalPriceNum > 0) {
-      return finalPriceNum;
+    // If custom price is specified and valid, use it
+    const customPriceNum = watchedCustomPrice ? Number(watchedCustomPrice) : 0;
+    if (customPriceNum > 0) {
+      return customPriceNum;
     }
 
     // Otherwise calculate based on plan price and discount
@@ -110,8 +112,8 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
       gymMembershipPlanId: data.gymMembershipPlanId,
       startDate: format(data.startDate, 'yyyy-MM-dd'),
       discountPercentage: Number(data.discountPercentage) || 0,
-      customPrice: data.finalPrice ? Number(data.finalPrice) : undefined,
-      attachmentIds: data.attachmentIds || [],
+      customPrice: data.customPrice ? Number(data.customPrice) : undefined,
+      receiptIds: data.receiptIds || [],
     };
 
     await execute<{ id: string }>(
@@ -223,7 +225,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
               <View className="mb-4">
                 <FormInput
                   control={control}
-                  name="finalPrice"
+                  name="customPrice"
                   label="Precio personalizado (opcional)"
                   placeholder="0.00"
                   keyboardType="numeric"
@@ -234,9 +236,9 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
               {/* Attachments */}
               <View className="mb-4">
                 <AssetSelector
-                  name="attachmentIds"
+                  name="receiptIds"
                   multi={true}
-                  label="Documentos adjuntos (opcional)"
+                  label="Recibos adjuntos (opcional)"
                 />
               </View>
             </View>
@@ -253,7 +255,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                     <Text className="font-medium">{formatPrice(selectedPlan.basePrice || 0)}</Text>
                   </HStack>
 
-                  {Number(watchedDiscount) > 0 && !watchedFinalPrice && (
+                  {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
                     <HStack className="justify-between">
                       <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                       <Text className="font-medium text-green-600">
@@ -262,11 +264,11 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                     </HStack>
                   )}
 
-                  {watchedFinalPrice && Number(watchedFinalPrice) > 0 && (
+                  {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
                     <HStack className="justify-between">
                       <Text className="text-gray-600">Precio personalizado:</Text>
                       <Text className="font-medium text-blue-600">
-                        {formatPrice(Number(watchedFinalPrice))}
+                        {formatPrice(Number(watchedCustomPrice))}
                       </Text>
                     </HStack>
                   )}

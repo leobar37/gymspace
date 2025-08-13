@@ -1,13 +1,13 @@
+import { ContractStatus, IRequestContext } from '@gymspace/shared';
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { PrismaService } from '../../core/database/prisma.service';
-import { GymsService } from '../gyms/gyms.service';
-import { ClientsService } from '../clients/clients.service';
-import { CreateContractDto, RenewContractDto, FreezeContractDto } from './dto';
-import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Contract, Prisma } from '@prisma/client';
-import { ContractStatus, IRequestContext } from '@gymspace/shared';
+import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { RequestContext } from '../../common/services/request-context.service';
+import { PrismaService } from '../../core/database/prisma.service';
+import { ClientsService } from '../clients/clients.service';
+import { GymsService } from '../gyms/gyms.service';
+import { CreateContractDto, FreezeContractDto, RenewContractDto } from './dto';
 
 @Injectable()
 export class ContractsService {
@@ -23,29 +23,13 @@ export class ContractsService {
   async createContract(context: IRequestContext, dto: CreateContractDto): Promise<Contract> {
     const gymId = context.getGymId();
     const userId = context.getUserId();
-    
+
     if (!gymId) {
       throw new BusinessException('El contexto del gimnasio es requerido');
     }
 
     // Verify gym access and get gym with organization for currency
-    const gym = await this.prismaService.gym.findFirst({
-      where: {
-        id: gymId,
-        OR: [
-          { organization: { ownerUserId: userId } },
-          { collaborators: { some: { userId, status: 'active' } } },
-        ],
-      },
-      include: {
-        organization: {
-          select: {
-            currency: true,
-          },
-        },
-      },
-    });
-    
+    const gym = context.gym;
     if (!gym) {
       throw new ResourceNotFoundException('Gimnasio', gymId);
     }
@@ -73,30 +57,24 @@ export class ContractsService {
           // Active contracts
           { status: 'active' },
           // Pending contracts that haven't started yet
-          { 
+          {
             status: 'pending',
-            startDate: { gte: now }
-          }
-        ]
+            startDate: { gte: now },
+          },
+        ],
       },
     });
 
     if (existingContracts.length > 0) {
       const activeContract = existingContracts[0];
-      // Log for debugging
-      console.log('Existing contract found:', {
-        id: activeContract.id,
-        status: activeContract.status,
-        startDate: activeContract.startDate,
-        endDate: activeContract.endDate,
-        deletedAt: activeContract.deletedAt,
-      });
-      
+
       // Provide more specific error message
       if (activeContract.status === 'active') {
         throw new BusinessException('El cliente ya tiene un contrato activo');
       } else if (activeContract.status === 'pending') {
-        throw new BusinessException('El cliente tiene un contrato pendiente que aún no ha iniciado');
+        throw new BusinessException(
+          'El cliente tiene un contrato pendiente que aún no ha iniciado',
+        );
       }
     }
 
@@ -114,7 +92,9 @@ export class ContractsService {
     });
 
     if (expiredContracts.count > 0) {
-      console.log(`Updated ${expiredContracts.count} expired contracts for client ${dto.gymClientId}`);
+      console.log(
+        `Updated ${expiredContracts.count} expired contracts for client ${dto.gymClientId}`,
+      );
     }
 
     // Verify membership plan belongs to this gym and is active
@@ -158,11 +138,12 @@ export class ContractsService {
         basePrice: plan.basePrice,
         customPrice: dto.customPrice || null,
         finalAmount: finalPrice,
-        currency: gym.organization.currency,
+        currency: context.organization.currency,
         discountPercentage: dto.discountPercentage || null,
         status: 'active',
         paymentFrequency: 'monthly',
         notes: dto.metadata?.notes || null,
+        receiptIds: dto.receiptIds || [],
         createdByUserId: userId,
       },
       include: {
@@ -339,7 +320,9 @@ export class ContractsService {
     const freezeEnd = new Date(dto.freezeEndDate);
 
     if (freezeStart >= freezeEnd) {
-      throw new BusinessException('La fecha de fin del congelamiento debe ser posterior a la fecha de inicio');
+      throw new BusinessException(
+        'La fecha de fin del congelamiento debe ser posterior a la fecha de inicio',
+      );
     }
 
     // Check if freeze period is within allowed limits
@@ -349,7 +332,9 @@ export class ContractsService {
     const maxFreezeDays = 30; // Default max freeze days
 
     if (freezeDays > maxFreezeDays) {
-      throw new BusinessException(`El período de congelamiento no puede exceder ${maxFreezeDays} días`);
+      throw new BusinessException(
+        `El período de congelamiento no puede exceder ${maxFreezeDays} días`,
+      );
     }
 
     // Extend contract end date by freeze duration
@@ -389,7 +374,11 @@ export class ContractsService {
   /**
    * Cancel contract
    */
-  async cancelContract(context: IRequestContext, contractId: string, reason: string): Promise<Contract> {
+  async cancelContract(
+    context: IRequestContext,
+    contractId: string,
+    reason: string,
+  ): Promise<Contract> {
     const userId = context.getUserId();
     const contract = await this.prismaService.contract.findFirst({
       where: {
@@ -482,34 +471,36 @@ export class ContractsService {
   /**
    * Get contracts for a gym
    */
-  async getGymContracts(
-    context: IRequestContext,
-    status?: ContractStatus,
-    limit = 20,
-    offset = 0,
-  ) {
+  async getGymContracts(context: IRequestContext, status?: ContractStatus, limit = 20, offset = 0) {
     const gymId = context.getGymId();
     const userId = context.getUserId();
-    
+
     if (!gymId) {
       throw new BusinessException('El contexto del gimnasio es requerido');
     }
 
-    // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
-    if (!hasAccess) {
-      throw new ResourceNotFoundException('Gimnasio', gymId);
+    // Verify gym access - use cached gym from context if available
+    if (!context.gym) {
+      const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+      if (!hasAccess) {
+        throw new ResourceNotFoundException('Gimnasio', gymId);
+      }
     }
 
+    // Build where clause more efficiently
     const where: Prisma.ContractWhereInput = {
       gymClient: {
         gymId,
+        deletedAt: null, // Ensure we only get non-deleted clients
       },
+      deletedAt: null, // Ensure we only get non-deleted contracts
     };
+    
     if (status) {
       where.status = status;
     }
 
+    // Execute queries
     const [contracts, total] = await Promise.all([
       this.prismaService.contract.findMany({
         where,
@@ -535,14 +526,9 @@ export class ContractsService {
       }),
       this.prismaService.contract.count({ where }),
     ]);
-    console.log("list contracts",{
-      contracts,
-      status
-    });
-    
 
     return {
-      contracts,
+      data: contracts,
       pagination: {
         total,
         limit,
@@ -556,7 +542,7 @@ export class ContractsService {
    */
   async getClientContracts(context: IRequestContext, clientId: string) {
     const userId = context.getUserId();
-    
+
     // Verify access through client
     // Create a RequestContext for the ClientsService call
     const requestContext = new RequestContext().forUser({ id: userId } as any);
@@ -595,7 +581,7 @@ export class ContractsService {
    */
   async updateExpiredContracts() {
     const now = new Date();
-    
+
     // Update expired contracts
     const expired = await this.prismaService.contract.updateMany({
       where: {

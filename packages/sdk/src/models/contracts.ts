@@ -7,6 +7,7 @@ export interface CreateContractDto {
   startDate: string;
   discountPercentage?: number;
   customPrice?: number;
+  receiptIds?: string[];
   metadata?: Record<string, any>;
 }
 

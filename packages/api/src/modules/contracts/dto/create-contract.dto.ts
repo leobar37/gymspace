@@ -1,4 +1,4 @@
-import { IsUUID, IsDateString, IsOptional, IsNumber, IsObject } from 'class-validator';
+import { IsUUID, IsDateString, IsOptional, IsNumber, IsObject, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateContractDto {
@@ -23,6 +23,16 @@ export class CreateContractDto {
   @IsOptional()
   @IsNumber()
   customPrice?: number;
+
+  @ApiProperty({ 
+    example: ['123e4567-e89b-12d3-a456-426614174002'], 
+    description: 'Array of asset IDs for contract receipts',
+    required: false
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  receiptIds?: string[];
 
   @ApiProperty({
     example: {

@@ -41,9 +41,9 @@ export const ContractsList: React.FC<ContractsListProps> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>(filters);
 
-  const { data, isLoading, refetch, isRefetching } = useContractsList(searchFilters);
+  const { data, isLoading, refetch } = useContractsList(searchFilters);
 
-  console.log("contract list data", JSON.stringify(data, null, 2));
+  console.log("contract list data", JSON.stringify(data?.data?.at?.(0), null, 2));
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -89,6 +89,8 @@ export const ContractsList: React.FC<ContractsListProps> = ({
     const statusInfo = getStatusBadge(item.status);
     const isFrozen = item.freezeStartDate && item.freezeEndDate;
 
+    console.log("contract item", JSON.stringify(item, null, 2));
+
     return (
       <Pressable
         onPress={() => handleContractPress(item.id)}
@@ -133,7 +135,7 @@ export const ContractsList: React.FC<ContractsListProps> = ({
               <HStack className="justify-between">
                 <Text className="text-sm text-gray-500">Precio final:</Text>
                 <Text className="text-sm font-medium">
-                  {formatPrice(item.finalPrice)}
+                  {formatPrice(item.finalAmount)}
                 </Text>
               </HStack>
 
@@ -218,12 +220,13 @@ export const ContractsList: React.FC<ContractsListProps> = ({
     );
   }
 
+  console.log("data", JSON.stringify(data, null, 2));
+  
   return (
     <Box className="flex-1 bg-gray-50">
       {renderStatusFilter()}
-
       <FlatList
-        data={data?.contracts || []}
+        data={data?.data || []}
         renderItem={renderContractItem}
         keyExtractor={(item) => item.id}
         refreshControl={
@@ -239,7 +242,7 @@ export const ContractsList: React.FC<ContractsListProps> = ({
         showsVerticalScrollIndicator={false}
       />
 
-      {!hideAddButton && data?.contracts && data.contracts.length > 0 && (
+      {!hideAddButton && data?.data && data.data.length > 0 && (
         <Fab
           onPress={handleAddPress}
           placement="bottom right"

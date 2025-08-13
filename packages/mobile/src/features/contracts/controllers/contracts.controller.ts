@@ -27,7 +27,7 @@ export interface ContractFormData {
   discountPercentage?: number;
   customPrice?: number;
   metadata?: Record<string, any>;
-  attachmentIds?: string[];
+  receiptIds?: string[];
 }
 
 export interface RenewFormData {
@@ -110,6 +110,7 @@ export const useContractsController = () => {
         startDate: data.startDate,
         discountPercentage: data.discountPercentage,
         customPrice: data.customPrice,
+        receiptIds: data.receiptIds,
         metadata: data.metadata,
       };
       const response = await sdk.contracts.createContract(createData);

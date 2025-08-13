@@ -148,7 +148,7 @@ export function AssetSelector({
                 <View className="h-48 bg-gray-100 rounded-lg items-center justify-center border-2 border-dashed border-gray-300">
                   <Icon as={ImageIcon} size="xl" className="text-gray-400 mb-2" />
                   <Text className="text-gray-500">No hay archivos seleccionados</Text>
-                  <Text className="text-xs text-gray-400 mt-1">Toca para seleccionar</Text>
+                  <Text className="text-xs text-gray-400 mt-1">Toca para seleccionar o tomar foto</Text>
                 </View>
               </Pressable>
             )}

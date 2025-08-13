@@ -52,8 +52,8 @@ export function SaleHistoryItem({
   };
 
   const isPaid = sale.paymentStatus === 'paid';
-  const itemCount = sale.items?.length || 0;
-  const totalQuantity = sale.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const itemCount = sale._count?.saleItems || sale.saleItems?.length || 0;
+  const totalQuantity = sale.saleItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   return (
     <Card className="bg-white border border-gray-200 shadow-sm">
@@ -120,9 +120,8 @@ export function SaleHistoryItem({
               "{sale.notes}"
             </Text>
           )}
-
           {/* Quick Item Preview */}
-          {sale.items && sale.items.length > 0 && (
+          {/* {sale.items && sale.items.length > 0 && (
             <VStack space="xs">
               <Text className="text-xs font-medium text-gray-500 uppercase">
                 Productos vendidos:
@@ -133,7 +132,7 @@ export function SaleHistoryItem({
                 ).join(', ')}
               </Text>
             </VStack>
-          )}
+          )} */}
         </VStack>
       </Pressable>
     </Card>

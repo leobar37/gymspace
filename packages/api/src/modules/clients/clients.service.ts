@@ -27,7 +27,7 @@ export class ClientsService {
     // Check if gym can add more clients
     const canAdd = await this.organizationsService.canAddClient(gymId);
     if (!canAdd) {
-      throw new BusinessException('Client limit reached for this subscription plan');
+      throw new BusinessException('Límite de clientes alcanzado para este plan de suscripción');
     }
 
     // Verify gym access
@@ -36,18 +36,20 @@ export class ClientsService {
       throw new ResourceNotFoundException('Gym', gymId);
     }
 
-    console.log('pas here');
 
-    // Check if email already exists in this gym
-    const existingClient = await this.prismaService.gymClient.findFirst({
-      where: {
-        email: dto.email,
-        gymId,
-      },
-    });
+    // Check if document already exists in this gym (only if both document type and value are provided)
+    if (dto.documentType && dto.documentValue) {
+      const existingClient = await this.prismaService.gymClient.findFirst({
+        where: {
+          documentType: dto.documentType,
+          documentValue: dto.documentValue,
+          gymId,
+        },
+      });
 
-    if (existingClient) {
-      throw new BusinessException('A client with this email already exists in this gym');
+      if (existingClient) {
+        throw new BusinessException(`Ya existe un cliente con este documento (${dto.documentType}: ${dto.documentValue}) en este gimnasio`);
+      }
     }
 
     // Generate client number
@@ -118,18 +120,20 @@ export class ClientsService {
       throw new ResourceNotFoundException('Client', clientId);
     }
 
-    // If email is being updated, check uniqueness within gym
-    if (dto.email && dto.email !== client.email) {
-      const emailExists = await this.prismaService.gymClient.findFirst({
+    // If document is being updated, check uniqueness within gym
+    if (dto.documentType && dto.documentValue && 
+        (dto.documentType !== client.documentType || dto.documentValue !== client.documentValue)) {
+      const documentExists = await this.prismaService.gymClient.findFirst({
         where: {
-          email: dto.email,
+          documentType: dto.documentType,
+          documentValue: dto.documentValue,
           gymId: client.gymId,
           id: { not: clientId },
         },
       });
 
-      if (emailExists) {
-        throw new BusinessException('A client with this email already exists in this gym');
+      if (documentExists) {
+        throw new BusinessException(`Ya existe un cliente con este documento (${dto.documentType}: ${dto.documentValue}) en este gimnasio`);
       }
     }
 

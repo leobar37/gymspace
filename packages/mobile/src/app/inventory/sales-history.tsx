@@ -41,6 +41,8 @@ export default function SalesHistoryScreen() {
     customerName: searchTerm || undefined,
   });
 
+  console.log("data", JSON.stringify(data?.items?.slice(0, 1), null, 3));
+  
   const handleFiltersChange = useCallback((newFilters: SearchSalesParams) => {
     setFilters(prev => ({
       ...prev,
@@ -239,6 +241,33 @@ export default function SalesHistoryScreen() {
       </View>
     );
   }, [isFetching, data?.hasNextPage]);
+
+  // Show loading screen on initial load
+  if (isLoading && !data) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <VStack className="flex-1 p-4">
+          <HStack className="items-center mb-6">
+            <Pressable
+              onPress={() => router.back()}
+              className="p-2 -ml-2 rounded-lg"
+            >
+              <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
+            </Pressable>
+            <Text className="text-xl font-bold text-gray-900 ml-2">
+              Historial de Ventas
+            </Text>
+          </HStack>
+          <View className="flex-1 items-center justify-center">
+            <VStack space="md" className="items-center">
+              <Spinner size="large" />
+              <Text className="text-gray-600">Cargando historial de ventas...</Text>
+            </VStack>
+          </View>
+        </VStack>
+      </SafeAreaView>
+    );
+  }
 
   if (isError) {
     return (

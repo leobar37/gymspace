@@ -53,7 +53,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.imageId ? (
               <AssetPreview
                 assetId={product.imageId}
-                size="full"
+                size="small"
                 resizeMode="cover"
                 showLoading={false}
               />
