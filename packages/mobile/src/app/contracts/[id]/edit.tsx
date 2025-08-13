@@ -17,7 +17,6 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { contractsKeys, useContractsController } from '@/features/contracts/controllers/contracts.controller';
-import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Form validation schema  
@@ -40,7 +39,6 @@ export default function EditContractScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const formatPrice = useFormatPrice();
-  const { sdk } = useGymSdk();
   const queryClient = useQueryClient();
   const { useContractDetail } = useContractsController();
   
@@ -109,7 +107,7 @@ export default function EditContractScreen() {
       return finalPriceNum;
     }
     
-    const basePrice = contract.price;
+    const basePrice = Number(contract.gymMembershipPlan?.basePrice || 0);
     const discount = watchedDiscount ? Number(watchedDiscount) : 0;
     return basePrice - (basePrice * discount / 100);
   };
@@ -184,7 +182,7 @@ export default function EditContractScreen() {
                     name="startDate"
                     label="Fecha de inicio"
                     placeholder="Seleccionar fecha"
-                    isDisabled={true} // Usually start date shouldn't be changed
+                    disabled={true} // Usually start date shouldn't be changed
                   />
 
                   <FormDatePicker
@@ -192,7 +190,7 @@ export default function EditContractScreen() {
                     name="endDate"
                     label="Fecha de fin"
                     placeholder="Seleccionar fecha"
-                    isDisabled={true} // Usually end date is calculated based on plan duration
+                    disabled={true} // Usually end date is calculated based on plan duration
                   />
 
                   <FormInput
@@ -222,14 +220,18 @@ export default function EditContractScreen() {
                 <VStack className="gap-2">
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Precio base:</Text>
-                    <Text className="font-medium">{formatPrice(contract.price)}</Text>
+                    <Text className="font-medium">
+                      {contract.gymMembershipPlan?.basePrice 
+                        ? formatPrice(Number(contract.gymMembershipPlan.basePrice))
+                        : 'N/A'}
+                    </Text>
                   </HStack>
                   
                   {Number(watchedDiscount) > 0 && !watchedFinalPrice && (
                     <HStack className="justify-between">
                       <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                       <Text className="font-medium text-green-600">
-                        -{formatPrice(contract.price * Number(watchedDiscount) / 100)}
+                        -{formatPrice((Number(contract.gymMembershipPlan?.basePrice || 0)) * Number(watchedDiscount) / 100)}
                       </Text>
                     </HStack>
                   )}
@@ -251,10 +253,13 @@ export default function EditContractScreen() {
               </Box>
             </Card>
 
-            {/* Submit Button */}
+            {/* Submit Button - Only enabled when there are changes */}
             <Button
               onPress={handleSubmit(onSubmit)}
-              isDisabled={updateContractMutation.isPending}
+              isDisabled={updateContractMutation.isPending || (
+                String(contract?.discountPercentage || 0) === watchedDiscount &&
+                String(contract?.finalPrice || '') === (watchedFinalPrice || '')
+              )}
               className="mt-4"
             >
               {updateContractMutation.isPending && <ButtonSpinner className="mr-2" />}

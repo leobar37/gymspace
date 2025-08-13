@@ -105,4 +105,16 @@ export class ContractsController {
   async getClientContracts(@AppCtxt() ctx: RequestContext, @Param('clientId') clientId: string) {
     return await this.contractsService.getClientContracts(ctx, clientId);
   }
+
+  @Post('update-expired')
+  @Allow(PERMISSIONS.CONTRACTS_UPDATE)
+  @ApiOperation({ summary: 'Update expired contracts status' })
+  @ApiResponse({ status: 200, description: 'Number of contracts updated' })
+  async updateExpiredContracts(@AppCtxt() ctx: RequestContext) {
+    const count = await this.contractsService.updateExpiredContracts();
+    return { 
+      message: `Se actualizaron ${count} contratos expirados`,
+      count 
+    };
+  }
 }

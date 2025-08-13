@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GlobalModals } from "@/components/GlobalModals";
+import { LoadingScreen } from "@/shared/loading-screen";
 import "../../global.css";
 
 function RootLayout() {
@@ -19,6 +20,7 @@ function RootLayout() {
               <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>
             <GlobalModals />
+            <LoadingScreen />
           </>
         </AppProviders>
       </GestureHandlerRootView>

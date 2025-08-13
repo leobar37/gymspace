@@ -25,7 +25,7 @@ export interface ContractFormData {
   gymMembershipPlanId: string;
   startDate: string;
   discountPercentage?: number;
-  finalPrice?: number;
+  customPrice?: number;
   metadata?: Record<string, any>;
   attachmentIds?: string[];
 }
@@ -33,7 +33,7 @@ export interface ContractFormData {
 export interface RenewFormData {
   startDate?: string;
   discountPercentage?: number;
-  finalPrice?: number;
+  customPrice?: number;
   metadata?: Record<string, any>;
 }
 
@@ -109,7 +109,7 @@ export const useContractsController = () => {
         gymMembershipPlanId: data.gymMembershipPlanId,
         startDate: data.startDate,
         discountPercentage: data.discountPercentage,
-        finalPrice: data.finalPrice,
+        customPrice: data.customPrice,
         metadata: data.metadata,
       };
       const response = await sdk.contracts.createContract(createData);
@@ -133,7 +133,7 @@ export const useContractsController = () => {
       const renewData: RenewContractDto = {
         startDate: data.startDate,
         discountPercentage: data.discountPercentage,
-        finalPrice: data.finalPrice,
+        customPrice: data.customPrice,
         metadata: data.metadata,
       };
       const response = await sdk.contracts.renewContract(id, renewData);

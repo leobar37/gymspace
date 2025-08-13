@@ -14,13 +14,16 @@ import { Platform, View, ActivityIndicator } from 'react-native';
 
 function AppLayout() {
   const { isAuthenticated } = useGymSdk();
-  const { session, isLoading: isSessionLoading, isError } = useCurrentSession();
+  const { session, isLoading: isSessionLoading, isError } = useCurrentSession({
+    enabled: isAuthenticated,
+  });
+  
   // If user is not authenticated, redirect to onboarding
   if (!isAuthenticated) {
     return <Redirect href="/(onboarding)" />;
   }
 
-  // While loading session data, show a loading indicator instead of null
+  // While loading session data, show a loading indicator
   if (isSessionLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -30,15 +33,24 @@ function AppLayout() {
   }
 
   // If session fetch failed or user doesn't have a valid session, redirect to onboarding
+  // This will trigger after max refresh attempts in useCurrentSession
   if (isError || !session || !session.isAuthenticated) {
     return <Redirect href="/(onboarding)" />;
   }
 
-
-  // If user doesn't have a gym (incomplete onboarding), redirect to welcome screen
-  // This handles cases where tokens exist but onboarding isn't complete
+  // If user doesn't have a gym (incomplete onboarding), redirect to appropriate onboarding step
   if (!session.gym || !session.gym.id) {
-    return <Redirect href="/(onboarding)/owner/welcome" />;
+    // Determine the correct onboarding step based on user type
+    const userType = session.user?.userType;
+    if (userType === 'owner') {
+      return <Redirect href="/(onboarding)/owner/welcome" />;
+    } else if (userType === 'collaborator') {
+      // Collaborators should complete their onboarding flow
+      return <Redirect href="/(onboarding)/collaborator" />;
+    } else {
+      // Fallback to main onboarding
+      return <Redirect href="/(onboarding)" />;
+    }
   }
 
   return (

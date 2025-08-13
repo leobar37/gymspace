@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useAuthToken } from '@/hooks/useAuthToken';
@@ -19,8 +20,12 @@ export interface UseCurrentSessionOptions {
 
 export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
   const { sdk, isAuthenticated, authToken, currentGymId, setCurrentGymId } = useGymSdk();
-  const { hasValidToken, refreshToken } = useAuthToken();
+  const { hasValidToken, refreshToken, clearToken } = useAuthToken();
   const queryClient = useQueryClient();
+  
+  // Track refresh attempts to avoid infinite loops
+  const refreshAttemptsRef = React.useRef(0);
+  const MAX_REFRESH_ATTEMPTS = 2;
 
   const {
     enabled = true,
@@ -37,34 +42,61 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
       const tokenValid = await hasValidToken();
 
       if (!tokenValid) {
-        // Try to refresh token first
-        const refreshedToken = await refreshToken();
-        if (!refreshedToken) {
+        // Try to refresh token if we haven't exceeded attempts
+        if (refreshAttemptsRef.current < MAX_REFRESH_ATTEMPTS) {
+          refreshAttemptsRef.current++;
+          const refreshedToken = await refreshToken();
+          if (!refreshedToken) {
+            // Clear token after max attempts
+            await clearToken();
+            refreshAttemptsRef.current = 0;
+            return null;
+          }
+        } else {
+          // Max attempts reached, clear token
+          await clearToken();
+          refreshAttemptsRef.current = 0;
           return null;
         }
       }
       try {
         const response = await sdk.auth.getCurrentSession();
 
-        console.log('response', response);
+        // Reset refresh attempts on successful request
+        refreshAttemptsRef.current = 0;
+        
+        // If we get a gym in the response but don't have a current gym ID stored,
+        // store it automatically (this handles the onboarding case)
+        if (response?.gym?.id && !currentGymId) {
+          await setCurrentGymId(response.gym.id);
+        }
 
         return response;
       } catch (error: any) {
         // Handle 401 errors by attempting token refresh
         if (error.status === 401) {
-          const refreshedToken = await refreshToken();
-          if (refreshedToken) {
-            // Retry the request with new token
-            const response = await sdk.auth.getCurrentSession();
+          if (refreshAttemptsRef.current < MAX_REFRESH_ATTEMPTS) {
+            refreshAttemptsRef.current++;
+            const refreshedToken = await refreshToken();
+            if (refreshedToken) {
+              // Retry the request with new token
+              const response = await sdk.auth.getCurrentSession();
 
-            // If we get a gym in the response but don't have a current gym ID stored,
-            // store it automatically (this handles the onboarding case)
-            if (response?.gym?.id && !currentGymId) {
-              await setCurrentGymId(response.gym.id);
+              // If we get a gym in the response but don't have a current gym ID stored,
+              // store it automatically (this handles the onboarding case)
+              if (response?.gym?.id && !currentGymId) {
+                await setCurrentGymId(response.gym.id);
+              }
+              
+              // Reset counter on successful refresh
+              refreshAttemptsRef.current = 0;
+              return response;
             }
-
-            return response;
           }
+          
+          // Clear token after max attempts
+          await clearToken();
+          refreshAttemptsRef.current = 0;
         }
         throw error;
       }

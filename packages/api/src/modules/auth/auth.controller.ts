@@ -127,7 +127,6 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'User not authenticated' })
   async getCurrentSession(@AppCtxt() context: IRequestContext): Promise<CurrentSessionDto> {
-    console.log('gym', context.gym);
     return {
       user: context.user,
       gym: context.gym,

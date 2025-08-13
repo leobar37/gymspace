@@ -19,12 +19,13 @@ import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody, ModalFooter
 import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator, ActionsheetItem, ActionsheetItemText } from '@/components/ui/actionsheet';
 import { Icon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
-import { EditIcon, XIcon, PauseIcon, ArrowLeft, MoreVertical } from 'lucide-react-native';
+import { EditIcon, XIcon, PauseIcon, ArrowLeft, MoreVertical, Eye } from 'lucide-react-native';
+import { AssetPreview } from '@/features/assets/components/AssetPreview';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
 import { useContractsController } from '@/features/contracts/controllers/contracts.controller';
 import { ContractStatus } from '@gymspace/sdk';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFormatPrice } from '@/config/ConfigContext';
@@ -226,7 +227,7 @@ export default function ContractDetailScreen() {
                 <VStack className="gap-3">
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Número:</Text>
-                    <Text className="font-medium">{contract.contractNumber}</Text>
+                    <Text className="font-medium">{contract.contractNumber || 'Sin número'}</Text>
                   </HStack>
 
                   <HStack className="justify-between">
@@ -262,7 +263,11 @@ export default function ContractDetailScreen() {
                 <VStack className="gap-3">
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Precio base:</Text>
-                    <Text className="font-medium">{formatPrice(contract.price)}</Text>
+                    <Text className="font-medium">
+                      {contract.gymMembershipPlan?.basePrice 
+                        ? formatPrice(Number(contract.gymMembershipPlan.basePrice))
+                        : 'N/A'}
+                    </Text>
                   </HStack>
 
                   {contract.discountPercentage && contract.discountPercentage > 0 && (
@@ -276,24 +281,69 @@ export default function ContractDetailScreen() {
 
                   <HStack className="justify-between">
                     <Text className="font-semibold">Precio final:</Text>
-                    <Text className="font-bold text-lg">{formatPrice(contract.finalPrice)}</Text>
+                    <Text className="font-bold text-lg">
+                      {contract.finalPrice !== null && contract.finalPrice !== undefined
+                        ? formatPrice(Number(contract.finalPrice))
+                        : formatPrice(Number(contract.gymMembershipPlan?.basePrice || 0))}
+                    </Text>
                   </HStack>
                 </VStack>
             </Card>
 
+            {/* Receipts/Attachments */}
+            {contract.receiptIds && contract.receiptIds.length > 0 && (
+              <Card className="p-4">
+                <Heading size="md" className="mb-4">Recibos adjuntos</Heading>
+                <VStack className="gap-3">
+                  {contract.receiptIds.map((assetId: string, index: number) => (
+                    <Pressable
+                      key={assetId}
+                      onPress={() => {
+                        // TODO: Implement full screen preview
+                        Alert.alert('Recibo', `Ver recibo ${index + 1}`);
+                      }}
+                    >
+                      <HStack className="items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <HStack className="items-center flex-1 gap-3">
+                          <View className="w-12 h-12 rounded overflow-hidden">
+                            <AssetPreview
+                              assetId={assetId}
+                              size="small"
+                              resizeMode="cover"
+                            />
+                          </View>
+                          <VStack className="flex-1">
+                            <Text className="text-sm font-medium">
+                              Recibo {index + 1}
+                            </Text>
+                            <Text className="text-xs text-gray-500">
+                              ID: {assetId.substring(0, 8)}...
+                            </Text>
+                          </VStack>
+                        </HStack>
+                        <Icon as={Eye} size="sm" className="text-blue-600" />
+                      </HStack>
+                    </Pressable>
+                  ))}
+                </VStack>
+              </Card>
+            )}
+
             {/* Actions */}
-            {contract.status === ContractStatus.ACTIVE && (
-              <VStack className="gap-3 mt-4">
+            <VStack className="gap-3 mt-4">
+              {(contract.status === ContractStatus.EXPIRING_SOON || contract.status === ContractStatus.EXPIRED) && (
                 <Button onPress={handleRenew} variant="outline">
                   <ButtonText>Renovar contrato</ButtonText>
                 </Button>
-                
-                {!isFrozen && (
-                  <Button onPress={() => setShowFreezeModal(true)} variant="outline">
-                    <ButtonText>Congelar contrato</ButtonText>
-                  </Button>
-                )}
-                
+              )}
+              
+              {contract.status === ContractStatus.ACTIVE && !isFrozen && (
+                <Button onPress={() => setShowFreezeModal(true)} variant="outline">
+                  <ButtonText>Congelar contrato</ButtonText>
+                </Button>
+              )}
+              
+              {(contract.status === ContractStatus.ACTIVE || contract.status === ContractStatus.PENDING) && (
                 <Button
                   onPress={() => setShowCancelDialog(true)}
                   action="negative"
@@ -301,8 +351,8 @@ export default function ContractDetailScreen() {
                 >
                   <ButtonText>Cancelar contrato</ButtonText>
                 </Button>
-              </VStack>
-            )}
+              )}
+            </VStack>
           </VStack>
         </ScrollView>
 
@@ -377,18 +427,11 @@ export default function ContractDetailScreen() {
                   ¿Está seguro que desea cancelar este contrato? Esta acción no se puede deshacer.
                 </Text>
                 
-                <Controller
+                <FormTextarea
                   control={cancelForm.control}
                   name="reason"
-                  render={({ field: { onChange, value } }) => (
-                    <FormTextarea
-                      label="Motivo de cancelación"
-                      placeholder="Ingrese el motivo"
-                      defaultValue={value}
-                      onChangeText={onChange}
-                      error={cancelForm.formState.errors.reason?.message}
-                    />
-                  )}
+                  label="Motivo de cancelación"
+                  placeholder="Ingrese el motivo"
                 />
               </VStack>
             </AlertDialogBody>

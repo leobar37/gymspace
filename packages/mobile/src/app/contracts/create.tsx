@@ -18,7 +18,7 @@ export default function CreateContractScreen() {
 
   return (
 
-    <SafeAreaView className='flex-1' edges={['bottom']}> >
+    <SafeAreaView className='flex-1' edges={['bottom']}>
       <View style={{ flex: 1 }}>
         {/* Custom Header */}
         <HStack className="p-4 items-center border-b border-gray-200">

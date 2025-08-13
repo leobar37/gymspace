@@ -25,7 +25,7 @@ export class ContractsService {
     const userId = context.getUserId();
     
     if (!gymId) {
-      throw new BusinessException('Gym context is required');
+      throw new BusinessException('El contexto del gimnasio es requerido');
     }
 
     // Verify gym access and get gym with organization for currency
@@ -47,7 +47,7 @@ export class ContractsService {
     });
     
     if (!gym) {
-      throw new ResourceNotFoundException('Gym', gymId);
+      throw new ResourceNotFoundException('Gimnasio', gymId);
     }
 
     // Verify client belongs to this gym
@@ -59,19 +59,62 @@ export class ContractsService {
     });
 
     if (!client) {
-      throw new ResourceNotFoundException('Client', dto.gymClientId);
+      throw new ResourceNotFoundException('Cliente', dto.gymClientId);
     }
 
     // Check if client has active contract
-    const activeContract = await this.prismaService.contract.findFirst({
+    // Consider both status and dates
+    const now = new Date();
+    const existingContracts = await this.prismaService.contract.findMany({
       where: {
         gymClientId: dto.gymClientId,
-        status: 'active',
+        deletedAt: null, // Explicitly check for non-deleted contracts
+        OR: [
+          // Active contracts
+          { status: 'active' },
+          // Pending contracts that haven't started yet
+          { 
+            status: 'pending',
+            startDate: { gte: now }
+          }
+        ]
       },
     });
 
-    if (activeContract) {
-      throw new BusinessException('Client already has an active contract');
+    if (existingContracts.length > 0) {
+      const activeContract = existingContracts[0];
+      // Log for debugging
+      console.log('Existing contract found:', {
+        id: activeContract.id,
+        status: activeContract.status,
+        startDate: activeContract.startDate,
+        endDate: activeContract.endDate,
+        deletedAt: activeContract.deletedAt,
+      });
+      
+      // Provide more specific error message
+      if (activeContract.status === 'active') {
+        throw new BusinessException('El cliente ya tiene un contrato activo');
+      } else if (activeContract.status === 'pending') {
+        throw new BusinessException('El cliente tiene un contrato pendiente que aún no ha iniciado');
+      }
+    }
+
+    // Also check if there are any expired contracts that need to be updated
+    const expiredContracts = await this.prismaService.contract.updateMany({
+      where: {
+        gymClientId: dto.gymClientId,
+        status: 'active',
+        endDate: { lt: now },
+        deletedAt: null,
+      },
+      data: {
+        status: 'expired',
+      },
+    });
+
+    if (expiredContracts.count > 0) {
+      console.log(`Updated ${expiredContracts.count} expired contracts for client ${dto.gymClientId}`);
     }
 
     // Verify membership plan belongs to this gym and is active
@@ -84,7 +127,7 @@ export class ContractsService {
     });
 
     if (!plan) {
-      throw new ResourceNotFoundException('MembershipPlan', dto.gymMembershipPlanId);
+      throw new ResourceNotFoundException('Plan de membresía', dto.gymMembershipPlanId);
     }
 
     // Calculate price
@@ -184,12 +227,12 @@ export class ContractsService {
     });
 
     if (!existingContract) {
-      throw new ResourceNotFoundException('Contract', contractId);
+      throw new ResourceNotFoundException('Contrato', contractId);
     }
 
     // Check if contract can be renewed
     if (existingContract.status === 'cancelled') {
-      throw new BusinessException('Cannot renew a cancelled contract');
+      throw new BusinessException('No se puede renovar un contrato cancelado');
     }
 
     // Set existing contract as completed
@@ -288,7 +331,7 @@ export class ContractsService {
     });
 
     if (!contract) {
-      throw new ResourceNotFoundException('Contract', contractId);
+      throw new ResourceNotFoundException('Contrato', contractId);
     }
 
     // Validate freeze dates
@@ -296,7 +339,7 @@ export class ContractsService {
     const freezeEnd = new Date(dto.freezeEndDate);
 
     if (freezeStart >= freezeEnd) {
-      throw new BusinessException('Freeze end date must be after start date');
+      throw new BusinessException('La fecha de fin del congelamiento debe ser posterior a la fecha de inicio');
     }
 
     // Check if freeze period is within allowed limits
@@ -306,7 +349,7 @@ export class ContractsService {
     const maxFreezeDays = 30; // Default max freeze days
 
     if (freezeDays > maxFreezeDays) {
-      throw new BusinessException(`Freeze period cannot exceed ${maxFreezeDays} days`);
+      throw new BusinessException(`El período de congelamiento no puede exceder ${maxFreezeDays} días`);
     }
 
     // Extend contract end date by freeze duration
@@ -363,11 +406,11 @@ export class ContractsService {
     });
 
     if (!contract) {
-      throw new ResourceNotFoundException('Contract', contractId);
+      throw new ResourceNotFoundException('Contrato', contractId);
     }
 
     if (contract.status === 'cancelled') {
-      throw new BusinessException('Contract is already cancelled');
+      throw new BusinessException('El contrato ya está cancelado');
     }
 
     const updated = await this.prismaService.contract.update({
@@ -430,7 +473,7 @@ export class ContractsService {
     });
 
     if (!contract) {
-      throw new ResourceNotFoundException('Contract', contractId);
+      throw new ResourceNotFoundException('Contrato', contractId);
     }
 
     return contract;
@@ -449,13 +492,13 @@ export class ContractsService {
     const userId = context.getUserId();
     
     if (!gymId) {
-      throw new BusinessException('Gym context is required');
+      throw new BusinessException('El contexto del gimnasio es requerido');
     }
 
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
-      throw new ResourceNotFoundException('Gym', gymId);
+      throw new ResourceNotFoundException('Gimnasio', gymId);
     }
 
     const where: Prisma.ContractWhereInput = {
@@ -492,6 +535,11 @@ export class ContractsService {
       }),
       this.prismaService.contract.count({ where }),
     ]);
+    console.log("list contracts",{
+      contracts,
+      status
+    });
+    
 
     return {
       contracts,
@@ -540,6 +588,31 @@ export class ContractsService {
     });
 
     return contracts;
+  }
+
+  /**
+   * Update expired contracts - can be called manually or by cron
+   */
+  async updateExpiredContracts() {
+    const now = new Date();
+    
+    // Update expired contracts
+    const expired = await this.prismaService.contract.updateMany({
+      where: {
+        status: 'active',
+        endDate: { lte: now },
+        deletedAt: null,
+      },
+      data: {
+        status: 'expired',
+      },
+    });
+
+    if (expired.count > 0) {
+      console.log(`Updated ${expired.count} expired contracts to 'expired' status`);
+    }
+
+    return expired.count;
   }
 
   /**

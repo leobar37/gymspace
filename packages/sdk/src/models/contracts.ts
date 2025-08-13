@@ -37,6 +37,7 @@ export interface Contract {
   finalPrice: number;
   freezeStartDate?: string;
   freezeEndDate?: string;
+  receiptIds?: string[];
   metadata?: Record<string, any>;
   createdAt: string;
   updatedAt: string;

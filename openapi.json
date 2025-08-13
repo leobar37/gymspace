@@ -1819,6 +1819,29 @@
         ]
       }
     },
+    "/api/v1/contracts/update-expired": {
+      "post": {
+        "operationId": "ContractsController_updateExpiredContracts",
+        "summary": "Update expired contracts status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Number of contracts updated"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/evaluations": {
       "post": {
         "operationId": "EvaluationsController_createEvaluation",

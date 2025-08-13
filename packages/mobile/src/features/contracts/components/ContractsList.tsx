@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { FlatList, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { da, es } from 'date-fns/locale';
 
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
@@ -29,8 +29,8 @@ interface ContractsListProps {
   availableStatuses?: { value: ContractStatus | undefined; label: string }[];
 }
 
-export const ContractsList: React.FC<ContractsListProps> = ({ 
-  filters = {}, 
+export const ContractsList: React.FC<ContractsListProps> = ({
+  filters = {},
   onContractPress,
   hideAddButton = false,
   availableStatuses
@@ -40,8 +40,10 @@ export const ContractsList: React.FC<ContractsListProps> = ({
   const { useContractsList } = useContractsController();
   const [refreshing, setRefreshing] = useState(false);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>(filters);
-  
+
   const { data, isLoading, refetch, isRefetching } = useContractsList(searchFilters);
+
+  console.log("contract list data", JSON.stringify(data, null, 2));
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -86,7 +88,7 @@ export const ContractsList: React.FC<ContractsListProps> = ({
   const renderContractItem = useCallback(({ item }: { item: any }) => {
     const statusInfo = getStatusBadge(item.status);
     const isFrozen = item.freezeStartDate && item.freezeEndDate;
-    
+
     return (
       <Pressable
         onPress={() => handleContractPress(item.id)}
@@ -186,8 +188,8 @@ export const ContractsList: React.FC<ContractsListProps> = ({
       <Box className="px-4 py-3">
         <HStack className="gap-2">
           {statuses.map((status) => {
-            const isActive = searchFilters.status === status.value || 
-                           (!searchFilters.status && !status.value);
+            const isActive = searchFilters.status === status.value ||
+              (!searchFilters.status && !status.value);
             return (
               <Pressable
                 key={status.label}
@@ -219,9 +221,9 @@ export const ContractsList: React.FC<ContractsListProps> = ({
   return (
     <Box className="flex-1 bg-gray-50">
       {renderStatusFilter()}
-      
+
       <FlatList
-        data={data?.data || []}
+        data={data?.contracts || []}
         renderItem={renderContractItem}
         keyExtractor={(item) => item.id}
         refreshControl={
@@ -237,7 +239,7 @@ export const ContractsList: React.FC<ContractsListProps> = ({
         showsVerticalScrollIndicator={false}
       />
 
-      {!hideAddButton && data?.data && data.data.length > 0 && (
+      {!hideAddButton && data?.contracts && data.contracts.length > 0 && (
         <Fab
           onPress={handleAddPress}
           placement="bottom right"
