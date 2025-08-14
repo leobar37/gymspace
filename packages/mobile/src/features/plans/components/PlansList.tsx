@@ -14,22 +14,22 @@ import { Spinner } from '@/components/ui/spinner';
 import { Fab, FabIcon } from '@/components/ui/fab';
 import { Box } from '@/components/ui/box';
 import { Pressable } from '@/components/ui/pressable';
-import { 
-  Actionsheet, 
-  ActionsheetContent, 
-  ActionsheetDragIndicator, 
-  ActionsheetDragIndicatorWrapper, 
-  ActionsheetItem, 
-  ActionsheetItemText 
+import {
+  Actionsheet,
+  ActionsheetContent,
+  ActionsheetDragIndicator,
+  ActionsheetDragIndicatorWrapper,
+  ActionsheetItem,
+  ActionsheetItemText
 } from '@/components/ui/actionsheet';
-import { 
-  AlertDialog, 
-  AlertDialogBackdrop, 
-  AlertDialogContent, 
-  AlertDialogHeader, 
-  AlertDialogCloseButton, 
-  AlertDialogBody, 
-  AlertDialogFooter 
+import {
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogCloseButton,
+  AlertDialogBody,
+  AlertDialogFooter
 } from '@/components/ui/alert-dialog';
 import { Heading } from '@/components/ui/heading';
 import { SearchIcon, PlusIcon, EditIcon, TrashIcon, XIcon } from 'lucide-react-native';
@@ -49,76 +49,76 @@ const PlanItem: React.FC<PlanItemProps> = ({ plan, onPress, onDelete }) => {
   const isActive = plan.status === 'active';
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
+
   const handleLongPress = () => {
     setShowActionSheet(true);
   };
-  
+
   const handleEdit = () => {
     setShowActionSheet(false);
     router.push(`/plans/${plan.id}/edit`);
   };
-  
+
   const handleDeletePress = () => {
     setShowActionSheet(false);
     setShowDeleteDialog(true);
   };
-  
+
   const handleConfirmDelete = () => {
     setShowDeleteDialog(false);
     onDelete(plan.id);
   };
-  
+
   return (
     <>
       <Pressable onPress={onPress} onLongPress={handleLongPress}>
         <Card className="mx-4 mb-3">
-      <VStack className="p-4 gap-2">
-        <HStack className="justify-between items-center">
-          <Text className="text-lg font-semibold text-gray-900">{plan.name}</Text>
-          <Badge action={isActive ? 'success' : 'muted'} size="sm">
-            <BadgeText>{isActive ? 'Activo' : 'Inactivo'}</BadgeText>
-          </Badge>
-        </HStack>
-        
-        {plan.description && (
-          <Text className="text-sm text-gray-600 line-clamp-2">{plan.description}</Text>
-        )}
-        
-        <HStack className="gap-4 mt-1">
-          <VStack>
-            <Text className="text-2xl font-bold text-gray-900">
-              {formatPrice(plan.basePrice)}
-            </Text>
-            <Text className="text-xs text-gray-500">
-              por {plan.durationDays 
-                ? `${plan.durationDays} ${plan.durationDays === 1 ? 'día' : 'días'}`
-                : `${plan.durationMonths} ${plan.durationMonths === 1 ? 'mes' : 'meses'}`
-              }
-            </Text>
-          </VStack>
-          
-          {/* TODO: Add contract count when available from API */}
-        </HStack>
-        
-        {plan.features && plan.features.length > 0 && (
-          <HStack className="gap-2 mt-2 flex-wrap">
-            {plan.features.slice(0, 3).map((feature, index) => (
-              <Badge key={index} action="muted" size="sm">
-                <BadgeText>{feature}</BadgeText>
+          <VStack className="p-4 gap-2">
+            <HStack className="justify-between items-center">
+              <Text className="text-lg font-semibold text-gray-900">{plan.name}</Text>
+              <Badge action={isActive ? 'success' : 'muted'} size="sm">
+                <BadgeText>{isActive ? 'Activo' : 'Inactivo'}</BadgeText>
               </Badge>
-            ))}
-            {plan.features.length > 3 && (
-              <Badge action="muted" size="sm">
-                <BadgeText>+{plan.features.length - 3}</BadgeText>
-              </Badge>
+            </HStack>
+
+            {plan.description && (
+              <Text className="text-sm text-gray-600 line-clamp-2">{plan.description}</Text>
             )}
-          </HStack>
-        )}
-      </VStack>
+
+            <HStack className="gap-4 mt-1">
+              <VStack>
+                <Text className="text-2xl font-bold text-gray-900">
+                  {formatPrice(plan.basePrice)}
+                </Text>
+                <Text className="text-xs text-gray-500">
+                  por {plan.durationDays
+                    ? `${plan.durationDays} ${plan.durationDays === 1 ? 'día' : 'días'}`
+                    : `${plan.durationMonths} ${plan.durationMonths === 1 ? 'mes' : 'meses'}`
+                  }
+                </Text>
+              </VStack>
+
+              {/* TODO: Add contract count when available from API */}
+            </HStack>
+
+            {plan.features && plan.features.length > 0 && (
+              <HStack className="gap-2 mt-2 flex-wrap">
+                {plan.features.slice(0, 3).map((feature, index) => (
+                  <Badge key={index} action="muted" size="sm">
+                    <BadgeText>{feature}</BadgeText>
+                  </Badge>
+                ))}
+                {plan.features.length > 3 && (
+                  <Badge action="muted" size="sm">
+                    <BadgeText>+{plan.features.length - 3}</BadgeText>
+                  </Badge>
+                )}
+              </HStack>
+            )}
+          </VStack>
         </Card>
       </Pressable>
-      
+
       <Actionsheet isOpen={showActionSheet} onClose={() => setShowActionSheet(false)}>
         <ActionsheetContent>
           <ActionsheetDragIndicatorWrapper>
@@ -134,7 +134,7 @@ const PlanItem: React.FC<PlanItemProps> = ({ plan, onPress, onDelete }) => {
           </ActionsheetItem>
         </ActionsheetContent>
       </Actionsheet>
-      
+
       <AlertDialog isOpen={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
         <AlertDialogBackdrop />
         <AlertDialogContent>
@@ -190,29 +190,29 @@ export const PlansList: React.FC = () => {
   const [search, setSearch] = useState('');
   const [showActiveOnly, setShowActiveOnly] = useState(false);
   const toast = useToast();
-  
+
   const filters: SearchFilters = {
     activeOnly: showActiveOnly,
   };
-  
+
   const { data, isLoading, error, refetch } = usePlansList(filters);
-  
+
   // Filter plans locally by search term
   const filteredPlans = React.useMemo(() => {
     if (!data) return [];
     if (!search) return data;
-    
+
     const searchLower = search.toLowerCase();
-    return data.filter(plan => 
+    return data.filter(plan =>
       plan.name.toLowerCase().includes(searchLower) ||
       (plan.description && plan.description.toLowerCase().includes(searchLower))
     );
   }, [data, search]);
-  
+
   const handlePlanPress = useCallback((plan: MembershipPlan) => {
     router.push(`/plans/${plan.id}`);
   }, []);
-  
+
   const handleDeletePlan = useCallback((planId: string) => {
     deletePlan(planId, {
       onSuccess: () => {
@@ -245,15 +245,15 @@ export const PlansList: React.FC = () => {
       },
     });
   }, [deletePlan, toast]);
-  
+
   const renderPlanItem = useCallback(({ item }: { item: MembershipPlan }) => (
-    <PlanItem 
-      plan={item} 
-      onPress={() => handlePlanPress(item)} 
+    <PlanItem
+      plan={item}
+      onPress={() => handlePlanPress(item)}
       onDelete={handleDeletePlan}
     />
   ), [handlePlanPress, handleDeletePlan]);
-  
+
   if (isLoading) {
     return (
       <Box className="flex-1 items-center justify-center">
@@ -261,17 +261,17 @@ export const PlansList: React.FC = () => {
       </Box>
     );
   }
-  
+
   if (error) {
     return <ErrorState onRetry={refetch} />;
   }
-  
+
   return (
     <View className="flex-1 bg-gray-50">
       <VStack className="p-4 bg-white border-b border-gray-200">
         <Input className="mb-3">
           <InputIcon>
-            <Icon as={SearchIcon} className="text-gray-400" />
+            <Icon as={SearchIcon} className="text-black" />
           </InputIcon>
           <InputField
             placeholder="Buscar planes..."
@@ -279,7 +279,7 @@ export const PlansList: React.FC = () => {
             onChangeText={setSearch}
           />
         </Input>
-        
+
         <HStack className="items-center justify-between">
           <Text className="text-sm text-gray-600">Mostrar solo activos</Text>
           <Switch
@@ -289,7 +289,7 @@ export const PlansList: React.FC = () => {
           />
         </HStack>
       </VStack>
-      
+
       <FlatList
         data={filteredPlans}
         renderItem={renderPlanItem}
@@ -299,11 +299,11 @@ export const PlansList: React.FC = () => {
         refreshing={false}
         onRefresh={refetch}
       />
-      
+
       {filteredPlans.length > 0 && (
         <Fab
           onPress={() => router.push('/plans/create')}
-          className="bg-blue-600"
+          className='size-16'
         >
           <FabIcon as={PlusIcon} />
         </Fab>

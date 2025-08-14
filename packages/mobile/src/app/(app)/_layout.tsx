@@ -125,17 +125,6 @@ function AppLayout() {
           ),
         }}
       />
-
-      <Tabs.Screen
-        name="plans"
-        options={{
-          title: 'Planes',
-          headerTitle: 'Planes',
-          tabBarIcon: ({ color }) => (
-            <Icon as={FileTextIcon} className="w-6 h-6" style={{ color }} />
-          ),
-        }}
-      />
       <Tabs.Screen
         name="more"
         options={{

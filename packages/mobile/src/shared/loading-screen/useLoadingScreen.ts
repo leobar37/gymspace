@@ -45,7 +45,9 @@ export const useLoadingScreen = () => {
           : [
               {
                 label: 'Aceptar',
-                onPress: () => hide(),
+                onPress: () => {
+                  // Modal will be closed automatically
+                },
                 variant: 'solid',
               },
             ];
@@ -87,7 +89,9 @@ export const useLoadingScreen = () => {
           },
           {
             label: 'Cerrar',
-            onPress: () => hide(),
+            onPress: () => {
+              // Modal will be closed automatically
+            },
             variant: 'outline',
           },
         ];

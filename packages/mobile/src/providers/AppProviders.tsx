@@ -8,6 +8,7 @@ import React, { useState } from "react";
 import { Alert } from "react-native";
 import { GymSdkProvider } from "./GymSdkProvider";
 import { LoadingScreen } from "@/shared/loading-screen/LoadingScreen";
+import { AssetPreviewGlobal } from "@/features/assets";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -123,6 +124,7 @@ export function AppProviders({ children }: AppProvidersProps) {
               <CartProvider>
                 {children}
                 <LoadingScreen />
+                <AssetPreviewGlobal />
               </CartProvider>
             </ConfigProvider>
           </GymSdkProvider>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { router } from 'expo-router';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { VStack } from '@/components/ui/vstack';
@@ -18,8 +18,9 @@ import { FormSelect } from '@/components/forms/FormSelect';
 import { FormSwitch } from '@/components/forms/FormSwitch';
 import { PlusIcon, XIcon } from 'lucide-react-native';
 import { usePlansController, PlanFormData } from '../controllers/plans.controller';
-import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 import { MembershipPlan } from '@gymspace/sdk';
+import { AssetSelector } from '@/features/assets/components/AssetSelector';
+import { useLoadingScreen } from '@/shared/loading-screen';
 
 // Schema validation
 const planSchema = z.object({
@@ -33,6 +34,7 @@ const planSchema = z.object({
   includesAdvisor: z.boolean().default(false),
   showInCatalog: z.boolean().default(false),
   status: z.enum(['active', 'inactive', 'archived']).optional(),
+  assetsIds: z.array(z.string()).optional(),
 });
 
 type PlanSchema = z.infer<typeof planSchema>;
@@ -49,7 +51,7 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
   planId,
 }) => {
   const { createPlan, updatePlan, isCreatingPlan, isUpdatingPlan } = usePlansController();
-  const toast = useToast();
+  const { execute } = useLoadingScreen();
   const [features, setFeatures] = useState<string[]>(initialData?.features || []);
   const [newFeature, setNewFeature] = useState('');
 
@@ -66,10 +68,11 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
       includesAdvisor: initialData?.includesAdvisor || false,
       showInCatalog: initialData?.showInCatalog || false,
       status: initialData?.status,
+      assetsIds: [],
     },
   });
 
-  const { control, handleSubmit, formState: { errors } } = form;
+  const { control, handleSubmit } = form;
 
   const isSubmitting = isCreatingPlan || isUpdatingPlan;
 
@@ -79,99 +82,84 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
   }
 
   const onSubmit = async (data: PlanSchema) => {
-    try {
-      const planData: PlanFormData = {
-        name: data.name,
-        description: data.description,
-        basePrice: data.basePrice,
-        durationMonths: data.durationType === 'months' ? data.durationValue : undefined,
-        durationDays: data.durationType === 'days' ? data.durationValue : undefined,
-        termsAndConditions: data.termsAndConditions,
-        allowsCustomPricing: data.allowsCustomPricing,
-        includesAdvisor: data.includesAdvisor,
-        showInCatalog: data.showInCatalog,
-        status: data.status,
-        features,
-      };
+    const planData: PlanFormData = {
+      name: data.name,
+      description: data.description,
+      basePrice: data.basePrice,
+      durationMonths: data.durationType === 'months' ? data.durationValue : undefined,
+      durationDays: data.durationType === 'days' ? data.durationValue : undefined,
+      termsAndConditions: data.termsAndConditions,
+      allowsCustomPricing: data.allowsCustomPricing,
+      includesAdvisor: data.includesAdvisor,
+      showInCatalog: data.showInCatalog,
+      status: data.status,
+      features,
+      assetsIds: data.assetsIds || [],
+    };
 
-      if (isEditing && planId) {
-        updatePlan(
-          { id: planId, data: planData },
-          {
-            onSuccess: () => {
-              toast.show({
-                placement: 'top',
-                duration: 3000,
-                render: ({ id }) => {
-                  return (
-                    <Toast nativeID={`toast-${id}`} action="success" variant="solid">
-                      <ToastTitle>Plan actualizado</ToastTitle>
-                      <ToastDescription>
-                        El plan se actualizó correctamente
-                      </ToastDescription>
-                    </Toast>
-                  );
-                },
-              });
-              router.back();
-            },
-            onError: (error) => {
-              toast.show({
-                placement: 'top',
-                duration: 4000,
-                render: ({ id }) => {
-                  return (
-                    <Toast nativeID={`toast-${id}`} action="error" variant="solid">
-                      <ToastTitle>Error al actualizar</ToastTitle>
-                      <ToastDescription>
-                        {error instanceof Error ? error.message : 'No se pudo actualizar el plan'}
-                      </ToastDescription>
-                    </Toast>
-                  );
-                },
-              });
-            },
-          }
-        );
-      } else {
-        createPlan(planData, {
-          onSuccess: () => {
-            toast.show({
-              placement: 'top',
-              duration: 3000,
-              render: ({ id }) => {
-                return (
-                  <Toast nativeID={`toast-${id}`} action="success" variant="solid">
-                    <ToastTitle>Plan creado</ToastTitle>
-                    <ToastDescription>
-                      El plan se creó correctamente
-                    </ToastDescription>
-                  </Toast>
-                );
+    if (isEditing && planId) {
+      await execute(
+        updatePlan.mutateAsync({ id: planId, data: planData }),
+        {
+          action: 'Actualizando plan...',
+          successMessage: 'El plan se actualizó correctamente',
+          successActions: [
+            {
+              label: 'Ver plan',
+              onPress: () => {
+                router.replace(`/plans/${planId}`);
               },
-            });
-            router.replace('/plans');
-          },
-          onError: (error) => {
-            toast.show({
-              placement: 'top',
-              duration: 4000,
-              render: ({ id }) => {
-                return (
-                  <Toast nativeID={`toast-${id}`} action="error" variant="solid">
-                    <ToastTitle>Error al crear</ToastTitle>
-                    <ToastDescription>
-                      {error instanceof Error ? error.message : 'No se pudo crear el plan'}
-                    </ToastDescription>
-                  </Toast>
-                );
+              variant: 'solid',
+            },
+            {
+              label: 'Ir al listado',
+              onPress: () => {
+                router.replace('/plans');
               },
-            });
+              variant: 'outline',
+            },
+          ],
+          errorFormatter: (error) => {
+            if (error instanceof Error) {
+              return `Error al actualizar: ${error.message}`;
+            }
+            return 'No se pudo actualizar el plan';
           },
-        });
-      }
-    } catch (error) {
-      console.error('Submit error:', error);
+          hideOnSuccess: false,
+        }
+      );
+    } else {
+      await execute(
+        createPlan.mutateAsync(planData),
+        {
+          action: 'Creando plan...',
+          successMessage: `El plan "${data.name}" se creó correctamente`,
+          successActions: [
+            {
+              label: 'Ver planes',
+              onPress: () => {
+                router.replace('/plans');
+              },
+              variant: 'solid',
+            },
+            {
+              label: 'Crear otro',
+              onPress: () => {
+                form.reset();
+                setFeatures([]);
+              },
+              variant: 'outline',
+            },
+          ],
+          errorFormatter: (error) => {
+            if (error instanceof Error) {
+              return `Error al crear: ${error.message}`;
+            }
+            return 'No se pudo crear el plan';
+          },
+          hideOnSuccess: false,
+        }
+      );
     }
   };
 
@@ -188,7 +176,8 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
 
 
   return (
-    <VStack className="p-4 gap-4">
+    <FormProvider {...form}>
+      <VStack className="p-4 gap-4">
         <VStack className="gap-4">
           <Text className="text-lg font-semibold">Campos Requeridos</Text>
           
@@ -241,11 +230,17 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
           <Text className="text-lg font-semibold">Campos Opcionales</Text>
           
           <FormTextarea
+            control={control}
+            name="description"
             label="Descripción"
             placeholder="Describe las características del plan"
-            value={form.watch('description') || ''}
-            onChangeText={(text) => form.setValue('description', text)}
-            error={errors.description?.message}
+          />
+
+          <AssetSelector
+            name="assetsIds"
+            label="Imágenes del plan"
+            multi={true}
+            required={false}
           />
         </VStack>
 
@@ -322,11 +317,10 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
         <Divider />
 
         <FormTextarea
+          control={control}
+          name="termsAndConditions"
           label="Términos y condiciones"
           placeholder="Ingresa los términos y condiciones del plan"
-          value={form.watch('termsAndConditions') || ''}
-          onChangeText={(text) => form.setValue('termsAndConditions', text)}
-          error={errors.termsAndConditions?.message}
           numberOfLines={4}
         />
 
@@ -356,5 +350,6 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
           </Button>
         </VStack>
       </VStack>
+    </FormProvider>
   );
 };

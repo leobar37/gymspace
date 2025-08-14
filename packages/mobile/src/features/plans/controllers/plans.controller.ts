@@ -32,6 +32,7 @@ export interface PlanFormData {
   includesAdvisor?: boolean;
   showInCatalog?: boolean;
   status?: 'active' | 'inactive' | 'archived';
+  assetsIds?: string[];
 }
 
 export interface SearchFilters {
@@ -99,6 +100,7 @@ export const usePlansController = () => {
         maxEvaluations: data.maxEvaluations || 0,
         includesAdvisor: data.includesAdvisor || false,
         showInCatalog: data.showInCatalog || false,
+        assetsIds: data.assetsIds || [],
       };
       const response = await sdk.membershipPlans.createMembershipPlan(createData);
       return response;
@@ -126,6 +128,7 @@ export const usePlansController = () => {
         includesAdvisor: data.includesAdvisor,
         showInCatalog: data.showInCatalog,
         status: data.status,
+        assetsIds: data.assetsIds,
       };
       const response = await sdk.membershipPlans.updateMembershipPlan(id, updateData);
       return response;
@@ -169,11 +172,11 @@ export const usePlansController = () => {
     usePlanStats,
     
     // Mutations
-    createPlan: createPlanMutation.mutate,
+    createPlan: createPlanMutation,
     isCreatingPlan: createPlanMutation.isPending,
     createPlanError: createPlanMutation.error,
     
-    updatePlan: updatePlanMutation.mutate,
+    updatePlan: updatePlanMutation,
     isUpdatingPlan: updatePlanMutation.isPending,
     
     deletePlan: deletePlanMutation.mutate,

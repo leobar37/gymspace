@@ -1,5 +1,5 @@
 import { ContractStatus, IRequestContext } from '@gymspace/shared';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { Contract, Prisma } from '@prisma/client';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
@@ -8,9 +8,15 @@ import { PrismaService } from '../../core/database/prisma.service';
 import { ClientsService } from '../clients/clients.service';
 import { GymsService } from '../gyms/gyms.service';
 import { CreateContractDto, FreezeContractDto, RenewContractDto } from './dto';
+import {
+  CONTRACT_EXPIRATION_CONSTANTS,
+  CONTRACT_STATUS_TRANSITIONS,
+} from './constants/contract-expiration.constants';
 
 @Injectable()
 export class ContractsService {
+  private readonly logger = new Logger(ContractsService.name);
+
   constructor(
     private prismaService: PrismaService,
     private gymsService: GymsService,
@@ -47,15 +53,16 @@ export class ContractsService {
     }
 
     // Check if client has active contract
-    // Consider both status and dates
+    // Consider both status and dates, including expiring_soon
     const now = new Date();
     const existingContracts = await this.prismaService.contract.findMany({
       where: {
         gymClientId: dto.gymClientId,
         deletedAt: null, // Explicitly check for non-deleted contracts
         OR: [
-          // Active contracts
+          // Active contracts (including expiring_soon)
           { status: 'active' },
+          { status: 'expiring_soon' },
           // Pending contracts that haven't started yet
           {
             status: 'pending',
@@ -71,6 +78,8 @@ export class ContractsService {
       // Provide more specific error message
       if (activeContract.status === 'active') {
         throw new BusinessException('El cliente ya tiene un contrato activo');
+      } else if (activeContract.status === 'expiring_soon') {
+        throw new BusinessException('El cliente tiene un contrato activo que está por vencer. Considere renovarlo en lugar de crear uno nuevo');
       } else if (activeContract.status === 'pending') {
         throw new BusinessException(
           'El cliente tiene un contrato pendiente que aún no ha iniciado',
@@ -78,24 +87,10 @@ export class ContractsService {
       }
     }
 
-    // Also check if there are any expired contracts that need to be updated
-    const expiredContracts = await this.prismaService.contract.updateMany({
-      where: {
-        gymClientId: dto.gymClientId,
-        status: 'active',
-        endDate: { lt: now },
-        deletedAt: null,
-      },
-      data: {
-        status: 'expired',
-      },
-    });
-
-    if (expiredContracts.count > 0) {
-      console.log(
-        `Updated ${expiredContracts.count} expired contracts for client ${dto.gymClientId}`,
-      );
-    }
+    // Run intelligent contract status update to ensure accurate status
+    // This ensures expired contracts are properly marked before creating new ones
+    await this.updateExpiringSoonContracts();
+    await this.updateExpiredContracts();
 
     // Verify membership plan belongs to this gym and is active
     const plan = await this.prismaService.gymMembershipPlan.findFirst({
@@ -469,7 +464,7 @@ export class ContractsService {
   }
 
   /**
-   * Get contracts for a gym
+   * Get contracts for a gym with intelligent status updates
    */
   async getGymContracts(context: IRequestContext, status?: ContractStatus, limit = 20, offset = 0) {
     const gymId = context.getGymId();
@@ -486,6 +481,10 @@ export class ContractsService {
         throw new ResourceNotFoundException('Gimnasio', gymId);
       }
     }
+
+    // Run intelligent status updates before querying to ensure accuracy
+    await this.updateExpiringSoonContracts();
+    await this.updateExpiredContracts();
 
     // Build where clause more efficiently
     const where: Prisma.ContractWhereInput = {
@@ -577,16 +576,155 @@ export class ContractsService {
   }
 
   /**
-   * Update expired contracts - can be called manually or by cron
+   * Get contracts that need status updates for a specific gym
+   * Useful for monitoring and debugging
    */
-  async updateExpiredContracts() {
+  async getContractsNeedingStatusUpdate(gymId?: string) {
     const now = new Date();
+    const warningDate = new Date();
+    warningDate.setDate(now.getDate() + CONTRACT_EXPIRATION_CONSTANTS.EXPIRING_SOON_DAYS);
 
-    // Update expired contracts
-    const expired = await this.prismaService.contract.updateMany({
+    const baseWhere: Prisma.ContractWhereInput = {
+      deletedAt: null,
+    };
+
+    if (gymId) {
+      baseWhere.gymClient = {
+        gymId,
+      };
+    }
+
+    const [needingExpiringSoon, needingExpired] = await Promise.all([
+      // Contracts that should be marked as expiring_soon
+      this.prismaService.contract.findMany({
+        where: {
+          ...baseWhere,
+          status: 'active',
+          endDate: {
+            lte: warningDate,
+            gt: now,
+          },
+        },
+        include: {
+          gymClient: {
+            select: { name: true, gymId: true },
+          },
+        },
+      }),
+      // Contracts that should be marked as expired
+      this.prismaService.contract.findMany({
+        where: {
+          ...baseWhere,
+          OR: [
+            { status: 'active' },
+            { status: 'expiring_soon' },
+          ],
+          endDate: { lte: now },
+        },
+        include: {
+          gymClient: {
+            select: { name: true, gymId: true },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      needingExpiringSoon,
+      needingExpired,
+      summary: {
+        expiringSoonCount: needingExpiringSoon.length,
+        expiredCount: needingExpired.length,
+        totalNeedingUpdate: needingExpiringSoon.length + needingExpired.length,
+      },
+    };
+  }
+
+  /**
+   * Check if a contract should be in expiring_soon status
+   */
+  isContractExpiringSoon(contract: { status: string; endDate: Date | null }): boolean {
+    if (!contract.endDate || contract.status !== 'active') {
+      return false;
+    }
+
+    const now = new Date();
+    const warningDate = new Date();
+    warningDate.setDate(now.getDate() + CONTRACT_EXPIRATION_CONSTANTS.EXPIRING_SOON_DAYS);
+
+    return contract.endDate <= warningDate && contract.endDate > now;
+  }
+
+  /**
+   * Check if a contract should be expired
+   */
+  isContractExpired(contract: { status: string; endDate: Date | null }): boolean {
+    if (!contract.endDate) {
+      return false;
+    }
+
+    const now = new Date();
+    const expirationThreshold = new Date(now);
+    
+    if (CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS > 0) {
+      expirationThreshold.setDate(now.getDate() - CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS);
+    }
+
+    return (contract.status === 'active' || contract.status === 'expiring_soon') && 
+           contract.endDate <= expirationThreshold;
+  }
+
+  /**
+   * Update contracts to expiring_soon status
+   * Called by the intelligent cron job
+   */
+  private async updateExpiringSoonContracts(): Promise<number> {
+    const now = new Date();
+    const warningDate = new Date();
+    warningDate.setDate(now.getDate() + CONTRACT_EXPIRATION_CONSTANTS.EXPIRING_SOON_DAYS);
+
+    const updated = await this.prismaService.contract.updateMany({
       where: {
         status: 'active',
-        endDate: { lte: now },
+        endDate: {
+          lte: warningDate,
+          gt: now, // Contract hasn't expired yet
+        },
+        deletedAt: null,
+      },
+      data: {
+        status: 'expiring_soon',
+      },
+    });
+
+    if (updated.count > 0) {
+      this.logger.log(`Updated ${updated.count} contracts to 'expiring_soon' status`);
+    }
+
+    return updated.count;
+  }
+
+  /**
+   * Update contracts to expired status
+   * Called by the intelligent cron job
+   */
+  private async updateExpiredContracts(): Promise<number> {
+    const now = new Date();
+    
+    // Add grace period if configured
+    const expirationThreshold = new Date(now);
+    if (CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS > 0) {
+      expirationThreshold.setDate(now.getDate() - CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS);
+    }
+
+    // Update contracts from both 'active' and 'expiring_soon' to 'expired'
+    const expired = await this.prismaService.contract.updateMany({
+      where: {
+        OR: [
+          { status: 'active' },
+          { status: 'expiring_soon' },
+        ],
+        endDate: { lte: expirationThreshold },
         deletedAt: null,
       },
       data: {
@@ -595,30 +733,127 @@ export class ContractsService {
     });
 
     if (expired.count > 0) {
-      console.log(`Updated ${expired.count} expired contracts to 'expired' status`);
+      this.logger.log(`Updated ${expired.count} contracts to 'expired' status`);
     }
 
     return expired.count;
   }
 
   /**
-   * Check and update expired/frozen contracts (scheduled task)
+   * Get contract status statistics for monitoring
    */
-  @Cron('0 0 * * *') // Daily at midnight
-  async updateContractStatuses() {
+  async getContractStatusStats() {
     const now = new Date();
+    const warningDate = new Date();
+    warningDate.setDate(now.getDate() + CONTRACT_EXPIRATION_CONSTANTS.EXPIRING_SOON_DAYS);
 
-    // Update expired contracts
-    const expired = await this.prismaService.contract.updateMany({
-      where: {
-        status: 'active',
-        endDate: { lte: now },
+    const stats = await this.prismaService.contract.groupBy({
+      by: ['status'],
+      _count: {
+        id: true,
       },
-      data: {
-        status: 'expired',
+      where: {
+        deletedAt: null,
       },
     });
 
-    console.log(`Updated ${expired.count} expired contracts`);
+    // Get additional stats for monitoring
+    const expiringSoon = await this.prismaService.contract.count({
+      where: {
+        status: 'active',
+        endDate: {
+          lte: warningDate,
+          gt: now,
+        },
+        deletedAt: null,
+      },
+    });
+
+    const overdue = await this.prismaService.contract.count({
+      where: {
+        OR: [
+          { status: 'active' },
+          { status: 'expiring_soon' },
+        ],
+        endDate: { lte: now },
+        deletedAt: null,
+      },
+    });
+
+    return {
+      statusBreakdown: stats.reduce((acc, stat) => {
+        acc[stat.status] = stat._count.id;
+        return acc;
+      }, {} as Record<ContractStatus, number>),
+      pendingUpdates: {
+        expiringSoon,
+        overdue,
+      },
+    };
+  }
+
+  /**
+   * Intelligent contract status update cron job
+   * Runs every 6 hours to maintain accurate contract statuses
+   */
+  @Cron(CONTRACT_EXPIRATION_CONSTANTS.CRON_SCHEDULE)
+  async updateContractStatuses() {
+    const startTime = new Date();
+    this.logger.log('Starting intelligent contract status update');
+
+    try {
+      // Step 1: Update contracts to expiring_soon
+      const expiringSoonCount = await this.updateExpiringSoonContracts();
+
+      // Step 2: Update contracts to expired
+      const expiredCount = await this.updateExpiredContracts();
+
+      // Step 3: Log summary
+      const endTime = new Date();
+      const duration = endTime.getTime() - startTime.getTime();
+
+      this.logger.log(
+        `Contract status update completed in ${duration}ms. ` +
+        `Updated ${expiringSoonCount} to expiring_soon, ${expiredCount} to expired.`
+      );
+
+      // Step 4: Get stats for monitoring (optional)
+      if (this.logger.isLevelEnabled('debug')) {
+        const stats = await this.getContractStatusStats();
+        this.logger.debug('Current contract status stats:', stats);
+      }
+
+    } catch (error) {
+      this.logger.error('Error updating contract statuses', error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Manual trigger for contract status updates
+   * Can be called by administrators or other services
+   */
+  async triggerContractStatusUpdate(): Promise<{
+    expiringSoonCount: number;
+    expiredCount: number;
+    executionTime: number;
+  }> {
+    const startTime = Date.now();
+    
+    const expiringSoonCount = await this.updateExpiringSoonContracts();
+    const expiredCount = await this.updateExpiredContracts();
+    
+    const executionTime = Date.now() - startTime;
+
+    this.logger.log(
+      `Manual contract status update completed. ` +
+      `Updated ${expiringSoonCount} to expiring_soon, ${expiredCount} to expired.`
+    );
+
+    return {
+      expiringSoonCount,
+      expiredCount,
+      executionTime,
+    };
   }
 }

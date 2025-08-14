@@ -5,11 +5,20 @@ import { useLoadingScreenStore } from './store';
 import { CheckCircle, XCircle } from 'lucide-react-native';
 
 export const LoadingScreen: React.FC = () => {
-  const { state, message, actions } = useLoadingScreenStore();
+  const { state, message, actions, hide } = useLoadingScreenStore();
 
   if (state === 'idle') {
     return null;
   }
+  
+  const handleActionPress = (action: typeof actions[0]) => {
+    // First hide the modal
+    hide();
+    // Then execute the action after a small delay to ensure modal is closed
+    setTimeout(() => {
+      action.onPress();
+    }, 100);
+  };
 
   const renderIcon = () => {
     switch (state) {
@@ -59,7 +68,7 @@ export const LoadingScreen: React.FC = () => {
                   <Button
                     key={index}
                     variant={action.variant || 'solid'}
-                    onPress={action.onPress}
+                    onPress={() => handleActionPress(action)}
                     className={index > 0 ? 'mt-3' : ''}
                   >
                     <ButtonText>{action.label}</ButtonText>

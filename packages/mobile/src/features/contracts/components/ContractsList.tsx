@@ -43,8 +43,6 @@ export const ContractsList: React.FC<ContractsListProps> = ({
 
   const { data, isLoading, refetch } = useContractsList(searchFilters);
 
-  console.log("contract list data", JSON.stringify(data?.data?.at?.(0), null, 2));
-
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetch();

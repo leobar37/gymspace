@@ -5739,6 +5739,17 @@
               "inactive",
               "archived"
             ]
+          },
+          "assetsIds": {
+            "example": [
+              "asset-id-1",
+              "asset-id-2"
+            ],
+            "description": "Array of asset IDs for plan images",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -5811,6 +5822,17 @@
               "inactive",
               "archived"
             ]
+          },
+          "assetsIds": {
+            "example": [
+              "asset-id-1",
+              "asset-id-2"
+            ],
+            "description": "Array of asset IDs for plan images",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "isActive": {
             "type": "boolean",

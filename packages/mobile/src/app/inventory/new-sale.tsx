@@ -29,6 +29,7 @@ import { ProductCard } from '@/components/inventory/ProductCard';
 import { CartItem } from '@/components/inventory/CartItem';
 import { ClientSelector } from '@/features/clients/components/ClientSelector';
 import { useForm, FormProvider } from 'react-hook-form';
+import { useLoadingScreen } from '@/shared/loading-screen';
 import type { Product, CreateSaleDto, SaleItemDto, Client } from '@gymspace/sdk';
 
 interface SaleFormData {
@@ -38,6 +39,7 @@ interface SaleFormData {
 
 export default function NewSaleScreen() {
   const formatPrice = useFormatPrice();
+  const { execute } = useLoadingScreen();
   const {
     state,
     addItem,
@@ -52,7 +54,6 @@ export default function NewSaleScreen() {
   } = useCart();
 
   const [showProductSelection, setShowProductSelection] = useState(false);
-  const [isProcessingSale, setIsProcessingSale] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const methods = useForm<SaleFormData>({
@@ -113,51 +114,67 @@ export default function NewSaleScreen() {
       return;
     }
 
-    setIsProcessingSale(true);
+    const saleItems: SaleItemDto[] = state.items.map(item => ({
+      productId: item.product.id,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+    }));
 
-    try {
-      const saleItems: SaleItemDto[] = state.items.map(item => ({
-        productId: item.product.id,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-      }));
+    const saleData: CreateSaleDto = {
+      items: saleItems,
+      paymentStatus: state.paymentStatus as 'paid' | 'unpaid',
+      customerName: state.customerName || undefined,
+      notes: state.notes || undefined,
+    };
 
-      const saleData: CreateSaleDto = {
-        items: saleItems,
-        paymentStatus: state.paymentStatus as 'paid' | 'unpaid',
-        customerName: state.customerName || undefined,
-        notes: state.notes || undefined,
-      };
-
-      await createSaleMutation.mutateAsync(saleData);
-
-      Alert.alert(
-        'Venta completada',
-        `Venta por ${formatPrice(state.total)} completada exitosamente.`,
-        [
+    await execute(
+      createSaleMutation.mutateAsync(saleData),
+      {
+        action: 'Procesando venta...',
+        successMessage: `Venta por ${formatPrice(state.total)} completada exitosamente`,
+        successActions: [
           {
-            text: 'Nueva venta',
-            onPress: () => resetCart(),
+            label: 'Nueva venta',
+            onPress: () => {
+              resetCart();
+            },
+            variant: 'solid',
           },
           {
-            text: 'Ver ventas',
+            label: 'Ver historial',
             onPress: () => {
               resetCart();
               router.push('/inventory/sales-history');
             },
+            variant: 'outline',
           },
-        ]
-      );
-    } catch (error) {
-      console.error('Error creating sale:', error);
-      Alert.alert(
-        'Error',
-        'No se pudo completar la venta. Por favor intenta nuevamente.'
-      );
-    } finally {
-      setIsProcessingSale(false);
-    }
-  }, [hasItems, state, createSaleMutation, resetCart]);
+        ],
+        errorFormatter: (error) => {
+          if (error instanceof Error) {
+            return `Error al procesar la venta: ${error.message}`;
+          }
+          return 'No se pudo completar la venta. Por favor intenta nuevamente.';
+        },
+        errorActions: [
+          {
+            label: 'Reintentar',
+            onPress: () => {
+              // El usuario puede reintentar desde la misma pantalla
+            },
+            variant: 'solid',
+          },
+          {
+            label: 'Cancelar',
+            onPress: () => {
+              // No action needed, just close the modal
+            },
+            variant: 'outline',
+          },
+        ],
+        hideOnSuccess: false,
+      }
+    );
+  }, [hasItems, state, createSaleMutation, resetCart, execute, formatPrice]);
 
   const renderCartItem = useCallback(({ item }: { item: typeof state.items[0] }) => (
     <CartItem
@@ -311,22 +328,14 @@ export default function NewSaleScreen() {
               {/* Complete Sale Button */}
               <Button
                 onPress={handleCompleteSale}
-                disabled={isProcessingSale}
                 variant="solid"
               >
-                {isProcessingSale ? (
-                  <HStack space="sm" className="items-center">
-                    <Spinner size="small" />
-                    <ButtonText>Procesando...</ButtonText>
-                  </HStack>
-                ) : (
-                  <HStack space="sm" className="items-center">
-                    <Icon as={CheckIcon} className="w-5 h-5" />
-                    <ButtonText className="font-semibold">
-                      Completar Venta
-                    </ButtonText>
-                  </HStack>
-                )}
+                <HStack space="sm" className="items-center">
+                  <Icon as={CheckIcon} className="w-5 h-5" />
+                  <ButtonText className="font-semibold">
+                    Completar Venta
+                  </ButtonText>
+                </HStack>
               </Button>
               </VStack>
             </FormProvider>

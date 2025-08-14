@@ -9,7 +9,7 @@ import { Alert } from 'react-native';
 
 export default function NewProductScreen() {
   const createProductMutation = useCreateProduct();
-  const { execute, hide } = useLoadingScreen();
+  const { execute } = useLoadingScreen();
   const createdProductRef = useRef<any>(null);
 
   const handleSubmit = async (data: CreateProductDto) => {
@@ -22,7 +22,6 @@ export default function NewProductScreen() {
           {
             label: 'Ver producto',
             onPress: () => {
-              hide();
               if (createdProductRef.current) {
                 router.replace(`/inventory/products/${createdProductRef.current.id}`);
               }
@@ -32,7 +31,6 @@ export default function NewProductScreen() {
           {
             label: 'Ir al listado',
             onPress: () => {
-              hide();
               router.replace('/inventory/products');
             },
             variant: 'outline',

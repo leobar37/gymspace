@@ -1,16 +1,11 @@
-import React, { useState } from 'react';
-import { View, Platform, Modal, TouchableWithoutFeedback } from 'react-native';
+import React from 'react';
+import { View, Platform } from 'react-native';
 import { useController } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
 import { Picker } from '@react-native-picker/picker';
 import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Pressable } from '@/components/ui/pressable';
-import { Icon } from '@/components/ui/icon';
-import { ChevronDownIcon, XIcon } from 'lucide-react-native';
 
 interface SelectOption {
   label: string;
@@ -46,155 +41,61 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
     shouldUnregister
   });
   
-  const [showModal, setShowModal] = useState(false);
-  const [tempValue, setTempValue] = useState(field.value || '');
-  
-  const selectedOption = options.find(opt => opt.value === field.value);
-  
-  console.log("options", options);
-  
-
-  const handleSave = () => {
-    field.onChange(tempValue);
-    setShowModal(false);
-  };
-  
-  const handleCancel = () => {
-    setTempValue(field.value || '');
-    setShowModal(false);
-  };
-  
-  const openModal = () => {
-    if (enabled) {
-      setTempValue(field.value || '');
-      setShowModal(true);
-    }
-  };
-  
   return (
-    <>
-      <FormControl isInvalid={!!fieldState.error}>
-        <VStack className="gap-1">
-          {label && <Text className="font-medium text-gray-900">{label}</Text>}
-          
-          {description && (
-            <FormControlHelper>
-              <FormControlHelperText>{description}</FormControlHelperText>
-            </FormControlHelper>
-          )}
-          
-          <Pressable
-            onPress={openModal}
-            disabled={!enabled}
+    <FormControl isInvalid={!!fieldState.error}>
+      <VStack className="gap-1">
+        {label && <Text className="font-medium text-gray-900">{label}</Text>}
+        
+        {description && (
+          <FormControlHelper>
+            <FormControlHelperText>{description}</FormControlHelperText>
+          </FormControlHelper>
+        )}
+        
+        <View className={`
+          bg-white 
+          border 
+          ${fieldState.error ? 'border-red-500' : 'border-gray-300'} 
+          rounded-lg 
+          overflow-hidden
+          ${!enabled ? 'opacity-50' : ''}
+        `}>
+          <Picker
+            selectedValue={field.value || ''}
+            onValueChange={(itemValue) => field.onChange(itemValue)}
+            enabled={enabled}
+            style={{
+              height: Platform.OS === 'ios' ? 200 : 56,
+              width: '100%',
+            }}
+            itemStyle={Platform.OS === 'ios' ? {
+              height: 200,
+              fontSize: 16,
+            } : undefined}
           >
-            <View className={`
-              bg-white 
-              border 
-              ${fieldState.error ? 'border-red-500' : 'border-gray-300'} 
-              rounded-lg 
-              px-4
-              py-6
-              min-h-[60px]
-              ${!enabled ? 'opacity-50' : ''}
-            `}>
-              <HStack className="justify-between items-center flex-1">
-                <Text className={`flex-1 ${selectedOption ? 'text-gray-900' : 'text-gray-400'}`}>
-                  {selectedOption ? selectedOption.label : placeholder}
-                </Text>
-                <View className="ml-4">
-                  <Icon as={ChevronDownIcon} className="text-gray-400" size="md" />
-                </View>
-              </HStack>
-            </View>
-          </Pressable>
-          
-          {fieldState.error && (
-            <FormControlError>
-              <FormControlErrorText>{fieldState.error.message}</FormControlErrorText>
-            </FormControlError>
-          )}
-        </VStack>
-      </FormControl>
-      
-      <Modal
-        visible={showModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowModal(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowModal(false)}>
-          <View className="flex-1 bg-black/50 justify-center items-center px-8">
-            <TouchableWithoutFeedback>
-              <View className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
-                {/* Header */}
-                <View className="px-8 py-6 border-b border-gray-200">
-                  <HStack className="justify-between items-center">
-                    <Text className="text-lg font-semibold text-gray-900">
-                      {label || 'Seleccionar opción'}
-                    </Text>
-                    <Pressable onPress={() => setShowModal(false)} className="p-1">
-                      <Icon as={XIcon} className="text-gray-400" size="md" />
-                    </Pressable>
-                  </HStack>
-                </View>
-                
-                {/* Picker */}
-                <View className="h-56 px-4">
-                  <Picker
-                    selectedValue={tempValue}
-                    onValueChange={(itemValue) => setTempValue(itemValue)}
-                    style={{
-                      height: Platform.OS === 'ios' ? 224 : '100%',
-                      width: '100%',
-                    }}
-                    itemStyle={{
-                      height: Platform.OS === 'ios' ? 56 : 48,
-                      fontSize: 18,
-                      color: '#374151',
-                    }}
-                  >
-                    {!tempValue && (
-                      <Picker.Item 
-                        label={placeholder} 
-                        value="" 
-                        color="#9CA3AF"
-                      />
-                    )}
-                    {options.map((option) => (
-                      <Picker.Item 
-                        key={option.value} 
-                        label={option.label} 
-                        value={option.value}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-                
-                {/* Footer */}
-                <View className="px-8 py-6 border-t border-gray-200">
-                  <HStack className="gap-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onPress={handleCancel}
-                      className="flex-1"
-                    >
-                      <ButtonText>Cancelar</ButtonText>
-                    </Button>
-                    <Button
-                      size="sm"
-                      onPress={handleSave}
-                      className="flex-1"
-                    >
-                      <ButtonText>Seleccionar</ButtonText>
-                    </Button>
-                  </HStack>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-    </>
+            {!field.value && (
+              <Picker.Item 
+                label={placeholder} 
+                value="" 
+                color="#9CA3AF"
+              />
+            )}
+            {options.map((option) => (
+              <Picker.Item 
+                key={option.value} 
+                label={option.label} 
+                value={option.value}
+              />
+            ))}
+          </Picker>
+        </View>
+        
+        {fieldState.error && (
+          <FormControlError>
+            <FormControlErrorText>{fieldState.error.message}</FormControlErrorText>
+          </FormControlError>
+        )}
+      </VStack>
+    </FormControl>
   );
 }

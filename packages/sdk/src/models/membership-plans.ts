@@ -11,6 +11,7 @@ export interface CreateMembershipPlanDto {
   showInCatalog?: boolean;
   features?: string[];
   status?: 'active' | 'inactive' | 'archived';
+  assetsIds?: string[];
 }
 
 export interface UpdateMembershipPlanDto {
@@ -27,6 +28,7 @@ export interface UpdateMembershipPlanDto {
   features?: string[];
   status?: 'active' | 'inactive' | 'archived';
   isActive?: boolean;
+  assetsIds?: string[];
 }
 
 export interface MembershipPlan {
@@ -52,6 +54,7 @@ export interface MembershipPlan {
   features: string[];
   status: 'active' | 'inactive' | 'archived';
   isActive: boolean;
+  assetsIds?: string[];
   createdAt: string;
   updatedAt: string;
 }

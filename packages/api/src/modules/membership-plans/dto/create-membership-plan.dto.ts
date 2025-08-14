@@ -81,4 +81,14 @@ export class CreateMembershipPlanDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @ApiProperty({
+    example: ['asset-id-1', 'asset-id-2'],
+    description: 'Array of asset IDs for plan images',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  assetsIds?: string[];
 }

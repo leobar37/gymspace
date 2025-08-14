@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, Alert } from 'react-native';
+import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
@@ -18,8 +18,6 @@ import {
   FileTextIcon,
   CreditCardIcon,
   ClockIcon,
-  EditIcon,
-  CopyIcon,
   InfoIcon,
   ArrowLeftIcon,
   ShoppingCartIcon
@@ -28,12 +26,13 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useSale, useUpdatePaymentStatus } from '@/hooks/useSales';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { Pressable } from '@/components/ui/pressable';
+import { useLoadingScreen } from '@/shared/loading-screen';
 
 export default function SaleDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id as string;
   const formatPrice = useFormatPrice();
-  const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
+  const { execute } = useLoadingScreen();
 
   const { data: sale, isLoading, isError, error, refetch } = useSale(id);
   const updatePaymentMutation = useUpdatePaymentStatus();
@@ -62,55 +61,51 @@ export default function SaleDetailScreen() {
 
     const statusText = newStatus === 'paid' ? 'pagado' : 'pendiente';
     
-    Alert.alert(
-      'Cambiar estado de pago',
-      `¿Confirmas que quieres marcar esta venta como ${statusText}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          onPress: async () => {
-            setIsUpdatingPayment(true);
-            try {
-              await updatePaymentMutation.mutateAsync({
-                id: sale.id,
-                paymentStatus: newStatus,
-              });
-              
-              Alert.alert('Éxito', `Venta marcada como ${statusText}`);
-            } catch (error) {
-              console.error('Error updating payment status:', error);
-              Alert.alert(
-                'Error',
-                'No se pudo actualizar el estado de pago. Por favor intenta nuevamente.'
-              );
-            } finally {
-              setIsUpdatingPayment(false);
-            }
+    await execute(
+      updatePaymentMutation.mutateAsync({
+        id: sale.id,
+        paymentStatus: newStatus,
+      }),
+      {
+        action: `Marcando venta como ${statusText}...`,
+        successMessage: `Venta marcada como ${statusText} exitosamente`,
+        successActions: [
+          {
+            label: 'Aceptar',
+            onPress: () => {
+              // Modal will be closed automatically
+            },
+            variant: 'solid',
           },
+        ],
+        errorFormatter: (error) => {
+          if (error instanceof Error) {
+            return `Error al actualizar: ${error.message}`;
+          }
+          return 'No se pudo actualizar el estado de pago. Por favor intenta nuevamente.';
         },
-      ]
+        errorActions: [
+          {
+            label: 'Reintentar',
+            onPress: () => {
+              // Modal will be closed automatically
+              handleUpdatePaymentStatus(newStatus);
+            },
+            variant: 'solid',
+          },
+          {
+            label: 'Cancelar',
+            onPress: () => {
+              // Modal will be closed automatically
+            },
+            variant: 'outline',
+          },
+        ],
+        hideOnSuccess: false,
+      }
     );
   };
 
-  const handleDuplicateSale = () => {
-    if (!sale) return;
-    
-    Alert.alert(
-      'Duplicar venta',
-      'Esta función creará una nueva venta con los mismos productos',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Duplicar',
-          onPress: () => {
-            // TODO: Implement sale duplication
-            router.push('/inventory/new-sale');
-          },
-        },
-      ]
-    );
-  };
 
 
   if (!id) {
@@ -191,14 +186,6 @@ export default function SaleDetailScreen() {
             <Text className="text-xl font-bold text-gray-900 flex-1 ml-2">
               Detalle de Venta
             </Text>
-            <HStack space="xs">
-              <Pressable
-                onPress={handleDuplicateSale}
-                className="p-2 rounded-lg"
-              >
-                <Icon as={CopyIcon} className="w-5 h-5 text-gray-600" />
-              </Pressable>
-            </HStack>
           </HStack>
 
           {/* Sale Info Card */}
@@ -276,18 +263,8 @@ export default function SaleDetailScreen() {
                   onValueChange={(value) => 
                     handleUpdatePaymentStatus(value ? 'paid' : 'unpaid')
                   }
-                  disabled={isUpdatingPayment}
                 />
               </HStack>
-              
-              {isUpdatingPayment && (
-                <HStack space="sm" className="items-center">
-                  <Spinner size="small" />
-                  <Text className="text-sm text-gray-600">
-                    Actualizando estado de pago...
-                  </Text>
-                </HStack>
-              )}
             </VStack>
           </Card>
 

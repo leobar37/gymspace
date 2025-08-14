@@ -108,13 +108,68 @@ export class ContractsController {
 
   @Post('update-expired')
   @Allow(PERMISSIONS.CONTRACTS_UPDATE)
-  @ApiOperation({ summary: 'Update expired contracts status' })
+  @ApiOperation({ summary: 'Update expired contracts status (deprecated - use update-status instead)' })
   @ApiResponse({ status: 200, description: 'Number of contracts updated' })
   async updateExpiredContracts(@AppCtxt() ctx: RequestContext) {
-    const count = await this.contractsService.updateExpiredContracts();
+    // Trigger both expiring_soon and expired updates for backward compatibility
+    const result = await this.contractsService.triggerContractStatusUpdate();
     return { 
-      message: `Se actualizaron ${count} contratos expirados`,
-      count 
+      message: `Se actualizaron ${result.expiringSoonCount + result.expiredCount} contratos`,
+      expiringSoonCount: result.expiringSoonCount,
+      expiredCount: result.expiredCount,
+      executionTime: result.executionTime
     };
+  }
+
+  @Post('update-status')
+  @Allow(PERMISSIONS.CONTRACTS_UPDATE)
+  @ApiOperation({ 
+    summary: 'Trigger intelligent contract status updates',
+    description: 'Manually trigger the intelligent contract status update process that runs on cron'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Contract status updates completed',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        expiringSoonCount: { type: 'number' },
+        expiredCount: { type: 'number' },
+        executionTime: { type: 'number' }
+      }
+    }
+  })
+  async triggerContractStatusUpdate(@AppCtxt() ctx: RequestContext) {
+    const result = await this.contractsService.triggerContractStatusUpdate();
+    return {
+      message: `Actualización inteligente de contratos completada. ${result.expiringSoonCount} marcados como 'expirando pronto', ${result.expiredCount} marcados como 'expirados'`,
+      expiringSoonCount: result.expiringSoonCount,
+      expiredCount: result.expiredCount,
+      executionTime: result.executionTime
+    };
+  }
+
+  @Get('status-stats')
+  @Allow(PERMISSIONS.CONTRACTS_READ)
+  @ApiOperation({ 
+    summary: 'Get contract status statistics',
+    description: 'Returns statistics about contract statuses and contracts needing updates'
+  })
+  @ApiResponse({ status: 200, description: 'Contract status statistics' })
+  async getContractStatusStats(@AppCtxt() ctx: RequestContext) {
+    return await this.contractsService.getContractStatusStats();
+  }
+
+  @Get('status-check')
+  @Allow(PERMISSIONS.CONTRACTS_READ)
+  @ApiOperation({ 
+    summary: 'Check contracts needing status updates',
+    description: 'Returns contracts that need status updates for monitoring purposes'
+  })
+  @ApiResponse({ status: 200, description: 'Contracts needing status updates' })
+  async getContractsNeedingStatusUpdate(@AppCtxt() ctx: RequestContext) {
+    const gymId = ctx.getGymId();
+    return await this.contractsService.getContractsNeedingStatusUpdate(gymId);
   }
 }
