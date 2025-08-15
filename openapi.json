@@ -1822,11 +1822,104 @@
     "/api/v1/contracts/update-expired": {
       "post": {
         "operationId": "ContractsController_updateExpiredContracts",
-        "summary": "Update expired contracts status",
+        "summary": "Update expired contracts status (deprecated - use update-status instead)",
         "parameters": [],
         "responses": {
           "200": {
             "description": "Number of contracts updated"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contracts/update-status": {
+      "post": {
+        "operationId": "ContractsController_triggerContractStatusUpdate",
+        "summary": "Trigger intelligent contract status updates",
+        "description": "Manually trigger the intelligent contract status update process that runs on cron",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Contract status updates completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "expiringSoonCount": {
+                      "type": "number"
+                    },
+                    "expiredCount": {
+                      "type": "number"
+                    },
+                    "executionTime": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contracts/status-stats": {
+      "get": {
+        "operationId": "ContractsController_getContractStatusStats",
+        "summary": "Get contract status statistics",
+        "description": "Returns statistics about contract statuses and contracts needing updates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Contract status statistics"
+          }
+        },
+        "tags": [
+          "Contracts"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contracts/status-check": {
+      "get": {
+        "operationId": "ContractsController_getContractsNeedingStatusUpdate",
+        "summary": "Check contracts needing status updates",
+        "description": "Returns contracts that need status updates for monitoring purposes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Contracts needing status updates"
           }
         },
         "tags": [

@@ -219,7 +219,7 @@ export const ProfileMenu: React.FC = () => {
           <Button
             onPress={handleLogout}
             variant="outline"
-            className="w-full py-3"
+            className="w-full"
           >
             <Icon as={LogOutIcon} className="text-red-600 mr-2" />
             <ButtonText className="text-red-600">Cerrar Sesión</ButtonText>

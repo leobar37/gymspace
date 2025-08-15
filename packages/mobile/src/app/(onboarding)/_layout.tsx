@@ -1,8 +1,8 @@
-import React from 'react';
-import { Stack, Redirect } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
-import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
+import { useGymSdk } from '@/providers/GymSdkProvider';
+import { Redirect, Stack } from 'expo-router';
+import React from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 export default function OnboardingLayout() {
   const { isAuthenticated } = useGymSdk();
@@ -35,7 +35,12 @@ export default function OnboardingLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />
-      <Stack.Screen name="owner" />
+      <Stack.Screen
+        name="owner"
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen name="collaborator" />
     </Stack>
   );

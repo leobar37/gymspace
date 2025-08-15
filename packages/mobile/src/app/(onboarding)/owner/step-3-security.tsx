@@ -1,8 +1,5 @@
 import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { ChevronLeftIcon } from 'lucide-react-native';
 import React from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, View } from 'react-native';
 import { z } from 'zod';
 import {
   FormInput,
@@ -12,13 +9,11 @@ import {
 } from '@/components/forms';
 import { Box } from '@/components/ui/box';
 import { Button as GluestackButton, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
-import { Icon } from '@/components/ui/icon';
-import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useOnboardingStore } from '@/store/onboarding';
+import { OnboardingStepsContainer } from '@/features/onboarding/components/OnboardingStepsContainer';
 
 // Validation schema
 const securityInfoSchema = z.object({
@@ -58,91 +53,63 @@ export default function OwnerSecurityInfoScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style="dark" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
-      >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View className="flex-1 px-6 py-4">
-            {/* Header */}
-            <HStack className="items-center justify-between mb-6">
-              <Pressable onPress={() => router.back()}>
-                <Icon as={ChevronLeftIcon} className="text-gray-700 w-6 h-6" />
-              </Pressable>
-              <Text className="text-gray-600">Paso 3 de 4</Text>
-            </HStack>
+    <OnboardingStepsContainer currentStep={3} totalSteps={4}>
+      <VStack className="flex-1 gap-8">
+        {/* Title */}
+        <VStack className="gap-3">
+          <Heading className="text-gray-900 text-3xl font-bold">
+            Crea tu Contraseña
+          </Heading>
+          <Text className="text-gray-600 text-lg">
+            Protege tu cuenta con una contraseña segura
+          </Text>
+        </VStack>
 
-            {/* Progress bar */}
-            <Progress value={75} className="mb-8">
-              <ProgressFilledTrack />
-            </Progress>
+        {/* Form */}
+        <FormProvider {...methods}>
+          <VStack className="gap-6">
+            <FormInput
+              name="password"
+              label="Contraseña"
+              placeholder="Mínimo 8 caracteres"
+              secureTextEntry
+              autoComplete="new-password"
+              returnKeyType="next"
+              autoFocus
+            />
 
-            <VStack className="flex-1 gap-8">
-              {/* Title */}
-              <VStack className="gap-3">
-                <Heading className="text-gray-900 text-3xl font-bold">
-                  Crea tu Contraseña
-                </Heading>
-                <Text className="text-gray-600 text-lg">
-                  Protege tu cuenta con una contraseña segura
-                </Text>
-              </VStack>
+            <FormInput
+              name="confirmPassword"
+              label="Confirmar contraseña"
+              placeholder="Repite tu contraseña"
+              secureTextEntry
+              autoComplete="new-password"
+              returnKeyType="done"
+              onSubmitEditing={methods.handleSubmit(onSubmit)}
+            />
+          </VStack>
+        </FormProvider>
 
-              {/* Form */}
-              <FormProvider {...methods}>
-                <VStack className="gap-6">
-                  <FormInput
-                    name="password"
-                    label="Contraseña"
-                    placeholder="Mínimo 8 caracteres"
-                    secureTextEntry
-                    autoComplete="new-password"
-                    returnKeyType="next"
-                    autoFocus
-                  />
+        {/* Password requirements */}
+        <VStack className="gap-2 bg-gray-50 p-4 rounded-lg">
+          <Text className="text-sm font-medium text-gray-700">Tu contraseña debe tener:</Text>
+          <Text className="text-sm text-gray-600">• Al menos 8 caracteres</Text>
+          <Text className="text-sm text-gray-600">• Una letra mayúscula</Text>
+          <Text className="text-sm text-gray-600">• Una letra minúscula</Text>
+          <Text className="text-sm text-gray-600">• Un número</Text>
+        </VStack>
 
-                  <FormInput
-                    name="confirmPassword"
-                    label="Confirmar contraseña"
-                    placeholder="Repite tu contraseña"
-                    secureTextEntry
-                    autoComplete="new-password"
-                    returnKeyType="done"
-                    onSubmitEditing={methods.handleSubmit(onSubmit)}
-                  />
-                </VStack>
-              </FormProvider>
-
-              {/* Password requirements */}
-              <VStack className="gap-2 bg-gray-50 p-4 rounded-lg">
-                <Text className="text-sm font-medium text-gray-700">Tu contraseña debe tener:</Text>
-                <Text className="text-sm text-gray-600">• Al menos 8 caracteres</Text>
-                <Text className="text-sm text-gray-600">• Una letra mayúscula</Text>
-                <Text className="text-sm text-gray-600">• Una letra minúscula</Text>
-                <Text className="text-sm text-gray-600">• Un número</Text>
-              </VStack>
-
-              {/* Continue button */}
-              <Box className="mt-auto pb-8">
-                <GluestackButton
-                  onPress={methods.handleSubmit(onSubmit)}
-                  disabled={!methods.formState.isValid}
-                  className={`${!methods.formState.isValid ? 'opacity-50' : ''}`}
-                >
-                  <ButtonText>Continuar</ButtonText>
-                </GluestackButton>
-              </Box>
-            </VStack>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        {/* Continue button */}
+        <Box className="mt-auto pb-8">
+          <GluestackButton
+            onPress={methods.handleSubmit(onSubmit)}
+            disabled={!methods.formState.isValid}
+            className={`${!methods.formState.isValid ? 'opacity-50' : ''}`}
+          >
+            <ButtonText>Continuar</ButtonText>
+          </GluestackButton>
+        </Box>
+      </VStack>
+    </OnboardingStepsContainer>
   );
 }

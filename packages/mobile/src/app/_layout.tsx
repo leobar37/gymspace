@@ -1,11 +1,11 @@
+import { GlobalModals } from "@/components/GlobalModals";
 import { AppProviders } from "@/providers/AppProviders";
+import { LoadingScreen } from "@/shared/loading-screen";
 import { Stack } from "expo-router";
 import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { GlobalModals } from "@/components/GlobalModals";
-import { LoadingScreen } from "@/shared/loading-screen";
 import "../../global.css";
 
 function RootLayout() {
@@ -15,7 +15,7 @@ function RootLayout() {
         <AppProviders>
           <>
             <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(onboarding)" />
+              <Stack.Screen name="(onboarding)"  />
               <Stack.Screen name="(app)" />
               <Stack.Screen name="index" options={{ headerShown: false }} />
             </Stack>

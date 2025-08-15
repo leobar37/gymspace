@@ -21,7 +21,7 @@ export class DashboardService {
     }
 
     const cacheKey = this.getDashboardStatsKey(gymId);
-    
+
     return await this.cacheService.getOrSet(
       cacheKey,
       async () => {
@@ -127,15 +127,11 @@ export class DashboardService {
                 gymClient: {
                   gymId,
                 },
-                status: 'active',
-                endDate: {
-                  gte: now,
-                  lte: thirtyDaysFromNow,
-                },
+                status: ContractStatus.EXPIRING_SOON,
                 deletedAt: null,
               },
             }),
-
+            
             // New clients this month
             tx.gymClient.count({
               where: {
@@ -172,74 +168,75 @@ export class DashboardService {
     }
 
     // Fetch recent activities from different sources within a transaction
-    const [recentCheckIns, recentClients, recentContracts, expiredContracts] = await this.prisma.$transaction([
-      // Recent check-ins
-      this.prisma.checkIn.findMany({
-        where: {
-          gymClient: {
-            gymId,
+    const [recentCheckIns, recentClients, recentContracts, expiredContracts] =
+      await this.prisma.$transaction([
+        // Recent check-ins
+        this.prisma.checkIn.findMany({
+          where: {
+            gymClient: {
+              gymId,
+            },
+            deletedAt: null,
           },
-          deletedAt: null,
-        },
-        orderBy: {
-          timestamp: 'desc',
-        },
-        take: limit,
-        include: {
-          gymClient: true,
-        },
-      }),
+          orderBy: {
+            timestamp: 'desc',
+          },
+          take: limit,
+          include: {
+            gymClient: true,
+          },
+        }),
 
-      // Recent new clients
-      this.prisma.gymClient.findMany({
-        where: {
-          gymId,
-          deletedAt: null,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
-      }),
-
-      // Recent new contracts
-      this.prisma.contract.findMany({
-        where: {
-          gymClient: {
+        // Recent new clients
+        this.prisma.gymClient.findMany({
+          where: {
             gymId,
+            deletedAt: null,
           },
-          deletedAt: null,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        take: limit,
-        include: {
-          gymClient: true,
-        },
-      }),
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: limit,
+        }),
 
-      // Recently expired contracts
-      this.prisma.contract.findMany({
-        where: {
-          gymClient: {
-            gymId,
+        // Recent new contracts
+        this.prisma.contract.findMany({
+          where: {
+            gymClient: {
+              gymId,
+            },
+            deletedAt: null,
           },
-          status: 'expired',
-          deletedAt: null,
-          updatedAt: {
-            gte: addDays(new Date(), -7), // Last 7 days
+          orderBy: {
+            createdAt: 'desc',
           },
-        },
-        orderBy: {
-          updatedAt: 'desc',
-        },
-        take: limit,
-        include: {
-          gymClient: true,
-        },
-      }),
-    ]);
+          take: limit,
+          include: {
+            gymClient: true,
+          },
+        }),
+
+        // Recently expired contracts
+        this.prisma.contract.findMany({
+          where: {
+            gymClient: {
+              gymId,
+            },
+            status: 'expired',
+            deletedAt: null,
+            updatedAt: {
+              gte: addDays(new Date(), -7), // Last 7 days
+            },
+          },
+          orderBy: {
+            updatedAt: 'desc',
+          },
+          take: limit,
+          include: {
+            gymClient: true,
+          },
+        }),
+      ]);
 
     // Convert to activity DTOs
     const activities: RecentActivityDto[] = [];

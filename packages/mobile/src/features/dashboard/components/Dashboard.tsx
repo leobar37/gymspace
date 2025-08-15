@@ -224,12 +224,12 @@ export const Dashboard: React.FC = () => {
               </View>
             </View>
           </VStack>
-          <Card className="p-4 bg-yellow-50 border border-yellow-200">
+          {stats.expiringContractsCount !== 0 && <Card className="p-4 bg-yellow-50 border border-yellow-200">
             <HStack className="items-center gap-3">
               <Icon as={AlertCircleIcon} className="w-5 h-5 text-yellow-600" />
               <VStack className="flex-1">
                 <Text className="font-medium text-gray-900">
-                  Contratos por vencer
+                  Contratos por vencer sas
                 </Text>
                 <Text className="text-sm text-gray-600">
                   {stats.expiringContractsCount} contratos vencen en los próximos 30 días
@@ -239,7 +239,7 @@ export const Dashboard: React.FC = () => {
                 <Text className="text-sm font-medium text-blue-600">Ver todos</Text>
               </Pressable>
             </HStack>
-          </Card>
+          </Card>}
           <Card className="p-4">
             <VStack className="gap-3">
               <HStack className="items-center justify-between mb-2">

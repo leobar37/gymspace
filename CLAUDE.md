@@ -52,3 +52,4 @@
 - always pass the complete RequestContext to the services
 - nevear addd examples unless i ask for it
 - not add README.md after do something
+- the primary color is the default of the library

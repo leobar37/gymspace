@@ -6,13 +6,14 @@ import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import { Checkbox as GluestackCheckbox, CheckboxIndicator, CheckboxIcon, CheckboxLabel } from '@/components/ui/checkbox';
 import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
-import { Icon } from '@/components/ui/icon';
 import { CheckIcon } from 'lucide-react-native';
 
 interface FormCheckboxProps<TFieldValues extends FieldValues = FieldValues> 
   extends UseControllerProps<TFieldValues> {
   label: string;
   description?: string;
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
 }
 
 export function FormCheckbox<TFieldValues extends FieldValues = FieldValues>({ 
@@ -22,7 +23,9 @@ export function FormCheckbox<TFieldValues extends FieldValues = FieldValues>({
   defaultValue,
   shouldUnregister,
   label, 
-  description
+  description,
+  size = 'md',
+  disabled = false
 }: FormCheckboxProps<TFieldValues>) {
   const { field, fieldState } = useController({ 
     name, 
@@ -35,12 +38,13 @@ export function FormCheckbox<TFieldValues extends FieldValues = FieldValues>({
   return (
     <FormControl isInvalid={!!fieldState.error}>
       <VStack className="gap-1">
-        <HStack className="gap-2" alignItems="center">
+        <HStack className="gap-2 items-center">
           <GluestackCheckbox
+            size={size}
             value={field.value}
-            isChecked={field.value}
-            onChange={(isSelected) => field.onChange(isSelected)}
-            onBlur={field.onBlur}
+            isChecked={!!field.value}
+            onChange={field.onChange}
+            isDisabled={disabled}
           >
             <CheckboxIndicator>
               <CheckboxIcon as={CheckIcon} />

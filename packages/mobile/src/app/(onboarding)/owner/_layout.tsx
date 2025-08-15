@@ -1,5 +1,5 @@
-import React from 'react';
 import { Stack } from 'expo-router';
+import React from 'react';
 
 export default function OwnerOnboardingLayout() {
   return (
@@ -7,15 +7,59 @@ export default function OwnerOnboardingLayout() {
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
+        gestureEnabled: false, // Disable swipe back gesture
       }}
     >
-      <Stack.Screen name="step-1-personal" />
-      <Stack.Screen name="step-2-contact" />
-      <Stack.Screen name="step-3-security" />
-      <Stack.Screen name="organization-setup" />
-      <Stack.Screen name="email-verification" />
-      <Stack.Screen name="create-gym" />
-      <Stack.Screen name="welcome" />
+      <Stack.Screen
+        name="step-1-personal"
+        options={{
+          headerBackVisible: true,
+          headerShown: false,
+          headerBackButtonMenuEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="step-2-contact"
+        options={{
+          gestureEnabled: false,
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="step-3-security"
+        options={{
+          gestureEnabled: false,
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="organization-setup"
+        options={{
+          gestureEnabled: false,
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="email-verification"
+        options={{
+          gestureEnabled: false,
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="create-gym"
+        options={{
+          gestureEnabled: false,
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="welcome"
+        options={{
+          gestureEnabled: false,
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

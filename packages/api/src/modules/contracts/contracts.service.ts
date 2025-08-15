@@ -253,7 +253,7 @@ export class ContractsService {
         finalAmount: finalPrice,
         currency: existingContract.gymClient.gym.organization.currency,
         discountPercentage: dto.discountPercentage || null,
-        status: 'active',
+        status: ContractStatus.ACTIVE,
         paymentFrequency: existingContract.paymentFrequency,
         notes: dto.metadata?.notes || existingContract.notes,
         createdByUserId: userId,
@@ -693,7 +693,7 @@ export class ContractsService {
         deletedAt: null,
       },
       data: {
-        status: 'expiring_soon',
+        status: ContractStatus.EXPIRING_SOON,
       },
     });
 
@@ -818,10 +818,10 @@ export class ContractsService {
       );
 
       // Step 4: Get stats for monitoring (optional)
-      if (this.logger.isLevelEnabled('debug')) {
-        const stats = await this.getContractStatusStats();
-        this.logger.debug('Current contract status stats:', stats);
-      }
+      // if (this.logger.isLevelEnabled('debug')) {
+      //   const stats = await this.getContractStatusStats();
+      //   this.logger.debug('Current contract status stats:', stats);
+      // }
 
     } catch (error) {
       this.logger.error('Error updating contract statuses', error.stack);

@@ -1,6 +1,5 @@
 import { Logo } from '@/components/Logo';
 import {
-  FormCheckbox,
   FormInput,
   FormProvider,
   useForm,
@@ -29,7 +28,6 @@ const loginSchema = z.object({
     .min(1, 'El correo electrónico es requerido')
     .email('Dirección de correo inválida'),
   password: z.string().min(1, 'La contraseña es requerida'),
-  rememberMe: z.boolean().default(false),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -45,7 +43,6 @@ export default function LoginScreen() {
     defaultValues: {
       email: 'admin@gymspace.pe',
       password: '182@Alfk3458',
-      rememberMe: false,
     },
   });
 
@@ -127,7 +124,7 @@ export default function LoginScreen() {
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="flex-1 px-6">
+          <View className="flex-1 px-6 mt-10">
             {/* Back button */}
             <Pressable 
               onPress={() => router.back()} 
@@ -174,12 +171,7 @@ export default function LoginScreen() {
                     disabled={loginMutation.isPending}
                   />
 
-                  <HStack className='justify-center items-center'>
-                    <FormCheckbox
-                      name="rememberMe"
-                      label="Recordarme"
-                    />
-                    
+                  <Center className="mt-2">
                     <Link href="/(onboarding)/forgot-password" asChild>
                       <Pressable>
                         <Text className="text-blue-500 text-sm font-medium">
@@ -187,7 +179,7 @@ export default function LoginScreen() {
                         </Text>
                       </Pressable>
                     </Link>
-                  </HStack>
+                  </Center>
                   <GluestackButton
                     onPress={methods.handleSubmit(onSubmit)}
                     disabled={loginMutation.isPending}
