@@ -18,6 +18,7 @@ A comprehensive gym management system built with NestJS, PostgreSQL, and modern 
 gymspace/
 ├── packages/
 │   ├── api/         # NestJS Backend API
+│   ├── mobile/      # React Native/Expo Mobile App
 │   ├── sdk/         # TypeScript SDK
 │   └── shared/      # Shared types and interfaces
 ├── docker/          # Docker configuration
@@ -118,6 +119,47 @@ The system follows a clean architecture pattern with:
 Once the server is running, visit:
 - Swagger UI: `http://localhost:3000/api/v1/docs`
 - OpenAPI JSON: `http://localhost:3000/api/v1/docs-json`
+
+## 📱 Mobile App Configuration
+
+The mobile app uses environment variables for configuration. Set up your API endpoint:
+
+1. Copy the example file:
+```bash
+cp packages/mobile/.env.example packages/mobile/.env
+```
+
+2. Configure the API URL in your `.env` file:
+```bash
+# For local development (replace with your machine's IP)
+API_URL=http://192.168.100.18:5200/api/v1
+
+# Or for production
+# API_URL=https://api.yourapp.com/api/v1
+```
+
+3. Environment-specific files:
+   - `.env.development` - Local development settings
+   - `.env.production` - Production build settings
+   - `.env` - Default fallback values
+
+4. Start the mobile app:
+```bash
+pnpm --filter @gymspace/mobile run start
+```
+
+### CI/CD Configuration
+
+For EAS builds or CI environments, provide the `API_URL` environment variable:
+
+```bash
+# EAS build
+eas build --profile production --non-interactive
+
+# GitHub Actions example
+env:
+  API_URL: ${{ secrets.PRODUCTION_API_URL }}
+```
 
 ## 🤝 Contributing
 

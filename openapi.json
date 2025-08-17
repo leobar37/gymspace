@@ -366,6 +366,146 @@
         ]
       }
     },
+    "/api/v1/auth/password-reset/request": {
+      "post": {
+        "operationId": "AuthController_requestPasswordReset",
+        "summary": "Request password reset code",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestPasswordResetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset code sent if email exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestPasswordResetResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/password-reset/verify-code": {
+      "post": {
+        "operationId": "AuthController_verifyResetCode",
+        "summary": "Verify password reset code and get reset token",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyResetCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResetCodeResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or expired code"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/password-reset/reset": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "summary": "Reset password with token",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPasswordResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid token or password"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/password-reset/resend-code": {
+      "post": {
+        "operationId": "AuthController_resendResetCode",
+        "summary": "Resend password reset code",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendResetCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset code resent if email exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendResetCodeResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Too many requests or invalid email"
+          }
+        },
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/api/v1/invitations": {
       "post": {
         "operationId": "InvitationsController_createInvitation",
@@ -5449,6 +5589,146 @@
             "type": "string",
             "description": "Success message",
             "example": "Contraseña actualizada exitosamente"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "RequestPasswordResetDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address to send the reset code",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "RequestPasswordResetResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indicates if the reset code was sent successfully",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message describing the result",
+            "example": "Reset code sent to your email"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "VerifyResetCodeDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address associated with the reset code",
+            "example": "user@example.com"
+          },
+          "code": {
+            "type": "string",
+            "description": "Reset code received via email",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "email",
+          "code"
+        ]
+      },
+      "VerifyResetCodeResponseDto": {
+        "type": "object",
+        "properties": {
+          "resetToken": {
+            "type": "string",
+            "description": "Temporary token for password reset",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "expiresIn": {
+            "type": "number",
+            "description": "Token expiration time in seconds",
+            "example": 1200
+          }
+        },
+        "required": [
+          "resetToken",
+          "expiresIn"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "resetToken": {
+            "type": "string",
+            "description": "Reset token obtained from code verification",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "New password for the account",
+            "example": "NewSecurePassword123!"
+          }
+        },
+        "required": [
+          "resetToken",
+          "newPassword"
+        ]
+      },
+      "ResetPasswordResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indicates if the password was reset successfully",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message describing the result",
+            "example": "Password reset successfully"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
+      "ResendResetCodeDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email address to resend the reset code",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResendResetCodeResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indicates if the reset code was resent successfully",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Message describing the result",
+            "example": "Reset code resent to your email"
           }
         },
         "required": [

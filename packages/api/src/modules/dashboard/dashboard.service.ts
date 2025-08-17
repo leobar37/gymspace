@@ -131,7 +131,7 @@ export class DashboardService {
                 deletedAt: null,
               },
             }),
-            
+
             // New clients this month
             tx.gymClient.count({
               where: {

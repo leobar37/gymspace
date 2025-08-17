@@ -13,6 +13,14 @@ import {
   CurrentSessionDto,
   ChangePasswordDto,
   ChangePasswordResponseDto,
+  RequestPasswordResetDto,
+  RequestPasswordResetResponseDto,
+  VerifyResetCodeDto,
+  VerifyResetCodeResponseDto,
+  ResetPasswordDto,
+  ResetPasswordResponseDto,
+  ResendResetCodeDto,
+  ResendResetCodeResponseDto,
 } from './dto';
 import { Public } from '../../common/decorators';
 import { AppCtxt } from '../../common/decorators/request-context.decorator';
@@ -151,11 +159,11 @@ export class AuthController {
   ) {
     if (authorization) {
       const token = authorization.replace('Bearer ', '');
-      
+
       // Blacklist the token to prevent further use
       // Token will be blacklisted for 24 hours (86400 seconds)
       await this.cacheService.blacklistToken(token, 86400000); // 24 hours in milliseconds
-      
+
       // Invalidate user's cached auth data
       if (context.user?.id) {
         await this.cacheService.invalidateUserAuthCache(context.user.id);
@@ -171,8 +179,8 @@ export class AuthController {
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Change password for authenticated user' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Password changed successfully',
     type: ChangePasswordResponseDto,
   })
@@ -187,5 +195,66 @@ export class AuthController {
       dto.currentPassword,
       dto.newPassword,
     );
+  }
+
+  @Post('password-reset/request')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request password reset code' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset code sent if email exists',
+    type: RequestPasswordResetResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid request' })
+  async requestPasswordReset(
+    @Body() dto: RequestPasswordResetDto,
+  ): Promise<RequestPasswordResetResponseDto> {
+    return await this.resetPasswordMeService.requestPasswordReset(dto.email);
+  }
+
+  @Post('password-reset/verify-code')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify password reset code and get reset token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Code verified successfully',
+    type: VerifyResetCodeResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid or expired code' })
+  async verifyResetCode(@Body() dto: VerifyResetCodeDto): Promise<VerifyResetCodeResponseDto> {
+    return await this.resetPasswordMeService.verifyResetCode(dto.email, dto.code);
+  }
+
+  @Post('password-reset/reset')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset successfully',
+    type: ResetPasswordResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid token or password' })
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<ResetPasswordResponseDto> {
+    return await this.resetPasswordMeService.resetPasswordWithToken(
+      dto.resetToken,
+      dto.newPassword,
+    );
+  }
+
+  @Post('password-reset/resend-code')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Resend password reset code' })
+  @ApiResponse({
+    status: 200,
+    description: 'Reset code resent if email exists',
+    type: ResendResetCodeResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Too many requests or invalid email' })
+  async resendResetCode(@Body() dto: ResendResetCodeDto): Promise<ResendResetCodeResponseDto> {
+    return await this.resetPasswordMeService.resendResetCode(dto.email);
   }
 }

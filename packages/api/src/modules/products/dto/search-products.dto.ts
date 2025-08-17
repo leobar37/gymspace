@@ -4,21 +4,29 @@ import { Type } from 'class-transformer';
 import { ProductStatus } from '@prisma/client';
 
 export class SearchProductsDto {
-  @ApiProperty({ example: 'protein', description: 'Search term for product name or description', required: false })
+  @ApiProperty({
+    example: 'protein',
+    description: 'Search term for product name or description',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   search?: string;
 
-  @ApiProperty({ example: 'uuid-category-id', description: 'Filter by category ID', required: false })
+  @ApiProperty({
+    example: 'uuid-category-id',
+    description: 'Filter by category ID',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   categoryId?: string;
 
-  @ApiProperty({ 
-    example: 'active', 
-    enum: ProductStatus, 
+  @ApiProperty({
+    example: 'active',
+    enum: ProductStatus,
     description: 'Filter by product status',
-    required: false 
+    required: false,
   })
   @IsOptional()
   @IsEnum(ProductStatus)

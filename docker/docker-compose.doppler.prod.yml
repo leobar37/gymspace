@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: packages/api/Dockerfile
+      args:
+        DOPPLER_PROJECT: gymspace
+        DOPPLER_ENV: prod
+    container_name: gymspace-api-prod
+    restart: unless-stopped
+    ports:
+      - '5200:5200'
+    environment:
+      # Doppler token for production (should be set via CI/CD or runtime environment)
+      DOPPLER_TOKEN: ${DOPPLER_TOKEN}
+      NODE_ENV: production
+    # Alternative: Use Docker secrets for more secure token handling
+    # secrets:
+    #   - doppler_token
+    # environment:
+    #   DOPPLER_TOKEN_FILE: /run/secrets/doppler_token
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:5200/api/v1/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - default
+
+# Uncomment to use Docker secrets
+# secrets:
+#   doppler_token:
+#     external: true
+
+networks:
+  default:
+    name: gymspace-network

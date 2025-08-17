@@ -58,9 +58,9 @@ export const CONTRACT_STATUS_TRANSITIONS = {
    * Automatic status transitions (handled by cron)
    */
   AUTOMATIC_TRANSITIONS: {
-    'active': 'expiring_soon', // When contract is within EXPIRING_SOON_DAYS of expiration
-    'expiring_soon': 'expired', // When contract has passed its endDate + grace period
-    'active_direct': 'expired', // Direct transition from active to expired if no expiring_soon step
+    active: 'expiring_soon', // When contract is within EXPIRING_SOON_DAYS of expiration
+    expiring_soon: 'expired', // When contract has passed its endDate + grace period
+    active_direct: 'expired', // Direct transition from active to expired if no expiring_soon step
   },
 } as const;
 

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { PaginationService } from '../../common/services/pagination.service';
-import { 
-  CreateSaleDto, 
-  UpdateSaleDto, 
-  SearchSalesDto, 
+import {
+  CreateSaleDto,
+  UpdateSaleDto,
+  SearchSalesDto,
   UpdatePaymentStatusDto,
-  SaleItemDto 
+  SaleItemDto,
 } from './dto';
 import { ResourceNotFoundException, BusinessException } from '../../common/exceptions';
 import { Prisma, PaymentStatus, ProductStatus } from '@prisma/client';
@@ -22,7 +22,7 @@ export class SalesService {
     // Generate sale number based on date + sequential number
     const today = new Date();
     const datePrefix = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
-    
+
     // Find the highest sale number for today
     const lastSale = await this.prisma.sale.findFirst({
       where: {
@@ -45,8 +45,8 @@ export class SalesService {
   }
 
   private async validateSaleItems(gymId: string, items: SaleItemDto[]) {
-    const productIds = items.map(item => item.productId);
-    
+    const productIds = items.map((item) => item.productId);
+
     // Get all products in one query
     const products = await this.prisma.product.findMany({
       where: {
@@ -63,8 +63,8 @@ export class SalesService {
     // Validate each item
     const validationErrors: string[] = [];
     for (const item of items) {
-      const product = products.find(p => p.id === item.productId);
-      
+      const product = products.find((p) => p.id === item.productId);
+
       if (!product) {
         validationErrors.push(`Product ${item.productId} not found`);
         continue;
@@ -75,13 +75,17 @@ export class SalesService {
       }
 
       if (product.stock < item.quantity) {
-        validationErrors.push(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
+        validationErrors.push(
+          `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`,
+        );
       }
 
       // Validate unit price matches current product price (with small tolerance for price changes)
       const priceDiff = Math.abs(parseFloat(product.price.toString()) - item.unitPrice);
       if (priceDiff > 0.01) {
-        validationErrors.push(`Price mismatch for ${product.name}. Current: ${product.price}, Provided: ${item.unitPrice}`);
+        validationErrors.push(
+          `Price mismatch for ${product.name}. Current: ${product.price}, Provided: ${item.unitPrice}`,
+        );
       }
     }
 
@@ -95,12 +99,12 @@ export class SalesService {
   async createSale(gymId: string, dto: CreateSaleDto, userId: string) {
     // Validate all products and stock
     const products = await this.validateSaleItems(gymId, dto.items);
-    
+
     // Generate unique sale number
     const saleNumber = await this.generateSaleNumber(gymId);
-    
+
     // Calculate total
-    const total = dto.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const total = dto.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
     // Create sale in transaction
     return await this.prisma.$transaction(async (tx) => {
@@ -140,7 +144,7 @@ export class SalesService {
       // Create sale items and update stock
       for (const item of dto.items) {
         const itemTotal = item.quantity * item.unitPrice;
-        
+
         // Create sale item
         await tx.saleItem.create({
           data: {
@@ -510,7 +514,7 @@ export class SalesService {
     });
 
     // Get product details
-    const productIds = topProducts.map(item => item.productId);
+    const productIds = topProducts.map((item) => item.productId);
     const products = await this.prisma.product.findMany({
       where: {
         id: { in: productIds },
@@ -530,8 +534,8 @@ export class SalesService {
       },
     });
 
-    return topProducts.map(item => {
-      const product = products.find(p => p.id === item.productId);
+    return topProducts.map((item) => {
+      const product = products.find((p) => p.id === item.productId);
       return {
         product,
         totalQuantity: item._sum.quantity || 0,

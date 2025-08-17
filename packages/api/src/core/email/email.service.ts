@@ -71,6 +71,156 @@ export class EmailService {
   }
 
   /**
+   * Send password reset code via email
+   */
+  async sendPasswordResetCode(params: { to: string; name: string; code: string }): Promise<void> {
+    try {
+      const emailContent = this.generatePasswordResetEmail(params.code, params.name);
+
+      const result = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [params.to],
+        subject: 'Código de restablecimiento de contraseña - GymSpace',
+        html: emailContent,
+      });
+
+      if (result.error) {
+        console.error('Resend error:', result.error);
+        throw new BusinessException('Failed to send password reset email');
+      }
+
+      console.log(
+        `Password reset email sent successfully to ${params.to}. Email ID: ${result.data?.id}`,
+      );
+    } catch (error) {
+      if (error instanceof BusinessException) {
+        throw error;
+      }
+      console.error('Error sending password reset email:', error);
+      throw new BusinessException('Failed to send password reset email');
+    }
+  }
+
+  /**
+   * Send password reset confirmation email
+   */
+  async sendPasswordResetConfirmation(params: { to: string; name: string }): Promise<void> {
+    try {
+      const emailContent = this.generatePasswordResetConfirmationEmail(params.name);
+
+      const result = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [params.to],
+        subject: 'Contraseña restablecida exitosamente - GymSpace',
+        html: emailContent,
+      });
+
+      if (result.error) {
+        console.error('Resend error:', result.error);
+        throw new BusinessException('Failed to send password reset confirmation');
+      }
+
+      console.log(`Password reset confirmation sent to ${params.to}. Email ID: ${result.data?.id}`);
+    } catch (error) {
+      if (error instanceof BusinessException) {
+        throw error;
+      }
+      console.error('Error sending password reset confirmation:', error);
+      throw new BusinessException('Failed to send password reset confirmation');
+    }
+  }
+
+  /**
+   * Generate password reset email content
+   */
+  private generatePasswordResetEmail(code: string, name: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Restablecimiento de Contraseña - GymSpace</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px 30px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #2563eb; margin: 0; font-size: 28px;">GymSpace</h1>
+            <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Gestión de gimnasios simplificada</p>
+          </div>
+          
+          <h2 style="color: #333; margin-bottom: 20px; font-size: 24px;">Restablecimiento de contraseña</h2>
+          
+          <p style="color: #555; font-size: 16px; line-height: 1.5;">Hola ${name},</p>
+          
+          <p style="color: #555; font-size: 16px; line-height: 1.5;">
+            Hemos recibido una solicitud para restablecer tu contraseña. Utiliza el siguiente código para continuar:
+          </p>
+          
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; margin: 30px 0; border-radius: 10px;">
+            <p style="color: #fff; font-size: 36px; font-weight: bold; margin: 0; letter-spacing: 5px;">${code}</p>
+          </div>
+          
+          <p style="color: #555; font-size: 16px; line-height: 1.5;">
+            Este código es válido por 15 minutos. Si no solicitaste restablecer tu contraseña, puedes ignorar este correo.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 14px; text-align: center;">
+            Si tienes alguna pregunta, no dudes en contactarnos.<br>
+            © 2024 GymSpace. Todos los derechos reservados.
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  /**
+   * Generate password reset confirmation email content
+   */
+  private generatePasswordResetConfirmationEmail(name: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Contraseña Restablecida - GymSpace</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px 30px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #2563eb; margin: 0; font-size: 28px;">GymSpace</h1>
+            <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Gestión de gimnasios simplificada</p>
+          </div>
+          
+          <h2 style="color: #333; margin-bottom: 20px; font-size: 24px;">Contraseña restablecida exitosamente</h2>
+          
+          <p style="color: #555; font-size: 16px; line-height: 1.5;">Hola ${name},</p>
+          
+          <p style="color: #555; font-size: 16px; line-height: 1.5;">
+            Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.
+          </p>
+          
+          <p style="color: #555; font-size: 16px; line-height: 1.5;">
+            Si no realizaste este cambio, por favor contacta inmediatamente a nuestro equipo de soporte.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 14px; text-align: center;">
+            Si tienes alguna pregunta, no dudes en contactarnos.<br>
+            © 2024 GymSpace. Todos los derechos reservados.
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  /**
    * Generate verification code email content
    */
   private generateVerificationCodeEmail(code: string, name: string): string {

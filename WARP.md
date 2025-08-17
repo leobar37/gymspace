@@ -81,6 +81,53 @@ pnpm dev:docker
 docker compose -f docker/docker-compose.yml down -v
 ```
 
+### Secrets Management with Doppler
+
+The API supports both traditional `.env` files and Doppler for secrets management. Doppler is recommended for production deployments.
+
+#### Setup Doppler
+
+```bash
+# Install Doppler CLI
+# macOS
+brew install dopplerhq/cli/doppler
+
+# Linux/Windows
+curl -Ls https://packages.doppler.com/install.sh | sh
+
+# Login to Doppler
+doppler login
+
+# Setup project (run from packages/api directory)
+doppler setup --project gymspace --config dev
+```
+
+#### Environment Options
+
+**Option 1: Traditional .env file (Local Development)**
+```bash
+# Use existing .env file
+pnpm dev
+```
+
+**Option 2: Doppler with Docker (Development)**
+```bash
+# Get your Doppler service token for dev environment
+DOPPLER_SERVICE_TOKEN=$(doppler configs tokens create dev-docker --plain)
+
+# Start with Doppler integration
+DOPPLER_SERVICE_TOKEN=$DOPPLER_SERVICE_TOKEN docker compose \
+  -f docker/docker-compose.yml \
+  -f docker/docker-compose.doppler.dev.yml up
+```
+
+**Option 3: Doppler CLI (Local Development)**
+```bash
+# Run API with Doppler injecting secrets
+cd packages/api
+doppler run -- pnpm dev
+```
+
 ### Database Operations
 
 ```bash
@@ -334,6 +381,65 @@ pnpm mcp:test
 ```
 
 The MCP server provides Gluestack UI component integration for Claude Desktop and Cursor IDE.
+
+## Production Deployments
+
+### Docker Production Build
+
+The Dockerfile supports Doppler secrets management for production deployments:
+
+```bash
+# Build production image
+docker build \
+  --build-arg DOPPLER_PROJECT=gymspace \
+  --build-arg DOPPLER_ENV=prod \
+  -t gymspace/api:latest \
+  packages/api
+
+# Run with Doppler token (production)
+DOPPLER_TOKEN=your_production_token docker run \
+  -p 5200:5200 \
+  -e DOPPLER_TOKEN=$DOPPLER_TOKEN \
+  gymspace/api:latest
+```
+
+### CI/CD Pipeline Integration
+
+**GitHub Actions Example:**
+```yaml
+- name: Build and deploy API
+  env:
+    DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+  run: |
+    docker build \
+      --build-arg DOPPLER_PROJECT=gymspace \
+      --build-arg DOPPLER_ENV=prod \
+      -t $REGISTRY/gymspace/api:$GITHUB_SHA \
+      packages/api
+    docker push $REGISTRY/gymspace/api:$GITHUB_SHA
+```
+
+**Required CI/CD Secrets:**
+- `DOPPLER_TOKEN`: Production Doppler token for secret injection at runtime
+- Service tokens should be scoped to specific environments (dev/staging/prod)
+
+### Environment Variable Matrix
+
+All environment variables from `.env.example` are supported in Doppler:
+
+**Required Secrets:**
+- `DATABASE_URL`
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`
+- `JWT_SECRET`
+- `S3_ACCESS_KEY`, `S3_SECRET_KEY`
+- `RESEND_API_KEY`
+
+**Optional with Defaults:**
+- `NODE_ENV`, `PORT`, `API_PREFIX`
+- `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
+- `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION`, `S3_USE_SSL`
+- `CORS_ORIGIN`
+- `RATE_LIMIT_TTL`, `RATE_LIMIT_MAX`
 
 ## Troubleshooting
 

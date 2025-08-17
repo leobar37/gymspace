@@ -81,7 +81,11 @@ async function bootstrap() {
     for (const name of Object.keys(nets)) {
       for (const net of nets[name] || []) {
         if (net.family === 'IPv4' && !net.internal) {
-          if (net.address.startsWith('192.168.') || net.address.startsWith('10.') || net.address.startsWith('172.')) {
+          if (
+            net.address.startsWith('192.168.') ||
+            net.address.startsWith('10.') ||
+            net.address.startsWith('172.')
+          ) {
             return net.address;
           }
         }
@@ -114,7 +118,10 @@ async function bootstrap() {
     .addServer(`http://localhost:${port}/${apiPrefix}`, 'Development (localhost)');
 
   if (lanIp) {
-    swaggerBuilder = swaggerBuilder.addServer(`http://${lanIp}:${port}/${apiPrefix}`, 'Development (LAN)');
+    swaggerBuilder = swaggerBuilder.addServer(
+      `http://${lanIp}:${port}/${apiPrefix}`,
+      'Development (LAN)',
+    );
   }
 
   swaggerBuilder = swaggerBuilder.addServer(`https://api.gymspace.com/${apiPrefix}`, 'Production');
@@ -152,7 +159,10 @@ async function bootstrap() {
   console.log(`🚀 Application running:`);
   console.log(`   Local:   http://localhost:${port}/${apiPrefix}`);
   if (lanIp) console.log(`   LAN:     http://${lanIp}:${port}/${apiPrefix}`);
-  console.log(`📚 Swagger: http://localhost:${port}/${apiPrefix}/docs` + (lanIp ? ` | http://${lanIp}:${port}/${apiPrefix}/docs` : ''));
+  console.log(
+    `📚 Swagger: http://localhost:${port}/${apiPrefix}/docs` +
+      (lanIp ? ` | http://${lanIp}:${port}/${apiPrefix}/docs` : ''),
+  );
 }
 
 bootstrap();

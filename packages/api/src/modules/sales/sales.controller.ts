@@ -1,12 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiSecurity } from '@nestjs/swagger';
 import { SalesService } from './sales.service';
-import { 
-  CreateSaleDto, 
-  UpdateSaleDto, 
-  SearchSalesDto, 
-  UpdatePaymentStatusDto 
-} from './dto';
+import { CreateSaleDto, UpdateSaleDto, SearchSalesDto, UpdatePaymentStatusDto } from './dto';
 import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS } from '@gymspace/shared';

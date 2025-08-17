@@ -44,7 +44,11 @@ export class StorageService implements OnModuleInit {
       await this.s3Client.send(command);
       console.log(`Bucket "${this.bucket}" already exists`);
     } catch (error: any) {
-      if (error.name === 'NotFound' || error.name === 'NoSuchBucket' || error.$metadata?.httpStatusCode === 404) {
+      if (
+        error.name === 'NotFound' ||
+        error.name === 'NoSuchBucket' ||
+        error.$metadata?.httpStatusCode === 404
+      ) {
         try {
           console.log(`Creating bucket "${this.bucket}"...`);
           const createCommand = new CreateBucketCommand({ Bucket: this.bucket });
@@ -52,7 +56,10 @@ export class StorageService implements OnModuleInit {
           console.log(`Bucket "${this.bucket}" created successfully`);
         } catch (createError: any) {
           // Bucket might already exist (race condition) or creation failed
-          if (createError.name === 'BucketAlreadyExists' || createError.name === 'BucketAlreadyOwnedByYou') {
+          if (
+            createError.name === 'BucketAlreadyExists' ||
+            createError.name === 'BucketAlreadyOwnedByYou'
+          ) {
             console.log(`Bucket "${this.bucket}" already exists (race condition)`);
           } else {
             console.error(`Error creating bucket "${this.bucket}":`, createError);
@@ -94,7 +101,7 @@ export class StorageService implements OnModuleInit {
 
       const command = new PutObjectCommand(params);
       const result = await this.s3Client.send(command);
-      
+
       // Return a response similar to the old SDK for compatibility
       const endpoint = this.configService.get('s3.endpoint');
       return {
@@ -123,12 +130,12 @@ export class StorageService implements OnModuleInit {
 
     const command = new GetObjectCommand(params);
     const response = await this.s3Client.send(command);
-    
+
     // The Body in SDK v3 is already a readable stream
     if (response.Body instanceof Readable) {
       return response.Body;
     }
-    
+
     // For environments where Body might be a web stream or buffer
     const chunks: Uint8Array[] = [];
     for await (const chunk of response.Body as any) {
@@ -164,10 +171,9 @@ export class StorageService implements OnModuleInit {
       Key: key,
     };
 
-    const command = operation === 'download' 
-      ? new GetObjectCommand(params)
-      : new PutObjectCommand(params);
-    
+    const command =
+      operation === 'download' ? new GetObjectCommand(params) : new PutObjectCommand(params);
+
     // Generate presigned URL with 1 hour expiration
     return getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
   }

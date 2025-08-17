@@ -11,7 +11,7 @@ export class AuthGuard implements CanActivate {
   private readonly TOKEN_CACHE_TTL = 300000; // 5 minutes in milliseconds for token validation cache
   private readonly GYM_CONTEXT_CACHE_TTL = 600000; // 10 minutes in milliseconds for gym context
   private readonly DEFAULT_GYM_CACHE_TTL = 1800000; // 30 minutes in milliseconds for default gym
-  
+
   constructor(
     private reflector: Reflector,
     private authService: AuthService,
@@ -47,11 +47,11 @@ export class AuthGuard implements CanActivate {
 
       // Try to get cached token validation first
       let user = await this.cacheService.getTokenValidation(token);
-      
+
       if (!user) {
         // If not cached, validate token with auth service
         user = await this.authService.validateToken(token);
-        
+
         // Cache the validated token for future requests
         await this.cacheService.cacheTokenValidation(token, user, this.TOKEN_CACHE_TTL);
       }
@@ -65,27 +65,32 @@ export class AuthGuard implements CanActivate {
       if (gymId) {
         // Try to get cached gym context
         gym = await this.cacheService.getGymContext(gymId, user.id);
-        
+
         if (!gym) {
           // If not cached, fetch from auth service
           gym = await this.authService.getGymContext(gymId, user.id);
-          
+
           // Cache the gym context if found
           if (gym) {
-            await this.cacheService.cacheGymContext(gymId, user.id, gym, this.GYM_CONTEXT_CACHE_TTL);
+            await this.cacheService.cacheGymContext(
+              gymId,
+              user.id,
+              gym,
+              this.GYM_CONTEXT_CACHE_TTL,
+            );
           }
         }
       }
-      
+
       // If no gym context found with gymId, try to get default gym
       if (!gym) {
         // Try to get cached default gym
         gym = await this.cacheService.getDefaultGym(user.id);
-        
+
         if (!gym) {
           // If not cached, fetch from auth service
           gym = await this.authService.getDefaultGymForUser(user.id);
-          
+
           // Cache the default gym if found
           if (gym) {
             await this.cacheService.cacheDefaultGym(user.id, gym, this.DEFAULT_GYM_CACHE_TTL);

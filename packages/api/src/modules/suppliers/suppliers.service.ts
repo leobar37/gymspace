@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { PaginationService } from '../../common/services/pagination.service';
-import { 
-  CreateSupplierDto, 
-  UpdateSupplierDto, 
-  SearchSuppliersDto 
-} from './dto';
+import { CreateSupplierDto, UpdateSupplierDto, SearchSuppliersDto } from './dto';
 import { ResourceNotFoundException, BusinessException } from '../../common/exceptions';
 import { Prisma } from '@prisma/client';
 
@@ -165,13 +161,7 @@ export class SuppliersService {
   }
 
   async searchSuppliers(gymId: string, dto: SearchSuppliersDto, userId: string) {
-    const {
-      search,
-      page = 1,
-      limit = 20,
-      sortBy = 'name',
-      sortOrder = 'asc',
-    } = dto;
+    const { search, page = 1, limit = 20, sortBy = 'name', sortOrder = 'asc' } = dto;
 
     const where: Prisma.SupplierWhereInput = {
       gymId,

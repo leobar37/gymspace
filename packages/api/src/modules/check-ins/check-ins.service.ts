@@ -21,7 +21,7 @@ export class CheckInsService {
       dto,
       userId,
     });
-    
+
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
@@ -36,10 +36,10 @@ export class CheckInsService {
       },
       include: {
         contracts: {
-          where: { 
+          where: {
             status: 'active',
             startDate: { lte: new Date() },
-            endDate: { gte: new Date() }
+            endDate: { gte: new Date() },
           },
         },
       },
@@ -53,7 +53,9 @@ export class CheckInsService {
     }
 
     if (client.contracts.length === 0) {
-      throw new BusinessException('El cliente no tiene un contrato activo o el contrato ha expirado');
+      throw new BusinessException(
+        'El cliente no tiene un contrato activo o el contrato ha expirado',
+      );
     }
 
     // Check if client already checked in today

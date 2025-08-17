@@ -17,6 +17,9 @@ build/
 .env.*.local
 .env.production
 
+# Mobile environment variables
+packages/mobile/.env*
+
 # Logs
 logs/
 *.log

@@ -3,7 +3,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class SearchSuppliersDto {
-  @ApiProperty({ example: 'acme', description: 'Search term for supplier name, email, or contact info', required: false })
+  @ApiProperty({
+    example: 'acme',
+    description: 'Search term for supplier name, email, or contact info',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   search?: string;

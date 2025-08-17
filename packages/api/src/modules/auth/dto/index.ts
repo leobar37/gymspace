@@ -6,3 +6,7 @@ export * from './register-collaborator.dto';
 export * from './generate-verification-code.dto';
 export * from './current-session.dto';
 export * from './change-password.dto';
+export * from './request-password-reset.dto';
+export * from './verify-reset-code.dto';
+export * from './reset-password.dto';
+export * from './resend-reset-code.dto';

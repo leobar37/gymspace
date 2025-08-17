@@ -118,7 +118,11 @@ export class CacheService {
   /**
    * Cache validated token with user data
    */
-  async cacheTokenValidation(token: string, user: any, ttl: number = CACHE_TTL.REPORTS): Promise<void> {
+  async cacheTokenValidation(
+    token: string,
+    user: any,
+    ttl: number = CACHE_TTL.REPORTS,
+  ): Promise<void> {
     const key = this.getTokenValidationKey(token);
     await this.set(key, user, ttl);
   }
@@ -134,7 +138,12 @@ export class CacheService {
   /**
    * Cache gym context for user
    */
-  async cacheGymContext(gymId: string, userId: string, gymContext: any, ttl: number = CACHE_TTL.GYM_DATA): Promise<void> {
+  async cacheGymContext(
+    gymId: string,
+    userId: string,
+    gymContext: any,
+    ttl: number = CACHE_TTL.GYM_DATA,
+  ): Promise<void> {
     const key = this.getGymContextKey(gymId, userId);
     await this.set(key, gymContext, ttl);
   }
@@ -169,7 +178,7 @@ export class CacheService {
   async invalidateUserAuthCache(userId: string): Promise<void> {
     const defaultGymKey = this.getDefaultGymKey(userId);
     await this.del(defaultGymKey);
-    
+
     // Note: For token and gym context invalidation, we'd need to track active tokens/gyms
     // This could be implemented with a user-to-tokens mapping if needed
   }

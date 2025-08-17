@@ -57,7 +57,7 @@ export class AssetsService {
           status: AssetStatus.active,
           uploadedByUserId: userId,
           createdByUserId: userId,
-          gymId: gymId,  // IMPORTANTE: Asociar el asset al gimnasio
+          gymId: gymId, // IMPORTANTE: Asociar el asset al gimnasio
         },
       });
 
@@ -79,7 +79,7 @@ export class AssetsService {
    */
   async findAll(context: IRequestContext): Promise<AssetResponseDto[]> {
     const gymId = context.getGymId();
-    
+
     const assets = await this.prisma.asset.findMany({
       where: {
         gymId: gymId,
@@ -118,14 +118,14 @@ export class AssetsService {
   async findByIds(context: IRequestContext, ids: string[]): Promise<AssetResponseDto[]> {
     // Get the gym ID from context
     const gymId = context.getGymId();
-    
+
     const whereClause: any = {
       id: { in: ids },
-      gymId: gymId,  // Filter by gymId
+      gymId: gymId, // Filter by gymId
       status: AssetStatus.active,
       deletedAt: null,
     };
-    
+
     const assets = await this.prisma.asset.findMany({
       where: whereClause,
     });
@@ -180,7 +180,7 @@ export class AssetsService {
   async delete(context: IRequestContext, id: string): Promise<void> {
     const userId = context.getUserId();
 
-    await this.findOne(context, id);  // Validate gym ownership
+    await this.findOne(context, id); // Validate gym ownership
 
     // Soft delete in database
     await this.prisma.asset.update({

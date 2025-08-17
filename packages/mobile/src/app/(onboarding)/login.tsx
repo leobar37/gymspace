@@ -281,7 +281,7 @@ export default function LoginScreen() {
                       </View>
 
                       <Center>
-                        <Link href="/(onboarding)/forgot-password" asChild>
+                        <Link href="/password-reset/request" asChild>
                           <Pressable className="py-2">
                             <Text className="text-blue-500 text-sm font-medium">
                               ¿Olvidaste tu contraseña?

@@ -1,18 +1,5 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Body,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiHeader,
-} from '@nestjs/swagger';
+import { Controller, Get, Put, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateProfileDto, UserProfileDto } from './dto';
 import { AppCtxt } from '~/common/decorators';
@@ -46,9 +33,7 @@ export class UsersController {
     status: HttpStatus.NOT_FOUND,
     description: 'User not found',
   })
-  async getProfile(
-    @AppCtxt() context: RequestContext,
-  ): Promise<UserProfileDto> {
+  async getProfile(@AppCtxt() context: RequestContext): Promise<UserProfileDto> {
     return this.usersService.getProfile(context);
   }
 
@@ -59,7 +44,8 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Update current user profile',
-    description: 'Updates the profile information of the currently authenticated user. Email cannot be updated through this endpoint.',
+    description:
+      'Updates the profile information of the currently authenticated user. Email cannot be updated through this endpoint.',
   })
   @ApiResponse({
     status: HttpStatus.OK,

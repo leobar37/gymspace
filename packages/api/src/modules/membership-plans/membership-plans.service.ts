@@ -22,11 +22,11 @@ export class GymMembershipPlansService {
   ): Promise<GymMembershipPlan> {
     const gymId = context.getGymId();
     const userId = context.getUserId();
-    
+
     if (!gymId) {
       throw new BusinessException('Gym context is required');
     }
-    
+
     // Verify gym access and get gym with organization
     const gym = await this.prismaService.gym.findFirst({
       where: {
@@ -117,7 +117,7 @@ export class GymMembershipPlansService {
     dto: UpdateMembershipPlanDto,
   ): Promise<GymMembershipPlan> {
     const userId = context.getUserId();
-    
+
     // Verify plan exists and user has access
     const plan = await this.prismaService.gymMembershipPlan.findFirst({
       where: {
@@ -138,9 +138,11 @@ export class GymMembershipPlansService {
     // Validate duration logic
     if (dto.durationMonths !== undefined || dto.durationDays !== undefined) {
       // If updating duration, ensure at least one is provided
-      const finalDurationMonths = dto.durationMonths !== undefined ? dto.durationMonths : plan.durationMonths;
-      const finalDurationDays = dto.durationDays !== undefined ? dto.durationDays : plan.durationDays;
-      
+      const finalDurationMonths =
+        dto.durationMonths !== undefined ? dto.durationMonths : plan.durationMonths;
+      const finalDurationDays =
+        dto.durationDays !== undefined ? dto.durationDays : plan.durationDays;
+
       if (!finalDurationMonths && !finalDurationDays) {
         throw new BusinessException('Either durationMonths or durationDays must be provided');
       }
@@ -224,7 +226,7 @@ export class GymMembershipPlansService {
    */
   async getGymMembershipPlan(context: IRequestContext, planId: string): Promise<GymMembershipPlan> {
     const userId = context.getUserId();
-    
+
     const plan = await this.prismaService.gymMembershipPlan.findFirst({
       where: {
         id: planId,
@@ -268,11 +270,11 @@ export class GymMembershipPlansService {
   async getGymGymMembershipPlans(context: IRequestContext, activeOnly = false) {
     const gymId = context.getGymId();
     const userId = context.getUserId();
-    
+
     if (!gymId) {
       throw new BusinessException('Gym context is required');
     }
-    
+
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
@@ -380,9 +382,12 @@ export class GymMembershipPlansService {
   /**
    * Delete (soft delete) membership plan
    */
-  async deleteGymMembershipPlan(context: IRequestContext, planId: string): Promise<GymMembershipPlan> {
+  async deleteGymMembershipPlan(
+    context: IRequestContext,
+    planId: string,
+  ): Promise<GymMembershipPlan> {
     const userId = context.getUserId();
-    
+
     const plan = await this.prismaService.gymMembershipPlan.findFirst({
       where: {
         id: planId,

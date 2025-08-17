@@ -24,10 +24,10 @@ export class CreateContractDto {
   @IsNumber()
   customPrice?: number;
 
-  @ApiProperty({ 
-    example: ['123e4567-e89b-12d3-a456-426614174002'], 
+  @ApiProperty({
+    example: ['123e4567-e89b-12d3-a456-426614174002'],
     description: 'Array of asset IDs for contract receipts',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsArray()

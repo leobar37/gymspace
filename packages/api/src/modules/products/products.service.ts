@@ -23,7 +23,7 @@ export class ProductsService {
   async createCategory(ctx: RequestContext, dto: CreateProductCategoryDto) {
     const gymId = ctx.getGymId()!;
     const userId = ctx.getUserId()!;
-    
+
     // Check for duplicate category name within gym
     const existingCategory = await this.prisma.productCategory.findFirst({
       where: {
@@ -48,7 +48,7 @@ export class ProductsService {
 
   async updateCategory(ctx: RequestContext, categoryId: string, dto: UpdateProductCategoryDto) {
     const userId = ctx.getUserId()!;
-    
+
     const category = await this.prisma.productCategory.findFirst({
       where: {
         id: categoryId,
@@ -87,7 +87,7 @@ export class ProductsService {
 
   async deleteCategory(ctx: RequestContext, categoryId: string) {
     const userId = ctx.getUserId()!;
-    
+
     const category = await this.prisma.productCategory.findFirst({
       where: {
         id: categoryId,
@@ -123,7 +123,7 @@ export class ProductsService {
 
   async getCategories(ctx: RequestContext) {
     const gymId = ctx.getGymId()!;
-    
+
     return this.prisma.productCategory.findMany({
       where: {
         gymId,
@@ -148,7 +148,7 @@ export class ProductsService {
   async createProduct(ctx: RequestContext, dto: CreateProductDto) {
     const gymId = ctx.getGymId()!;
     const userId = ctx.getUserId()!;
-    
+
     // Validate category exists if provided
     if (dto.categoryId) {
       const category = await this.prisma.productCategory.findFirst({
@@ -179,7 +179,7 @@ export class ProductsService {
 
     // Filter out any unknown fields from DTO
     const { name, description, price, stock, categoryId, imageId, status } = dto;
-    
+
     return this.prisma.product.create({
       data: {
         name,
@@ -200,7 +200,7 @@ export class ProductsService {
 
   async updateProduct(ctx: RequestContext, productId: string, dto: UpdateProductDto) {
     const userId = ctx.getUserId()!;
-    
+
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -246,7 +246,7 @@ export class ProductsService {
     // Filter out any unknown fields from DTO
     const { name, description, price, stock, categoryId, imageId, status } = dto;
     const updateData: any = { updatedByUserId: userId };
-    
+
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = price;
@@ -266,7 +266,7 @@ export class ProductsService {
 
   async deleteProduct(ctx: RequestContext, productId: string) {
     const userId = ctx.getUserId()!;
-    
+
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -315,7 +315,7 @@ export class ProductsService {
 
   async searchProducts(ctx: RequestContext, dto: SearchProductsDto) {
     const gymId = ctx.getGymId()!;
-    
+
     const {
       search,
       categoryId,
@@ -397,7 +397,7 @@ export class ProductsService {
 
   async toggleProductStatus(ctx: RequestContext, productId: string) {
     const userId = ctx.getUserId()!;
-    
+
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -426,7 +426,7 @@ export class ProductsService {
 
   async updateStock(ctx: RequestContext, productId: string, quantity: number) {
     const userId = ctx.getUserId()!;
-    
+
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -441,7 +441,7 @@ export class ProductsService {
     return this.prisma.product.update({
       where: { id: productId },
       data: {
-        stock: quantity ,
+        stock: quantity,
         updatedByUserId: userId,
       },
       include: {
@@ -452,7 +452,7 @@ export class ProductsService {
 
   async getLowStockProducts(ctx: RequestContext, threshold: number = 10) {
     const gymId = ctx.getGymId()!;
-    
+
     return this.prisma.product.findMany({
       where: {
         gymId,

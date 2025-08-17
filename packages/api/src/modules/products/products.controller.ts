@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiSecurity } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
-import { 
-  CreateProductDto, 
-  UpdateProductDto, 
-  SearchProductsDto, 
-  CreateProductCategoryDto, 
+import {
+  CreateProductDto,
+  UpdateProductDto,
+  SearchProductsDto,
+  CreateProductCategoryDto,
   UpdateProductCategoryDto,
-  UpdateStockDto
+  UpdateStockDto,
 } from './dto';
 import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';

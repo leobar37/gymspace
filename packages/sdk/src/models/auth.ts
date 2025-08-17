@@ -41,6 +41,44 @@ export interface ChangePasswordResponseDto {
   message: string;
 }
 
+export interface RequestPasswordResetDto {
+  email: string;
+}
+
+export interface RequestPasswordResetResponseDto {
+  success: boolean;
+  message: string;
+}
+
+export interface VerifyResetCodeDto {
+  email: string;
+  code: string;
+}
+
+export interface VerifyResetCodeResponseDto {
+  resetToken: string;
+  expiresIn: number;
+}
+
+export interface ResetPasswordDto {
+  resetToken: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponseDto {
+  success: boolean;
+  message: string;
+}
+
+export interface ResendResetCodeDto {
+  email: string;
+}
+
+export interface ResendResetCodeResponseDto {
+  success: boolean;
+  message: string;
+}
+
 
 export interface RegisterCollaboratorDto {
   invitationToken: string;

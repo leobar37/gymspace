@@ -49,7 +49,6 @@ function createExtendedPrismaClient(configService: ConfigService) {
   const prismaClient = new PrismaClient({
     datasources: {
       db: {
-        
         url: url.toString(),
       },
     },

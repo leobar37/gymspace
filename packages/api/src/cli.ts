@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv';
 import 'reflect-metadata';
 dotenv.config();
 
-
 import { CommandFactory } from 'nest-commander';
 import { CommandsModule } from './commands/commands.module';
 console.log('das');

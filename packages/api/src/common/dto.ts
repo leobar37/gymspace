@@ -1,7 +1,7 @@
-import { PaginationMeta } from "@gymspace/shared";
+import { PaginationMeta } from '@gymspace/shared';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class PaginationQueryDto  {
+export class PaginationQueryDto {
   @ApiProperty({ default: 1, minimum: 1, description: 'Page number' })
   page: number = 1;
 

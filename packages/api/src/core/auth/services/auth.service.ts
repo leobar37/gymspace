@@ -352,7 +352,9 @@ export class AuthService {
       console.log(authError);
 
       if (authError) {
-        throw new UnauthorizedException('Credenciales inválidas. Por favor, verifica tu correo y contraseña.');
+        throw new UnauthorizedException(
+          'Credenciales inválidas. Por favor, verifica tu correo y contraseña.',
+        );
       }
 
       // Get user details

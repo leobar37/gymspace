@@ -103,7 +103,7 @@ export class FilesService {
    */
   async findAll(context: IRequestContext): Promise<FileResponseDto[]> {
     const userId = context.getUserId();
-      
+
     const files = await this.prisma.file.findMany({
       where: {
         userId,
@@ -116,7 +116,7 @@ export class FilesService {
     });
 
     console.log(`[FilesService] Found ${files.length} files for user: ${userId}`);
-    
+
     return files.map((file) => this.mapToDto(file));
   }
 
@@ -125,7 +125,7 @@ export class FilesService {
    */
   async findOne(context: IRequestContext, id: string): Promise<FileResponseDto> {
     const userId = context.getUserId();
-    
+
     const file = await this.prisma.file.findFirst({
       where: {
         id,
@@ -147,7 +147,7 @@ export class FilesService {
    */
   async findByIds(context: IRequestContext, ids: string[]): Promise<FileResponseDto[]> {
     const userId = context.getUserId();
-    
+
     const files = await this.prisma.file.findMany({
       where: {
         id: { in: ids },
@@ -261,7 +261,20 @@ export class FilesService {
   /**
    * Map entity to DTO
    */
-  private mapToDto(file: { id: string; filename: string; originalName: string; filePath: string; fileSize: number; mimeType: string; status: string; metadata: any; description: string | null; createdAt: Date; updatedAt: Date; userId: string; }): FileResponseDto {
+  private mapToDto(file: {
+    id: string;
+    filename: string;
+    originalName: string;
+    filePath: string;
+    fileSize: number;
+    mimeType: string;
+    status: string;
+    metadata: any;
+    description: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    userId: string;
+  }): FileResponseDto {
     const baseUrl = this.configService.get('app.baseUrl');
     return {
       id: file.id,

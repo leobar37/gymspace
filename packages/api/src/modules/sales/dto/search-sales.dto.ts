@@ -9,22 +9,30 @@ export class SearchSalesDto {
   @IsString()
   customerName?: string;
 
-  @ApiProperty({ 
-    example: 'paid', 
-    enum: PaymentStatus, 
+  @ApiProperty({
+    example: 'paid',
+    enum: PaymentStatus,
     description: 'Filter by payment status',
-    required: false 
+    required: false,
   })
   @IsOptional()
   @IsEnum(PaymentStatus)
   paymentStatus?: PaymentStatus;
 
-  @ApiProperty({ example: '2024-01-01', description: 'Start date filter (YYYY-MM-DD)', required: false })
+  @ApiProperty({
+    example: '2024-01-01',
+    description: 'Start date filter (YYYY-MM-DD)',
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   startDate?: string;
 
-  @ApiProperty({ example: '2024-12-31', description: 'End date filter (YYYY-MM-DD)', required: false })
+  @ApiProperty({
+    example: '2024-12-31',
+    description: 'End date filter (YYYY-MM-DD)',
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   endDate?: string;

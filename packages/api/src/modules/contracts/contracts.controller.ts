@@ -108,27 +108,30 @@ export class ContractsController {
 
   @Post('update-expired')
   @Allow(PERMISSIONS.CONTRACTS_UPDATE)
-  @ApiOperation({ summary: 'Update expired contracts status (deprecated - use update-status instead)' })
+  @ApiOperation({
+    summary: 'Update expired contracts status (deprecated - use update-status instead)',
+  })
   @ApiResponse({ status: 200, description: 'Number of contracts updated' })
   async updateExpiredContracts(@AppCtxt() ctx: RequestContext) {
     // Trigger both expiring_soon and expired updates for backward compatibility
     const result = await this.contractsService.triggerContractStatusUpdate();
-    return { 
+    return {
       message: `Se actualizaron ${result.expiringSoonCount + result.expiredCount} contratos`,
       expiringSoonCount: result.expiringSoonCount,
       expiredCount: result.expiredCount,
-      executionTime: result.executionTime
+      executionTime: result.executionTime,
     };
   }
 
   @Post('update-status')
   @Allow(PERMISSIONS.CONTRACTS_UPDATE)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Trigger intelligent contract status updates',
-    description: 'Manually trigger the intelligent contract status update process that runs on cron'
+    description:
+      'Manually trigger the intelligent contract status update process that runs on cron',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Contract status updates completed',
     schema: {
       type: 'object',
@@ -136,9 +139,9 @@ export class ContractsController {
         message: { type: 'string' },
         expiringSoonCount: { type: 'number' },
         expiredCount: { type: 'number' },
-        executionTime: { type: 'number' }
-      }
-    }
+        executionTime: { type: 'number' },
+      },
+    },
   })
   async triggerContractStatusUpdate(@AppCtxt() ctx: RequestContext) {
     const result = await this.contractsService.triggerContractStatusUpdate();
@@ -146,15 +149,15 @@ export class ContractsController {
       message: `Actualización inteligente de contratos completada. ${result.expiringSoonCount} marcados como 'expirando pronto', ${result.expiredCount} marcados como 'expirados'`,
       expiringSoonCount: result.expiringSoonCount,
       expiredCount: result.expiredCount,
-      executionTime: result.executionTime
+      executionTime: result.executionTime,
     };
   }
 
   @Get('status-stats')
   @Allow(PERMISSIONS.CONTRACTS_READ)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get contract status statistics',
-    description: 'Returns statistics about contract statuses and contracts needing updates'
+    description: 'Returns statistics about contract statuses and contracts needing updates',
   })
   @ApiResponse({ status: 200, description: 'Contract status statistics' })
   async getContractStatusStats(@AppCtxt() ctx: RequestContext) {
@@ -163,9 +166,9 @@ export class ContractsController {
 
   @Get('status-check')
   @Allow(PERMISSIONS.CONTRACTS_READ)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Check contracts needing status updates',
-    description: 'Returns contracts that need status updates for monitoring purposes'
+    description: 'Returns contracts that need status updates for monitoring purposes',
   })
   @ApiResponse({ status: 200, description: 'Contracts needing status updates' })
   async getContractsNeedingStatusUpdate(@AppCtxt() ctx: RequestContext) {

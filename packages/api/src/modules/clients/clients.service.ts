@@ -23,7 +23,7 @@ export class ClientsService {
   async createClient(ctx: RequestContext, dto: CreateClientDto): Promise<any> {
     const gymId = ctx.getGymId()!;
     const userId = ctx.getUserId()!;
-    
+
     // Check if gym can add more clients
     const canAdd = await this.organizationsService.canAddClient(gymId);
     if (!canAdd) {
@@ -36,7 +36,6 @@ export class ClientsService {
       throw new ResourceNotFoundException('Gym', gymId);
     }
 
-
     // Check if document already exists in this gym (only if both document type and value are provided)
     if (dto.documentType && dto.documentValue) {
       const existingClient = await this.prismaService.gymClient.findFirst({
@@ -48,7 +47,9 @@ export class ClientsService {
       });
 
       if (existingClient) {
-        throw new BusinessException(`Ya existe un cliente con este documento (${dto.documentType}: ${dto.documentValue}) en este gimnasio`);
+        throw new BusinessException(
+          `Ya existe un cliente con este documento (${dto.documentType}: ${dto.documentValue}) en este gimnasio`,
+        );
       }
     }
 
@@ -59,16 +60,16 @@ export class ClientsService {
     const clientNumber = `C${Date.now()}-${clientCount + 1}`;
 
     // Create client - filter out fields that don't exist in schema
-    const { 
-      address, 
-      city, 
-      state, 
-      postalCode, 
-      gender, 
-      maritalStatus, 
-      occupation, 
+    const {
+      address,
+      city,
+      state,
+      postalCode,
+      gender,
+      maritalStatus,
+      occupation,
       customData,
-      ...validClientData 
+      ...validClientData
     } = dto;
 
     const client = await this.prismaService.gymClient.create({
@@ -102,7 +103,7 @@ export class ClientsService {
    */
   async updateClient(ctx: RequestContext, clientId: string, dto: UpdateClientDto): Promise<any> {
     const userId = ctx.getUserId()!;
-    
+
     // Verify client exists and user has access
     const client = await this.prismaService.gymClient.findFirst({
       where: {
@@ -121,8 +122,11 @@ export class ClientsService {
     }
 
     // If document is being updated, check uniqueness within gym
-    if (dto.documentType && dto.documentValue && 
-        (dto.documentType !== client.documentType || dto.documentValue !== client.documentValue)) {
+    if (
+      dto.documentType &&
+      dto.documentValue &&
+      (dto.documentType !== client.documentType || dto.documentValue !== client.documentValue)
+    ) {
       const documentExists = await this.prismaService.gymClient.findFirst({
         where: {
           documentType: dto.documentType,
@@ -133,21 +137,23 @@ export class ClientsService {
       });
 
       if (documentExists) {
-        throw new BusinessException(`Ya existe un cliente con este documento (${dto.documentType}: ${dto.documentValue}) en este gimnasio`);
+        throw new BusinessException(
+          `Ya existe un cliente con este documento (${dto.documentType}: ${dto.documentValue}) en este gimnasio`,
+        );
       }
     }
 
     // Update client - filter out fields that don't exist in schema
-    const { 
-      address, 
-      city, 
-      state, 
-      postalCode, 
-      gender, 
-      maritalStatus, 
-      occupation, 
+    const {
+      address,
+      city,
+      state,
+      postalCode,
+      gender,
+      maritalStatus,
+      occupation,
       customData,
-      ...validClientData 
+      ...validClientData
     } = dto;
 
     const updated = await this.prismaService.gymClient.update({
@@ -177,7 +183,7 @@ export class ClientsService {
    */
   async getClient(ctx: RequestContext, clientId: string): Promise<any> {
     const userId = ctx.getUserId()!;
-    
+
     const client = await this.prismaService.gymClient.findFirst({
       where: {
         id: clientId,
@@ -232,7 +238,7 @@ export class ClientsService {
   async searchClients(ctx: RequestContext, dto: SearchClientsDto) {
     const gymId = ctx.getGymId()!;
     const userId = ctx.getUserId()!;
-    
+
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
     if (!hasAccess) {
@@ -292,10 +298,10 @@ export class ClientsService {
     // Include contract status if requested
     if (dto.includeContractStatus) {
       includeOptions.contracts = {
-        where: { 
+        where: {
           status: 'active',
           startDate: { lte: new Date() },
-          endDate: { gte: new Date() }
+          endDate: { gte: new Date() },
         },
         include: {
           gymMembershipPlan: {
@@ -332,7 +338,7 @@ export class ClientsService {
    */
   async toggleClientStatus(ctx: RequestContext, clientId: string): Promise<any> {
     const userId = ctx.getUserId()!;
-    
+
     const client = await this.prismaService.gymClient.findFirst({
       where: {
         id: clientId,
@@ -359,7 +365,7 @@ export class ClientsService {
     // If deactivating, check for active contracts
     if (newStatus === 'inactive') {
       const activeContractsCount = client.contracts.length;
-      
+
       if (activeContractsCount > 0) {
         throw new BusinessException(
           'CANNOT_DEACTIVATE_CLIENT_WITH_ACTIVE_CONTRACTS',
@@ -385,7 +391,7 @@ export class ClientsService {
     const result = await this.prismaService.$transaction(async (tx) => {
       // Get client with related data
       const client = await tx.gymClient.findUnique({
-        where: { 
+        where: {
           id: clientId,
           gymId: ctx.gym.id,
           deletedAt: null,

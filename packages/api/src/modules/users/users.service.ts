@@ -20,7 +20,7 @@ export class UsersService {
    */
   async getProfile(context: RequestContext): Promise<UserProfileDto> {
     const userId = context.getUserId();
-    
+
     const user = await this.prisma.user.findFirst({
       where: {
         id: userId,

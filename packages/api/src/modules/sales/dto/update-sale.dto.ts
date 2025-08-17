@@ -13,11 +13,11 @@ export class UpdateSaleDto {
   @IsString()
   notes?: string;
 
-  @ApiProperty({ 
-    example: 'paid', 
-    enum: PaymentStatus, 
+  @ApiProperty({
+    example: 'paid',
+    enum: PaymentStatus,
     description: 'Payment status',
-    required: false 
+    required: false,
   })
   @IsOptional()
   @IsEnum(PaymentStatus)

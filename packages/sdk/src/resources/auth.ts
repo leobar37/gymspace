@@ -10,6 +10,14 @@ import {
   VerifyEmailDto,
   ChangePasswordDto,
   ChangePasswordResponseDto,
+  RequestPasswordResetDto,
+  RequestPasswordResetResponseDto,
+  VerifyResetCodeDto,
+  VerifyResetCodeResponseDto,
+  ResetPasswordDto,
+  ResetPasswordResponseDto,
+  ResendResetCodeDto,
+  ResendResetCodeResponseDto,
 } from '../models/auth';
 import { RequestOptions } from '../types';
 import { BaseResource } from './base';
@@ -78,6 +86,50 @@ export class AuthResource extends BaseResource {
   ): Promise<ChangePasswordResponseDto> {
     return this.client.post<ChangePasswordResponseDto>(
       `${this.basePath}/change-password`,
+      data,
+      options,
+    );
+  }
+
+  async requestPasswordReset(
+    data: RequestPasswordResetDto,
+    options?: RequestOptions,
+  ): Promise<RequestPasswordResetResponseDto> {
+    return this.client.post<RequestPasswordResetResponseDto>(
+      `${this.basePath}/password-reset/request`,
+      data,
+      options,
+    );
+  }
+
+  async verifyResetCode(
+    data: VerifyResetCodeDto,
+    options?: RequestOptions,
+  ): Promise<VerifyResetCodeResponseDto> {
+    return this.client.post<VerifyResetCodeResponseDto>(
+      `${this.basePath}/password-reset/verify-code`,
+      data,
+      options,
+    );
+  }
+
+  async resetPassword(
+    data: ResetPasswordDto,
+    options?: RequestOptions,
+  ): Promise<ResetPasswordResponseDto> {
+    return this.client.post<ResetPasswordResponseDto>(
+      `${this.basePath}/password-reset/reset`,
+      data,
+      options,
+    );
+  }
+
+  async resendResetCode(
+    data: ResendResetCodeDto,
+    options?: RequestOptions,
+  ): Promise<ResendResetCodeResponseDto> {
+    return this.client.post<ResendResetCodeResponseDto>(
+      `${this.basePath}/password-reset/resend-code`,
       data,
       options,
     );

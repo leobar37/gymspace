@@ -35,21 +35,21 @@ export class OnboardingService {
    */
   static calculateSubscriptionEndDate(
     startDate: Date,
-    plan: Pick<SubscriptionPlan, 'duration' | 'durationPeriod'>
+    plan: Pick<SubscriptionPlan, 'duration' | 'durationPeriod'>,
   ): Date {
     const endDate = new Date(startDate);
-    
+
     if (plan.duration && plan.durationPeriod) {
       if (plan.durationPeriod === DurationPeriod.DAY) {
-        endDate.setTime(endDate.getTime() + (plan.duration * 24 * 60 * 60 * 1000));
+        endDate.setTime(endDate.getTime() + plan.duration * 24 * 60 * 60 * 1000);
       } else if (plan.durationPeriod === DurationPeriod.MONTH) {
         endDate.setMonth(endDate.getMonth() + plan.duration);
       }
     } else {
       // Default to 30 days if no duration specified
-      endDate.setTime(endDate.getTime() + (30 * 24 * 60 * 60 * 1000));
+      endDate.setTime(endDate.getTime() + 30 * 24 * 60 * 60 * 1000);
     }
-    
+
     return endDate;
   }
 
@@ -138,7 +138,7 @@ export class OnboardingService {
         const subscriptionStartDate = new Date();
         const subscriptionEndDate = OnboardingService.calculateSubscriptionEndDate(
           subscriptionStartDate,
-          subscriptionPlan
+          subscriptionPlan,
         );
 
         // Create organization

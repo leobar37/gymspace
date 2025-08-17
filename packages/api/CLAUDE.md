@@ -296,3 +296,4 @@ All entities include audit fields and soft delete support.
 - Contract relates to Gym through gymClient, not directly
 - Client numbers generated using timestamp pattern
 - Use environment-specific configurations via ConfigModule
+- in the button to disabled is isDisabled instead of disable

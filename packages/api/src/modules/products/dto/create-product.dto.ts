@@ -37,11 +37,11 @@ export class CreateProductDto {
   @IsString()
   imageId?: string;
 
-  @ApiProperty({ 
-    example: 'active', 
-    enum: ProductStatus, 
+  @ApiProperty({
+    example: 'active',
+    enum: ProductStatus,
     description: 'Product status',
-    required: false 
+    required: false,
   })
   @IsOptional()
   @IsEnum(ProductStatus)

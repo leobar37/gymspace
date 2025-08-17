@@ -79,7 +79,9 @@ export class ContractsService {
       if (activeContract.status === 'active') {
         throw new BusinessException('El cliente ya tiene un contrato activo');
       } else if (activeContract.status === 'expiring_soon') {
-        throw new BusinessException('El cliente tiene un contrato activo que está por vencer. Considere renovarlo en lugar de crear uno nuevo');
+        throw new BusinessException(
+          'El cliente tiene un contrato activo que está por vencer. Considere renovarlo en lugar de crear uno nuevo',
+        );
       } else if (activeContract.status === 'pending') {
         throw new BusinessException(
           'El cliente tiene un contrato pendiente que aún no ha iniciado',
@@ -494,7 +496,7 @@ export class ContractsService {
       },
       deletedAt: null, // Ensure we only get non-deleted contracts
     };
-    
+
     if (status) {
       where.status = status;
     }
@@ -615,10 +617,7 @@ export class ContractsService {
       this.prismaService.contract.findMany({
         where: {
           ...baseWhere,
-          OR: [
-            { status: 'active' },
-            { status: 'expiring_soon' },
-          ],
+          OR: [{ status: 'active' }, { status: 'expiring_soon' }],
           endDate: { lte: now },
         },
         include: {
@@ -665,13 +664,15 @@ export class ContractsService {
 
     const now = new Date();
     const expirationThreshold = new Date(now);
-    
+
     if (CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS > 0) {
       expirationThreshold.setDate(now.getDate() - CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS);
     }
 
-    return (contract.status === 'active' || contract.status === 'expiring_soon') && 
-           contract.endDate <= expirationThreshold;
+    return (
+      (contract.status === 'active' || contract.status === 'expiring_soon') &&
+      contract.endDate <= expirationThreshold
+    );
   }
 
   /**
@@ -710,7 +711,7 @@ export class ContractsService {
    */
   private async updateExpiredContracts(): Promise<number> {
     const now = new Date();
-    
+
     // Add grace period if configured
     const expirationThreshold = new Date(now);
     if (CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS > 0) {
@@ -720,10 +721,7 @@ export class ContractsService {
     // Update contracts from both 'active' and 'expiring_soon' to 'expired'
     const expired = await this.prismaService.contract.updateMany({
       where: {
-        OR: [
-          { status: 'active' },
-          { status: 'expiring_soon' },
-        ],
+        OR: [{ status: 'active' }, { status: 'expiring_soon' }],
         endDate: { lte: expirationThreshold },
         deletedAt: null,
       },
@@ -771,20 +769,20 @@ export class ContractsService {
 
     const overdue = await this.prismaService.contract.count({
       where: {
-        OR: [
-          { status: 'active' },
-          { status: 'expiring_soon' },
-        ],
+        OR: [{ status: 'active' }, { status: 'expiring_soon' }],
         endDate: { lte: now },
         deletedAt: null,
       },
     });
 
     return {
-      statusBreakdown: stats.reduce((acc, stat) => {
-        acc[stat.status] = stat._count.id;
-        return acc;
-      }, {} as Record<ContractStatus, number>),
+      statusBreakdown: stats.reduce(
+        (acc, stat) => {
+          acc[stat.status] = stat._count.id;
+          return acc;
+        },
+        {} as Record<ContractStatus, number>,
+      ),
       pendingUpdates: {
         expiringSoon,
         overdue,
@@ -814,7 +812,7 @@ export class ContractsService {
 
       this.logger.log(
         `Contract status update completed in ${duration}ms. ` +
-        `Updated ${expiringSoonCount} to expiring_soon, ${expiredCount} to expired.`
+          `Updated ${expiringSoonCount} to expiring_soon, ${expiredCount} to expired.`,
       );
 
       // Step 4: Get stats for monitoring (optional)
@@ -822,7 +820,6 @@ export class ContractsService {
       //   const stats = await this.getContractStatusStats();
       //   this.logger.debug('Current contract status stats:', stats);
       // }
-
     } catch (error) {
       this.logger.error('Error updating contract statuses', error.stack);
       throw error;
@@ -839,15 +836,15 @@ export class ContractsService {
     executionTime: number;
   }> {
     const startTime = Date.now();
-    
+
     const expiringSoonCount = await this.updateExpiringSoonContracts();
     const expiredCount = await this.updateExpiredContracts();
-    
+
     const executionTime = Date.now() - startTime;
 
     this.logger.log(
       `Manual contract status update completed. ` +
-      `Updated ${expiringSoonCount} to expiring_soon, ${expiredCount} to expired.`
+        `Updated ${expiringSoonCount} to expiring_soon, ${expiredCount} to expired.`,
     );
 
     return {

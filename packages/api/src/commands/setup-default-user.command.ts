@@ -117,7 +117,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       // Step 3: Update gym settings (minimal setup for demo)
       console.log('\n⚙️  Configuring gym settings...');
-      
+
       // Create a proper RequestContext for service calls
       const context = new RequestContext()
         .forUser({
@@ -236,7 +236,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
         {
           name: 'Proteína Whey',
           description: 'Proteína de suero de leche premium para desarrollo muscular',
-          price: 120.00,
+          price: 120.0,
           currency: 'PEN',
           stock: 50,
           barcode: 'PROT001',
@@ -245,7 +245,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
         {
           name: 'Creatina Monohidratada',
           description: 'Creatina pura para mejorar rendimiento y fuerza',
-          price: 85.00,
+          price: 85.0,
           currency: 'PEN',
           stock: 30,
           barcode: 'CREA001',
@@ -254,7 +254,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
         {
           name: 'BCAA Aminoácidos',
           description: 'Aminoácidos de cadena ramificada para recuperación muscular',
-          price: 95.00,
+          price: 95.0,
           currency: 'PEN',
           stock: 25,
           barcode: 'BCAA001',
@@ -263,7 +263,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
         {
           name: 'Pre-Entreno',
           description: 'Fórmula pre-entrenamiento para energía y enfoque',
-          price: 110.00,
+          price: 110.0,
           currency: 'PEN',
           stock: 20,
           barcode: 'PRE001',
@@ -272,7 +272,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
         {
           name: 'Botella de Agua Deportiva',
           description: 'Botella de 1 litro con logo del gimnasio',
-          price: 25.00,
+          price: 25.0,
           currency: 'PEN',
           stock: 100,
           barcode: 'BOT001',
@@ -284,10 +284,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
         try {
           // Remove currency from product data as it's not part of the Product model
           const { currency, ...productData } = product;
-          await this.productsService.createProduct(
-            context,
-            productData as any,
-          );
+          await this.productsService.createProduct(context, productData as any);
           console.log(`✅ Producto creado: ${product.name}`);
         } catch (error) {
           console.log(`⚠️  Error creando producto ${product.name}:`, error.message);
@@ -351,10 +348,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       for (const client of defaultClients) {
         try {
-          await this.clientsService.createClient(
-            context,
-            client,
-          );
+          await this.clientsService.createClient(context, client);
           console.log(`✅ Cliente creado: ${client.name}`);
         } catch (error) {
           console.log(`⚠️  Error creando cliente ${client.name}:`, error.message);
@@ -380,7 +374,9 @@ export class SetupDefaultUserCommand extends CommandRunner {
       console.log('👥 Clientes Creados: 5');
       console.log('========================================\n');
 
-      console.log('ℹ️  Ahora puede iniciar sesión con estas credenciales y comenzar a usar el sistema.');
+      console.log(
+        'ℹ️  Ahora puede iniciar sesión con estas credenciales y comenzar a usar el sistema.',
+      );
     } catch (error: any) {
       console.error('❌ Error setting up default user:', error.message || error);
       if (error.stack) {

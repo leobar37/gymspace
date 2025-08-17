@@ -21,7 +21,7 @@ export class GymsService {
   async createGym(context: IRequestContext, dto: CreateGymDto): Promise<Gym> {
     const userId = context.getUserId();
     const organizationId = context.getOrganizationId();
-    
+
     if (!organizationId) {
       throw new BusinessException('Organization context is required');
     }
@@ -149,7 +149,7 @@ export class GymsService {
   async getOrganizationGyms(context: IRequestContext) {
     const userId = context.getUserId();
     const organizationId = context.getOrganizationId();
-    
+
     if (!organizationId) {
       throw new BusinessException('Organization context is required');
     }
@@ -291,7 +291,7 @@ export class GymsService {
   async updateCurrentGym(context: IRequestContext, dto: UpdateCurrentGymDto): Promise<Gym> {
     const gymId = context.getGymId();
     const userId = context.getUserId();
-    
+
     if (!gymId) {
       throw new BusinessException('Gym context is required');
     }
@@ -323,7 +323,7 @@ export class GymsService {
     if (dto.assetId !== undefined) {
       // You might want to validate the asset exists and belongs to the gym
       updateData.settings = {
-        ...(gym.settings as object || {}),
+        ...((gym.settings as object) || {}),
         logoAssetId: dto.assetId,
       };
     }
