@@ -5,3 +5,4 @@ export * from './resend-verification.dto';
 export * from './register-collaborator.dto';
 export * from './generate-verification-code.dto';
 export * from './current-session.dto';
+export * from './change-password.dto';

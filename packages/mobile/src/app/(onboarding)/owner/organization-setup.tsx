@@ -11,18 +11,17 @@ import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { OnboardingStepsContainer } from '@/features/onboarding/components/OnboardingStepsContainer';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useOnboardingStore } from '@/store/onboarding';
 import { StartOnboardingData } from '@gymspace/sdk';
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { ChevronLeftIcon, DollarSignIcon, FlagIcon } from 'lucide-react-native';
+import { DollarSignIcon, FlagIcon } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, View } from 'react-native';
+import { Pressable } from 'react-native';
 import { z } from 'zod';
 
 // Country/currency options
@@ -143,29 +142,14 @@ export default function OrganizationSetupScreen() {
   }, [selectedCountry, methods]);
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style="dark" />
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="flex-1 px-6 py-4">
-          {/* Header */}
-          <HStack className="items-center justify-between mb-6">
-            <Pressable onPress={() => router.back()}>
-              <Icon as={ChevronLeftIcon} className="text-gray-700 w-6 h-6" />
-            </Pressable>
-            <Text className="text-gray-600">Paso 4 de 4</Text>
-          </HStack>
-
-          {/* Progress bar */}
-          <Progress value={100} className="mb-8">
-            <ProgressFilledTrack />
-          </Progress>
-
-          <VStack className="flex-1 gap-12">
-            {/* Title */}
-            <VStack className="gap-3">
+    <OnboardingStepsContainer
+      currentStep={4}
+      totalSteps={7}
+      onBackPress={() => router.back()}
+    >
+      <VStack className="flex-1 gap-12">
+        {/* Title */}
+        <VStack className="gap-3">
               <Heading className="text-gray-900 text-2xl font-bold">
                 Configuración de Organización
               </Heading>
@@ -255,20 +239,18 @@ export default function OrganizationSetupScreen() {
               </VStack>
             </FormProvider>
 
-            {/* Continue button */}
-            <Box className="mt-auto pb-4">
-              <GluestackButton
-                onPress={methods.handleSubmit(onSubmit)}
-                className={`w-full ${(!methods.formState.isValid || !selectedCountry || startOnboarding.isPending) ? 'opacity-50' : ''}`}
-                disabled={!methods.formState.isValid || !selectedCountry || startOnboarding.isPending}
-              >
-                {startOnboarding.isPending && <ButtonSpinner className="mr-2" />}
-                <ButtonText>Continuar</ButtonText>
-              </GluestackButton>
-            </Box>
-          </VStack>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        {/* Continue button */}
+        <Box className="mt-auto pb-4">
+          <GluestackButton
+            onPress={methods.handleSubmit(onSubmit)}
+            className={`w-full ${(!methods.formState.isValid || !selectedCountry || startOnboarding.isPending) ? 'opacity-50' : ''}`}
+            disabled={!methods.formState.isValid || !selectedCountry || startOnboarding.isPending}
+          >
+            {startOnboarding.isPending && <ButtonSpinner className="mr-2" />}
+            <ButtonText>Continuar</ButtonText>
+          </GluestackButton>
+        </Box>
+      </VStack>
+    </OnboardingStepsContainer>
   );
 }

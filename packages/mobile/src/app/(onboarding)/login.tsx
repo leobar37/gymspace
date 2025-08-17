@@ -5,7 +5,7 @@ import {
   useForm,
   zodResolver
 } from '@/components/forms';
-import { ButtonSpinner, ButtonText, Button as GluestackButton } from '@/components/ui/button';
+import { ButtonText, Button as GluestackButton } from '@/components/ui/button';
 import { Center } from '@/components/ui/center';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -13,14 +13,23 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useMutation } from '@tanstack/react-query';
 import { Link, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, View } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  KeyboardAvoidingView, 
+  Platform, 
+  Pressable, 
+  SafeAreaView, 
+  ScrollView, 
+  Keyboard, 
+  View,
+  TextInput
+} from 'react-native';
 import { z } from 'zod';
 import { useAuthToken } from '@/hooks/useAuthToken';
+import { useLoadingScreen, LoadingScreen } from '@/shared/loading-screen';
 
 // Login schema
 const loginSchema = z.object({
@@ -35,187 +44,293 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginScreen() {
   const { sdk } = useGymSdk();
   const { storeTokens } = useAuthToken();
-  const [showPassword, setShowPassword] = useState(false);
+  const { execute } = useLoadingScreen();
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const passwordInputRef = useRef<View>(null);
+
+  // Keyboard listeners
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setIsKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
 
   // Initialize form
   const methods = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: 'admin@gymspace.pe',
-      password: '182@Alfk3458',
+      email: '',
+      password: '',
     },
   });
 
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginForm) => {
+  // Error formatter for better UX - all messages in Spanish
+  const formatLoginError = (error: unknown): string => {
+    console.log("the error", error);
+    
+    let message = 'Error de inicio de sesión. Por favor, inténtalo de nuevo.';
+    
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      const errorObj = error as any;
+      if (errorObj.response?.data?.message) {
+        message = errorObj.response.data.message;
+      } else if (errorObj.message) {
+        message = errorObj.message;
+      }
+    }
+    
+    // Check if message is already in Spanish
+    if (message.includes('contraseña') || 
+        message.includes('correo') || 
+        message.includes('usuario') ||
+        message.includes('Credenciales') ||
+        message.includes('verificar') ||
+        message.includes('inválid')) {
+      return message;
+    }
+    
+    // Translate common English error messages to Spanish
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('invalid credentials') || 
+        lowerMessage.includes('unauthorized') ||
+        lowerMessage.includes('invalid login credentials')) {
+      return 'Credenciales inválidas. Por favor, verifica tu correo y contraseña.';
+    } 
+    
+    if (lowerMessage.includes('user not found')) {
+      return 'Usuario no encontrado. Por favor, verifica tu correo electrónico.';
+    }
+    
+    if (lowerMessage.includes('email not confirmed') || 
+        lowerMessage.includes('email not verified')) {
+      return 'Debes verificar tu correo electrónico antes de iniciar sesión.';
+    }
+    
+    if (lowerMessage.includes('network') || 
+        lowerMessage.includes('connection')) {
+      return 'Error de conexión. Por favor, verifica tu conexión a internet e inténtalo de nuevo.';
+    }
+    
+    if (lowerMessage.includes('too many requests')) {
+      return 'Demasiados intentos. Por favor, espera un momento antes de intentar de nuevo.';
+    }
+    
+    return 'Error al iniciar sesión. Por favor, inténtalo de nuevo.';
+  };
+
+  const onSubmit = async (data: LoginForm) => {
+    // Dismiss keyboard before submitting
+    Keyboard.dismiss();
+    
+    // Clear any existing errors before attempting login
+    methods.clearErrors();
+    
+    const loginPromise = async () => {
       const response = await sdk.auth.login({
         email: data.email,
         password: data.password,
       });
-      console.log("auth responde", response);
+      
+      // Store tokens
+      const success = await storeTokens({
+        accessToken: response.access_token,
+        refreshToken: response.refresh_token,
+        expiresAt: Date.now() + (24 * 60 * 60 * 1000),
+      });
+      
+      if (!success) {
+        throw new Error('Error al guardar la sesión. Por favor, inténtalo de nuevo.');
+      }
       
       return response;
-    },
-    onSuccess: async (response) => {
-      try {
-        // Store both access and refresh tokens properly
-        const success = await storeTokens({
-          accessToken: response.access_token,
-          refreshToken: response.refresh_token,
-          expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours from now
-        });
-        
-        if (!success) {
-          throw new Error('Failed to store tokens');
-        }
-        
-        // Navigate to main app - the app layout will handle checking if user has completed onboarding
-        router.replace('/(app)');
-      } catch (error) {
-        console.error('Error storing auth tokens:', error);
-        methods.setError('email', { 
-          message: 'Error al guardar la sesión. Inténtalo de nuevo.' 
-        });
-      }
-    },
-    onError: (error: any) => {
-      console.error('Login error:', error);
-      
-      // Handle different error types from the SDK
-      let message = 'Error de inicio de sesión. Inténtalo de nuevo.';
-      
-      if (error.message) {
-        // SDK errors have a message property
-        message = error.message;
-      } else if (error.response?.data?.message) {
-        // Axios/HTTP errors
-        message = error.response.data.message;
-      }
-      
-      // Translate common error messages to Spanish
-      if (message.toLowerCase().includes('invalid credentials') || 
-          message.toLowerCase().includes('unauthorized')) {
-        message = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
-      } else if (message.toLowerCase().includes('user not found')) {
-        message = 'Usuario no encontrado. Verifica tu correo electrónico.';
-      } else if (message.toLowerCase().includes('email not verified')) {
-        message = 'Debes verificar tu correo electrónico antes de iniciar sesión.';
-      }
-      
-      methods.setError('email', { message });
-    },
-  });
+    };
+    
+    await execute(loginPromise(), {
+      action: 'Iniciando sesión...',
+      successMessage: '¡Bienvenido a GymSpace!',
+      errorFormatter: formatLoginError,
+      hideOnSuccess: true,
+      hideDelay: 1000,
+      errorActions: [
+        {
+          label: 'Reintentar',
+          onPress: () => {
+            // The modal will close and user can retry
+          },
+          variant: 'solid',
+        },
+        {
+          label: 'Cerrar',
+          onPress: () => {
+            // Just close the modal
+          },
+          variant: 'outline',
+        },
+      ],
+      onSuccess: () => {
+        // Navigate after successful login
+        setTimeout(() => {
+          router.replace('/(app)');
+        }, 1200);
+      },
+      onError: (error) => {
+        console.error('Login error:', error);
+        // Error is already handled by the loading screen
+      },
+    });
+  };
 
-  const onSubmit = (data: LoginForm) => {
-    // Clear any existing errors before attempting login
-    methods.clearErrors();
-    loginMutation.mutate(data);
+  const handlePasswordFocus = () => {
+    // Scroll to password field when focused
+    setTimeout(() => {
+      if (passwordInputRef.current) {
+        passwordInputRef.current.measureLayout(
+          scrollViewRef.current as any,
+          (x, y) => {
+            scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+          },
+          () => {}
+        );
+      }
+    }, 300);
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style="dark" />
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
-        <ScrollView 
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
+    <>
+      <SafeAreaView className="flex-1 bg-white">
+        <StatusBar style="dark" />
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1 mt-4" 
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <View className="flex-1 px-6 mt-10">
-            {/* Back button */}
-            <Pressable 
-              onPress={() => router.back()} 
-              className="pt-4 pb-2"
-            >
-              <Icon as={ChevronLeftIcon} className="text-gray-700 w-6 h-6" />
-            </Pressable>
+          <ScrollView 
+            ref={scrollViewRef}
+            contentContainerStyle={{ 
+              flexGrow: 1,
+              paddingBottom: 20
+            }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={true}
+            automaticallyAdjustKeyboardInsets={true}
+          >
+            <View className="flex-1 px-6 pt-4">
+              {/* Back button */}
+              <Pressable onPress={() => router.back()} className="pb-4">
+                <Icon as={ChevronLeftIcon} className="text-gray-700 w-6 h-6" />
+              </Pressable>
 
-            <VStack className="flex-1 justify-center max-w-sm w-full mx-auto gap-16">
-              {/* Logo */}
-              <Center className="mb-4">
-                <Logo variant="sm" />
-              </Center>
+              <View className={`flex-1 ${isKeyboardVisible ? '' : 'justify-center'} max-w-sm w-full mx-auto`}>
+                <VStack className="gap-6">
+                  {/* Logo - hide when keyboard is visible */}
+                  {!isKeyboardVisible && (
+                    <Center className="mb-4">
+                      <Logo variant="sm" />
+                    </Center>
+                  )}
 
-              {/* Header */}
-              <VStack className="gap-3">
-                <Heading className="text-gray-900 text-3xl font-bold">
-                  ¡Bienvenido de nuevo!
-                </Heading>
-                <Text className="text-gray-600 text-lg">
-                  Inicia sesión para continuar en GymSpace
-                </Text>
-              </VStack>
-
-              {/* Form */}
-              <FormProvider {...methods}>
-                <VStack className="gap-4">
-                  <FormInput
-                    name="email"
-                    label="Correo electrónico"
-                    placeholder="Ingresa tu correo"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    disabled={loginMutation.isPending}
-                  />
-
-                  <FormInput
-                    name="password"
-                    label="Contraseña"
-                    placeholder="Ingresa tu contraseña"
-                    secureTextEntry={!showPassword}
-                    autoComplete="password"
-                    disabled={loginMutation.isPending}
-                  />
-
-                  <Center className="mt-2">
-                    <Link href="/(onboarding)/forgot-password" asChild>
-                      <Pressable>
-                        <Text className="text-blue-500 text-sm font-medium">
-                          ¿Olvidaste tu contraseña?
-                        </Text>
-                      </Pressable>
-                    </Link>
-                  </Center>
-                  <GluestackButton
-                    onPress={methods.handleSubmit(onSubmit)}
-                    disabled={loginMutation.isPending}
-                    className="w-full mt-4"
-                  >
-                    {loginMutation.isPending ? (
-                      <>
-                        <ButtonSpinner />
-                        <ButtonText>Iniciando sesión...</ButtonText>
-                      </>
-                    ) : (
-                      <ButtonText>Iniciar Sesión</ButtonText>
-                    )}
-                  </GluestackButton>
-                </VStack>
-              </FormProvider>
-
-              {/* Footer */}
-              <Center className="mt-8">
-                <HStack className="gap-1">
-                  <Text className="text-gray-600">
-                    ¿No tienes una cuenta?
-                  </Text>
-                  <Link href="/(onboarding)" asChild>
-                    <Pressable>
-                      <Text className="text-blue-500 font-medium">
-                        Regístrate
+                  {/* Header */}
+                  <VStack className="gap-2">
+                    <Heading className={`text-gray-900 ${isKeyboardVisible ? 'text-2xl' : 'text-3xl'} font-bold text-center`}>
+                      ¡Bienvenido de nuevo!
+                    </Heading>
+                    {!isKeyboardVisible && (
+                      <Text className="text-gray-600 text-base text-center">
+                        Inicia sesión para continuar
                       </Text>
-                    </Pressable>
-                  </Link>
-                </HStack>
-              </Center>
-            </VStack>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                    )}
+                  </VStack>
+
+                  {/* Form */}
+                  <FormProvider {...methods}>
+                    <VStack className="gap-4">
+                      <FormInput
+                        name="email"
+                        label="Correo electrónico"
+                        placeholder="ejemplo@correo.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        returnKeyType="next"
+                      />
+
+                      <View ref={passwordInputRef}>
+                        <FormInput
+                          name="password"
+                          label="Contraseña"
+                          placeholder="Tu contraseña"
+                          secureTextEntry={true}
+                          autoComplete="password"
+                          returnKeyType="done"
+                          onFocus={handlePasswordFocus}
+                          onSubmitEditing={methods.handleSubmit(onSubmit)}
+                        />
+                      </View>
+
+                      <Center>
+                        <Link href="/(onboarding)/forgot-password" asChild>
+                          <Pressable className="py-2">
+                            <Text className="text-blue-500 text-sm font-medium">
+                              ¿Olvidaste tu contraseña?
+                            </Text>
+                          </Pressable>
+                        </Link>
+                      </Center>
+                      
+                      <GluestackButton
+                        onPress={methods.handleSubmit(onSubmit)}
+                        className="w-full h-12"
+                        variant="solid"
+                      >
+                        <ButtonText className="text-base font-medium">
+                          Iniciar Sesión
+                        </ButtonText>
+                      </GluestackButton>
+                    </VStack>
+                  </FormProvider>
+
+                  {/* Footer - hide when keyboard is visible */}
+                  {!isKeyboardVisible && (
+                    <Center className="mt-4">
+                      <HStack className="gap-1">
+                        <Text className="text-gray-600 text-sm">
+                          ¿No tienes una cuenta?
+                        </Text>
+                        <Link href="/(onboarding)" asChild>
+                          <Pressable>
+                            <Text className="text-blue-500 text-sm font-medium">
+                              Regístrate
+                            </Text>
+                          </Pressable>
+                        </Link>
+                      </HStack>
+                    </Center>
+                  )}
+                </VStack>
+              </View>
+              
+              {/* Extra padding when keyboard is visible */}
+              {isKeyboardVisible && <View className="h-20" />}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+      
+      {/* Loading Screen Modal */}
+      <LoadingScreen />
+    </>
   );
 }

@@ -11,6 +11,8 @@ import { useRouter } from 'expo-router';
 import { MailIcon, RefreshCwIcon } from 'lucide-react-native';
 import React, { useEffect, useState, useCallback } from 'react';
 import { Pressable } from 'react-native';
+
+
 interface EmailVerificationProps {
   email: string;
   onSuccess?: (verificationCode: string) => void;
@@ -45,10 +47,6 @@ export function EmailVerification({
   const handleVerify = useCallback(async () => {
     if (code.length === 6) {
       try {
-        console.log("verify the email", {
-          email,
-          code
-        });
         await verifyEmailAsync({
           email: email,
           code: code,

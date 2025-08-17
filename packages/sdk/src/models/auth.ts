@@ -31,6 +31,16 @@ export interface ResendVerificationDto {
   email: string;
 }
 
+export interface ChangePasswordDto {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponseDto {
+  success: boolean;
+  message: string;
+}
+
 
 export interface RegisterCollaboratorDto {
   invitationToken: string;

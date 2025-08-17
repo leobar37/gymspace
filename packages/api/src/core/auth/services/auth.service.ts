@@ -328,7 +328,7 @@ export class AuthService {
       if (error instanceof BusinessException || error instanceof ConflictException) {
         throw error;
       }
-      throw new BusinessException('Registration failed. Please try again.');
+      throw new BusinessException('Error en el registro. Por favor, inténtalo de nuevo.');
     }
   }
 
@@ -352,7 +352,7 @@ export class AuthService {
       console.log(authError);
 
       if (authError) {
-        throw new UnauthorizedException('Invalid credentials');
+        throw new UnauthorizedException('Credenciales inválidas. Por favor, verifica tu correo y contraseña.');
       }
 
       // Get user details
@@ -740,7 +740,7 @@ export class AuthService {
       if (error instanceof BusinessException) {
         throw error;
       }
-      throw new BusinessException('Registration failed. Please try again.');
+      throw new BusinessException('Error en el registro. Por favor, inténtalo de nuevo.');
     }
   }
 }

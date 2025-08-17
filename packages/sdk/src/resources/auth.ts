@@ -8,6 +8,8 @@ import {
   ResendVerificationDto,
   SubscriptionPlan,
   VerifyEmailDto,
+  ChangePasswordDto,
+  ChangePasswordResponseDto,
 } from '../models/auth';
 import { RequestOptions } from '../types';
 import { BaseResource } from './base';
@@ -68,5 +70,16 @@ export class AuthResource extends BaseResource {
 
   async getCurrentSession(options?: RequestOptions): Promise<CurrentSessionResponse> {
     return this.client.get<CurrentSessionResponse>(`${this.basePath}/current-session`, options);
+  }
+
+  async changePassword(
+    data: ChangePasswordDto,
+    options?: RequestOptions,
+  ): Promise<ChangePasswordResponseDto> {
+    return this.client.post<ChangePasswordResponseDto>(
+      `${this.basePath}/change-password`,
+      data,
+      options,
+    );
   }
 }

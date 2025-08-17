@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Body, Param, HttpCode, HttpStatus, Headers } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from '../../core/auth/services/auth.service';
+import { ResetPasswordMeService } from '../../core/auth/services/reset-password-me.service';
 import {
   RegisterOwnerDto,
   LoginDto,
@@ -10,6 +11,8 @@ import {
   RegisterCollaboratorDto,
   GenerateVerificationCodeDto,
   CurrentSessionDto,
+  ChangePasswordDto,
+  ChangePasswordResponseDto,
 } from './dto';
 import { Public } from '../../common/decorators';
 import { AppCtxt } from '../../common/decorators/request-context.decorator';
@@ -22,6 +25,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly cacheService: CacheService,
+    private readonly resetPasswordMeService: ResetPasswordMeService,
   ) {}
 
   @Post('register/owner')
@@ -162,5 +166,26 @@ export class AuthController {
       success: true,
       message: 'Logged out successfully',
     };
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Change password for authenticated user' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Password changed successfully',
+    type: ChangePasswordResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid current password or validation error' })
+  @ApiResponse({ status: 401, description: 'User not authenticated' })
+  async changePassword(
+    @Body() dto: ChangePasswordDto,
+    @AppCtxt() context: IRequestContext,
+  ): Promise<ChangePasswordResponseDto> {
+    return await this.resetPasswordMeService.changePasswordWithValidation(
+      context,
+      dto.currentPassword,
+      dto.newPassword,
+    );
   }
 }

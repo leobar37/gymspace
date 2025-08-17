@@ -31,6 +31,7 @@ export default function OwnerContactInfoScreen() {
     defaultValues: {
       phone: ownerData?.phone || '',
     },
+    mode: 'onChange', // Enable real-time validation
   });
 
   const onSubmit = (data: ContactInfoForm) => {
@@ -56,7 +57,6 @@ export default function OwnerContactInfoScreen() {
             ¿Cómo podemos contactarte?
           </Text>
         </VStack>
-
         {/* Form */}
         <FormProvider {...methods}>
           <VStack className="gap-6">
@@ -73,12 +73,12 @@ export default function OwnerContactInfoScreen() {
           </VStack>
         </FormProvider>
 
-        {/* Continue button */}
-        <Box className="mt-auto pb-8">
+        {/* Continue button - Extra padding for keyboard */}
+        <Box className="mt-auto pb-safe">
           <GluestackButton
             onPress={methods.handleSubmit(onSubmit)}
             disabled={!methods.formState.isValid}
-            className={`${!methods.formState.isValid ? 'opacity-50' : ''}`}
+            className={`w-full ${!methods.formState.isValid ? 'opacity-50' : ''}`}
           >
             <ButtonText>Continuar</ButtonText>
           </GluestackButton>

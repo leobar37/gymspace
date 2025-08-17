@@ -1,5 +1,6 @@
 import { IRequestContext, SubscriptionStatus, UserType } from '@gymspace/shared';
 import { Injectable } from '@nestjs/common';
+import { DurationPeriod, SubscriptionPlan } from '@prisma/client';
 import {
   BusinessException,
   ResourceNotFoundException,
@@ -17,6 +18,7 @@ import {
   StartOnboardingDto,
   UpdateGymSettingsDto,
 } from './dto';
+import ms from 'ms';
 
 @Injectable()
 export class OnboardingService {
@@ -26,6 +28,30 @@ export class OnboardingService {
     private subscriptionsService: SubscriptionsService,
     private emailService: EmailService,
   ) {}
+
+  /**
+   * Calculate subscription end date based on plan duration
+   * This method is reusable when user changes plans
+   */
+  static calculateSubscriptionEndDate(
+    startDate: Date,
+    plan: Pick<SubscriptionPlan, 'duration' | 'durationPeriod'>
+  ): Date {
+    const endDate = new Date(startDate);
+    
+    if (plan.duration && plan.durationPeriod) {
+      if (plan.durationPeriod === DurationPeriod.DAY) {
+        endDate.setTime(endDate.getTime() + (plan.duration * 24 * 60 * 60 * 1000));
+      } else if (plan.durationPeriod === DurationPeriod.MONTH) {
+        endDate.setMonth(endDate.getMonth() + plan.duration);
+      }
+    } else {
+      // Default to 30 days if no duration specified
+      endDate.setTime(endDate.getTime() + (30 * 24 * 60 * 60 * 1000));
+    }
+    
+    return endDate;
+  }
 
   /**
    * Start the onboarding process - creates organization, user, and initial gym
@@ -68,8 +94,6 @@ export class OnboardingService {
     }
     const verificationCode = this.emailService.generateVerificationCode();
     try {
-      console.log('password dto', dto);
-
       // Create everything in a transaction
       const result = await this.prismaService.$transaction(async (tx) => {
         // Create Supabase user
@@ -103,12 +127,19 @@ export class OnboardingService {
             userType: UserType.OWNER,
             emailVerifiedAt: null,
             verificationCode: verificationCode,
-            verificationCodeExpiresAt: new Date(Date.now() + 3 * 60 * 60 * 1000), // 3 hours from now
+            verificationCodeExpiresAt: new Date(Date.now() + ms('3h')), // 3 hours from now
           },
         });
 
         // Generate unique organization code
         const organizationCode = this.emailService.generateOrganizationCode();
+
+        // Calculate subscription end date based on plan duration
+        const subscriptionStartDate = new Date();
+        const subscriptionEndDate = OnboardingService.calculateSubscriptionEndDate(
+          subscriptionStartDate,
+          subscriptionPlan
+        );
 
         // Create organization
         const organization = await tx.organization.create({
@@ -118,8 +149,8 @@ export class OnboardingService {
             organizationCode: organizationCode,
             subscriptionPlanId: subscriptionPlanId,
             subscriptionStatus: SubscriptionStatus.ACTIVE,
-            subscriptionStart: new Date(),
-            subscriptionEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial
+            subscriptionStart: subscriptionStartDate,
+            subscriptionEnd: subscriptionEndDate,
             country: dto.country,
             currency: dto.currency,
             timezone: dto.timezone,
@@ -473,6 +504,28 @@ export class OnboardingService {
   private async createDefaultMembershipPlans(gymId: string, userId: string) {
     const defaultPlans = [
       {
+        name: 'Pase Diario',
+        basePrice: 5.99,
+        durationDays: 1,
+        description: 'Acceso completo a las instalaciones del gimnasio por un día',
+        features: [
+          'Acceso ilimitado al gimnasio',
+          'Acceso a todo el equipamiento',
+          'Acceso a vestuarios',
+        ],
+      },
+      {
+        name: 'Membresía Semanal',
+        basePrice: 19.99,
+        durationDays: 7,
+        description: 'Acceso completo a las instalaciones del gimnasio por una semana',
+        features: [
+          'Acceso ilimitado al gimnasio',
+          'Acceso a todo el equipamiento',
+          'Acceso a vestuarios',
+        ],
+      },
+      {
         name: 'Membresía Mensual',
         basePrice: 49.99,
         durationMonths: 1,
@@ -516,7 +569,8 @@ export class OnboardingService {
           gymId,
           name: plan.name,
           basePrice: plan.basePrice,
-          durationMonths: plan.durationMonths,
+          durationMonths: plan.durationMonths || null,
+          durationDays: plan.durationDays || null,
           description: plan.description,
           features: plan.features,
           status: 'active',

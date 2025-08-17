@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useController } from 'react-hook-form';
+import { useController, useFormContext } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
@@ -13,7 +13,7 @@ import { Icon } from '@/components/ui/icon';
 import { HStack } from '@/components/ui/hstack';
 
 interface FormDatePickerProps<TFieldValues extends FieldValues = FieldValues>
-  extends UseControllerProps<TFieldValues> {
+  extends Omit<UseControllerProps<TFieldValues>, 'control'> {
   label: string;
   description?: string;
   placeholder?: string;
@@ -21,6 +21,7 @@ interface FormDatePickerProps<TFieldValues extends FieldValues = FieldValues>
   minimumDate?: Date;
   maximumDate?: Date;
   locale?: string;
+  control?: UseControllerProps<TFieldValues>['control'];
 }
 
 export const FormDatePicker = <TFieldValues extends FieldValues = FieldValues>({
@@ -37,9 +38,10 @@ export const FormDatePicker = <TFieldValues extends FieldValues = FieldValues>({
   maximumDate,
   locale = 'es',
 }: FormDatePickerProps<TFieldValues>) => {
+  const formContext = useFormContext<TFieldValues>();
   const { field, fieldState } = useController({
     name,
-    control,
+    control: control || formContext.control,
     rules,
     defaultValue,
     shouldUnregister

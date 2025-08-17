@@ -27,7 +27,7 @@ export default function WelcomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
-      <View className="flex-1 px-6 py-8">
+      <View className="flex-1 px-6 py-8 mt-28">
         <VStack className="flex-1 gap-8">
           {/* Success animation */}
           <Center>

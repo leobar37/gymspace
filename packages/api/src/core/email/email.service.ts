@@ -30,15 +30,13 @@ export class EmailService {
     const resendApiKey = this.configService.get<string>('resend.apiKey');
     this.fromEmail = this.configService.get<string>('resend.fromEmail');
 
-    if (!resendApiKey && !this.isDev) {
-      throw new Error(
-        'Resend API key is missing. Please check RESEND_API_KEY environment variable.',
-      );
-    }
+    // if (!resendApiKey && !this.isDev) {
+    //   throw new Error(
+    //     'Resend API key is missing. Please check RESEND_API_KEY environment variable.',
+    //   );
+    // }
 
-    if (!this.isDev) {
-      this.resend = new Resend(resendApiKey);
-    }
+    this.resend = new Resend(resendApiKey);
   }
 
   /**
@@ -46,19 +44,6 @@ export class EmailService {
    */
   async sendVerificationCode(email: string, code: string, name: string): Promise<void> {
     try {
-      // In development mode, just log to console
-      if (this.isDev) {
-        console.log('='.repeat(60));
-        console.log('📧 EMAIL VERIFICATION CODE (DEV MODE)');
-        console.log('='.repeat(60));
-        console.log(`📩 To: ${email}`);
-        console.log(`👤 Name: ${name}`);
-        console.log(`🔑 Verification Code: ${code}`);
-        console.log(`⏰ Expires: ${new Date(Date.now() + 10 * 60 * 1000).toISOString()}`);
-        console.log('='.repeat(60));
-        return;
-      }
-
       // Generate email content with the OTP code
       const emailContent = this.generateVerificationCodeEmail(code, name);
 
@@ -95,21 +80,21 @@ export class EmailService {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Email Verification - GymSpace</title>
+        <title>Verificación de Correo Electrónico - GymSpace</title>
       </head>
       <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px 30px;">
           <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #2563eb; margin: 0; font-size: 28px;">GymSpace</h1>
-            <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Gym Management Made Simple</p>
+            <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Gestión de gimnasios simplificada</p>
           </div>
           
-          <h2 style="color: #333; margin-bottom: 20px; font-size: 24px;">Email Verification</h2>
+          <h2 style="color: #333; margin-bottom: 20px; font-size: 24px;">Verificación de correo electrónico</h2>
           
-          <p style="color: #555; font-size: 16px; line-height: 1.5;">Hello ${name},</p>
+          <p style="color: #555; font-size: 16px; line-height: 1.5;">Hola ${name},</p>
           
           <p style="color: #555; font-size: 16px; line-height: 1.5;">
-            Thank you for registering with GymSpace. To complete your registration, please use the following verification code:
+            Gracias por registrarte en GymSpace. Para completar tu registro, por favor utiliza el siguiente código de verificación:
           </p>
           
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; margin: 30px 0; border-radius: 10px;">
@@ -118,24 +103,24 @@ export class EmailService {
           
           <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0;">
             <p style="color: #856404; margin: 0; font-size: 14px;">
-              ⏰ <strong>Important:</strong> This code will expire in 10 minutes for security reasons.
+              ⏰ <strong>Importante:</strong> Este código expirará en 10 minutos por razones de seguridad.
             </p>
           </div>
           
           <p style="color: #555; font-size: 16px; line-height: 1.5;">
-            If you didn't request this verification code, please ignore this email.
+            Si no solicitaste este código de verificación, por favor ignora este correo.
           </p>
           
           <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
           
           <p style="color: #666; font-size: 14px; line-height: 1.5;">
-            Best regards,<br>
-            <strong>The GymSpace Team</strong>
+            Saludos cordiales,<br>
+            <strong>El equipo de GymSpace</strong>
           </p>
           
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
             <p style="color: #999; font-size: 12px; margin: 0;">
-              © 2024 GymSpace. All rights reserved.
+              © 2024 GymSpace. Todos los derechos reservados.
             </p>
           </div>
         </div>
@@ -154,19 +139,6 @@ export class EmailService {
     ownerName: string,
   ): Promise<void> {
     try {
-      // In development mode, just log to console
-      if (this.isDev) {
-        console.log('='.repeat(60));
-        console.log('🏢 ORGANIZATION CODE EMAIL (DEV MODE)');
-        console.log('='.repeat(60));
-        console.log(`📩 To: ${email}`);
-        console.log(`👤 Owner: ${ownerName}`);
-        console.log(`🏢 Organization: ${organizationName}`);
-        console.log(`🔑 Organization Code: ${organizationCode}`);
-        console.log('='.repeat(60));
-        return;
-      }
-
       // Generate email content
       const emailContent = this.generateOrganizationCodeEmail(
         organizationCode,

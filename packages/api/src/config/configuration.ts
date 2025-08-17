@@ -57,7 +57,7 @@ export default () => ({
   // Email (Resend)
   resend: {
     apiKey: process.env.RESEND_API_KEY,
-    fromEmail: process.env.RESEND_FROM_EMAIL || 'GymSpace <onboarding@resend.dev>',
+    fromEmail: process.env.RESEND_FROM_EMAIL || 'GymSpace <gymspace@theelena.me>',
   },
 
   // Rate limiting

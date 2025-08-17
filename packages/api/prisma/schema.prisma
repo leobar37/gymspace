@@ -100,12 +100,19 @@ enum PaymentStatus {
     unpaid
 }
 
+enum DurationPeriod {
+    DAY
+    MONTH
+}
+
 // Models
 model SubscriptionPlan {
     id               String    @id @default(uuid())
     name             String
     price            Json
     billingFrequency String    @map("billing_frequency")
+    duration         Int?
+    durationPeriod   DurationPeriod? @map("duration_period")
     maxGyms          Int       @map("max_gyms")
     maxClientsPerGym Int       @map("max_clients_per_gym")
     maxUsersPerGym   Int       @map("max_users_per_gym")
