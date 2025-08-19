@@ -1,3 +1,30 @@
+// Function to parse Redis URL
+function parseRedisUrl(redisUrl?: string) {
+  if (!redisUrl) {
+    return {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      password: process.env.REDIS_PASSWORD || undefined,
+    };
+  }
+
+  try {
+    const url = new URL(redisUrl);
+    return {
+      host: url.hostname,
+      port: parseInt(url.port || '6379', 10),
+      password: url.password || undefined,
+    };
+  } catch (error) {
+    console.error('Invalid REDIS_URL format, falling back to individual values', error);
+    return {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      password: process.env.REDIS_PASSWORD || undefined,
+    };
+  }
+}
+
 export default () => ({
   // Application
   app: {
@@ -20,11 +47,7 @@ export default () => ({
   },
 
   // Redis
-  redis: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379', 10),
-    password: process.env.REDIS_PASSWORD || undefined,
-  },
+  redis: parseRedisUrl(process.env.REDIS_URL),
 
   // Supabase
   supabase: {

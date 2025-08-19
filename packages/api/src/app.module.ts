@@ -8,6 +8,7 @@ import { DatabaseModule } from './core/database/database.module';
 import { AuthModule } from './core/auth/auth.module';
 import { CacheModule } from './core/cache/cache.module';
 import { CommonModule } from './common/common.module';
+import { LoggerModule } from './core/logger/logger.module';
 
 // Business modules
 import { HealthModule } from './modules/health/health.module';
@@ -35,6 +36,7 @@ import { SuppliersModule } from './modules/suppliers/suppliers.module';
 // Global providers
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { RequestContextInterceptor } from './common/interceptors/request-context.interceptor';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { AuthGuard } from './core/auth/guards/auth.guard';
 // Configuration
 import configuration from './config/configuration';
@@ -51,6 +53,7 @@ import validationSchema from './config/validation.schema';
     }),
 
     // Core modules
+    LoggerModule,
     DatabaseModule,
     AuthModule,
     CacheModule,
@@ -85,6 +88,10 @@ import validationSchema from './config/validation.schema';
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

@@ -1,0 +1,22 @@
+{
+    "name": "api-infra",
+    "main": "index.ts",
+    "scripts": {
+        "deploy": "pulumi up",
+        "deploy:preview": "pulumi preview",
+        "deploy:dev": "pulumi stack select dev && pulumi up",
+        "deploy:prod": "pulumi stack select prod && pulumi up",
+        "destroy": "pulumi destroy",
+        "stack:list": "pulumi stack ls",
+        "stack:output": "pulumi stack output",
+        "logs": "gcloud run services logs read gymspace-api-$(pulumi stack --show-name) --region=$(pulumi config get gcp:region || echo 'us-central1')"
+    },
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@pulumi/gcp": "^8.40.0",
+        "@pulumi/pulumi": "^3.113.0"
+    }
+}

@@ -1,14 +1,29 @@
 {
   "name": "@gymspace/sdk",
   "version": "1.0.0",
-  "private": false,
   "description": "GymSpace TypeScript SDK for API integration",
+  "author": "GymSpace Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gymspace/gymspace.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/gymspace/gymspace/tree/main/packages/sdk",
+  "bugs": {
+    "url": "https://github.com/gymspace/gymspace/issues"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "source":"./src/index.ts",
+      "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
@@ -21,20 +36,22 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "prepublishOnly": "pnpm run clean && pnpm run build"
   },
   "dependencies": {
-    "@gymspace/shared": "workspace:*",
+    "@gymspace/shared": "^1.0.0",
     "axios": "^1.6.5",
-    "zod": "catalog:"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@vitest/ui": "catalog:",
+    "@types/minimatch": "^6.0.0",
+    "@types/node": "^20.19.9",
+    "@vitest/ui": "^2.0.5",
     "rimraf": "^5.0.5",
-    "tsup": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "tsup": "^8.5.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.0.5"
   },
   "peerDependencies": {
     "axios": ">=1.0.0"
@@ -43,6 +60,17 @@
     "node": ">=18"
   },
   "publishConfig": {
-    "access": "public"
-  }
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "gymspace",
+    "sdk",
+    "api",
+    "client",
+    "typescript",
+    "gym",
+    "management",
+    "fitness"
+  ]
 }

@@ -1,0 +1,5 @@
+config:
+  api-infra:dopplerToken:
+    secure: AAABAIYHWR0laoO+qRzLTPyH6ML1SWal9Xcf5a3CUwa/xLZd/ti+WpqSf/l9enzjlTnp9IwEJQeYMlcOjHwLZWUo0XVtPodeq6Qu1a4rI001bqn1ew==
+  gcp:project: meta-episode-466920-h4
+  gcp:region: us-central1

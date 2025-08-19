@@ -52,6 +52,7 @@ function createExtendedPrismaClient(configService: ConfigService) {
         url: url.toString(),
       },
     },
+    log: configService.get<string>('NODE_ENV') === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
 
   return {

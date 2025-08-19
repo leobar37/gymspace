@@ -10,9 +10,18 @@ export default Joi.object({
   // Database
   DATABASE_URL: Joi.string().required(),
 
-  // Redis
-  REDIS_HOST: Joi.string().default('localhost'),
-  REDIS_PORT: Joi.number().default(6379),
+  // Redis - supports either REDIS_URL or individual host/port/password
+  REDIS_URL: Joi.string().uri({ scheme: ['redis'] }).optional(),
+  REDIS_HOST: Joi.string().when('REDIS_URL', {
+    is: Joi.exist(),
+    then: Joi.optional(),
+    otherwise: Joi.string().default('localhost'),
+  }),
+  REDIS_PORT: Joi.number().when('REDIS_URL', {
+    is: Joi.exist(),
+    then: Joi.optional(),
+    otherwise: Joi.number().default(6379),
+  }),
   REDIS_PASSWORD: Joi.string().allow('').optional(),
 
   // Supabase

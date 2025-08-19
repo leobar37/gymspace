@@ -4,7 +4,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "DARK_MODE=media DARK_MODE=media expo start --android",
+    "android": "DARK_MODE=media expo start --android",
     "ios": "DARK_MODE=media DARK_MODE=media expo start --ios",
     "web": "DARK_MODE=media DARK_MODE=media expo start --web"
   },
@@ -70,10 +70,10 @@
     "react-native-css-interop": "^0.1.22",
     "react-native-date-picker": "^5.0.13",
     "react-native-gesture-handler": "~2.24.0",
-    "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-reanimated": "~3.17.5",
     "react-native-reanimated-carousel": "^4.0.3",
     "react-native-safe-area-context": "^5.4.0",
+    "react-native-screens": "^4.14.1",
     "react-native-svg": "15.11.2",
     "react-native-web": "^0.20.0",
     "tailwind-merge": "^3.3.1",

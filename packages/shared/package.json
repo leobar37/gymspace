@@ -1,8 +1,23 @@
 {
   "name": "@gymspace/shared",
   "version": "1.0.0",
-  "private": true,
   "description": "Shared types and interfaces for GymSpace",
+  "author": "GymSpace Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gymspace/gymspace.git",
+    "directory": "packages/shared"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -18,14 +33,24 @@
     "build": "tsup && tsc --emitDeclarationOnly",
     "dev": "tsup --watch",
     "clean": "rimraf dist",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm run clean && pnpm run build"
   },
   "devDependencies": {
+    "@types/minimatch": "^6.0.0",
     "rimraf": "^5.0.5",
-    "tsup": "catalog:",
-    "typescript": "catalog:"
+    "tsup": "^8.5.0",
+    "typescript": "^5.7.2"
   },
   "dependencies": {
-    "zod": "catalog:"
-  }
+    "zod": "^3.25.76"
+  },
+  "keywords": [
+    "gymspace",
+    "shared",
+    "types",
+    "typescript",
+    "gym",
+    "management"
+  ]
 }

@@ -201,6 +201,10 @@ buck-out/
 # CocoaPods
 /ios/Pods/
 
+# Native folders (using Prebuild/CNG)
+/android/
+/ios/
+
 # Expo
 .expo/
 .expo-shared/

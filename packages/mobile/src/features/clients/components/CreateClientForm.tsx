@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, Pressable, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { z } from 'zod';
 import {
   FormInput,
@@ -192,17 +191,17 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAwareScrollView
+      <KeyboardAvoidingView 
         className="flex-1"
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        enableOnAndroid={true}
-        enableAutomaticScroll={true}
-        extraScrollHeight={Platform.OS === 'ios' ? 20 : 100}
-        extraHeight={Platform.OS === 'android' ? 150 : 0}
-        enableResetScrollToCoords={false}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         <View className="flex-1 p-4">
           <FormProvider {...methods}>
             <VStack className="gap-6">
@@ -372,7 +371,8 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
             </VStack>
           </FormProvider>
         </View>
-      </KeyboardAwareScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

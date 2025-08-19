@@ -17,15 +17,16 @@
     "dev:docker": "docker-compose -f docker/docker-compose.yml up -d",
     "build": "pnpm -r run build",
     "build:landing": "pnpm --filter @gymspace/landing run build",
+    "build:android": "cd packages/mobile && npx expo prebuild --platform android && cd android && ./gradlew assembleRelease",
     "test": "pnpm -r run test",
     "lint": "pnpm -r run lint",
     "format": "pnpm -r run format",
     "clean": "pnpm -r run clean && rm -rf node_modules",
     "prepare": "husky install",
-    "generate:api": "pnpm --filter @gymspace/api run openapi:generate && pnpm generate:client",
-    "generate:client": "pnpm --filter @gymspace/api-client run generate",
     "mcp:start": "node start-mcp.js",
-    "mcp:test": "cd mcp && node index.js"
+    "mcp:test": "cd mcp && node index.js",
+    "android": "pnpm --filter @gymspace/mobile run android",
+    "ios": "expo run:ios"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -52,5 +53,10 @@
     "overrides": {
       "nativewind": "4.1.23"
     }
+  },
+  "dependencies": {
+    "expo": "~53.0.20",
+    "react": "19.0.0",
+    "react-native": "0.79.5"
   }
 }

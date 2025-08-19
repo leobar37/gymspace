@@ -1,0 +1,8 @@
+{
+  "android": {
+    "package": "com.leobar37.gymspace"
+  },
+  "ios": {
+    "bundleIdentifier": "com.leobar37.gymspace"
+  }
+}

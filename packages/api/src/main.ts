@@ -9,14 +9,23 @@ import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { networkInterfaces } from 'os';
+import { LoggerService } from './core/logger/logger.service';
 
 async function bootstrap() {
+  // Create app with custom logger configuration
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({
-      logger: true,
+      logger: false, // Disable Fastify's built-in logger
     }),
+    {
+      bufferLogs: true, // Buffer logs until custom logger is ready
+    }
   );
+
+  // Get and use custom logger
+  const logger = app.get(LoggerService);
+  app.useLogger(logger);
 
   const configService = app.get(ConfigService);
 
@@ -156,13 +165,22 @@ async function bootstrap() {
 
   await app.listen(port, '0.0.0.0');
 
-  console.log(`🚀 Application running:`);
-  console.log(`   Local:   http://localhost:${port}/${apiPrefix}`);
-  if (lanIp) console.log(`   LAN:     http://${lanIp}:${port}/${apiPrefix}`);
-  console.log(
-    `📚 Swagger: http://localhost:${port}/${apiPrefix}/docs` +
-      (lanIp ? ` | http://${lanIp}:${port}/${apiPrefix}/docs` : ''),
-  );
+  // Log startup information
+  logger.log(`Application started successfully`, 'Bootstrap');
+  logger.log(`Local: http://localhost:${port}/${apiPrefix}`, 'Bootstrap');
+  if (lanIp) {
+    logger.log(`LAN: http://${lanIp}:${port}/${apiPrefix}`, 'Bootstrap');
+  }
+  logger.log(`Swagger: http://localhost:${port}/${apiPrefix}/docs`, 'Bootstrap');
+  
+  // Log environment info for Google Cloud
+  if (configService.get('GOOGLE_CLOUD_PROJECT')) {
+    logger.log(`Google Cloud Project: ${configService.get('GOOGLE_CLOUD_PROJECT')}`, 'Bootstrap');
+    logger.log('Google Cloud Logging enabled', 'Bootstrap');
+  }
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Failed to start application:', error);
+  process.exit(1);
+});
