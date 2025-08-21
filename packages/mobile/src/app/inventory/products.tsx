@@ -1,6 +1,5 @@
 import { ProductCard } from '@/components/inventory/ProductCard';
 import { ProductFilters } from '@/components/inventory/ProductFilters';
-import { ProductTypeSelector } from '@/components/inventory/ProductTypeSelector';
 import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -22,7 +21,8 @@ const { width: screenWidth } = Dimensions.get('window');
 const CARD_PADDING = 8;
 const CONTAINER_PADDING = 16;
 const CARDS_PER_ROW = 2;
-const CARD_WIDTH = (screenWidth - (CONTAINER_PADDING * 2) - (CARD_PADDING * (CARDS_PER_ROW + 1))) / CARDS_PER_ROW;
+const CARD_WIDTH =
+  (screenWidth - CONTAINER_PADDING * 2 - CARD_PADDING * (CARDS_PER_ROW + 1)) / CARDS_PER_ROW;
 
 export default function ProductsScreen() {
   // Check authentication and redirect if not authenticated
@@ -31,39 +31,32 @@ export default function ProductsScreen() {
   const [filters, setFilters] = useState<SearchProductsParams>({ page: 1, limit: 20 });
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showProductTypeSelector, setShowProductTypeSelector] = useState(false);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    isFetching,
-    refetch
-  } = useProducts({
+  const { data, isLoading, isError, error, isFetching, refetch } = useProducts({
     ...filters,
     search: searchTerm || undefined,
   });
 
   const handleFiltersChange = useCallback((newFilters: SearchProductsParams) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       ...newFilters,
       page: 1, // Reset to first page when filters change
     }));
   }, []);
 
-  console.log("data", JSON.stringify(data?.items?.slice(0, 1), null, 3));
-
-  const handleSearch = useCallback((search: string) => {
-    if (search !== searchTerm) {
-      setSearchTerm(search);
-      setFilters(prev => ({
-        ...prev,
-        page: 1, // Reset to first page when searching
-      }));
-    }
-  }, [searchTerm]);
+  const handleSearch = useCallback(
+    (search: string) => {
+      if (search !== searchTerm) {
+        setSearchTerm(search);
+        setFilters((prev) => ({
+          ...prev,
+          page: 1, // Reset to first page when searching
+        }));
+      }
+    },
+    [searchTerm],
+  );
 
   const handleProductPress = useCallback((product: Product) => {
     // Navigate to product detail or add to cart
@@ -76,105 +69,104 @@ export default function ProductsScreen() {
   }, []);
 
   const handleAddProduct = useCallback(() => {
-    setShowProductTypeSelector(true);
-  }, []);
-
-  const handleSelectProductType = useCallback((type: 'product' | 'service') => {
-    // Navigate to the appropriate creation screen based on type
-    router.push(`/inventory/products/new?type=${type}`);
+    router.push('/inventory/products/new');
   }, []);
 
   const handleLoadMore = useCallback(() => {
     if (data?.hasNextPage && !isFetching) {
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
         page: (prev.page || 1) + 1,
       }));
     }
   }, [data?.hasNextPage, isFetching]);
 
-  const renderProductCard = useCallback(({ item, index }: { item: Product; index: number }) => (
-    <View
-      style={{
-        width: CARD_WIDTH,
-        marginLeft: index % CARDS_PER_ROW === 0 ? 0 : CARD_PADDING,
-        marginBottom: CARD_PADDING,
-      }}
-    >
-      <ProductCard
-        product={item}
-        onPress={handleProductPress}
-        onLongPress={handleProductLongPress}
-        compact={false}
-      />
-    </View>
-  ), [handleProductPress, handleProductLongPress]);
+  const renderProductCard = useCallback(
+    ({ item, index }: { item: Product; index: number }) => (
+      <View
+        style={{
+          width: CARD_WIDTH,
+          marginLeft: index % CARDS_PER_ROW === 0 ? 0 : CARD_PADDING,
+          marginBottom: CARD_PADDING,
+        }}
+      >
+        <ProductCard
+          product={item}
+          onPress={handleProductPress}
+          onLongPress={handleProductLongPress}
+          compact={false}
+        />
+      </View>
+    ),
+    [handleProductPress, handleProductLongPress],
+  );
 
   const handleToggleFilters = useCallback(() => {
-    setShowFilters(prev => !prev);
+    setShowFilters((prev) => !prev);
   }, []);
 
-  const renderHeader = useCallback(() => (
-    <VStack space="sm">
-      {/* Back Button and Title */}
-      <HStack className="items-center justify-between px-4 py-2">
-        <HStack className="items-center">
-          <Button
-            className='text-white'
-            size="sm"
-            onPress={() => router.back()}
-          >
-            <Icon as={ChevronLeftIcon} className="w-5 h-5 text-white" />
+  const renderHeader = useCallback(
+    () => (
+      <VStack space="sm">
+        {/* Back Button and Title */}
+        <HStack className="items-center justify-between px-4 py-2">
+          <HStack className="items-center">
+            <Button className="text-white" size="sm" onPress={() => router.back()}>
+              <Icon as={ChevronLeftIcon} className="w-5 h-5 text-white" />
+            </Button>
+            <Text className="text-xl font-semibold text-gray-900 ml-2">Productos</Text>
+          </HStack>
+          <Button size="sm" onPress={handleAddProduct}>
+            <Icon as={PlusIcon} className="w-4 h-4 mr-2 text-white" />
+            <ButtonText>Agregar</ButtonText>
           </Button>
-          <Text className="text-xl font-semibold text-gray-900 ml-2">
-            Productos
-          </Text>
         </HStack>
-        <Button
-          size="sm"
-          onPress={handleAddProduct}
-        >
-          <Icon as={PlusIcon} className="w-4 h-4 mr-2 text-white" />
-          <ButtonText>Agregar</ButtonText>
-        </Button>
-      </HStack>
 
-      <ProductFilters
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        onSearch={handleSearch}
-        showFilters={showFilters}
-        onToggleFilters={handleToggleFilters}
-      />
+        <ProductFilters
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          onSearch={handleSearch}
+          showFilters={showFilters}
+          onToggleFilters={handleToggleFilters}
+        />
 
-      {/* Results Summary */}
-      {data && (
-        <HStack className="justify-between items-center px-4 py-2">
-          <Text className="text-sm text-gray-600">
-            {data.total} producto{data.total !== 1 ? 's' : ''} encontrado{data.total !== 1 ? 's' : ''}
-          </Text>
-          {data.totalPages > 1 && (
-            <Text className="text-sm text-gray-500">
-              Página {data.page} de {data.totalPages}
+        {/* Results Summary */}
+        {data && (
+          <HStack className="justify-between items-center px-4 py-2">
+            <Text className="text-sm text-gray-600">
+              {data.total} producto{data.total !== 1 ? 's' : ''} encontrado
+              {data.total !== 1 ? 's' : ''}
             </Text>
-          )}
-        </HStack>
-      )}
-    </VStack>
-  ), [
-    filters,
-    showFilters,
-    data,
-    handleFiltersChange,
-    handleSearch,
-    handleAddProduct,
-    handleToggleFilters,
-  ]);
+            {data.totalPages > 1 && (
+              <Text className="text-sm text-gray-500">
+                Página {data.page} de {data.totalPages}
+              </Text>
+            )}
+          </HStack>
+        )}
+      </VStack>
+    ),
+    [
+      filters,
+      showFilters,
+      data,
+      handleFiltersChange,
+      handleSearch,
+      handleAddProduct,
+      handleToggleFilters,
+    ],
+  );
 
   const renderEmptyState = useCallback(() => {
     if (isLoading) return null;
 
-    const hasFilters = !!(filters.search || filters.categoryId || filters.status || filters.inStock || searchTerm);
+    const hasFilters = !!(
+      filters.search ||
+      filters.categoryId ||
+      filters.status ||
+      filters.inStock ||
+      searchTerm
+    );
 
     return (
       <View className="flex-1 items-center justify-center py-12 px-8">
@@ -190,16 +182,12 @@ export default function ProductsScreen() {
             <Text className="text-gray-600 text-center">
               {hasFilters
                 ? 'Intenta ajustar los filtros de búsqueda'
-                : 'Comienza agregando tu primer producto al inventario'
-              }
+                : 'Comienza agregando tu primer producto al inventario'}
             </Text>
           </VStack>
 
           {!hasFilters && (
-            <Button
-              onPress={handleAddProduct}
-              className="mt-4"
-            >
+            <Button onPress={handleAddProduct} className="mt-4">
               <Icon as={PlusIcon} className="w-4 h-4 mr-2 text-white" />
               <ButtonText>Agregar Producto</ButtonText>
             </Button>
@@ -266,11 +254,7 @@ export default function ProductsScreen() {
                 Error al cargar los productos: {error?.message || 'Error desconocido'}
               </AlertText>
             </Alert>
-            <Button
-              variant="outline"
-              onPress={() => refetch()}
-              className="mt-4"
-            >
+            <Button variant="outline" onPress={() => refetch()} className="mt-4">
               <ButtonText>Reintentar</ButtonText>
             </Button>
           </View>
@@ -280,7 +264,7 @@ export default function ProductsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" >
+    <SafeAreaView className="flex-1 bg-gray-50">
       <FlatList
         data={data?.items || []}
         renderItem={renderProductCard}
@@ -309,12 +293,6 @@ export default function ProductsScreen() {
         maxToRenderPerBatch={10}
         windowSize={10}
         initialNumToRender={8}
-      />
-      
-      <ProductTypeSelector
-        isOpen={showProductTypeSelector}
-        onClose={() => setShowProductTypeSelector(false)}
-        onSelectType={handleSelectProductType}
       />
     </SafeAreaView>
   );
