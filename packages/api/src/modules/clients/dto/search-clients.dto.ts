@@ -1,6 +1,6 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class PaginationQueryDto {
   @ApiProperty({ default: 1, minimum: 1, description: 'Page number' })
@@ -33,8 +33,11 @@ export class SearchClientsDto extends PartialType(PaginationQueryDto) {
 
   @ApiProperty({ example: true, required: false })
   @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
+  @IsNotEmpty()
+  @Transform(({ obj, key }) => {
+    const value = obj[key];
+    return value === 'true' || value === true;
+  })
   activeOnly?: boolean;
 
   @ApiProperty({

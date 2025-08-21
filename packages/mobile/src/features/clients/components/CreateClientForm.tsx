@@ -1,27 +1,28 @@
-import React from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform, Pressable, Keyboard } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { z } from 'zod';
 import {
-  FormInput,
   FormDatePicker,
-  FormSelect,
+  FormInput,
   FormProvider,
+  FormSelect,
   useForm,
   zodResolver,
 } from '@/components/forms';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Heading } from '@/components/ui/heading';
-import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
+import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { ChevronLeft } from 'lucide-react-native';
-import { useClientsController, ClientFormData } from '../controllers/clients.controller';
-import { router } from 'expo-router';
+import { VStack } from '@/components/ui/vstack';
 import { useDocumentTypes, useDocumentValidator } from '@/config/ConfigContext';
 import { FileSelector } from '@/features/files/components/FileSelector';
+import { ScreenForm } from '@/shared/components/ScreenForm';
 import { useLoadingScreen } from '@/shared/loading-screen/useLoadingScreen';
+import { router } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
+import React from 'react';
+import { KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { z } from 'zod';
+import { ClientFormData, useClientsController } from '../controllers/clients.controller';
 
 // Create the validation schema as a function to use document validator
 const createClientSchema = (validateDocument: (type: string, value: string) => { isValid: boolean; error?: string }) => z.object({
@@ -189,6 +190,30 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
     });
   };
 
+  const actions = (
+    <Button
+      onPress={methods.handleSubmit(onSubmit)}
+      disabled={isLoading}
+      size="lg"
+      action="primary"
+      variant="solid"
+      className="w-full"
+    >
+      {isLoading ? (
+        <>
+          <ButtonSpinner />
+          <ButtonText>
+            {isEditing ? 'Actualizando...' : 'Creando...'}
+          </ButtonText>
+        </>
+      ) : (
+        <ButtonText>
+          {isEditing ? 'Actualizar Cliente' : 'Crear Cliente'}
+        </ButtonText>
+      )}
+    </Button>
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView 
@@ -196,14 +221,8 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-        <View className="flex-1 p-4">
-          <FormProvider {...methods}>
+        <FormProvider {...methods}>
+          <ScreenForm actions={actions}>
             <VStack className="gap-6">
               {/* Back Button and Title */}
               <HStack className="items-center gap-2 mb-2">
@@ -345,33 +364,9 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                   maxLength={500}
                 />
               </VStack>
-
-              {/* Submit button */}
-              <Button
-                onPress={methods.handleSubmit(onSubmit)}
-                disabled={isLoading}
-                size="lg"
-                action="primary"
-                variant="solid"
-                className="w-full mt-6 mb-8"
-              >
-                {isLoading ? (
-                  <>
-                    <ButtonSpinner />
-                    <ButtonText>
-                      {isEditing ? 'Actualizando...' : 'Creando...'}
-                    </ButtonText>
-                  </>
-                ) : (
-                  <ButtonText>
-                    {isEditing ? 'Actualizar Cliente' : 'Crear Cliente'}
-                  </ButtonText>
-                )}
-              </Button>
             </VStack>
-          </FormProvider>
-        </View>
-        </ScrollView>
+          </ScreenForm>
+        </FormProvider>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

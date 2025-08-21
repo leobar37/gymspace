@@ -1,7 +1,6 @@
 import {
   FormInput,
   FormProvider,
-  FormSelect,
   useForm,
   zodResolver
 } from '@/components/forms';
@@ -32,7 +31,7 @@ const COUNTRY_OPTIONS = [
     currency: 'PEN',
     currencySymbol: 'S/',
     flag: '🇵🇪',
-    timezones: ['America/Lima']
+    timezone: 'America/Lima'
   },
   {
     value: 'EC',
@@ -40,40 +39,28 @@ const COUNTRY_OPTIONS = [
     currency: 'USD',
     currencySymbol: '$',
     flag: '🇪🇨',
-    timezones: ['America/Guayaquil', 'Pacific/Galapagos']
+    timezone: 'America/Guayaquil'
   },
 ];
 
-// Timezone options based on selected country
-const getTimezoneOptions = (country: string) => {
-  const countryData = COUNTRY_OPTIONS.find(c => c.value === country);
-  if (!countryData) return [];
-
-  return countryData.timezones.map(tz => ({
-    label: tz.replace('America/', '').replace('Pacific/', '').replace(/_/g, ' '),
-    value: tz
-  }));
-};
 
 // Validation schema
 const organizationSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   country: z.string().min(2, 'Selecciona un país'),
-  timezone: z.string().min(1, 'Selecciona una zona horaria'),
 });
 
 type OrganizationForm = z.infer<typeof organizationSchema>;
 
 export default function OrganizationSetupScreen() {
   const { setOrganizationData, ownerData, setTempAuthTokens } = useOnboardingStore();
-  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [selectedCountry, setSelectedCountry] = useState<string>('PE'); // Default to Peru
   // Initialize form
   const methods = useForm<OrganizationForm>({
     resolver: zodResolver(organizationSchema),
     defaultValues: {
       name: '',
-      country: '',
-      timezone: '',
+      country: 'PE', // Default to Peru
     },
   });
 
@@ -108,7 +95,7 @@ export default function OrganizationSetupScreen() {
         name: data.name,
         country: country.value,
         currency: country.currency,
-        timezone: data.timezone,
+        timezone: country.timezone,
       });
       try {
         const result = await startOnboarding.mutateAsync({
@@ -119,7 +106,7 @@ export default function OrganizationSetupScreen() {
           organizationName: data.name,
           password: ownerData.password,
           phone: ownerData.phone,
-          timezone: data.timezone
+          timezone: country.timezone
         })
         console.log("result", result);
         router.replace('/owner/email-verification');
@@ -131,15 +118,10 @@ export default function OrganizationSetupScreen() {
 
   const selectedCountryInfo = COUNTRY_OPTIONS.find(c => c.value === selectedCountry);
 
-  // Reset timezone when country changes
+  // Set default country on component mount
   useEffect(() => {
-    if (selectedCountry) {
-      const timezones = getTimezoneOptions(selectedCountry);
-      if (timezones.length > 0) {
-        methods.setValue('timezone', timezones[0].value);
-      }
-    }
-  }, [selectedCountry, methods]);
+    methods.setValue('country', 'PE');
+  }, [methods]);
 
   return (
     <OnboardingStepsContainer
@@ -215,15 +197,6 @@ export default function OrganizationSetupScreen() {
                   </VStack>
                 </VStack>
 
-                {/* Timezone selection */}
-                {selectedCountry && (
-                  <FormSelect
-                    name="timezone"
-                    label="Zona horaria"
-                    placeholder="Selecciona una zona horaria"
-                    options={getTimezoneOptions(selectedCountry)}
-                  />
-                )}
 
                 {/* Currency preview */}
                 {selectedCountryInfo && (

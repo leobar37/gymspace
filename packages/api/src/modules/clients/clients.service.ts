@@ -316,6 +316,11 @@ export class ClientsService {
       };
     }
 
+    console.log('where', {
+      where,
+      dto,
+    });
+
     // Get clients with pagination
     const clients = await this.prismaService.gymClient.findMany({
       where,

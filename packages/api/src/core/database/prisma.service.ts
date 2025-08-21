@@ -27,32 +27,17 @@ function createExtendedPrismaClient(configService: ConfigService) {
   // Parse the URL to add connection pool settings
   const url = new URL(databaseUrl);
 
-  // Add connection pool parameters to ensure efficient connection management
-  // These settings help prevent connection pool exhaustion
-  url.searchParams.set(
-    'connection_limit',
-    configService.get<number>('database.connectionLimit', 25).toString(),
-  );
-  url.searchParams.set(
-    'pool_timeout',
-    configService.get<number>('database.poolTimeout', 20).toString(),
-  );
-  url.searchParams.set(
-    'connect_timeout',
-    configService.get<number>('database.connectTimeout', 10).toString(),
-  );
-  url.searchParams.set(
-    'socket_timeout',
-    configService.get<number>('database.socketTimeout', 30).toString(),
-  );
-
   const prismaClient = new PrismaClient({
     datasources: {
       db: {
         url: url.toString(),
       },
     },
-    log: configService.get<string>('NODE_ENV') === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    // Add transaction timeout configuration
+    transactionOptions: {
+      timeout: 15000, // 15 seconds timeout for transactions
+      maxWait: 5000, // 5 seconds max wait to start transaction
+    },
   });
 
   return {

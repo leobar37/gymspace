@@ -20,7 +20,7 @@ async function bootstrap() {
     }),
     {
       bufferLogs: true, // Buffer logs until custom logger is ready
-    }
+    },
   );
 
   // Get and use custom logger
@@ -172,7 +172,7 @@ async function bootstrap() {
     logger.log(`LAN: http://${lanIp}:${port}/${apiPrefix}`, 'Bootstrap');
   }
   logger.log(`Swagger: http://localhost:${port}/${apiPrefix}/docs`, 'Bootstrap');
-  
+
   // Log environment info for Google Cloud
   if (configService.get('GOOGLE_CLOUD_PROJECT')) {
     logger.log(`Google Cloud Project: ${configService.get('GOOGLE_CLOUD_PROJECT')}`, 'Bootstrap');

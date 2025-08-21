@@ -167,132 +167,140 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    // Fetch recent activities from different sources within a transaction
-    const [recentCheckIns, recentClients, recentContracts, expiredContracts] =
-      await this.prisma.$transaction([
-        // Recent check-ins
-        this.prisma.checkIn.findMany({
-          where: {
-            gymClient: {
-              gymId,
-            },
-            deletedAt: null,
-          },
-          orderBy: {
-            timestamp: 'desc',
-          },
-          take: limit,
-          include: {
-            gymClient: true,
-          },
-        }),
+    const cacheKey = `gym:${gymId}:dashboard:recent-activity:${limit}`;
 
-        // Recent new clients
-        this.prisma.gymClient.findMany({
-          where: {
-            gymId,
-            deletedAt: null,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: limit,
-        }),
+    return await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        // Fetch recent activities from different sources in parallel
+        const [recentCheckIns, recentClients, recentContracts, expiredContracts] =
+          await Promise.all([
+            // Recent check-ins
+            this.prisma.checkIn.findMany({
+              where: {
+                gymClient: {
+                  gymId,
+                },
+                deletedAt: null,
+              },
+              orderBy: {
+                timestamp: 'desc',
+              },
+              take: limit,
+              include: {
+                gymClient: true,
+              },
+            }),
 
-        // Recent new contracts
-        this.prisma.contract.findMany({
-          where: {
-            gymClient: {
-              gymId,
-            },
-            deletedAt: null,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: limit,
-          include: {
-            gymClient: true,
-          },
-        }),
+            // Recent new clients
+            this.prisma.gymClient.findMany({
+              where: {
+                gymId,
+                deletedAt: null,
+              },
+              orderBy: {
+                createdAt: 'desc',
+              },
+              take: limit,
+            }),
 
-        // Recently expired contracts
-        this.prisma.contract.findMany({
-          where: {
-            gymClient: {
-              gymId,
-            },
-            status: 'expired',
-            deletedAt: null,
-            updatedAt: {
-              gte: addDays(new Date(), -7), // Last 7 days
-            },
-          },
-          orderBy: {
-            updatedAt: 'desc',
-          },
-          take: limit,
-          include: {
-            gymClient: true,
-          },
-        }),
-      ]);
+            // Recent new contracts
+            this.prisma.contract.findMany({
+              where: {
+                gymClient: {
+                  gymId,
+                },
+                deletedAt: null,
+              },
+              orderBy: {
+                createdAt: 'desc',
+              },
+              take: limit,
+              include: {
+                gymClient: true,
+              },
+            }),
 
-    // Convert to activity DTOs
-    const activities: RecentActivityDto[] = [];
+            // Recently expired contracts
+            this.prisma.contract.findMany({
+              where: {
+                gymClient: {
+                  gymId,
+                },
+                status: 'expired',
+                deletedAt: null,
+                updatedAt: {
+                  gte: addDays(new Date(), -7), // Last 7 days
+                },
+              },
+              orderBy: {
+                updatedAt: 'desc',
+              },
+              take: limit,
+              include: {
+                gymClient: true,
+              },
+            }),
+          ]);
 
-    // Add check-ins
-    recentCheckIns.forEach((checkIn) => {
-      activities.push({
-        id: checkIn.id,
-        type: ActivityType.CHECK_IN,
-        description: 'Check-in registrado',
-        timestamp: checkIn.timestamp.toISOString(),
-        clientName: (checkIn as any).gymClient.name,
-        clientId: checkIn.gymClientId,
-      });
-    });
+        // Convert to activity DTOs
+        const activities: RecentActivityDto[] = [];
 
-    // Add new clients
-    recentClients.forEach((gymClient) => {
-      activities.push({
-        id: gymClient.id,
-        type: ActivityType.NEW_CLIENT,
-        description: 'Nuevo cliente registrado',
-        timestamp: gymClient.createdAt.toISOString(),
-        clientName: gymClient.name,
-        clientId: gymClient.id,
-      });
-    });
+        // Add check-ins
+        recentCheckIns.forEach((checkIn) => {
+          activities.push({
+            id: checkIn.id,
+            type: ActivityType.CHECK_IN,
+            description: 'Check-in registrado',
+            timestamp: checkIn.timestamp.toISOString(),
+            clientName: (checkIn as any).gymClient.name,
+            clientId: checkIn.gymClientId,
+          });
+        });
 
-    // Add new contracts
-    recentContracts.forEach((contract) => {
-      activities.push({
-        id: contract.id,
-        type: ActivityType.NEW_CONTRACT,
-        description: 'Nuevo contrato creado',
-        timestamp: contract.createdAt.toISOString(),
-        clientName: (contract as any).gymClient.name,
-        clientId: (contract as any).gymClient.id,
-      });
-    });
+        // Add new clients
+        recentClients.forEach((gymClient) => {
+          activities.push({
+            id: gymClient.id,
+            type: ActivityType.NEW_CLIENT,
+            description: 'Nuevo cliente registrado',
+            timestamp: gymClient.createdAt.toISOString(),
+            clientName: gymClient.name,
+            clientId: gymClient.id,
+          });
+        });
 
-    // Add expired contracts
-    expiredContracts.forEach((contract) => {
-      activities.push({
-        id: contract.id,
-        type: ActivityType.CONTRACT_EXPIRED,
-        description: 'Contrato expirado',
-        timestamp: contract.updatedAt.toISOString(),
-        clientName: (contract as any).gymClient.name,
-        clientId: (contract as any).gymClient.id,
-      });
-    });
+        // Add new contracts
+        recentContracts.forEach((contract) => {
+          activities.push({
+            id: contract.id,
+            type: ActivityType.NEW_CONTRACT,
+            description: 'Nuevo contrato creado',
+            timestamp: contract.createdAt.toISOString(),
+            clientName: (contract as any).gymClient.name,
+            clientId: (contract as any).gymClient.id,
+          });
+        });
 
-    // Sort by timestamp and return the most recent
-    return activities
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
+        // Add expired contracts
+        expiredContracts.forEach((contract) => {
+          activities.push({
+            id: contract.id,
+            type: ActivityType.CONTRACT_EXPIRED,
+            description: 'Contrato expirado',
+            timestamp: contract.updatedAt.toISOString(),
+            clientName: (contract as any).gymClient.name,
+            clientId: (contract as any).gymClient.id,
+          });
+        });
+
+        // Sort by timestamp and return the most recent
+        return activities
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+          .slice(0, limit);
+      },
+      CACHE_TTL.DASHBOARD, // Cache for 3 minutes
+    );
   }
 
   async getExpiringContracts(
@@ -305,42 +313,48 @@ export class DashboardService {
     }
 
     const now = new Date();
-    const thirtyDaysFromNow = addDays(now, 30);
 
-    const expiringContracts = await this.prisma.$transaction(async (tx) => {
-      return tx.contract.findMany({
-        where: {
-          gymClient: {
-            gymId,
+    // Use caching for expiring contracts to reduce database load
+    const cacheKey = `gym:${gymId}:dashboard:expiring-contracts:${limit}`;
+
+    return await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        // Remove transaction and query directly for better performance
+        const expiringContracts = await this.prisma.contract.findMany({
+          where: {
+            gymClient: {
+              gymId,
+            },
+            status: ContractStatus.EXPIRING_SOON,
+            deletedAt: null,
           },
-          status: ContractStatus.EXPIRING_SOON,
-          deletedAt: null,
-        },
-        orderBy: {
-          endDate: 'asc', // Show soonest expiring first
-        },
-        take: limit,
-        include: {
-          gymClient: true,
-          gymMembershipPlan: true,
-        },
-      });
-    });
+          orderBy: {
+            endDate: 'asc', // Show soonest expiring first
+          },
+          take: limit,
+          include: {
+            gymClient: true,
+            gymMembershipPlan: true,
+          },
+        });
 
-    return expiringContracts.map((contract) => {
-      const daysRemaining = Math.ceil(
-        (contract.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      return {
-        id: contract.id,
-        clientName: (contract as any).gymClient.name,
-        clientId: (contract as any).gymClient.id,
-        planName: (contract as any).gymMembershipPlan.name,
-        endDate: contract.endDate.toISOString(),
-        daysRemaining,
-      };
-    });
+        return expiringContracts.map((contract) => {
+          const daysRemaining = Math.ceil(
+            (contract.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+          );
+          return {
+            id: contract.id,
+            clientName: (contract as any).gymClient.name,
+            clientId: (contract as any).gymClient.id,
+            planName: (contract as any).gymMembershipPlan.name,
+            endDate: contract.endDate.toISOString(),
+            daysRemaining,
+          };
+        });
+      },
+      CACHE_TTL.DASHBOARD, // Use dashboard cache TTL (shorter than reports)
+    );
   }
 
   private getDashboardStatsKey(gymId: string): string {

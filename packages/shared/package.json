@@ -34,7 +34,8 @@
     "dev": "tsup --watch",
     "clean": "rimraf dist",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm run clean && pnpm run build"
+    "prepublishOnly": "pnpm run clean && pnpm run build",
+    "postinstall": "pnpm run build"
   },
   "devDependencies": {
     "@types/minimatch": "^6.0.0",

@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { LoggerService } from 'src/core/logger/logger.service';
@@ -27,20 +22,16 @@ export class LoggingInterceptor implements NestInterceptor {
         next: () => {
           const responseTime = Date.now() - now;
           const statusCode = response.statusCode;
-          
+
           // Log completed request with Google Cloud Logging structure
           this.logger.logRequest(method, url, statusCode, responseTime);
         },
         error: (error) => {
           const responseTime = Date.now() - now;
           const statusCode = error.status || 500;
-          
+
           // Log failed request
-          this.logger.error(
-            `Request failed: ${method} ${url}`,
-            error.stack,
-            'HTTP'
-          );
+          this.logger.error(`Request failed: ${method} ${url}`, error.stack, 'HTTP');
           this.logger.logRequest(method, url, statusCode, responseTime);
         },
       }),

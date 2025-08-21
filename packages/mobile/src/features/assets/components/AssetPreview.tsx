@@ -1,11 +1,10 @@
 import type { AssetResponseDto } from '@gymspace/sdk';
-import Constants from 'expo-constants';
+import { Image, ImageContentFit } from 'expo-image';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { Image, ImageContentFit } from 'expo-image';
 
 // Get the API base URL from constants
-const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5200/api/v1';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 // Simple function to construct render URL without needing SDK
 function getAssetRenderUrl(assetId: string | null | undefined): string | null {

@@ -11,7 +11,9 @@ export default Joi.object({
   DATABASE_URL: Joi.string().required(),
 
   // Redis - supports either REDIS_URL or individual host/port/password
-  REDIS_URL: Joi.string().uri({ scheme: ['redis'] }).optional(),
+  REDIS_URL: Joi.string()
+    .uri({ scheme: ['redis'] })
+    .optional(),
   REDIS_HOST: Joi.string().when('REDIS_URL', {
     is: Joi.exist(),
     then: Joi.optional(),

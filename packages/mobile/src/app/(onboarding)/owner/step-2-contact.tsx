@@ -66,13 +66,11 @@ export default function OwnerContactInfoScreen() {
               placeholder="+51 999 999 999"
               keyboardType="phone-pad"
               autoComplete="tel"
-              returnKeyType="done"
               autoFocus
               onSubmitEditing={methods.handleSubmit(onSubmit)}
             />
           </VStack>
         </FormProvider>
-
         {/* Continue button - Extra padding for keyboard */}
         <Box className="mt-auto pb-safe">
           <GluestackButton

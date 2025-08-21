@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { GymSpaceSdk } from '@gymspace/sdk';
 import { useSecureStorage } from '@/hooks/useSecureStorage';
-import Constants from 'expo-constants';
 
 interface GymSdkContextValue {
   sdk: GymSpaceSdk;
@@ -20,8 +19,7 @@ interface GymSdkProviderProps {
   children: React.ReactNode;
 }
 
-const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || 'http://localhost:5200/api/v1';
-console.log(API_BASE_URL);
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export function GymSdkProvider({ children }: GymSdkProviderProps) {
   const { getItem, setItem, removeItem } = useSecureStorage();
@@ -29,6 +27,8 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
   const [currentGymId, setCurrentGymIdState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log("api base url", API_BASE_URL);
+  
   // Initialize SDK
   const sdk = useMemo(() => {
     return new GymSpaceSdk({

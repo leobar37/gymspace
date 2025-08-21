@@ -158,7 +158,7 @@ export default function ProductDetailScreen() {
 
   // View mode
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" >
+    <SafeAreaView className="flex-1" >
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
           {/* Header with actions */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, Alert } from 'react-native';
+import { Alert } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,6 +18,7 @@ import { FormProvider } from '@/components/forms/FormProvider';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
 import { FormSwitch } from '@/components/forms/FormSwitch';
+import { ScreenForm } from '@/shared/components/ScreenForm';
 import type { Product, CreateProductDto, UpdateProductDto } from '@gymspace/sdk';
 
 // Zod validation schema
@@ -108,10 +109,43 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
   const priceValue = watch('price');
   const isActiveValue = watch('isActive');
 
+  const actions = (
+    <HStack space="md">
+      <Button
+        variant="outline"
+        onPress={onCancel}
+        disabled={isFormLoading}
+        className="flex-1"
+      >
+        <Icon as={XIcon} className="w-4 h-4 text-gray-600 mr-2" />
+        <ButtonText className="text-gray-600">Cancelar</ButtonText>
+      </Button>
+      <Button
+        onPress={handleFormSubmit}
+        disabled={product ? (isFormLoading || !isDirty) : isFormLoading}
+        className="flex-1"
+      >
+        {isFormLoading ? (
+          <HStack space="sm" className="items-center">
+            <Spinner size="small" color="white" />
+            <ButtonText className="text-white">Guardando...</ButtonText>
+          </HStack>
+        ) : (
+          <HStack space="sm" className="items-center">
+            <Icon as={SaveIcon} className="w-4 h-4 text-white" />
+            <ButtonText className="text-white font-semibold">
+              {product ? 'Actualizar' : 'Crear'} Producto
+            </ButtonText>
+          </HStack>
+        )}
+      </Button>
+    </HStack>
+  );
+
   return (
     <FormProvider {...methods}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <VStack space="lg" className="p-4">
+      <ScreenForm actions={actions}>
+        <VStack space="lg">
           {/* Basic Information */}
           <Card className="bg-white border border-gray-200">
             <VStack space="md" className="p-4">
@@ -220,39 +254,8 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
               />
             </VStack>
           </Card>
-
-          {/* Action Buttons */}
-          <HStack space="md" className="pb-4">
-            <Button
-              variant="outline"
-              onPress={onCancel}
-              disabled={isFormLoading}
-              className="flex-1"
-            >
-              <Icon as={XIcon} className="w-4 h-4 text-gray-600 mr-2" />
-              <ButtonText className="text-gray-600">Cancelar</ButtonText>
-            </Button>
-            <Button
-              onPress={handleFormSubmit}
-              disabled={product ? (isFormLoading || !isDirty) : isFormLoading}
-            >
-              {isFormLoading ? (
-                <HStack space="sm" className="items-center">
-                  <Spinner size="small" color="white" />
-                  <ButtonText className="text-white">Guardando...</ButtonText>
-                </HStack>
-              ) : (
-                <HStack space="sm" className="items-center">
-                  <Icon as={SaveIcon} className="w-4 h-4 text-white" />
-                  <ButtonText className="text-white font-semibold">
-                    {product ? 'Actualizar' : 'Crear'} Producto
-                  </ButtonText>
-                </HStack>
-              )}
-            </Button>
-          </HStack>
         </VStack>
-      </ScrollView>
+      </ScreenForm>
     </FormProvider>
   );
 }

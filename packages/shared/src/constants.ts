@@ -155,6 +155,7 @@ export const CACHE_TTL = {
   GYM_DATA: 1800, // 30 minutes
   STATIC_DATA: 3600, // 60 minutes
   REPORTS: 300, // 5 minutes
+  DASHBOARD: 180, // 3 minutes
 } as const;
 
 // File size limits (in bytes)

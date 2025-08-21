@@ -43,9 +43,16 @@ export const useClientsController = () => {
 
   // Get clients list
   const useClientsList = (filters: SearchFilters = {}) => {
+    
     return useQuery({
       queryKey: clientsKeys.list(filters),
       queryFn: async () => {
+        console.log("filters 2", {
+          ...filters,
+          page: filters.page || 1,
+          limit: filters.limit || 20,
+        });
+        
         const response = await sdk.clients.searchClients({
           ...filters,
           page: filters.page || 1,
@@ -180,21 +187,21 @@ export const useClientsController = () => {
     useClientsList,
     useClientDetail,
     useClientStats,
-    
+
     // Mutations
     createClient: createClientMutation.mutate,
     isCreatingClient: createClientMutation.isPending,
     createClientError: createClientMutation.error,
-    
+
     updateClient: updateClientMutation.mutate,
     isUpdatingClient: updateClientMutation.isPending,
-    
+
     toggleStatus: toggleStatusMutation.mutate,
     isTogglingStatus: toggleStatusMutation.isPending,
-    
+
     // deleteClient: deleteClientMutation.mutate,
     // isDeletingClient: deleteClientMutation.isPending,
-    
+
     // Utilities
     prefetchClient,
     invalidateClients: () => queryClient.invalidateQueries({ queryKey: clientsKeys.all }),

@@ -50,6 +50,8 @@ export class ClientsController {
   @ApiOperation({ summary: 'Search clients in gym' })
   @ApiResponse({ status: 200, description: 'List of clients' })
   async searchClients(@Query() dto: SearchClientsDto, @AppCtxt() ctx: RequestContext) {
+    console.log('dto', dto);
+
     return await this.clientsService.searchClients(ctx, dto);
   }
 
@@ -78,7 +80,9 @@ export class ClientsController {
   async searchClientsForCheckIn(@Query() dto: SearchClientsDto, @AppCtxt() ctx: RequestContext) {
     // Force include contract status for check-in searches
     dto.includeContractStatus = true;
-    dto.activeOnly = true; // Only show active clients
+
+    dto.activeOnly = true;
+
     return await this.clientsService.searchClients(ctx, dto);
   }
 }

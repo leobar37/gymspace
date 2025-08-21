@@ -21,7 +21,7 @@ export class LoggerService implements NestLoggerService {
       ? winston.format.combine(
           winston.format.timestamp(),
           winston.format.errors({ stack: true }),
-          winston.format.json()
+          winston.format.json(),
         )
       : winston.format.combine(
           winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -31,14 +31,14 @@ export class LoggerService implements NestLoggerService {
             const contextStr = context ? `[${context}] ` : '';
             const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
             return `${timestamp} ${level}: ${contextStr}${message}${metaStr}`;
-          })
+          }),
         );
 
     transports.push(
       new winston.transports.Console({
         format: consoleFormat,
         level: this.isProduction ? 'info' : 'debug',
-      })
+      }),
     );
 
     // Add Google Cloud Logging in production when running on Google Cloud

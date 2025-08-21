@@ -1,11 +1,21 @@
 import React from 'react';
-import { View, Platform } from 'react-native';
 import { useController } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
-import { Picker } from '@react-native-picker/picker';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
+import { 
+  Select, 
+  SelectTrigger, 
+  SelectInput, 
+  SelectIcon, 
+  SelectPortal, 
+  SelectBackdrop, 
+  SelectContent, 
+  SelectItem, 
+  SelectScrollView 
+} from '@/components/ui/select';
+import { ChevronDownIcon } from 'lucide-react-native';
 
 interface SelectOption {
   label: string;
@@ -18,7 +28,9 @@ interface FormSelectProps<TFieldValues extends FieldValues = FieldValues>
   description?: string;
   placeholder?: string;
   options: SelectOption[];
-  enabled?: boolean;
+  isDisabled?: boolean;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  variant?: 'outline' | 'underlined' | 'rounded';
 }
 
 export function FormSelect<TFieldValues extends FieldValues = FieldValues>({ 
@@ -31,7 +43,9 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
   description,
   placeholder = 'Seleccionar opción',
   options,
-  enabled = true
+  isDisabled = false,
+  size = 'md',
+  variant = 'outline'
 }: FormSelectProps<TFieldValues>) {
   const { field, fieldState } = useController({ 
     name, 
@@ -42,9 +56,9 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
   });
   
   return (
-    <FormControl isInvalid={!!fieldState.error}>
+    <FormControl isInvalid={!!fieldState.error} isDisabled={isDisabled}>
       <VStack className="gap-1">
-        {label && <Text className="font-medium text-gray-900">{label}</Text>}
+        {label && <Text className="font-medium text-typography-900">{label}</Text>}
         
         {description && (
           <FormControlHelper>
@@ -52,43 +66,34 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
           </FormControlHelper>
         )}
         
-        <View className={`
-          bg-white 
-          border 
-          ${fieldState.error ? 'border-red-500' : 'border-gray-300'} 
-          rounded-lg 
-          overflow-hidden
-          ${!enabled ? 'opacity-50' : ''}
-        `}>
-          <Picker
-            selectedValue={field.value || ''}
-            onValueChange={(itemValue) => field.onChange(itemValue)}
-            enabled={enabled}
-            style={{
-              height: Platform.OS === 'ios' ? 200 : 56,
-              width: '100%',
-            }}
-            itemStyle={Platform.OS === 'ios' ? {
-              height: 200,
-              fontSize: 16,
-            } : undefined}
-          >
-            {!field.value && (
-              <Picker.Item 
-                label={placeholder} 
-                value="" 
-                color="#9CA3AF"
-              />
-            )}
-            {options.map((option) => (
-              <Picker.Item 
-                key={option.value} 
-                label={option.label} 
-                value={option.value}
-              />
-            ))}
-          </Picker>
-        </View>
+        <Select 
+          selectedValue={field.value}
+          onValueChange={(value) => field.onChange(value)}
+          isDisabled={isDisabled}
+        >
+          <SelectTrigger variant={variant} size={size}>
+            <SelectInput 
+              placeholder={placeholder}
+              value={field.value ? options.find(opt => opt.value === field.value)?.label : ''}
+            />
+            <SelectIcon as={ChevronDownIcon} />
+          </SelectTrigger>
+          
+          <SelectPortal>
+            <SelectBackdrop />
+            <SelectContent>
+              <SelectScrollView>
+                {options.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    label={option.label} 
+                    value={option.value}
+                  />
+                ))}
+              </SelectScrollView>
+            </SelectContent>
+          </SelectPortal>
+        </Select>
         
         {fieldState.error && (
           <FormControlError>

@@ -29,7 +29,14 @@ import {
   ActionsheetItem,
   ActionsheetItemText,
 } from '@/components/ui/actionsheet';
-import { SearchIcon, UserPlusIcon, PhoneIcon, MoreHorizontalIcon, EditIcon, TrashIcon } from 'lucide-react-native';
+import {
+  SearchIcon,
+  UserPlusIcon,
+  PhoneIcon,
+  MoreHorizontalIcon,
+  EditIcon,
+  TrashIcon,
+} from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -43,7 +50,7 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
   const hasActiveContract = client.contracts?.length > 0;
   // Nuevo flag derivado del status
   const isActive = client.status === 'active';
-  
+
   return (
     <Card className="mb-3 p-4">
       <HStack className="items-center justify-between">
@@ -51,10 +58,13 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
           <HStack className="items-center gap-3 flex-1">
             <Avatar className="bg-blue-600">
               <Text className="text-white font-semibold">
-                {client.name.split(' ').map((n: string) => n[0]).join('')}
+                {client.name
+                  .split(' ')
+                  .map((n: string) => n[0])
+                  .join('')}
               </Text>
             </Avatar>
-            
+
             <VStack className="flex-1">
               <Text className="font-semibold text-gray-900">{client.name}</Text>
               <Text className="text-sm text-gray-600">{client.clientNumber}</Text>
@@ -69,10 +79,7 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
         </Pressable>
         <VStack className="items-end gap-1">
           <HStack className="items-center gap-2">
-            <Badge
-              variant="solid"
-              action={isActive ? 'success' : 'muted'}
-            >
+            <Badge variant="solid" action={isActive ? 'success' : 'muted'}>
               <BadgeText>{isActive ? 'Activo' : 'Inactivo'}</BadgeText>
             </Badge>
             <Pressable onPress={() => onActionPress(client)} className="p-1">
@@ -97,7 +104,7 @@ export const ClientsList: React.FC = () => {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<any>(null);
   const debouncedSearch = useDebounce(searchText, 300);
-  
+
   const { useClientsList, toggleStatus, isTogglingStatus } = useClientsController();
   const { data, isLoading, refetch, isRefetching } = useClientsList({
     search: debouncedSearch,
@@ -185,19 +192,17 @@ export const ClientsList: React.FC = () => {
           data={data?.data || []}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <ClientCard 
-              client={item} 
+            <ClientCard
+              client={item}
               onPress={() => handleClientPress(item.id)}
               onActionPress={handleActionPress}
             />
           )}
-          contentContainerStyle={{ 
+          contentContainerStyle={{
             padding: 16,
             flexGrow: 1,
           }}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-          }
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           ListEmptyComponent={renderEmptyState}
         />
       )}
@@ -205,33 +210,32 @@ export const ClientsList: React.FC = () => {
       {/* FAB for adding client */}
       {data?.data && data.data.length > 0 && (
         <View className="absolute bottom-6 right-6">
-          <Button
-            onPress={handleAddClient}
-            action="primary"
-          >
-            <Icon className='text-white' as={UserPlusIcon} />
+          <Button onPress={handleAddClient} action="primary">
+            <Icon className="text-white" as={UserPlusIcon} />
           </Button>
         </View>
       )}
 
       {/* Action Sheet */}
-      <Actionsheet isOpen={showActionsheet} onClose={() => setShowActionsheet(false)} snapPoints={[30]}>
+      <Actionsheet
+        isOpen={showActionsheet}
+        onClose={() => setShowActionsheet(false)}
+        snapPoints={[30]}
+      >
         <ActionsheetBackdrop />
         <ActionsheetContent>
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
-          
+
           <ActionsheetItem onPress={handleEditClient}>
             <Icon as={EditIcon} />
             <ActionsheetItemText>Editar</ActionsheetItemText>
           </ActionsheetItem>
-          
+
           <ActionsheetItem onPress={handleToggleStatusPress}>
             <Icon as={TrashIcon} />
-            <ActionsheetItemText>
-              Eliminar
-            </ActionsheetItemText>
+            <ActionsheetItemText>Eliminar</ActionsheetItemText>
           </ActionsheetItem>
         </ActionsheetContent>
       </Actionsheet>
@@ -249,21 +253,20 @@ export const ClientsList: React.FC = () => {
               ¿Estás seguro de que deseas eliminar a {clientToDelete?.name}?
             </Text>
             <Text className="text-sm text-gray-500 mt-2">
-              Nota: El cliente será desactivado y no podrá acceder al gimnasio, pero su historial se mantendrá.
+              Nota: El cliente será desactivado y no podrá acceder al gimnasio, pero su historial se
+              mantendrá.
             </Text>
           </AlertDialogBody>
           <AlertDialogFooter>
             <Button variant="outline" onPress={handleCancelDelete}>
               <ButtonText>Cancelar</ButtonText>
             </Button>
-            <Button 
+            <Button
               action="negative"
               onPress={handleConfirmToggleStatus}
               disabled={isTogglingStatus}
             >
-              <ButtonText>
-                Eliminar
-              </ButtonText>
+              <ButtonText>Eliminar</ButtonText>
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

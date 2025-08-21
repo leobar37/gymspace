@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "NODE_ENV=development expo start",
     "android": "DARK_MODE=media expo start --android",
     "ios": "DARK_MODE=media DARK_MODE=media expo start --ios",
-    "web": "DARK_MODE=media DARK_MODE=media expo start --web"
+    "web": "DARK_MODE=media DARK_MODE=media expo start --web",
+    "prebuild:deps": "cd ../sdk && pnpm build && cd ../shared && pnpm build",
+    "build:preview": "NODE_ENV=production eas build --platform android --profile preview --local",
+    "build:production": "pnpm prebuild:deps && NODE_ENV=production eas build --platform android --profile production --local"
   },
   "dependencies": {
     "@expo/html-elements": "0.4.2",
@@ -60,6 +63,7 @@
     "expo-router": "~5.1.4",
     "expo-secure-store": "~14.2.3",
     "expo-status-bar": "~2.2.3",
+    "expo-system-ui": "^5.0.10",
     "jotai": "^2.12.5",
     "lodash": "^4.17.21",
     "lucide-react-native": "^0.536.0",

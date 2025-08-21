@@ -57,6 +57,7 @@ export default function InventoryLayout() {
         name="categories/new"
         options={{
           title: 'Nueva Categoría',
+          headerBackTitle: 'Volver',
         }}
       />
       <Stack.Screen
@@ -75,6 +76,14 @@ export default function InventoryLayout() {
         name="products/[id]"
         options={{
           headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="products/new"
+        options={{
+          headerShown: true,
+          title: 'Nuevo Producto',
+          headerBackTitle: 'Volver',
         }}
       />
     </Stack>

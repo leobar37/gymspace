@@ -20,6 +20,8 @@ export class ClientsResource extends BaseResource {
     params?: SearchClientsParams,
     options?: RequestOptions
   ): Promise<PaginatedResponseDto<Client>> {
+    console.log("params", params);
+    
     return this.paginate<Client>(this.basePath, params, options);
   }
 

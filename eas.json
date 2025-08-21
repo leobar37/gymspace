@@ -22,13 +22,15 @@
       },
       "env": {
         "API_URL": "https://gymspace-api-dev-vxzoxrvkoq-uc.a.run.app/api/v1"
-      }
+      },
+      "prebuildCommand": "cd ../sdk && pnpm build && cd ../shared && pnpm build"
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "API_URL": "https://gymspace-api-dev-vxzoxrvkoq-uc.a.run.app/api/v1"
-      }
+      },
+      "prebuildCommand": "cd ../sdk && pnpm build && cd ../shared && pnpm build"
     }
   },
   "submit": {

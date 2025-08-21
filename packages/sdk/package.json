@@ -37,7 +37,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "prepublishOnly": "pnpm run clean && pnpm run build"
+    "prepublishOnly": "pnpm run clean && pnpm run build",
+    "postinstall": "pnpm run build"
   },
   "dependencies": {
     "@gymspace/shared": "^1.0.0",
