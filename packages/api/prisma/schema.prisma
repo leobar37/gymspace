@@ -118,6 +118,7 @@ model SubscriptionPlan {
     maxUsersPerGym   Int       @map("max_users_per_gym")
     features         Json
     description      String?   @db.Text
+    isActive         Boolean   @default(true) @map("is_active")
     createdByUserId  String?   @map("created_by_user_id")
     updatedByUserId  String?   @map("updated_by_user_id")
     createdAt        DateTime  @default(now()) @map("created_at")
@@ -125,11 +126,36 @@ model SubscriptionPlan {
     deletedAt        DateTime? @map("deleted_at")
     
     // Relations
-    createdBy     User?          @relation("SubscriptionPlanCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy     User?          @relation("SubscriptionPlanUpdatedBy", fields: [updatedByUserId], references: [id])
-    organizations Organization[]
+    createdBy                 User?                      @relation("SubscriptionPlanCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy                 User?                      @relation("SubscriptionPlanUpdatedBy", fields: [updatedByUserId], references: [id])
+    subscriptionOrganizations SubscriptionOrganization[]
 
     @@map("subscription_plans")
+}
+
+model SubscriptionOrganization {
+    id                 String             @id @default(uuid())
+    organizationId     String             @map("organization_id")
+    subscriptionPlanId String             @map("subscription_plan_id")
+    status             SubscriptionStatus
+    startDate          DateTime           @map("start_date")
+    endDate            DateTime           @map("end_date")
+    isActive           Boolean            @default(true) @map("is_active")
+    metadata           Json?
+    createdByUserId    String             @map("created_by_user_id")
+    updatedByUserId    String?            @map("updated_by_user_id")
+    createdAt          DateTime           @default(now()) @map("created_at")
+    updatedAt          DateTime           @updatedAt @map("updated_at")
+    deletedAt          DateTime?          @map("deleted_at")
+
+    // Relations
+    organization     Organization     @relation(fields: [organizationId], references: [id])
+    subscriptionPlan SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
+    createdBy        User             @relation("SubscriptionOrganizationCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy        User?            @relation("SubscriptionOrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
+
+    @@unique([organizationId, isActive], name: "unique_active_subscription")
+    @@map("subscription_organizations")
 }
 
 model User {
@@ -161,10 +187,12 @@ model User {
     invitationsAccepted Invitation[]   @relation("InvitationAcceptedBy")
 
     // Audit relations
-    createdSubscriptionPlans  SubscriptionPlan[]  @relation("SubscriptionPlanCreatedBy")
-    updatedSubscriptionPlans  SubscriptionPlan[]  @relation("SubscriptionPlanUpdatedBy")
-    createdOrganizations      Organization[]      @relation("OrganizationCreatedBy")
-    updatedOrganizations      Organization[]      @relation("OrganizationUpdatedBy")
+    createdSubscriptionPlans         SubscriptionPlan[]         @relation("SubscriptionPlanCreatedBy")
+    updatedSubscriptionPlans         SubscriptionPlan[]         @relation("SubscriptionPlanUpdatedBy")
+    createdSubscriptionOrganizations SubscriptionOrganization[] @relation("SubscriptionOrganizationCreatedBy")
+    updatedSubscriptionOrganizations SubscriptionOrganization[] @relation("SubscriptionOrganizationUpdatedBy")
+    createdOrganizations             Organization[]             @relation("OrganizationCreatedBy")
+    updatedOrganizations             Organization[]             @relation("OrganizationUpdatedBy")
     createdGyms               Gym[]               @relation("GymCreatedBy")
     updatedGyms               Gym[]               @relation("GymUpdatedBy")
     createdRoles              Role[]              @relation("RoleCreatedBy")
@@ -211,30 +239,27 @@ model User {
 }
 
 model Organization {
-    id                 String             @id @default(uuid())
-    ownerUserId        String             @map("owner_user_id")
-    name               String
-    organizationCode   String             @unique @map("organization_code")
-    subscriptionPlanId String             @map("subscription_plan_id")
-    subscriptionStatus SubscriptionStatus @map("subscription_status")
-    subscriptionStart  DateTime           @map("subscription_start")
-    subscriptionEnd    DateTime           @map("subscription_end")
-    country            String
-    currency           String
-    timezone           String
-    settings           Json?
-    createdByUserId    String             @map("created_by_user_id")
-    updatedByUserId    String?            @map("updated_by_user_id")
-    createdAt          DateTime           @default(now()) @map("created_at")
-    updatedAt          DateTime           @updatedAt @map("updated_at")
-    deletedAt          DateTime?          @map("deleted_at")
+    id               String    @id @default(uuid())
+    ownerUserId      String    @map("owner_user_id")
+    name             String
+    organizationCode String    @unique @map("organization_code")
+    hasUsedFreeTrial Boolean   @default(false) @map("has_used_free_trial")
+    country          String
+    currency         String
+    timezone         String
+    settings         Json?
+    createdByUserId  String    @map("created_by_user_id")
+    updatedByUserId  String?   @map("updated_by_user_id")
+    createdAt        DateTime  @default(now()) @map("created_at")
+    updatedAt        DateTime  @updatedAt @map("updated_at")
+    deletedAt        DateTime? @map("deleted_at")
 
     // Relations
-    owner            User             @relation(fields: [ownerUserId], references: [id])
-    subscriptionPlan SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
-    createdBy        User             @relation("OrganizationCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy        User?            @relation("OrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
-    gyms             Gym[]
+    owner                     User                        @relation(fields: [ownerUserId], references: [id])
+    createdBy                 User                        @relation("OrganizationCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy                 User?                       @relation("OrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
+    gyms                      Gym[]
+    subscriptionOrganizations SubscriptionOrganization[]
 
     @@map("organizations")
 }
