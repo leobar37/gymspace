@@ -31,6 +31,7 @@ export class SubscriptionsService {
     const plans = await this.prisma.subscriptionPlan.findMany({
       where: {
         deletedAt: null,
+        isActive: true,
       },
       orderBy: {
         name: 'asc',
@@ -72,7 +73,19 @@ export class SubscriptionsService {
         deletedAt: null,
       },
       include: {
-        subscriptionPlan: true,
+        subscriptionOrganizations: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          include: {
+            subscriptionPlan: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
         gyms: {
           where: {
             deletedAt: null,
@@ -109,6 +122,12 @@ export class SubscriptionsService {
       }
     }
 
+    // Get active subscription
+    const activeSubscription = organization.subscriptionOrganizations[0];
+    if (!activeSubscription) {
+      throw new BusinessException('No active subscription found for this organization');
+    }
+
     // Calculate usage
     const totalClients = organization.gyms.reduce((sum, gym) => sum + gym.gymClients.length, 0);
     const totalUsers = organization.gyms.reduce(
@@ -120,27 +139,27 @@ export class SubscriptionsService {
     const now = new Date();
     const daysRemaining = Math.max(
       0,
-      Math.ceil((organization.subscriptionEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+      Math.ceil((activeSubscription.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
     );
 
-    const isExpired = now > organization.subscriptionEnd;
-    const isFreePlan = this.isFreePlan(organization.subscriptionPlan.price);
+    const isExpired = now > activeSubscription.endDate;
+    const isFreePlan = this.isFreePlan(activeSubscription.subscriptionPlan.price);
 
     return {
       organizationId: organization.id,
       subscriptionPlan: {
-        id: organization.subscriptionPlan.id,
-        name: organization.subscriptionPlan.name,
-        price: organization.subscriptionPlan.price,
-        billingFrequency: organization.subscriptionPlan.billingFrequency,
-        maxGyms: organization.subscriptionPlan.maxGyms,
-        maxClientsPerGym: organization.subscriptionPlan.maxClientsPerGym,
-        maxUsersPerGym: organization.subscriptionPlan.maxUsersPerGym,
-        features: organization.subscriptionPlan.features as any,
+        id: activeSubscription.subscriptionPlan.id,
+        name: activeSubscription.subscriptionPlan.name,
+        price: activeSubscription.subscriptionPlan.price,
+        billingFrequency: activeSubscription.subscriptionPlan.billingFrequency,
+        maxGyms: activeSubscription.subscriptionPlan.maxGyms,
+        maxClientsPerGym: activeSubscription.subscriptionPlan.maxClientsPerGym,
+        maxUsersPerGym: activeSubscription.subscriptionPlan.maxUsersPerGym,
+        features: activeSubscription.subscriptionPlan.features as any,
       },
-      status: organization.subscriptionStatus as SubscriptionStatus,
-      subscriptionStart: organization.subscriptionStart,
-      subscriptionEnd: organization.subscriptionEnd,
+      status: activeSubscription.status as SubscriptionStatus,
+      subscriptionStart: activeSubscription.startDate,
+      subscriptionEnd: activeSubscription.endDate,
       daysRemaining,
       isExpired,
       isFreePlan,
@@ -150,9 +169,9 @@ export class SubscriptionsService {
         totalUsers,
       },
       limits: {
-        maxGyms: organization.subscriptionPlan.maxGyms,
-        maxClientsPerGym: organization.subscriptionPlan.maxClientsPerGym,
-        maxUsersPerGym: organization.subscriptionPlan.maxUsersPerGym,
+        maxGyms: activeSubscription.subscriptionPlan.maxGyms,
+        maxClientsPerGym: activeSubscription.subscriptionPlan.maxClientsPerGym,
+        maxUsersPerGym: activeSubscription.subscriptionPlan.maxUsersPerGym,
       },
     };
   }
@@ -173,7 +192,15 @@ export class SubscriptionsService {
         deletedAt: null,
       },
       include: {
-        subscriptionPlan: true,
+        subscriptionOrganizations: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          include: {
+            subscriptionPlan: true,
+          },
+        },
       },
     });
 
@@ -190,6 +217,7 @@ export class SubscriptionsService {
       where: {
         id: dto.subscriptionPlanId,
         deletedAt: null,
+        isActive: true,
       },
     });
 
@@ -207,23 +235,55 @@ export class SubscriptionsService {
       ]);
     }
 
+    // Check if it's a free plan and organization has already used free trial
+    if (this.isFreePlan(newPlan.price) && organization.hasUsedFreeTrial) {
+      throw new BusinessException('Organization has already used their free trial period');
+    }
+
     // Check if already on this plan
-    if (organization.subscriptionPlanId === newPlan.id) {
+    const currentSubscription = organization.subscriptionOrganizations[0];
+    if (currentSubscription && currentSubscription.subscriptionPlanId === newPlan.id) {
       throw new BusinessException('Organization is already on this plan');
     }
 
-    // Update the organization's subscription
-    await this.prisma.organization.update({
-      where: {
-        id: organizationId,
-      },
-      data: {
-        subscriptionPlanId: newPlan.id,
-        subscriptionStatus: SubscriptionStatus.ACTIVE,
-        subscriptionStart: new Date(),
-        subscriptionEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial for free plans
-        updatedByUserId: context.getUserId(),
-      },
+    await this.prisma.$transaction(async (prisma) => {
+      // Deactivate current subscription if exists
+      if (currentSubscription) {
+        await prisma.subscriptionOrganization.update({
+          where: {
+            id: currentSubscription.id,
+          },
+          data: {
+            isActive: false,
+            updatedByUserId: context.getUserId(),
+          },
+        });
+      }
+
+      // Create new subscription
+      await prisma.subscriptionOrganization.create({
+        data: {
+          organizationId,
+          subscriptionPlanId: newPlan.id,
+          status: SubscriptionStatus.ACTIVE,
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial for free plans
+          createdByUserId: context.getUserId(),
+        },
+      });
+
+      // Mark organization as having used free trial if it's a free plan
+      if (this.isFreePlan(newPlan.price)) {
+        await prisma.organization.update({
+          where: {
+            id: organizationId,
+          },
+          data: {
+            hasUsedFreeTrial: true,
+            updatedByUserId: context.getUserId(),
+          },
+        });
+      }
     });
 
     // Clear cache
@@ -252,7 +312,16 @@ export class SubscriptionsService {
         deletedAt: null,
       },
       include: {
-        subscriptionPlan: true,
+        subscriptionOrganizations: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          include: {
+            subscriptionPlan: true,
+          },
+          take: 1,
+        },
         gyms: {
           where: {
             deletedAt: null,
@@ -277,7 +346,12 @@ export class SubscriptionsService {
       throw new ResourceNotFoundException('Organization not found');
     }
 
-    const plan = organization.subscriptionPlan;
+    const activeSubscription = organization.subscriptionOrganizations[0];
+    if (!activeSubscription) {
+      throw new BusinessException('No active subscription found for this organization');
+    }
+
+    const plan = activeSubscription.subscriptionPlan;
     let currentUsage = 0;
     let limit = 0;
 
@@ -337,6 +411,7 @@ export class SubscriptionsService {
       where: {
         name: 'Gratuito',
         deletedAt: null,
+        isActive: true,
       },
       select: {
         id: true,
@@ -349,6 +424,173 @@ export class SubscriptionsService {
     }
 
     return freePlan;
+  }
+
+  /**
+   * Check subscription expiration and update status
+   * This method will be called by the cron job
+   */
+  async checkAndUpdateExpiredSubscriptions(): Promise<{
+    updated: number;
+    expired: string[];
+  }> {
+    const now = new Date();
+    
+    const expiredSubscriptions = await this.prisma.subscriptionOrganization.findMany({
+      where: {
+        endDate: {
+          lt: now,
+        },
+        status: SubscriptionStatus.ACTIVE,
+        isActive: true,
+        deletedAt: null,
+      },
+      include: {
+        organization: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (expiredSubscriptions.length === 0) {
+      return { updated: 0, expired: [] };
+    }
+
+    // Update expired subscriptions
+    await this.prisma.subscriptionOrganization.updateMany({
+      where: {
+        id: {
+          in: expiredSubscriptions.map((sub) => sub.id),
+        },
+      },
+      data: {
+        status: SubscriptionStatus.EXPIRED,
+        updatedAt: now,
+      },
+    });
+
+    // Clear caches for affected organizations
+    for (const subscription of expiredSubscriptions) {
+      await this.cache.del(`org:${subscription.organizationId}:*`);
+    }
+
+    return {
+      updated: expiredSubscriptions.length,
+      expired: expiredSubscriptions.map(
+        (sub) => `${sub.organization.name} (${sub.organizationId})`,
+      ),
+    };
+  }
+
+  /**
+   * Upgrade organization subscription to a paid plan
+   */
+  async upgradeSubscription(
+    organizationId: string,
+    subscriptionPlanId: string,
+    context: IRequestContext,
+  ): Promise<SubscriptionStatusDto> {
+    // Verify organization exists and user is owner
+    const organization = await this.prisma.organization.findUnique({
+      where: {
+        id: organizationId,
+        deletedAt: null,
+      },
+      include: {
+        subscriptionOrganizations: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          include: {
+            subscriptionPlan: true,
+          },
+        },
+      },
+    });
+
+    if (!organization) {
+      throw new ResourceNotFoundException('Organization not found');
+    }
+
+    if (organization.ownerUserId !== context.getUserId()) {
+      throw new BusinessException('Only the organization owner can upgrade subscription plans');
+    }
+
+    // Get the new plan
+    const newPlan = await this.prisma.subscriptionPlan.findUnique({
+      where: {
+        id: subscriptionPlanId,
+        deletedAt: null,
+        isActive: true,
+      },
+    });
+
+    if (!newPlan) {
+      throw new ResourceNotFoundException('Subscription plan not found');
+    }
+
+    // Verify it's not a free plan
+    if (this.isFreePlan(newPlan.price)) {
+      throw new ValidationException([
+        {
+          field: 'subscriptionPlanId',
+          message: 'Cannot upgrade to a free plan. Use affiliate method instead.',
+        },
+      ]);
+    }
+
+    const currentSubscription = organization.subscriptionOrganizations[0];
+    if (currentSubscription && currentSubscription.subscriptionPlanId === newPlan.id) {
+      throw new BusinessException('Organization is already on this plan');
+    }
+
+    await this.prisma.$transaction(async (prisma) => {
+      // Deactivate current subscription if exists
+      if (currentSubscription) {
+        await prisma.subscriptionOrganization.update({
+          where: {
+            id: currentSubscription.id,
+          },
+          data: {
+            isActive: false,
+            updatedByUserId: context.getUserId(),
+          },
+        });
+      }
+
+      // Create new subscription with duration based on plan
+      const startDate = new Date();
+      let endDate: Date;
+
+      if (newPlan.duration && newPlan.durationPeriod) {
+        const multiplier = newPlan.durationPeriod === 'MONTH' ? 30 : 1;
+        endDate = new Date(startDate.getTime() + newPlan.duration * multiplier * 24 * 60 * 60 * 1000);
+      } else {
+        // Default to 1 month for paid plans
+        endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      }
+
+      await prisma.subscriptionOrganization.create({
+        data: {
+          organizationId,
+          subscriptionPlanId: newPlan.id,
+          status: SubscriptionStatus.ACTIVE,
+          startDate,
+          endDate,
+          createdByUserId: context.getUserId(),
+        },
+      });
+    });
+
+    // Clear cache
+    await this.cache.del(`org:${organizationId}:*`);
+
+    // Return updated status
+    return this.getSubscriptionStatus(organizationId, context);
   }
 
   /**
