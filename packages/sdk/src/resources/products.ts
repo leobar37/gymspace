@@ -3,6 +3,7 @@ import {
   Product,
   ProductCategory,
   CreateProductDto, 
+  CreateServiceDto,
   UpdateProductDto,
   UpdateStockDto,
   CreateProductCategoryDto,
@@ -41,6 +42,10 @@ export class ProductsResource extends BaseResource {
   // Product Methods
   async createProduct(data: CreateProductDto, options?: RequestOptions): Promise<Product> {
     return this.client.post<Product>(this.basePath, data, options);
+  }
+
+  async createService(data: CreateServiceDto, options?: RequestOptions): Promise<Product> {
+    return this.client.post<Product>(`${this.basePath}/services`, data, options);
   }
 
   async searchProducts(

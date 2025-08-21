@@ -85,6 +85,7 @@ export class AssetsService {
         gymId: gymId,
         status: AssetStatus.active,
         deletedAt: null,
+        isHide: false,
       },
       orderBy: {
         createdAt: 'desc',

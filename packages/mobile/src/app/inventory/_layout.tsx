@@ -1,7 +1,11 @@
 import { Stack } from 'expo-router';
 import React from 'react';
+import { useRouter } from 'expo-router';
+import { TouchableOpacity, Text } from 'react-native';
 
 export default function InventoryLayout() {
+  const router = useRouter();
+
   return (
     <Stack
       screenOptions={{
@@ -84,6 +88,30 @@ export default function InventoryLayout() {
           headerShown: true,
           title: 'Nuevo Producto',
           headerBackTitle: 'Volver',
+        }}
+      />
+      <Stack.Screen
+        name="services/new"
+        options={{
+          headerShown: true,
+          title: 'Nuevo Servicio',
+          headerBackTitle: 'Volver',
+        }}
+      />
+      <Stack.Screen
+        name="services"
+        options={{
+          headerShown: true,
+          title: 'Servicios',
+          headerBackTitle: 'Volver',
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.push('/inventory')}
+              style={{ marginLeft: 10 }}
+            >
+              <Text style={{ color: '#374151' }}>Volver</Text>
+            </TouchableOpacity>
+          ),
         }}
       />
     </Stack>

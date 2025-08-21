@@ -10,8 +10,15 @@ import {
 } from 'lucide-react-native';
 import React from 'react';
 
+interface Activity {
+  type: 'check_in' | 'new_client' | 'new_contract' | string;
+  description: string;
+  clientName?: string;
+  timestamp: string;
+}
+
 interface ActivityItemProps {
-  activity: any;
+  activity: Activity;
 }
 
 export const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {

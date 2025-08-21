@@ -10,8 +10,15 @@ import React from 'react';
 import { View } from 'react-native';
 import { ActivityItem } from './ActivityItem';
 
+interface Activity {
+  id: string;
+  type: string;
+  timestamp: string;
+  // Add other relevant fields here
+}
+
 interface RecentActivityProps {
-  recentActivity: any[];
+  recentActivity: Activity[];
 }
 
 export const RecentActivity: React.FC<RecentActivityProps> = ({

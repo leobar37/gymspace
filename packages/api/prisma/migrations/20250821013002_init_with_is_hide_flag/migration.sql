@@ -35,19 +35,22 @@ CREATE TYPE "EvaluationStatus" AS ENUM ('open', 'in_progress', 'completed', 'can
 CREATE TYPE "CommentType" AS ENUM ('progress_note', 'phone_call', 'meeting', 'reminder', 'other');
 
 -- CreateEnum
-CREATE TYPE "AssetCategory" AS ENUM ('medical_document', 'identification', 'insurance', 'contract_copy', 'other');
-
--- CreateEnum
 CREATE TYPE "LeadStatus" AS ENUM ('NEW', 'CONTACTED', 'INTERESTED', 'CONVERTED', 'LOST');
 
 -- CreateEnum
-CREATE TYPE "ContractAssetType" AS ENUM ('payment_receipt', 'contract_document', 'identification', 'other');
+CREATE TYPE "ProductStatus" AS ENUM ('active', 'inactive');
 
 -- CreateEnum
-CREATE TYPE "EvaluationAssetStage" AS ENUM ('initial', 'progress', 'final');
+CREATE TYPE "PaymentStatus" AS ENUM ('paid', 'unpaid');
 
 -- CreateEnum
-CREATE TYPE "EvaluationAssetCategory" AS ENUM ('body_photo', 'measurement_photo', 'document', 'report', 'other');
+CREATE TYPE "DurationPeriod" AS ENUM ('DAY', 'MONTH');
+
+-- CreateEnum
+CREATE TYPE "ProductType" AS ENUM ('Product', 'Service');
+
+-- CreateEnum
+CREATE TYPE "TrackInventory" AS ENUM ('none', 'simple', 'advanced', 'capacity');
 
 -- CreateTable
 CREATE TABLE "subscription_plans" (
@@ -55,6 +58,8 @@ CREATE TABLE "subscription_plans" (
     "name" TEXT NOT NULL,
     "price" JSONB NOT NULL,
     "billing_frequency" TEXT NOT NULL,
+    "duration" INTEGER,
+    "duration_period" "DurationPeriod",
     "max_gyms" INTEGER NOT NULL,
     "max_clients_per_gym" INTEGER NOT NULL,
     "max_users_per_gym" INTEGER NOT NULL,
@@ -76,6 +81,7 @@ CREATE TABLE "users" (
     "password" TEXT,
     "name" TEXT NOT NULL,
     "phone" TEXT,
+    "birth_date" TIMESTAMP(3),
     "user_type" "UserType" NOT NULL,
     "email_verified_at" TIMESTAMP(3),
     "verification_code" TEXT,
@@ -134,8 +140,8 @@ CREATE TABLE "gyms" (
     "settings" JSONB,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "gym_code" TEXT NOT NULL,
-    "profile_asset_id" TEXT,
-    "cover_asset_id" TEXT,
+    "profile_photo_id" TEXT,
+    "cover_photo_id" TEXT,
     "evaluation_structure" JSONB,
     "catalog_visibility" BOOLEAN NOT NULL DEFAULT false,
     "catalog_description" TEXT,
@@ -177,8 +183,8 @@ CREATE TABLE "collaborators" (
     "status" "CollaboratorStatus" NOT NULL,
     "hired_date" TIMESTAMP(3),
     "invitation_id" TEXT,
-    "profile_asset_id" TEXT,
-    "cover_asset_id" TEXT,
+    "profile_photo_id" TEXT,
+    "cover_photo_id" TEXT,
     "description" TEXT,
     "specialties" JSONB,
     "created_by_user_id" TEXT NOT NULL,
@@ -218,11 +224,14 @@ CREATE TABLE "gym_clients" (
     "client_number" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "birth_date" TIMESTAMP(3),
-    "document_id" TEXT,
+    "document_value" TEXT,
+    "document_type" TEXT,
     "phone" TEXT,
     "email" TEXT,
     "status" "ClientStatus" NOT NULL,
-    "profile_asset_id" TEXT,
+    "profile_photo_id" TEXT,
+    "document_front_photo_id" TEXT,
+    "document_back_photo_id" TEXT,
     "emergency_contact_name" TEXT,
     "emergency_contact_phone" TEXT,
     "medical_conditions" TEXT,
@@ -242,8 +251,8 @@ CREATE TABLE "gym_membership_plans" (
     "gym_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "base_price" DECIMAL(10,2) NOT NULL,
-    "currency" TEXT NOT NULL,
-    "duration_months" INTEGER NOT NULL,
+    "duration_months" INTEGER,
+    "duration_days" INTEGER,
     "description" TEXT,
     "features" JSONB,
     "terms_and_conditions" TEXT,
@@ -251,6 +260,7 @@ CREATE TABLE "gym_membership_plans" (
     "max_evaluations" INTEGER NOT NULL DEFAULT 0,
     "includes_advisor" BOOLEAN NOT NULL DEFAULT false,
     "show_in_catalog" BOOLEAN NOT NULL DEFAULT false,
+    "assets_ids" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "status" "PlanStatus" NOT NULL,
     "created_by_user_id" TEXT NOT NULL,
     "updated_by_user_id" TEXT,
@@ -278,6 +288,9 @@ CREATE TABLE "contracts" (
     "payment_frequency" "PaymentFrequency" NOT NULL,
     "notes" TEXT,
     "terms_and_conditions" TEXT,
+    "contract_document_id" TEXT,
+    "payment_receipt_ids" JSONB,
+    "receipt_ids" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "created_by_user_id" TEXT NOT NULL,
     "updated_by_user_id" TEXT,
     "approved_by_user_id" TEXT,
@@ -300,11 +313,12 @@ CREATE TABLE "assets" (
     "file_path" TEXT NOT NULL,
     "file_size" INTEGER NOT NULL,
     "mime_type" TEXT NOT NULL,
-    "entity_type" TEXT NOT NULL,
-    "entity_id" TEXT NOT NULL,
+    "gym_id" TEXT NOT NULL,
     "uploaded_by_user_id" TEXT NOT NULL,
     "metadata" JSONB,
     "status" "AssetStatus" NOT NULL,
+    "description" TEXT,
+    "is_hide" BOOLEAN NOT NULL DEFAULT false,
     "created_by_user_id" TEXT NOT NULL,
     "updated_by_user_id" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -312,6 +326,25 @@ CREATE TABLE "assets" (
     "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "assets_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "files" (
+    "id" TEXT NOT NULL,
+    "filename" TEXT NOT NULL,
+    "original_name" TEXT NOT NULL,
+    "file_path" TEXT NOT NULL,
+    "file_size" INTEGER NOT NULL,
+    "mime_type" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "metadata" JSONB,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "description" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "files_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -335,7 +368,6 @@ CREATE TABLE "check_ins" (
 CREATE TABLE "evaluations" (
     "id" TEXT NOT NULL,
     "gym_client_id" TEXT NOT NULL,
-    "contract_id" TEXT,
     "advisor_id" TEXT,
     "evaluation_type" "EvaluationType" NOT NULL,
     "status" "EvaluationStatus" NOT NULL,
@@ -347,6 +379,10 @@ CREATE TABLE "evaluations" (
     "progress_percentage" DECIMAL(5,2),
     "goals" TEXT,
     "results_summary" TEXT,
+    "initial_photo_ids" JSONB,
+    "progress_photo_ids" JSONB,
+    "final_photo_ids" JSONB,
+    "document_ids" JSONB,
     "created_by_user_id" TEXT NOT NULL,
     "updated_by_user_id" TEXT,
     "completed_by_user_id" TEXT,
@@ -365,6 +401,7 @@ CREATE TABLE "evaluation_comments" (
     "comment_type" "CommentType" NOT NULL,
     "comment" TEXT NOT NULL,
     "is_private" BOOLEAN NOT NULL DEFAULT false,
+    "attachment_ids" JSONB,
     "created_by_user_id" TEXT NOT NULL,
     "updated_by_user_id" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -372,74 +409,6 @@ CREATE TABLE "evaluation_comments" (
     "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "evaluation_comments_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "contract_assets" (
-    "id" TEXT NOT NULL,
-    "contract_id" TEXT NOT NULL,
-    "asset_id" TEXT NOT NULL,
-    "asset_type" "ContractAssetType" NOT NULL,
-    "description" TEXT,
-    "is_required" BOOLEAN NOT NULL DEFAULT false,
-    "created_by_user_id" TEXT NOT NULL,
-    "updated_by_user_id" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-    "deleted_at" TIMESTAMP(3),
-
-    CONSTRAINT "contract_assets_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "client_assets" (
-    "id" TEXT NOT NULL,
-    "gym_client_id" TEXT NOT NULL,
-    "asset_id" TEXT NOT NULL,
-    "asset_category" "AssetCategory" NOT NULL,
-    "description" TEXT,
-    "is_required" BOOLEAN NOT NULL DEFAULT false,
-    "expiration_date" TIMESTAMP(3),
-    "created_by_user_id" TEXT NOT NULL,
-    "updated_by_user_id" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-    "deleted_at" TIMESTAMP(3),
-
-    CONSTRAINT "client_assets_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "evaluation_assets" (
-    "id" TEXT NOT NULL,
-    "evaluation_id" TEXT NOT NULL,
-    "asset_id" TEXT NOT NULL,
-    "asset_stage" "EvaluationAssetStage" NOT NULL,
-    "asset_category" "EvaluationAssetCategory" NOT NULL,
-    "description" TEXT,
-    "measurement_type" TEXT,
-    "created_by_user_id" TEXT NOT NULL,
-    "updated_by_user_id" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-    "deleted_at" TIMESTAMP(3),
-
-    CONSTRAINT "evaluation_assets_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "comment_assets" (
-    "id" TEXT NOT NULL,
-    "evaluation_comment_id" TEXT NOT NULL,
-    "asset_id" TEXT NOT NULL,
-    "description" TEXT,
-    "created_by_user_id" TEXT NOT NULL,
-    "updated_by_user_id" TEXT,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-    "deleted_at" TIMESTAMP(3),
-
-    CONSTRAINT "comment_assets_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -455,6 +424,8 @@ CREATE TABLE "leads" (
     "metadata" JSONB,
     "assigned_to_user_id" TEXT,
     "notes" TEXT,
+    "asset_id" TEXT,
+    "asset_ids" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "converted_to_client_id" TEXT,
     "converted_at" TIMESTAMP(3),
     "created_by_user_id" TEXT,
@@ -464,6 +435,100 @@ CREATE TABLE "leads" (
     "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "leads_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "product_categories" (
+    "id" TEXT NOT NULL,
+    "gym_id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "color" TEXT,
+    "created_by_user_id" TEXT NOT NULL,
+    "updated_by_user_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "product_categories_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "products" (
+    "id" TEXT NOT NULL,
+    "gym_id" TEXT NOT NULL,
+    "category_id" TEXT,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "price" DECIMAL(10,2) NOT NULL,
+    "stock" INTEGER,
+    "min_stock" INTEGER,
+    "max_stock" INTEGER,
+    "image_id" TEXT,
+    "status" "ProductStatus" NOT NULL DEFAULT 'active',
+    "type" "ProductType" NOT NULL DEFAULT 'Product',
+    "track_inventory" "TrackInventory" NOT NULL DEFAULT 'simple',
+    "created_by_user_id" TEXT NOT NULL,
+    "updated_by_user_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "products_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "suppliers" (
+    "id" TEXT NOT NULL,
+    "gym_id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "contact_info" TEXT,
+    "phone" TEXT,
+    "email" TEXT,
+    "address" TEXT,
+    "created_by_user_id" TEXT NOT NULL,
+    "updated_by_user_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "suppliers_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "sales" (
+    "id" TEXT NOT NULL,
+    "gym_id" TEXT NOT NULL,
+    "sale_number" TEXT NOT NULL,
+    "total" DECIMAL(10,2) NOT NULL,
+    "payment_status" "PaymentStatus" NOT NULL DEFAULT 'unpaid',
+    "sale_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "customer_name" TEXT,
+    "notes" TEXT,
+    "created_by_user_id" TEXT NOT NULL,
+    "updated_by_user_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "sales_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "sale_items" (
+    "id" TEXT NOT NULL,
+    "sale_id" TEXT NOT NULL,
+    "product_id" TEXT NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "unit_price" DECIMAL(10,2) NOT NULL,
+    "total" DECIMAL(10,2) NOT NULL,
+    "created_by_user_id" TEXT NOT NULL,
+    "updated_by_user_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "sale_items_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -485,7 +550,10 @@ CREATE UNIQUE INDEX "invitations_token_key" ON "invitations"("token");
 CREATE UNIQUE INDEX "gym_clients_gym_id_client_number_key" ON "gym_clients"("gym_id", "client_number");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "gym_clients_gym_id_document_id_key" ON "gym_clients"("gym_id", "document_id");
+CREATE UNIQUE INDEX "gym_clients_gym_id_document_value_key" ON "gym_clients"("gym_id", "document_value");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "sales_gym_id_sale_number_key" ON "sales"("gym_id", "sale_number");
 
 -- AddForeignKey
 ALTER TABLE "subscription_plans" ADD CONSTRAINT "subscription_plans_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -515,12 +583,6 @@ ALTER TABLE "organizations" ADD CONSTRAINT "organizations_updated_by_user_id_fke
 ALTER TABLE "gyms" ADD CONSTRAINT "gyms_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "gyms" ADD CONSTRAINT "gyms_profile_asset_id_fkey" FOREIGN KEY ("profile_asset_id") REFERENCES "assets"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "gyms" ADD CONSTRAINT "gyms_cover_asset_id_fkey" FOREIGN KEY ("cover_asset_id") REFERENCES "assets"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "gyms" ADD CONSTRAINT "gyms_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -543,12 +605,6 @@ ALTER TABLE "collaborators" ADD CONSTRAINT "collaborators_role_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "collaborators" ADD CONSTRAINT "collaborators_invitation_id_fkey" FOREIGN KEY ("invitation_id") REFERENCES "invitations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "collaborators" ADD CONSTRAINT "collaborators_profile_asset_id_fkey" FOREIGN KEY ("profile_asset_id") REFERENCES "assets"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "collaborators" ADD CONSTRAINT "collaborators_cover_asset_id_fkey" FOREIGN KEY ("cover_asset_id") REFERENCES "assets"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "collaborators" ADD CONSTRAINT "collaborators_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -576,9 +632,6 @@ ALTER TABLE "invitations" ADD CONSTRAINT "invitations_updated_by_user_id_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "gym_clients" ADD CONSTRAINT "gym_clients_gym_id_fkey" FOREIGN KEY ("gym_id") REFERENCES "gyms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "gym_clients" ADD CONSTRAINT "gym_clients_profile_asset_id_fkey" FOREIGN KEY ("profile_asset_id") REFERENCES "assets"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "gym_clients" ADD CONSTRAINT "gym_clients_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -617,6 +670,9 @@ ALTER TABLE "contracts" ADD CONSTRAINT "contracts_cancelled_by_user_id_fkey" FOR
 ALTER TABLE "contracts" ADD CONSTRAINT "contracts_gymId_fkey" FOREIGN KEY ("gymId") REFERENCES "gyms"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "assets" ADD CONSTRAINT "assets_gym_id_fkey" FOREIGN KEY ("gym_id") REFERENCES "gyms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "assets" ADD CONSTRAINT "assets_uploaded_by_user_id_fkey" FOREIGN KEY ("uploaded_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -624,6 +680,9 @@ ALTER TABLE "assets" ADD CONSTRAINT "assets_created_by_user_id_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "assets" ADD CONSTRAINT "assets_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "files" ADD CONSTRAINT "files_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "check_ins" ADD CONSTRAINT "check_ins_gym_client_id_fkey" FOREIGN KEY ("gym_client_id") REFERENCES "gym_clients"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -642,9 +701,6 @@ ALTER TABLE "check_ins" ADD CONSTRAINT "check_ins_updated_by_user_id_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "evaluations" ADD CONSTRAINT "evaluations_gym_client_id_fkey" FOREIGN KEY ("gym_client_id") REFERENCES "gym_clients"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "evaluations" ADD CONSTRAINT "evaluations_contract_id_fkey" FOREIGN KEY ("contract_id") REFERENCES "contracts"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "evaluations" ADD CONSTRAINT "evaluations_advisor_id_fkey" FOREIGN KEY ("advisor_id") REFERENCES "collaborators"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -671,54 +727,6 @@ ALTER TABLE "evaluation_comments" ADD CONSTRAINT "evaluation_comments_created_by
 ALTER TABLE "evaluation_comments" ADD CONSTRAINT "evaluation_comments_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "contract_assets" ADD CONSTRAINT "contract_assets_contract_id_fkey" FOREIGN KEY ("contract_id") REFERENCES "contracts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "contract_assets" ADD CONSTRAINT "contract_assets_asset_id_fkey" FOREIGN KEY ("asset_id") REFERENCES "assets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "contract_assets" ADD CONSTRAINT "contract_assets_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "contract_assets" ADD CONSTRAINT "contract_assets_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "client_assets" ADD CONSTRAINT "client_assets_gym_client_id_fkey" FOREIGN KEY ("gym_client_id") REFERENCES "gym_clients"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "client_assets" ADD CONSTRAINT "client_assets_asset_id_fkey" FOREIGN KEY ("asset_id") REFERENCES "assets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "client_assets" ADD CONSTRAINT "client_assets_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "client_assets" ADD CONSTRAINT "client_assets_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "evaluation_assets" ADD CONSTRAINT "evaluation_assets_evaluation_id_fkey" FOREIGN KEY ("evaluation_id") REFERENCES "evaluations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "evaluation_assets" ADD CONSTRAINT "evaluation_assets_asset_id_fkey" FOREIGN KEY ("asset_id") REFERENCES "assets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "evaluation_assets" ADD CONSTRAINT "evaluation_assets_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "evaluation_assets" ADD CONSTRAINT "evaluation_assets_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "comment_assets" ADD CONSTRAINT "comment_assets_evaluation_comment_id_fkey" FOREIGN KEY ("evaluation_comment_id") REFERENCES "evaluation_comments"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "comment_assets" ADD CONSTRAINT "comment_assets_asset_id_fkey" FOREIGN KEY ("asset_id") REFERENCES "assets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "comment_assets" ADD CONSTRAINT "comment_assets_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "comment_assets" ADD CONSTRAINT "comment_assets_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "leads" ADD CONSTRAINT "leads_gym_id_fkey" FOREIGN KEY ("gym_id") REFERENCES "gyms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -732,3 +740,55 @@ ALTER TABLE "leads" ADD CONSTRAINT "leads_created_by_user_id_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "leads" ADD CONSTRAINT "leads_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "product_categories" ADD CONSTRAINT "product_categories_gym_id_fkey" FOREIGN KEY ("gym_id") REFERENCES "gyms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "product_categories" ADD CONSTRAINT "product_categories_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "product_categories" ADD CONSTRAINT "product_categories_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "products" ADD CONSTRAINT "products_gym_id_fkey" FOREIGN KEY ("gym_id") REFERENCES "gyms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "products" ADD CONSTRAINT "products_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "product_categories"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "products" ADD CONSTRAINT "products_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "products" ADD CONSTRAINT "products_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "suppliers" ADD CONSTRAINT "suppliers_gym_id_fkey" FOREIGN KEY ("gym_id") REFERENCES "gyms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "suppliers" ADD CONSTRAINT "suppliers_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "suppliers" ADD CONSTRAINT "suppliers_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "sales" ADD CONSTRAINT "sales_gym_id_fkey" FOREIGN KEY ("gym_id") REFERENCES "gyms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "sales" ADD CONSTRAINT "sales_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "sales" ADD CONSTRAINT "sales_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_sale_id_fkey" FOREIGN KEY ("sale_id") REFERENCES "sales"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "sale_items" ADD CONSTRAINT "sale_items_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+

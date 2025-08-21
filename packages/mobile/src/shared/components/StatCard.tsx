@@ -10,7 +10,7 @@ interface StatCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: any;
+  icon: React.ComponentType<any>;
   iconColor: string;
   onPress?: () => void;
 }

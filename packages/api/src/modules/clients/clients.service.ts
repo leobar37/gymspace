@@ -316,10 +316,7 @@ export class ClientsService {
       };
     }
 
-    console.log('where', {
-      where,
-      dto,
-    });
+    // Removed debug log for production
 
     // Get clients with pagination
     const clients = await this.prismaService.gymClient.findMany({

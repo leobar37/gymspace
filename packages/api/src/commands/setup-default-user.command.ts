@@ -230,7 +230,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       console.log('✅ Guided setup completed');
 
-      // Step 6: Initialize default products
+      // Step 6: Initialize default products and services
       console.log('\n📦 Creating default products...');
       const defaultProducts = [
         {
@@ -288,6 +288,50 @@ export class SetupDefaultUserCommand extends CommandRunner {
           console.log(`✅ Producto creado: ${product.name}`);
         } catch (error) {
           console.log(`⚠️  Error creando producto ${product.name}:`, error.message);
+        }
+      }
+
+      // Step 6.1: Initialize default services
+      console.log('\n🛎️ Creating default services...');
+      const defaultServices = [
+        {
+          name: 'Entrenamiento Personal',
+          description: 'Sesión personalizada de entrenamiento con instructor certificado',
+          price: 150.0,
+        },
+        {
+          name: 'Evaluación Física Completa',
+          description: 'Evaluación antropométrica, composición corporal y plan de entrenamiento',
+          price: 80.0,
+        },
+        {
+          name: 'Clase de Yoga',
+          description: 'Clase grupal de yoga para flexibilidad y relajación',
+          price: 30.0,
+        },
+        {
+          name: 'Clase de Spinning',
+          description: 'Entrenamiento cardiovascular intenso en bicicleta estática',
+          price: 35.0,
+        },
+        {
+          name: 'Nutrición Deportiva',
+          description: 'Consulta nutricional y plan alimenticio personalizado',
+          price: 120.0,
+        },
+        {
+          name: 'Masaje Deportivo',
+          description: 'Masaje terapéutico para recuperación muscular',
+          price: 100.0,
+        },
+      ];
+
+      for (const service of defaultServices) {
+        try {
+          await this.productsService.createService(context, service);
+          console.log(`✅ Servicio creado: ${service.name}`);
+        } catch (error) {
+          console.log(`⚠️  Error creando servicio ${service.name}:`, error.message);
         }
       }
 
@@ -371,6 +415,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
       console.log('💰 Moneda: PEN (Soles)');
       console.log('🕐 Zona Horaria: America/Lima');
       console.log('📦 Productos Creados: 5');
+      console.log('🛎️ Servicios Creados: 6');
       console.log('👥 Clientes Creados: 5');
       console.log('========================================\n');
 

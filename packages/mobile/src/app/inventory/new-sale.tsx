@@ -18,7 +18,8 @@ import {
   CheckIcon,
   XIcon,
   PackageIcon,
-  ChevronLeftIcon
+  ChevronLeftIcon,
+  WrenchIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useCart } from '@/contexts/CartContext';
@@ -26,10 +27,12 @@ import { useProducts } from '@/hooks/useProducts';
 import { useCreateSale } from '@/hooks/useSales';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { ProductCard } from '@/components/inventory/ProductCard';
+import { ServiceCard } from '@/components/inventory/services';
 import { CartItem } from '@/components/inventory/CartItem';
 import { ClientSelector } from '@/features/clients/components/ClientSelector';
 import { useForm, FormProvider } from 'react-hook-form';
 import { useLoadingScreen } from '@/shared/loading-screen';
+import { PRODUCT_TYPES } from '@/shared/constants';
 import type { Product, CreateSaleDto, SaleItemDto, Client } from '@gymspace/sdk';
 
 interface SaleFormData {
@@ -55,6 +58,7 @@ export default function NewSaleScreen() {
 
   const [showProductSelection, setShowProductSelection] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedTab, setSelectedTab] = useState<'products' | 'services'>('products');
 
   const methods = useForm<SaleFormData>({
     defaultValues: {
@@ -65,10 +69,19 @@ export default function NewSaleScreen() {
 
   const { data: productsData, isLoading: loadingProducts } = useProducts({ 
     status: 'active',
+    type: PRODUCT_TYPES.PRODUCT,
     inStock: true,
     page: 1,
     limit: 50 
   });
+  
+  const { data: servicesData, isLoading: loadingServices } = useProducts({ 
+    status: 'active',
+    type: PRODUCT_TYPES.SERVICE,
+    page: 1,
+    limit: 50 
+  });
+  
   const createSaleMutation = useCreateSale();
 
   // Update customer name when client is selected
@@ -85,7 +98,8 @@ export default function NewSaleScreen() {
   }, []);
 
   const handleAddProduct = useCallback((product: Product) => {
-    if (product.stock && product.stock <= 0) {
+    // Only check stock for products, not services
+    if (product.type === PRODUCT_TYPES.PRODUCT && product.stock !== null && product.stock <= 0) {
       Alert.alert('Sin stock', 'Este producto no tiene stock disponible.');
       return;
     }
@@ -191,6 +205,16 @@ export default function NewSaleScreen() {
         onPress={handleAddProduct}
         compact={true}
         showStock={true}
+      />
+    </View>
+  ), [handleAddProduct]);
+
+  const renderServiceCard = useCallback(({ item }: { item: Product }) => (
+    <View className="w-1/2 p-1">
+      <ServiceCard
+        service={item}
+        onPress={handleAddProduct}
+        compact={true}
       />
     </View>
   ), [handleAddProduct]);
@@ -354,7 +378,7 @@ export default function NewSaleScreen() {
             {/* Modal Header */}
             <HStack className="justify-between items-center p-4 border-b border-gray-200">
               <Text className="text-lg font-semibold text-gray-900">
-                Seleccionar Producto
+                Seleccionar {selectedTab === 'products' ? 'Producto' : 'Servicio'}
               </Text>
               <Pressable
                 onPress={() => setShowProductSelection(false)}
@@ -364,30 +388,105 @@ export default function NewSaleScreen() {
               </Pressable>
             </HStack>
 
-            {/* Products Grid */}
+            {/* Tabs */}
+            <HStack className="p-2 bg-gray-100">
+              <Pressable
+                onPress={() => setSelectedTab('products')}
+                className={`flex-1 py-2 px-4 rounded-lg ${
+                  selectedTab === 'products' ? 'bg-white shadow-sm' : ''
+                }`}
+              >
+                <HStack className="items-center justify-center" space="sm">
+                  <Icon 
+                    as={PackageIcon} 
+                    className={`w-4 h-4 ${
+                      selectedTab === 'products' ? 'text-blue-600' : 'text-gray-500'
+                    }`} 
+                  />
+                  <Text 
+                    className={`font-medium ${
+                      selectedTab === 'products' ? 'text-blue-600' : 'text-gray-600'
+                    }`}
+                  >
+                    Productos
+                  </Text>
+                </HStack>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setSelectedTab('services')}
+                className={`flex-1 py-2 px-4 rounded-lg ${
+                  selectedTab === 'services' ? 'bg-white shadow-sm' : ''
+                }`}
+              >
+                <HStack className="items-center justify-center" space="sm">
+                  <Icon 
+                    as={WrenchIcon} 
+                    className={`w-4 h-4 ${
+                      selectedTab === 'services' ? 'text-blue-600' : 'text-gray-500'
+                    }`} 
+                  />
+                  <Text 
+                    className={`font-medium ${
+                      selectedTab === 'services' ? 'text-blue-600' : 'text-gray-600'
+                    }`}
+                  >
+                    Servicios
+                  </Text>
+                </HStack>
+              </Pressable>
+            </HStack>
+
+            {/* Content */}
             <View className="flex-1">
-              {loadingProducts ? (
-                <View className="flex-1 items-center justify-center">
-                  <Spinner size="large" />
-                  <Text className="text-gray-600 mt-2">Cargando productos...</Text>
-                </View>
+              {selectedTab === 'products' ? (
+                loadingProducts ? (
+                  <View className="flex-1 items-center justify-center">
+                    <Spinner size="large" />
+                    <Text className="text-gray-600 mt-2">Cargando productos...</Text>
+                  </View>
+                ) : (
+                  <FlatList
+                    data={productsData?.items || []}
+                    renderItem={renderProductCard}
+                    keyExtractor={(item) => item.id}
+                    numColumns={2}
+                    contentContainerStyle={{ padding: 16 }}
+                    showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={() => (
+                      <View className="flex-1 items-center justify-center py-12">
+                        <Icon as={PackageIcon} className="w-16 h-16 text-gray-300 mb-4" />
+                        <Text className="text-gray-600 text-center">
+                          No hay productos disponibles
+                        </Text>
+                      </View>
+                    )}
+                  />
+                )
               ) : (
-                <FlatList
-                  data={productsData?.items || []}
-                  renderItem={renderProductCard}
-                  keyExtractor={(item) => item.id}
-                  numColumns={2}
-                  contentContainerStyle={{ padding: 16 }}
-                  showsVerticalScrollIndicator={false}
-                  ListEmptyComponent={() => (
-                    <View className="flex-1 items-center justify-center py-12">
-                      <Icon as={PackageIcon} className="w-16 h-16 text-gray-300 mb-4" />
-                      <Text className="text-gray-600 text-center">
-                        No hay productos disponibles
-                      </Text>
-                    </View>
-                  )}
-                />
+                loadingServices ? (
+                  <View className="flex-1 items-center justify-center">
+                    <Spinner size="large" />
+                    <Text className="text-gray-600 mt-2">Cargando servicios...</Text>
+                  </View>
+                ) : (
+                  <FlatList
+                    data={servicesData?.items || []}
+                    renderItem={renderServiceCard}
+                    keyExtractor={(item) => item.id}
+                    numColumns={2}
+                    contentContainerStyle={{ padding: 16 }}
+                    showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={() => (
+                      <View className="flex-1 items-center justify-center py-12">
+                        <Icon as={WrenchIcon} className="w-16 h-16 text-gray-300 mb-4" />
+                        <Text className="text-gray-600 text-center">
+                          No hay servicios disponibles
+                        </Text>
+                      </View>
+                    )}
+                  />
+                )
               )}
             </View>
           </VStack>

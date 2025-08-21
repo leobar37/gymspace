@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiSecurity } from '
 import { ProductsService } from './products.service';
 import {
   CreateProductDto,
+  CreateServiceDto,
   UpdateProductDto,
   SearchProductsDto,
   CreateProductCategoryDto,
@@ -71,6 +72,20 @@ export class ProductsController {
   @ApiResponse({ status: 409, description: 'Product name already exists' })
   async createProduct(@Body() dto: CreateProductDto, @AppCtxt() ctx: RequestContext) {
     return await this.productsService.createProduct(ctx, dto);
+  }
+
+  @Post('services')
+  @Allow(PERMISSIONS.PRODUCTS_CREATE)
+  @ApiOperation({ 
+    summary: 'Create a new service', 
+    description: 'Create a new service (no inventory tracking)' 
+  })
+  @ApiResponse({ status: 201, description: 'Service created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - invalid input data' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
+  @ApiResponse({ status: 409, description: 'Service name already exists' })
+  async createService(@Body() dto: CreateServiceDto, @AppCtxt() ctx: RequestContext) {
+    return await this.productsService.createService(ctx, dto);
   }
 
   @Get()

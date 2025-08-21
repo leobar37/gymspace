@@ -105,6 +105,18 @@ enum DurationPeriod {
     MONTH
 }
 
+enum ProductType {
+    Product
+    Service
+}
+
+enum TrackInventory {
+    none
+    simple
+    advanced
+    capacity
+}
+
 // Models
 model SubscriptionPlan {
     id               String    @id @default(uuid())
@@ -519,6 +531,7 @@ model Asset {
     metadata         Json?
     status           AssetStatus
     description      String?     @db.Text
+    isHide           Boolean     @default(false) @map("is_hide")
     createdByUserId  String      @map("created_by_user_id")
     updatedByUserId  String?     @map("updated_by_user_id")
     createdAt        DateTime    @default(now()) @map("created_at")
@@ -706,9 +719,13 @@ model Product {
     name            String
     description     String?       @db.Text
     price           Decimal       @db.Decimal(10, 2)
-    stock           Int           @default(0)
+    stock           Int?          @map("stock") // Made optional for services
+    minStock        Int?          @map("min_stock") // Optional minimum stock level
+    maxStock        Int?          @map("max_stock") // Optional maximum stock level
     imageId         String?       @map("image_id") // Asset ID
     status          ProductStatus @default(active)
+    type            ProductType   @default(Product) @map("type")
+    trackInventory  TrackInventory @default(simple) @map("track_inventory")
     createdByUserId String        @map("created_by_user_id")
     updatedByUserId String?       @map("updated_by_user_id")
     createdAt       DateTime      @default(now()) @map("created_at")

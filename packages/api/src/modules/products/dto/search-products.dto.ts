@@ -1,7 +1,7 @@
 import { IsOptional, IsString, IsEnum, IsNumber, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ProductStatus } from '@prisma/client';
+import { ProductStatus, ProductType } from '@prisma/client';
 
 export class SearchProductsDto {
   @ApiProperty({
@@ -21,6 +21,16 @@ export class SearchProductsDto {
   @IsOptional()
   @IsString()
   categoryId?: string;
+
+  @ApiProperty({
+    example: 'Product',
+    enum: ProductType,
+    description: 'Filter by product type (Product or Service)',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(ProductType)
+  type?: ProductType;
 
   @ApiProperty({
     example: 'active',

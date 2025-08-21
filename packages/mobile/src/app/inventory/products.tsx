@@ -1,5 +1,6 @@
 import { ProductCard } from '@/components/inventory/ProductCard';
 import { ProductFilters } from '@/components/inventory/ProductFilters';
+import { ProductTypeSelector } from '@/components/inventory/ProductTypeSelector';
 import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -30,6 +31,7 @@ export default function ProductsScreen() {
   const [filters, setFilters] = useState<SearchProductsParams>({ page: 1, limit: 20 });
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showProductTypeSelector, setShowProductTypeSelector] = useState(false);
 
   const {
     data,
@@ -74,7 +76,12 @@ export default function ProductsScreen() {
   }, []);
 
   const handleAddProduct = useCallback(() => {
-    router.push('/inventory/products/new');
+    setShowProductTypeSelector(true);
+  }, []);
+
+  const handleSelectProductType = useCallback((type: 'product' | 'service') => {
+    // Navigate to the appropriate creation screen based on type
+    router.push(`/inventory/products/new?type=${type}`);
   }, []);
 
   const handleLoadMore = useCallback(() => {
@@ -302,6 +309,12 @@ export default function ProductsScreen() {
         maxToRenderPerBatch={10}
         windowSize={10}
         initialNumToRender={8}
+      />
+      
+      <ProductTypeSelector
+        isOpen={showProductTypeSelector}
+        onClose={() => setShowProductTypeSelector(false)}
+        onSelectType={handleSelectProductType}
       />
     </SafeAreaView>
   );

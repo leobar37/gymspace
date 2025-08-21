@@ -40,6 +40,7 @@ const loginSchema = z.object({
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
+console.log("env",__DEV__);
 
 export default function LoginScreen() {
   const { sdk } = useGymSdk();
@@ -68,8 +69,8 @@ export default function LoginScreen() {
   const methods = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: __DEV__ ? 'admin@gymspace.pe' : '',
+      password: __DEV__ ? '182@Alfk3458' : '',
     },
   });
 

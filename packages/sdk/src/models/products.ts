@@ -47,6 +47,14 @@ export interface CreateProductDto {
   status?: 'active' | 'inactive';
 }
 
+export interface CreateServiceDto {
+  name: string;
+  description?: string;
+  price: number;
+  categoryId?: string;
+  imageId?: string;
+}
+
 export interface UpdateProductDto {
   name?: string;
   description?: string;
@@ -68,9 +76,11 @@ export interface Product {
   name: string;
   description?: string;
   price: number;
-  stock: number;
+  stock: number | null;
   imageId?: string;
   status: 'active' | 'inactive';
+  type?: 'Product' | 'Service';
+  trackInventory?: 'none' | 'stock' | 'batch';
   createdAt: string;
   updatedAt: string;
   category?: ProductCategory;
@@ -92,6 +102,7 @@ export interface Product {
 export interface SearchProductsParams extends PaginationQueryDto {
   search?: string;
   categoryId?: string;
+  type?: 'Product' | 'Service';
   status?: 'active' | 'inactive';
   inStock?: boolean;
   minPrice?: number;

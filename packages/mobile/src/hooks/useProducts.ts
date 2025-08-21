@@ -6,6 +6,7 @@ import type {
   ProductCategory,
   SearchProductsParams, 
   CreateProductDto,
+  CreateServiceDto,
   UpdateProductDto
 } from '@gymspace/sdk';
 
@@ -103,6 +104,23 @@ export function useCreateProduct() {
     onSuccess: () => {
       // Invalidate and refetch product lists
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.lowStock() });
+    },
+  });
+}
+
+export function useCreateService() {
+  const { sdk } = useGymSdk();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateServiceDto): Promise<Product> => {
+      return sdk.products.createService(data);
+    },
+    onSuccess: () => {
+      // Invalidate and refetch product lists (services are stored as products)
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      // Services don't affect low stock, but invalidate for consistency
       queryClient.invalidateQueries({ queryKey: productKeys.lowStock() });
     },
   });

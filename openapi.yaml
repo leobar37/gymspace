@@ -2603,6 +2603,16 @@ paths:
           schema:
             example: uuid-category-id
             type: string
+        - name: type
+          required: false
+          in: query
+          description: Filter by product type (Product or Service)
+          schema:
+            example: Product
+            enum:
+              - Product
+              - Service
+            type: string
         - name: status
           required: false
           in: query
@@ -2665,6 +2675,32 @@ paths:
       responses:
         '200':
           description: Paginated list of products
+      tags:
+        - Products
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/products/services:
+    post:
+      operationId: ProductsController_createService
+      summary: Create a new service
+      description: Create a new service (no inventory tracking)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceDto'
+      responses:
+        '201':
+          description: Service created successfully
+        '400':
+          description: Bad request - invalid input data
+        '404':
+          description: Category not found
+        '409':
+          description: Service name already exists
       tags:
         - Products
       security:
@@ -5142,6 +5178,34 @@ components:
             - active
             - inactive
           description: Product status
+      required:
+        - name
+        - price
+    CreateServiceDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Personal Training Session
+          description: Service name
+          minLength: 2
+        description:
+          type: string
+          example: One-on-one personal training session with a certified trainer
+          description: Service description
+        price:
+          type: number
+          example: 50
+          description: Service price per session
+          minimum: 0
+        categoryId:
+          type: string
+          example: uuid-category-id
+          description: Service category ID
+        imageId:
+          type: string
+          example: uuid-asset-id
+          description: Service image asset ID
       required:
         - name
         - price

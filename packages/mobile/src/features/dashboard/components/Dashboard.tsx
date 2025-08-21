@@ -3,7 +3,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useRequireAuth } from '@/controllers/auth.controller';
 import React from 'react';
-import { RefreshControl, ScrollView } from 'react-native';
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDashboardController } from '../controllers/dashboard.controller';
 import { CheckInButton } from './CheckInButton';
@@ -58,7 +58,7 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+    <View className="flex-1 bg-gray-50">
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -71,19 +71,14 @@ export const Dashboard: React.FC = () => {
           <Text className="text-gray-600 mb-2">
             {`Resumen de tu gimnasio al ${new Date().toLocaleDateString()}`}
           </Text>
-
           <StatsGrid stats={stats} />
-
           <ExpiringContractsAlert expiringContractsCount={stats?.expiringContractsCount || 0} />
-
           <RecentActivity recentActivity={recentActivity || []} />
-
           <MonthlySummary stats={stats} />
         </VStack>
       </ScrollView>
-
       {/* Floating Check-in Button */}
       <CheckInButton />
-    </SafeAreaView>
+    </View>
   );
 };

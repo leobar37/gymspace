@@ -9,8 +9,13 @@ import { VStack } from '@/components/ui/vstack';
 import { AlertCircleIcon, UserPlusIcon } from 'lucide-react-native';
 import React from 'react';
 
+interface MonthlyStats {
+  newClientsThisMonth: number;
+  expiringContractsCount: number;
+}
+
 interface MonthlySummaryProps {
-  stats: any;
+  stats: MonthlyStats;
 }
 
 export const MonthlySummary: React.FC<MonthlySummaryProps> = ({ stats }) => {

@@ -11,8 +11,17 @@ import {
 import React from 'react';
 import { View } from 'react-native';
 
+interface Stats {
+  activeClients: number;
+  totalClients: number;
+  todayCheckIns: number;
+  activeContracts: number;
+  totalContracts: number;
+  monthlyRevenue: number;
+}
+
 interface StatsGridProps {
-  stats: any;
+  stats: Stats;
 }
 
 export const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {

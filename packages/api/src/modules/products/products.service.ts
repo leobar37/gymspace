@@ -3,13 +3,14 @@ import { PrismaService } from '../../core/database/prisma.service';
 import { PaginationService } from '../../common/services/pagination.service';
 import {
   CreateProductDto,
+  CreateServiceDto,
   UpdateProductDto,
   SearchProductsDto,
   CreateProductCategoryDto,
   UpdateProductCategoryDto,
 } from './dto';
 import { ResourceNotFoundException, BusinessException } from '../../common/exceptions';
-import { Prisma, ProductStatus } from '@prisma/client';
+import { Prisma, ProductStatus, ProductType, TrackInventory } from '@prisma/client';
 import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
@@ -198,6 +199,61 @@ export class ProductsService {
     });
   }
 
+  async createService(ctx: RequestContext, dto: CreateServiceDto) {
+    const gymId = ctx.getGymId()!;
+    const userId = ctx.getUserId()!;
+
+    // Validate category exists if provided
+    if (dto.categoryId) {
+      const category = await this.prisma.productCategory.findFirst({
+        where: {
+          id: dto.categoryId,
+          gymId,
+          deletedAt: null,
+        },
+      });
+
+      if (!category) {
+        throw new ResourceNotFoundException('Category not found');
+      }
+    }
+
+    // Check for duplicate service name within gym
+    const existingService = await this.prisma.product.findFirst({
+      where: {
+        gymId,
+        name: dto.name,
+        deletedAt: null,
+      },
+    });
+
+    if (existingService) {
+      throw new BusinessException('Service with this name already exists');
+    }
+
+    // Filter out any unknown fields from DTO
+    const { name, description, price, categoryId, imageId } = dto;
+
+    return this.prisma.product.create({
+      data: {
+        name,
+        description,
+        price,
+        stock: null, // Services don't have stock
+        categoryId,
+        imageId,
+        status: ProductStatus.active,
+        type: ProductType.Service,
+        trackInventory: TrackInventory.none,
+        gymId,
+        createdByUserId: userId,
+      },
+      include: {
+        category: true,
+      },
+    });
+  }
+
   async updateProduct(ctx: RequestContext, productId: string, dto: UpdateProductDto) {
     const userId = ctx.getUserId()!;
 
@@ -287,7 +343,7 @@ export class ProductsService {
     });
   }
 
-  async getProduct(ctx: RequestContext, productId: string) {
+  async getProduct(_ctx: RequestContext, productId: string) {
     // Context is passed for consistency but not currently used
     // Could be used in the future for gym-specific validation
     const product = await this.prisma.product.findFirst({
@@ -319,6 +375,7 @@ export class ProductsService {
     const {
       search,
       categoryId,
+      type,
       status,
       inStock,
       minPrice,
@@ -344,6 +401,10 @@ export class ProductsService {
 
     if (categoryId) {
       where.categoryId = categoryId;
+    }
+
+    if (type) {
+      where.type = type;
     }
 
     if (status) {

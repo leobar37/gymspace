@@ -47,12 +47,6 @@ export const useClientsController = () => {
     return useQuery({
       queryKey: clientsKeys.list(filters),
       queryFn: async () => {
-        console.log("filters 2", {
-          ...filters,
-          page: filters.page || 1,
-          limit: filters.limit || 20,
-        });
-        
         const response = await sdk.clients.searchClients({
           ...filters,
           page: filters.page || 1,

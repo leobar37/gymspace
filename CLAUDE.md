@@ -4,11 +4,43 @@
 
 ## Development Paths
 
+### SDK Access Pattern (CRITICAL for Mobile App)
+- **NEVER** import gymspaceClient directly from lib/api-client
+- **ALWAYS** use useGymSdk hook from @/providers/GymSdkProvider
+- Pattern: `const { sdk } = useGymSdk();`
+- This ensures proper authentication and configuration
+- All API calls in mobile app must go through the sdk from useGymSdk
+
+### Loading Screen Pattern (CRITICAL for Mobile App)
+- **ALWAYS** use `useLoadingScreen` from `@/shared/loading-screen` for:
+  - Create operations (new records)
+  - Update/Edit operations
+  - Delete operations
+  - Complex async operations
+- Pattern: `const { execute } = useLoadingScreen();`
+- Wrap async operations with `execute()` providing:
+  - `action`: Loading message
+  - `successMessage`: Success feedback
+  - `successActions`: Post-success navigation options
+  - `errorFormatter`: Error message formatting
+- **NEVER** use simple try/catch with toast for these operations
+
 ### Form Development
 - Always use `/Users/leobar37/code/gymspace/packages/mobile/src/components/forms` to work with forms
 
 ### Component Replacements
 - CardContent component does not exist, use View with tailwind classes instead
+
+### Configuration Context (CRITICAL for Mobile App)
+- **NEVER** use `useGymContext` or `useGymConfig` - they don't exist
+- Available hooks from `@/config/ConfigContext`:
+  - `useConfig()` - Returns full config context
+  - `useCountryConfig()` - Returns country configuration
+  - `useDocumentTypes()` - Returns document types for the country
+  - `useDocumentValidator()` - Returns document validation function
+  - `useFormatPrice()` - Returns price formatting function
+- Pattern for country config: `const config = useCountryConfig();`
+- Pattern for price formatting: `const formatPrice = useFormatPrice();`
 
 ### Service Architecture
 - Add the context as first parameter in the services, and pass the complete RequestContext, instead of 
@@ -145,3 +177,4 @@
 - nevear addd examples unless i ask for it
 - not add README.md after do something
 - the primary color is the default of the library
+- never run commands unless i ask for it
