@@ -123,7 +123,17 @@ export class GymsService {
             country: true,
             currency: true,
             timezone: true,
-            subscriptionPlan: true,
+          },
+          include: {
+            subscriptionOrganizations: {
+              where: {
+                isActive: true,
+              },
+              include: {
+                subscriptionPlan: true,
+              },
+              take: 1,
+            },
           },
         },
         _count: {
@@ -247,8 +257,14 @@ export class GymsService {
       },
       collaborators: {
         total: totalCollaborators,
-        limit: (gym as any).organization.subscriptionPlan.maxUsersPerGym,
-        available: (gym as any).organization.subscriptionPlan.maxUsersPerGym - totalCollaborators,
+        limit:
+          (gym as any).organization.subscriptionOrganizations[0]?.subscriptionPlan
+            ?.maxUsersPerGym || 0,
+        available: Math.max(
+          0,
+          ((gym as any).organization.subscriptionOrganizations[0]?.subscriptionPlan
+            ?.maxUsersPerGym || 0) - totalCollaborators,
+        ),
       },
       contracts: {
         active: activeContracts,

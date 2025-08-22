@@ -3,7 +3,11 @@ import { SubscriptionsService } from './subscriptions.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CacheService } from '../../core/cache/cache.service';
 import { IRequestContext, SubscriptionStatus } from '@gymspace/shared';
-import { BusinessException, ResourceNotFoundException, ValidationException } from '../../common/exceptions';
+import {
+  BusinessException,
+  ResourceNotFoundException,
+  ValidationException,
+} from '../../common/exceptions';
 
 // Mock data
 const mockUser = {
@@ -228,9 +232,9 @@ describe('SubscriptionsService', () => {
 
       prismaService.organization.findUnique.mockResolvedValue(organizationWithoutSubscription);
 
-      await expect(
-        service.getSubscriptionStatus('org-1', mockRequestContext),
-      ).rejects.toThrow(BusinessException);
+      await expect(service.getSubscriptionStatus('org-1', mockRequestContext)).rejects.toThrow(
+        BusinessException,
+      );
     });
 
     it('should calculate correct days remaining', async () => {
@@ -305,7 +309,11 @@ describe('SubscriptionsService', () => {
         limits: { maxGyms: 1, maxClientsPerGym: 50, maxUsersPerGym: 3 },
       } as any);
 
-      const result = await service.affiliateOrganization('org-1', { subscriptionPlanId: 'plan-free' }, mockRequestContext);
+      const result = await service.affiliateOrganization(
+        'org-1',
+        { subscriptionPlanId: 'plan-free' },
+        mockRequestContext,
+      );
 
       expect(result.status).toBe(SubscriptionStatus.ACTIVE);
       expect(prismaService.subscriptionOrganization.create).toHaveBeenCalled();
@@ -329,7 +337,11 @@ describe('SubscriptionsService', () => {
       prismaService.subscriptionPlan.findUnique.mockResolvedValue(mockFreePlan);
 
       await expect(
-        service.affiliateOrganization('org-1', { subscriptionPlanId: 'plan-free' }, mockRequestContext),
+        service.affiliateOrganization(
+          'org-1',
+          { subscriptionPlanId: 'plan-free' },
+          mockRequestContext,
+        ),
       ).rejects.toThrow(BusinessException);
     });
 
@@ -343,7 +355,11 @@ describe('SubscriptionsService', () => {
       prismaService.subscriptionPlan.findUnique.mockResolvedValue(mockPaidPlan);
 
       await expect(
-        service.affiliateOrganization('org-1', { subscriptionPlanId: 'plan-paid' }, mockRequestContext),
+        service.affiliateOrganization(
+          'org-1',
+          { subscriptionPlanId: 'plan-paid' },
+          mockRequestContext,
+        ),
       ).rejects.toThrow(ValidationException);
     });
 
@@ -360,7 +376,11 @@ describe('SubscriptionsService', () => {
       });
 
       await expect(
-        service.affiliateOrganization('org-1', { subscriptionPlanId: 'plan-free' }, nonOwnerContext),
+        service.affiliateOrganization(
+          'org-1',
+          { subscriptionPlanId: 'plan-free' },
+          nonOwnerContext,
+        ),
       ).rejects.toThrow(BusinessException);
     });
 
@@ -382,7 +402,11 @@ describe('SubscriptionsService', () => {
 
       jest.spyOn(service, 'getSubscriptionStatus').mockResolvedValue({} as any);
 
-      await service.affiliateOrganization('org-1', { subscriptionPlanId: 'plan-free-2' }, mockRequestContext);
+      await service.affiliateOrganization(
+        'org-1',
+        { subscriptionPlanId: 'plan-free-2' },
+        mockRequestContext,
+      );
 
       expect(prismaService.subscriptionOrganization.update).toHaveBeenCalledWith({
         where: { id: 'sub-1' },
@@ -494,14 +518,15 @@ describe('SubscriptionsService', () => {
 
       await service.upgradeSubscription('org-1', 'plan-paid', mockRequestContext);
 
-      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock
+        .calls[0][0];
       const startDate = createCall.data.startDate;
       const endDate = createCall.data.endDate;
 
       // Should be approximately 3 months (90 days)
       const expectedDuration = 3 * 30 * 24 * 60 * 60 * 1000;
       const actualDuration = endDate.getTime() - startDate.getTime();
-      
+
       expect(Math.abs(actualDuration - expectedDuration)).toBeLessThan(1000); // Within 1 second
     });
   });
@@ -663,13 +688,13 @@ describe('SubscriptionsService', () => {
 
       prismaService.organization.findUnique.mockResolvedValue(organizationWithSubscription);
 
-      await expect(
-        service.checkSubscriptionLimit('org-1', 'clients'),
-      ).rejects.toThrow(ValidationException);
+      await expect(service.checkSubscriptionLimit('org-1', 'clients')).rejects.toThrow(
+        ValidationException,
+      );
 
-      await expect(
-        service.checkSubscriptionLimit('org-1', 'users'),
-      ).rejects.toThrow(ValidationException);
+      await expect(service.checkSubscriptionLimit('org-1', 'users')).rejects.toThrow(
+        ValidationException,
+      );
     });
 
     it('should throw error if gym not found for client/user limit check', async () => {

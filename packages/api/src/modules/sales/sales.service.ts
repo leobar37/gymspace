@@ -9,7 +9,7 @@ import {
   SaleItemDto,
 } from './dto';
 import { ResourceNotFoundException, BusinessException } from '../../common/exceptions';
-import { Prisma, PaymentStatus, ProductStatus } from '@prisma/client';
+import { Prisma, PaymentStatus, ProductStatus, TrackInventory } from '@prisma/client';
 
 @Injectable()
 export class SalesService {
@@ -74,10 +74,13 @@ export class SalesService {
         validationErrors.push(`Product ${product.name} is not active`);
       }
 
-      if (product.stock < item.quantity) {
-        validationErrors.push(
-          `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`,
-        );
+      // Only validate stock for products that track inventory
+      if (product.trackInventory !== TrackInventory.none && product.stock !== null) {
+        if (product.stock < item.quantity) {
+          validationErrors.push(
+            `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`,
+          );
+        }
       }
 
       // Validate unit price matches current product price (with small tolerance for price changes)
@@ -157,16 +160,19 @@ export class SalesService {
           },
         });
 
-        // Update product stock
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: {
-              decrement: item.quantity,
+        // Update product stock only if it tracks inventory
+        const product = products.find((p) => p.id === item.productId);
+        if (product && product.trackInventory !== TrackInventory.none && product.stock !== null) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stock: {
+                decrement: item.quantity,
+              },
+              updatedByUserId: userId,
             },
-            updatedByUserId: userId,
-          },
-        });
+          });
+        }
       }
 
       // Fetch the complete sale with items
@@ -417,17 +423,27 @@ export class SalesService {
 
     // Restore stock for all items in transaction
     return await this.prisma.$transaction(async (tx) => {
-      // Restore stock for each item
+      // Get products to check if they track inventory
+      const productIds = sale.saleItems.map((item) => item.productId);
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, trackInventory: true, stock: true },
+      });
+
+      // Restore stock for each item that tracks inventory
       for (const item of sale.saleItems) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: {
-              increment: item.quantity,
+        const product = products.find((p) => p.id === item.productId);
+        if (product && product.trackInventory !== TrackInventory.none && product.stock !== null) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stock: {
+                increment: item.quantity,
+              },
+              updatedByUserId: userId,
             },
-            updatedByUserId: userId,
-          },
-        });
+          });
+        }
       }
 
       // Soft delete the sale (sale items will be handled by cascade)

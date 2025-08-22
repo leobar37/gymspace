@@ -65,6 +65,7 @@ CREATE TABLE "subscription_plans" (
     "max_users_per_gym" INTEGER NOT NULL,
     "features" JSONB NOT NULL,
     "description" TEXT,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_by_user_id" TEXT,
     "updated_by_user_id" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -72,6 +73,25 @@ CREATE TABLE "subscription_plans" (
     "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "subscription_plans_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "subscription_organizations" (
+    "id" TEXT NOT NULL,
+    "organization_id" TEXT NOT NULL,
+    "subscription_plan_id" TEXT NOT NULL,
+    "status" "SubscriptionStatus" NOT NULL,
+    "start_date" TIMESTAMP(3) NOT NULL,
+    "end_date" TIMESTAMP(3) NOT NULL,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "metadata" JSONB,
+    "created_by_user_id" TEXT NOT NULL,
+    "updated_by_user_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "subscription_organizations_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -101,10 +121,7 @@ CREATE TABLE "organizations" (
     "owner_user_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "organization_code" TEXT NOT NULL,
-    "subscription_plan_id" TEXT NOT NULL,
-    "subscription_status" "SubscriptionStatus" NOT NULL,
-    "subscription_start" TIMESTAMP(3) NOT NULL,
-    "subscription_end" TIMESTAMP(3) NOT NULL,
+    "has_used_free_trial" BOOLEAN NOT NULL DEFAULT false,
     "country" TEXT NOT NULL,
     "currency" TEXT NOT NULL,
     "timezone" TEXT NOT NULL,
@@ -532,6 +549,9 @@ CREATE TABLE "sale_items" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "subscription_organizations_organization_id_is_active_key" ON "subscription_organizations"("organization_id", "is_active");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
@@ -562,6 +582,18 @@ ALTER TABLE "subscription_plans" ADD CONSTRAINT "subscription_plans_created_by_u
 ALTER TABLE "subscription_plans" ADD CONSTRAINT "subscription_plans_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "subscription_organizations" ADD CONSTRAINT "subscription_organizations_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subscription_organizations" ADD CONSTRAINT "subscription_organizations_subscription_plan_id_fkey" FOREIGN KEY ("subscription_plan_id") REFERENCES "subscription_plans"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subscription_organizations" ADD CONSTRAINT "subscription_organizations_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "subscription_organizations" ADD CONSTRAINT "subscription_organizations_updated_by_user_id_fkey" FOREIGN KEY ("updated_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -569,9 +601,6 @@ ALTER TABLE "users" ADD CONSTRAINT "users_updated_by_user_id_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "organizations" ADD CONSTRAINT "organizations_owner_user_id_fkey" FOREIGN KEY ("owner_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "organizations" ADD CONSTRAINT "organizations_subscription_plan_id_fkey" FOREIGN KEY ("subscription_plan_id") REFERENCES "subscription_plans"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "organizations" ADD CONSTRAINT "organizations_created_by_user_id_fkey" FOREIGN KEY ("created_by_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

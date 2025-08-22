@@ -8,6 +8,13 @@ import {
 import { CacheService } from '../../core/cache/cache.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { AffiliateOrganizationDto, AvailablePlanDto, SubscriptionStatusDto } from './dto';
+import dayjs from 'dayjs';
+
+export enum DurationPeriod {
+  DAY = 'DAY',
+  MONTH = 'MONTH',
+  YEAR = 'YEAR',
+}
 
 @Injectable()
 export class SubscriptionsService {
@@ -406,7 +413,12 @@ export class SubscriptionsService {
   /**
    * Get the default free plan (Gratuito)
    */
-  async getDefaultFreePlan(): Promise<{ id: string; name: string }> {
+  async getDefaultFreePlan(): Promise<{
+    id: string;
+    name: string;
+    duration: number;
+    durationPeriod: string;
+  }> {
     const freePlan = await this.prisma.subscriptionPlan.findFirst({
       where: {
         name: 'Gratuito',
@@ -416,6 +428,8 @@ export class SubscriptionsService {
       select: {
         id: true,
         name: true,
+        duration: true,
+        durationPeriod: true,
       },
     });
 
@@ -427,6 +441,55 @@ export class SubscriptionsService {
   }
 
   /**
+   * Create a free trial subscription for a new organization
+   * This is called when a new owner registers
+   */
+  async createFreeTrialSubscription(organizationId: string, userId: string): Promise<void> {
+    const freePlan = await this.getDefaultFreePlan();
+
+    // Calculate end date based on plan duration
+    const startDate = new Date();
+    let endDate: Date;
+
+    if (freePlan.duration && freePlan.durationPeriod) {
+      if (freePlan.durationPeriod === DurationPeriod.MONTH) {
+        endDate = dayjs(startDate).add(freePlan.duration, 'month').toDate();
+      } else if (freePlan.durationPeriod === DurationPeriod.YEAR) {
+        endDate = dayjs(startDate).add(freePlan.duration, 'year').toDate();
+      } else if (freePlan.durationPeriod === DurationPeriod.DAY) {
+        endDate = dayjs(startDate).add(freePlan.duration, 'day').toDate();
+      } else {
+        // Default to 30 days if unknown period
+        endDate = dayjs(startDate).add(30, 'day').toDate();
+      }
+    } else {
+      // Default to 30 days if no duration specified
+      endDate = dayjs(startDate).add(30, 'day').toDate();
+    }
+
+    await this.prisma.subscriptionOrganization.create({
+      data: {
+        organizationId,
+        subscriptionPlanId: freePlan.id,
+        status: SubscriptionStatus.ACTIVE,
+        startDate,
+        endDate,
+        isActive: true,
+        createdByUserId: userId,
+      },
+    });
+
+    // Mark organization as having used free trial
+    await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: {
+        hasUsedFreeTrial: true,
+        updatedByUserId: userId,
+      },
+    });
+  }
+
+  /**
    * Check subscription expiration and update status
    * This method will be called by the cron job
    */
@@ -435,7 +498,7 @@ export class SubscriptionsService {
     expired: string[];
   }> {
     const now = new Date();
-    
+
     const expiredSubscriptions = await this.prisma.subscriptionOrganization.findMany({
       where: {
         endDate: {
@@ -568,7 +631,9 @@ export class SubscriptionsService {
 
       if (newPlan.duration && newPlan.durationPeriod) {
         const multiplier = newPlan.durationPeriod === 'MONTH' ? 30 : 1;
-        endDate = new Date(startDate.getTime() + newPlan.duration * multiplier * 24 * 60 * 60 * 1000);
+        endDate = new Date(
+          startDate.getTime() + newPlan.duration * multiplier * 24 * 60 * 60 * 1000,
+        );
       } else {
         // Default to 1 month for paid plans
         endDate = new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);

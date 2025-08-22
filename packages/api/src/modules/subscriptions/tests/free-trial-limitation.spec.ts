@@ -107,7 +107,11 @@ describe('SubscriptionsService - Free Trial Limitation', () => {
         return callback(prismaService);
       });
 
-      await service.affiliateOrganization('org-new', { subscriptionPlanId: 'plan-free' }, mockRequestContext);
+      await service.affiliateOrganization(
+        'org-new',
+        { subscriptionPlanId: 'plan-free' },
+        mockRequestContext,
+      );
 
       // Verify free trial subscription is created
       expect(prismaService.subscriptionOrganization.create).toHaveBeenCalledWith({
@@ -144,7 +148,11 @@ describe('SubscriptionsService - Free Trial Limitation', () => {
       prismaService.subscriptionPlan.findUnique.mockResolvedValue(mockFreePlan);
 
       await expect(
-        service.affiliateOrganization('org-used-trial', { subscriptionPlanId: 'plan-free' }, mockRequestContext),
+        service.affiliateOrganization(
+          'org-used-trial',
+          { subscriptionPlanId: 'plan-free' },
+          mockRequestContext,
+        ),
       ).rejects.toThrow(BusinessException);
 
       expect(prismaService.$transaction).not.toHaveBeenCalled();
@@ -166,9 +174,14 @@ describe('SubscriptionsService - Free Trial Limitation', () => {
       });
 
       const startTime = Date.now();
-      await service.affiliateOrganization('org-trial', { subscriptionPlanId: 'plan-free' }, mockRequestContext);
+      await service.affiliateOrganization(
+        'org-trial',
+        { subscriptionPlanId: 'plan-free' },
+        mockRequestContext,
+      );
 
-      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock
+        .calls[0][0];
       const startDate = createCall.data.startDate;
       const endDate = createCall.data.endDate;
 
@@ -227,7 +240,11 @@ describe('SubscriptionsService - Free Trial Limitation', () => {
       prismaService.subscriptionPlan.findUnique.mockResolvedValue(mockFreePlan);
 
       await expect(
-        service.affiliateOrganization('org-expired', { subscriptionPlanId: 'plan-free' }, mockRequestContext),
+        service.affiliateOrganization(
+          'org-expired',
+          { subscriptionPlanId: 'plan-free' },
+          mockRequestContext,
+        ),
       ).rejects.toThrow(BusinessException);
 
       expect(prismaService.subscriptionOrganization.create).not.toHaveBeenCalled();
@@ -339,7 +356,11 @@ describe('SubscriptionsService - Free Trial Limitation', () => {
         return callback(prismaService);
       });
 
-      await service.affiliateOrganization('org-lifecycle', { subscriptionPlanId: 'plan-free' }, mockRequestContext);
+      await service.affiliateOrganization(
+        'org-lifecycle',
+        { subscriptionPlanId: 'plan-free' },
+        mockRequestContext,
+      );
 
       // Verify hasUsedFreeTrial is set to true
       expect(prismaService.organization.update).toHaveBeenCalledWith({
@@ -362,7 +383,11 @@ describe('SubscriptionsService - Free Trial Limitation', () => {
       prismaService.subscriptionPlan.findUnique.mockResolvedValue(mockFreePlan);
 
       await expect(
-        service.affiliateOrganization('org-lifecycle', { subscriptionPlanId: 'plan-free' }, mockRequestContext),
+        service.affiliateOrganization(
+          'org-lifecycle',
+          { subscriptionPlanId: 'plan-free' },
+          mockRequestContext,
+        ),
       ).rejects.toThrow(BusinessException);
     });
 
@@ -393,15 +418,23 @@ describe('SubscriptionsService - Free Trial Limitation', () => {
 
       // Execute concurrent requests
       const requests = [
-        service.affiliateOrganization('org-concurrent', { subscriptionPlanId: 'plan-free' }, mockRequestContext),
-        service.affiliateOrganization('org-concurrent', { subscriptionPlanId: 'plan-free' }, mockRequestContext),
+        service.affiliateOrganization(
+          'org-concurrent',
+          { subscriptionPlanId: 'plan-free' },
+          mockRequestContext,
+        ),
+        service.affiliateOrganization(
+          'org-concurrent',
+          { subscriptionPlanId: 'plan-free' },
+          mockRequestContext,
+        ),
       ];
 
       const results = await Promise.allSettled(requests);
 
       // One should succeed, one should fail
-      const succeeded = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
 
       expect(succeeded).toBe(1);
       expect(failed).toBe(1);
@@ -425,7 +458,11 @@ describe('SubscriptionsService - Free Trial Limitation', () => {
       });
 
       // Should treat undefined as false and allow free trial
-      await service.affiliateOrganization('org-no-flag', { subscriptionPlanId: 'plan-free' }, mockRequestContext);
+      await service.affiliateOrganization(
+        'org-no-flag',
+        { subscriptionPlanId: 'plan-free' },
+        mockRequestContext,
+      );
 
       expect(prismaService.subscriptionOrganization.create).toHaveBeenCalled();
       expect(prismaService.organization.update).toHaveBeenCalledWith({
@@ -461,7 +498,11 @@ describe('SubscriptionsService - Free Trial Limitation', () => {
         return callback(prismaService);
       });
 
-      await service.affiliateOrganization('org-inconsistent', { subscriptionPlanId: 'plan-free' }, mockRequestContext);
+      await service.affiliateOrganization(
+        'org-inconsistent',
+        { subscriptionPlanId: 'plan-free' },
+        mockRequestContext,
+      );
 
       // Current implementation allows this (trusts the flag)
       expect(prismaService.subscriptionOrganization.create).toHaveBeenCalled();

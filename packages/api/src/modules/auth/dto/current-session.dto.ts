@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IUser, IGym, IOrganization, Permission } from '@gymspace/shared';
+import { IUser, IGym, IOrganization, ISubscription, Permission } from '@gymspace/shared';
 
 export class CurrentSessionDto {
   @ApiProperty({
@@ -21,6 +21,13 @@ export class CurrentSessionDto {
     required: false,
   })
   organization?: IOrganization;
+
+  @ApiProperty({
+    description: 'Organization active subscription',
+    type: 'object',
+    required: false,
+  })
+  subscription?: ISubscription;
 
   @ApiProperty({
     description: 'User permissions in current context',

@@ -18,3 +18,13 @@ export {
   useFileRenderUrl,
   useDownloadFile,
 } from './controllers/files.controller';
+
+// Utils
+export {
+  pickImageFromLibrary,
+  pickImageFromCamera,
+  showImagePickerActionSheet,
+  createFileFromAsset,
+  requestPermissions,
+  requestCameraPermissions,
+} from './utils/image-picker';

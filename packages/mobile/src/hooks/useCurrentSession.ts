@@ -20,7 +20,7 @@ export interface UseCurrentSessionOptions {
 
 export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
   const { sdk, isAuthenticated, authToken, currentGymId, setCurrentGymId } = useGymSdk();
-  const { hasValidToken, refreshToken, clearToken } = useAuthToken();
+  const { hasValidToken, refreshToken, clearStoredTokens } = useAuthToken();
   const queryClient = useQueryClient();
   
   // Track refresh attempts to avoid infinite loops
@@ -48,13 +48,13 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
           const refreshedToken = await refreshToken();
           if (!refreshedToken) {
             // Clear token after max attempts
-            await clearToken();
+            await clearStoredTokens();
             refreshAttemptsRef.current = 0;
             return null;
           }
         } else {
           // Max attempts reached, clear token
-          await clearToken();
+          await clearStoredTokens();
           refreshAttemptsRef.current = 0;
           return null;
         }
@@ -138,6 +138,7 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
     user: sessionQuery.data?.user || null,
     gym: sessionQuery.data?.gym || null,
     organization: sessionQuery.data?.organization || null,
+    subscription: sessionQuery.data?.subscription || null,
     permissions: sessionQuery.data?.permissions || [],
 
     // Query states

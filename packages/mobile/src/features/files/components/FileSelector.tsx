@@ -1,13 +1,36 @@
 import React from 'react';
-import { View, ActivityIndicator, Dimensions, Pressable, FlatList } from 'react-native';
+import { View, ActivityIndicator, Dimensions, Pressable, FlatList, Alert } from 'react-native';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { ImageIcon } from 'lucide-react-native';
-import { useFilesStore } from '../stores/files.store';
-import { useFilesByIds } from '../controllers/files.controller';
+import { 
+  ImageIcon, 
+  PlusIcon, 
+  LoaderIcon, 
+  TrashIcon,
+  CameraIcon,
+  ImagePlusIcon 
+} from 'lucide-react-native';
+import { 
+  Actionsheet, 
+  ActionsheetBackdrop, 
+  ActionsheetContent, 
+  ActionsheetDragIndicator, 
+  ActionsheetDragIndicatorWrapper, 
+  ActionsheetItem, 
+  ActionsheetItemText 
+} from '@/components/ui/actionsheet/index';
+import { useFilesByIds, useUploadFile, useDeleteFile } from '../controllers/files.controller';
 import { FilePreview } from './FilePreview';
+import { 
+  pickImageFromLibrary, 
+  pickImageFromCamera, 
+  showImagePickerActionSheet,
+  createFileFromAsset 
+} from '../utils/image-picker';
+import { useLoadingScreen } from '@/shared/loading-screen';
 
 interface FileSelectorProps {
   name: string;
@@ -22,8 +45,15 @@ export function FileSelector({
   label,
   required = false,
 }: FileSelectorProps) {
-  const { control, watch } = useFormContext();
-  const { openModal } = useFilesStore();
+  const { control, watch, setValue } = useFormContext();
+  const uploadFile = useUploadFile();
+  const deleteFile = useDeleteFile();
+  const { execute } = useLoadingScreen();
+  
+  // State for action sheet
+  const [showActionSheet, setShowActionSheet] = React.useState(false);
+  const [showDeleteSheet, setShowDeleteSheet] = React.useState(false);
+  const [fileToDelete, setFileToDelete] = React.useState<string | null>(null);
   
   // Watch the form value
   const formValue = watch(name);
@@ -44,29 +74,146 @@ export function FileSelector({
   // Fetch file data
   const { data: files, isLoading } = useFilesByIds(fileIds);
   
-  console.log("files", {
-    files,
-    fileIds
-  });
-  
-  const handleOpenSelector = (onChange: (value: any) => void) => {
-    openModal({
-      isMulti: multi,
-      selectedFiles: fileIds,
-      onSelect: (selectedIds) => {
-        // Pass the value directly based on multi mode
-        const newValue = multi
-          ? selectedIds
-          : selectedIds[0] || null;
-        
-        onChange(newValue);
-      },
+  const handleSelectImage = async () => {
+    showImagePickerActionSheet(
+      () => handlePickFromLibrary(),
+      () => handlePickFromCamera(),
+      () => setShowActionSheet(false)
+    );
+  };
+
+  const handlePickFromLibrary = async () => {
+    setShowActionSheet(false);
+    
+    const assets = await pickImageFromLibrary({
+      allowsMultipleSelection: multi,
+    });
+    
+    if (assets) {
+      await handleUploadFiles(assets);
+    }
+  };
+
+  const handlePickFromCamera = async () => {
+    setShowActionSheet(false);
+    
+    const assets = await pickImageFromCamera();
+    
+    if (assets) {
+      await handleUploadFiles(assets);
+    }
+  };
+
+  const handleUploadFiles = async (assets: any[]) => {
+    await execute({
+      action: 'Subiendo archivo...',
+      successMessage: `Archivo${assets.length > 1 ? 's' : ''} subido${assets.length > 1 ? 's' : ''} exitosamente`,
+      operation: async () => {
+        // If single mode and we already have a file, delete the old one first
+        if (!multi && formValue) {
+          try {
+            await deleteFile.mutateAsync(formValue);
+          } catch (error) {
+            console.warn('Failed to delete old file:', error);
+          }
+        }
+
+        const uploadPromises = assets.map(asset => {
+          const file = createFileFromAsset(asset);
+          return uploadFile.mutateAsync({ file });
+        });
+
+        const uploadedFiles = await Promise.all(uploadPromises);
+        const newFileIds = uploadedFiles.map(file => file.id);
+
+        if (multi) {
+          // For multi mode, append to existing files
+          const currentIds = Array.isArray(formValue) ? formValue : [];
+          setValue(name, [...currentIds, ...newFileIds]);
+        } else {
+          // For single mode, replace the current file
+          setValue(name, newFileIds[0] || null);
+        }
+      }
     });
   };
-  
+
+  const handleDeleteFile = async (fileId: string) => {
+    await execute({
+      action: 'Eliminando archivo...',
+      successMessage: 'Archivo eliminado exitosamente',
+      operation: async () => {
+        await deleteFile.mutateAsync(fileId);
+        
+        if (multi) {
+          // Remove from array
+          const currentIds = Array.isArray(formValue) ? formValue : [];
+          const newIds = currentIds.filter(id => id !== fileId);
+          setValue(name, newIds);
+        } else {
+          // Clear single value
+          setValue(name, null);
+        }
+      }
+    });
+    
+    setShowDeleteSheet(false);
+    setFileToDelete(null);
+  };
+
+  const handleLongPress = (fileId: string) => {
+    setFileToDelete(fileId);
+    setShowDeleteSheet(true);
+  };
+
+  const handlePreviewPress = () => {
+    if (files && files.length > 0) {
+      // If we have files, show picker to replace
+      setShowActionSheet(true);
+    } else {
+      // No files, show picker to add
+      setShowActionSheet(true);
+    }
+  };
+
   const screenWidth = Dimensions.get('window').width;
   const carouselWidth = screenWidth - 32; // Account for padding
+  const gridItemSize = (carouselWidth - 24) / 2; // 2 columns with 12px gap between
   
+  const renderPlaceholder = () => (
+    <Pressable onPress={() => setShowActionSheet(true)}>
+      <View 
+        className="bg-gray-100 rounded-lg items-center justify-center border-2 border-dashed border-gray-300"
+        style={{ width: gridItemSize, height: gridItemSize }}
+      >
+        <Icon as={PlusIcon} size="lg" className="text-gray-400 mb-2" />
+        <Text className="text-xs text-gray-500 text-center px-2">
+          Agregar imagen
+        </Text>
+      </View>
+    </Pressable>
+  );
+
+  const renderFileItem = ({ item: file, index }: { item: any; index: number }) => (
+    <Pressable
+      onPress={handlePreviewPress}
+      onLongPress={() => handleLongPress(file.id)}
+      delayLongPress={500}
+    >
+      <View 
+        className="rounded-lg overflow-hidden bg-gray-100"
+        style={{ width: gridItemSize, height: gridItemSize }}
+      >
+        <FilePreview
+          file={file}
+          width={gridItemSize}
+          height={gridItemSize}
+          resizeMode="cover"
+        />
+      </View>
+    </Pressable>
+  );
+
   return (
     <>
       <Controller
@@ -82,77 +229,66 @@ export function FileSelector({
             {/* File Preview Area */}
             {isLoading ? (
               <View className="h-48 bg-gray-100 rounded-lg items-center justify-center">
-                <ActivityIndicator size="large" />
+                <Icon as={LoaderIcon} size="lg" className="text-gray-400 animate-spin" />
+                <Text className="text-gray-500 mt-2">Cargando archivos...</Text>
               </View>
-            ) : files && files.length > 0 ? (
+            ) : (
               <View className="w-full">
-                {files.length === 1 ? (
-                  // Single file - show directly with click to change
-                  <Pressable onPress={() => handleOpenSelector(onChange)}>
-                    <View className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
-                      <FilePreview
-                        file={files[0]}
-                        width={carouselWidth}
-                        height={192}
-                        resizeMode="contain"
-                        className="rounded-lg"
-                      />
-                    </View>
-                  </Pressable>
-                ) : (
-                  // Multiple files - show 2x2 grid using FlatList
-                  <Pressable onPress={() => handleOpenSelector(onChange)}>
-                    <View className="w-full">
-                      <FlatList
-                        data={files.slice(0, 4)}
-                        renderItem={({ item, index }) => (
-                          <View style={{ flex: 1, padding: 8 }}>
-                            <View style={{ position: 'relative' }}>
-                              <View 
-                                style={{
-                                  borderRadius: 12,
-                                  overflow: 'hidden',
-                                  backgroundColor: '#f3f4f6'
-                                }}
-                              >
-                                <FilePreview
-                                  file={item}
-                                  width={undefined}
-                                  height={undefined}
-                                  resizeMode="cover"
-                                />
-                              </View>
-                              {/* Show +N overlay on the 4th item if there are more */}
-                              {index === 3 && files.length > 4 && (
-                                <View className="absolute inset-0 bg-black/60 rounded-xl items-center justify-center">
-                                  <Text className="text-white text-lg font-bold">+{files.length - 4}</Text>
-                                </View>
-                              )}
-                            </View>
-                          </View>
-                        )}
-                        keyExtractor={(item) => item.id}
-                        numColumns={2}
-                        scrollEnabled={false}
-                        columnWrapperStyle={{ paddingHorizontal: 4 }}
-                        contentContainerStyle={{ paddingVertical: 4 }}
-                      />
+                {multi ? (
+                  // Multiple files - Grid layout
+                  <View>
+                    <FlatList
+                      data={[...(files || []), 'placeholder']}
+                      renderItem={({ item, index }) => {
+                        if (item === 'placeholder') {
+                          return renderPlaceholder();
+                        }
+                        return renderFileItem({ item, index });
+                      }}
+                      keyExtractor={(item, index) => 
+                        item === 'placeholder' ? 'placeholder' : item.id
+                      }
+                      numColumns={2}
+                      columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 12 }}
+                      scrollEnabled={false}
+                      showsVerticalScrollIndicator={false}
+                    />
+                    {files && files.length > 0 && (
                       <Text className="text-center text-xs text-gray-500 mt-2">
                         {files.length} archivo{files.length !== 1 ? 's' : ''} seleccionado{files.length !== 1 ? 's' : ''}
                       </Text>
-                    </View>
-                  </Pressable>
+                    )}
+                  </View>
+                ) : (
+                  // Single file
+                  files && files.length > 0 ? (
+                    <Pressable 
+                      onPress={handlePreviewPress}
+                      onLongPress={() => handleLongPress(files[0].id)}
+                      delayLongPress={500}
+                    >
+                      <View className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
+                        <FilePreview
+                          file={files[0]}
+                          width={carouselWidth}
+                          height={192}
+                          resizeMode="contain"
+                          className="rounded-lg"
+                        />
+                      </View>
+                    </Pressable>
+                  ) : (
+                    // No files - show clickable placeholder
+                    <Pressable onPress={() => setShowActionSheet(true)}>
+                      <View className="h-48 bg-gray-100 rounded-lg items-center justify-center border-2 border-dashed border-gray-300">
+                        <Icon as={ImageIcon} size="xl" className="text-gray-400 mb-2" />
+                        <Text className="text-gray-500">Sin archivos seleccionados</Text>
+                        <Text className="text-xs text-gray-400 mt-1">Toca para seleccionar</Text>
+                      </View>
+                    </Pressable>
+                  )
                 )}
               </View>
-            ) : (
-              // No files - show clickable placeholder
-              <Pressable onPress={() => handleOpenSelector(onChange)}>
-                <View className="h-48 bg-gray-100 rounded-lg items-center justify-center border-2 border-dashed border-gray-300">
-                  <Icon as={ImageIcon} size="xl" className="text-gray-400 mb-2" />
-                  <Text className="text-gray-500">Sin archivos seleccionados</Text>
-                  <Text className="text-xs text-gray-400 mt-1">Toca para seleccionar</Text>
-                </View>
-              </Pressable>
             )}
             
             {/* Error Message */}
@@ -162,6 +298,63 @@ export function FileSelector({
           </VStack>
         )}
       />
+
+      {/* Image Picker Action Sheet */}
+      <Actionsheet isOpen={showActionSheet} onClose={() => setShowActionSheet(false)}>
+        <ActionsheetBackdrop />
+        <ActionsheetContent>
+          <ActionsheetDragIndicatorWrapper>
+            <ActionsheetDragIndicator />
+          </ActionsheetDragIndicatorWrapper>
+          
+          <VStack space="md" className="w-full p-4">
+            <Text className="text-lg font-semibold text-center text-gray-900">
+              Seleccionar imagen
+            </Text>
+            
+            <ActionsheetItem onPress={handlePickFromLibrary}>
+              <HStack space="md" className="items-center">
+                <Icon as={ImagePlusIcon} size="md" className="text-gray-600" />
+                <ActionsheetItemText>Elegir de galería</ActionsheetItemText>
+              </HStack>
+            </ActionsheetItem>
+            
+            <ActionsheetItem onPress={handlePickFromCamera}>
+              <HStack space="md" className="items-center">
+                <Icon as={CameraIcon} size="md" className="text-gray-600" />
+                <ActionsheetItemText>Tomar foto</ActionsheetItemText>
+              </HStack>
+            </ActionsheetItem>
+          </VStack>
+        </ActionsheetContent>
+      </Actionsheet>
+
+      {/* Delete Action Sheet */}
+      <Actionsheet isOpen={showDeleteSheet} onClose={() => setShowDeleteSheet(false)}>
+        <ActionsheetBackdrop />
+        <ActionsheetContent>
+          <ActionsheetDragIndicatorWrapper>
+            <ActionsheetDragIndicator />
+          </ActionsheetDragIndicatorWrapper>
+          
+          <VStack space="md" className="w-full p-4">
+            <Text className="text-lg font-semibold text-center text-gray-900">
+              Opciones de archivo
+            </Text>
+            
+            <ActionsheetItem 
+              onPress={() => fileToDelete && handleDeleteFile(fileToDelete)}
+            >
+              <HStack space="md" className="items-center">
+                <Icon as={TrashIcon} size="md" className="text-red-600" />
+                <ActionsheetItemText className="text-red-600">
+                  Eliminar archivo
+                </ActionsheetItemText>
+              </HStack>
+            </ActionsheetItem>
+          </VStack>
+        </ActionsheetContent>
+      </Actionsheet>
     </>
   );
 }

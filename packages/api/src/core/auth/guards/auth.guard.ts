@@ -2,7 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { Reflector } from '@nestjs/core';
 import { AuthService } from '../services/auth.service';
 import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator';
-import { IGym, IOrganization } from '@gymspace/shared';
+import { IGym, IOrganization, ISubscription } from '@gymspace/shared';
 import { RequestContext } from '../../../common/services/request-context.service';
 import { CacheService } from '../../cache/cache.service';
 
@@ -98,9 +98,19 @@ export class AuthGuard implements CanActivate {
         }
       }
 
+      let subscription: ISubscription | undefined;
+      
       if (gym) {
         request.gym = gym;
         request.organization = gym.organization;
+        
+        // Load organization's active subscription if organization exists
+        if (gym.organization?.id) {
+          subscription = await this.authService.getOrganizationSubscription(gym.organization.id);
+          if (subscription) {
+            request.subscription = subscription;
+          }
+        }
       }
 
       // Get user permissions for the selected gym context

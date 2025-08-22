@@ -143,7 +143,9 @@ describe('SubscriptionCronService', () => {
       const error = new Error('Service unavailable');
       subscriptionsService.checkAndUpdateExpiredSubscriptions.mockRejectedValue(error);
 
-      await expect(service.manualCheckExpiredSubscriptions()).rejects.toThrow('Service unavailable');
+      await expect(service.manualCheckExpiredSubscriptions()).rejects.toThrow(
+        'Service unavailable',
+      );
 
       expect(logger.log).toHaveBeenCalledWith('Manual subscription expiration check triggered...');
       expect(subscriptionsService.checkAndUpdateExpiredSubscriptions).toHaveBeenCalled();

@@ -35,6 +35,366 @@ import { useLoadingScreen } from '@/shared/loading-screen';
 import { PRODUCT_TYPES } from '@/shared/constants';
 import type { Product, CreateSaleDto, SaleItemDto, Client } from '@gymspace/sdk';
 
+// Componente para el header con botón de retroceso
+interface SaleHeaderProps {
+  onBack: () => void;
+}
+
+function SaleHeader({ onBack }: SaleHeaderProps) {
+  return (
+    <HStack className="items-center mb-2">
+      <Pressable
+        onPress={onBack}
+        className="p-2 -ml-2 rounded-lg"
+      >
+        <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
+      </Pressable>
+      <Text className="text-xl font-bold text-gray-900 ml-2">
+        Nueva Venta
+      </Text>
+    </HStack>
+  );
+}
+
+// Componente para el resumen del carrito
+interface CartSummaryProps {
+  itemCount: number;
+  onAddItems: () => void;
+}
+
+function CartSummary({ itemCount, onAddItems }: CartSummaryProps) {
+  return (
+    <HStack className="justify-between items-center">
+      <Text className="text-gray-600">
+        {itemCount} item{itemCount !== 1 ? 's' : ''} en el carrito
+      </Text>
+      
+      <Button
+        variant="outline"
+        size="sm"
+        onPress={onAddItems}
+      >
+        <Icon as={PlusIcon} className="w-4 h-4 mr-2 text-black" />
+        <ButtonText>Agregar</ButtonText>
+      </Button>
+    </HStack>
+  );
+}
+
+// Componente para el carrito vacío
+interface EmptyCartProps {
+  onAddItems: () => void;
+}
+
+function EmptyCart({ onAddItems }: EmptyCartProps) {
+  return (
+    <Card className="bg-gray-50 border-gray-200 border-dashed">
+      <VStack space="md" className="p-8 items-center">
+        <Icon as={ShoppingCartIcon} className="w-12 h-12 text-gray-400" />
+        <VStack space="xs" className="items-center">
+          <Text className="text-gray-600 font-medium">
+            Carrito vacío
+          </Text>
+          <Text className="text-gray-500 text-center text-sm">
+            Agrega items para comenzar una nueva venta
+          </Text>
+        </VStack>
+        <Button
+          onPress={onAddItems}
+          variant="solid"
+        >
+          <Icon as={PlusIcon} className="w-4 h-4 mr-2" />
+          <ButtonText>Agregar items</ButtonText>
+        </Button>
+      </VStack>
+    </Card>
+  );
+}
+
+// Componente para los detalles de la venta
+interface SaleDetailsProps {
+  notes: string;
+  paymentStatus: 'paid' | 'unpaid';
+  total: number;
+  formatPrice: (amount: number) => string;
+  onNotesChange: (notes: string) => void;
+  onPaymentStatusChange: (status: 'paid' | 'unpaid') => void;
+  onClientSelect: (client: Client | null) => void;
+  onCompleteSale: () => void;
+  methods: any;
+}
+
+function SaleDetails({
+  notes,
+  paymentStatus,
+  total,
+  formatPrice,
+  onNotesChange,
+  onPaymentStatusChange,
+  onClientSelect,
+  onCompleteSale,
+  methods
+}: SaleDetailsProps) {
+  return (
+    <FormProvider {...methods}>
+      <VStack space="md">
+        {/* Client Selector */}
+        <ClientSelector
+          name="clientId"
+          control={methods.control}
+          label="Cliente (opcional)"
+          placeholder="Seleccionar cliente"
+          allowClear={true}
+          onClientSelect={onClientSelect}
+        />
+
+        {/* Notes */}
+        <VStack space="xs">
+          <Text className="text-sm font-medium text-gray-700">
+            Notas (opcional)
+          </Text>
+          <Input>
+            <InputField
+              placeholder="Notas adicionales"
+              value={notes}
+              onChangeText={onNotesChange}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </Input>
+        </VStack>
+
+        {/* Payment Status */}
+        <VStack space="xs">
+          <Text className="text-sm font-medium text-gray-700">
+            Estado de pago
+          </Text>
+          <HStack space="md" className="items-center">
+            <Switch
+              value={paymentStatus === 'paid'}
+              onValueChange={(value) => onPaymentStatusChange(value ? 'paid' : 'unpaid')}
+            />
+            <Text className="text-gray-600">
+              {paymentStatus === 'paid' ? 'Pagado' : 'Pendiente de pago'}
+            </Text>
+          </HStack>
+        </VStack>
+
+        {/* Total */}
+        <Card className="bg-blue-50 border-blue-200">
+          <HStack className="justify-between items-center p-4">
+            <Text className="text-lg font-semibold text-blue-900">
+              Total
+            </Text>
+            <Text className="text-2xl font-bold text-blue-900">
+              {formatPrice(total)}
+            </Text>
+          </HStack>
+        </Card>
+
+        {/* Complete Sale Button */}
+        <Button
+          onPress={onCompleteSale}
+          variant="solid"
+        >
+          <HStack space="sm" className="items-center">
+            <Icon as={CheckIcon} className="w-5 h-5" />
+            <ButtonText className="font-semibold">
+              Completar Venta
+            </ButtonText>
+          </HStack>
+        </Button>
+      </VStack>
+    </FormProvider>
+  );
+}
+
+// Componente para las pestañas de productos/servicios
+interface ItemTabsProps {
+  selectedTab: 'products' | 'services';
+  onTabChange: (tab: 'products' | 'services') => void;
+}
+
+function ItemTabs({ selectedTab, onTabChange }: ItemTabsProps) {
+  return (
+    <HStack className="p-2 bg-gray-100">
+      <Pressable
+        onPress={() => onTabChange('products')}
+        className={`flex-1 py-2 px-4 rounded-lg ${
+          selectedTab === 'products' ? 'bg-white shadow-sm' : ''
+        }`}
+      >
+        <HStack className="items-center justify-center" space="sm">
+          <Icon 
+            as={PackageIcon} 
+            className={`w-4 h-4 ${
+              selectedTab === 'products' ? 'text-blue-600' : 'text-gray-500'
+            }`} 
+          />
+          <Text 
+            className={`font-medium ${
+              selectedTab === 'products' ? 'text-blue-600' : 'text-gray-600'
+            }`}
+          >
+            Productos
+          </Text>
+        </HStack>
+      </Pressable>
+
+      <Pressable
+        onPress={() => onTabChange('services')}
+        className={`flex-1 py-2 px-4 rounded-lg ${
+          selectedTab === 'services' ? 'bg-white shadow-sm' : ''
+        }`}
+      >
+        <HStack className="items-center justify-center" space="sm">
+          <Icon 
+            as={WrenchIcon} 
+            className={`w-4 h-4 ${
+              selectedTab === 'services' ? 'text-blue-600' : 'text-gray-500'
+            }`} 
+          />
+          <Text 
+            className={`font-medium ${
+              selectedTab === 'services' ? 'text-blue-600' : 'text-gray-600'
+            }`}
+          >
+            Servicios
+          </Text>
+        </HStack>
+      </Pressable>
+    </HStack>
+  );
+}
+
+// Componente para el modal de selección de items
+interface ItemSelectionModalProps {
+  visible: boolean;
+  selectedTab: 'products' | 'services';
+  onClose: () => void;
+  onTabChange: (tab: 'products' | 'services') => void;
+  onAddItem: (item: Product) => void;
+  productsData?: { items: Product[] };
+  servicesData?: { items: Product[] };
+  loadingProducts: boolean;
+  loadingServices: boolean;
+}
+
+function ItemSelectionModal({
+  visible,
+  selectedTab,
+  onClose,
+  onTabChange,
+  onAddItem,
+  productsData,
+  servicesData,
+  loadingProducts,
+  loadingServices
+}: ItemSelectionModalProps) {
+  const renderProductCard = useCallback(({ item }: { item: Product }) => (
+    <View className="w-1/2 p-1">
+      <ProductCard
+        product={item}
+        onPress={onAddItem}
+        compact={true}
+        showStock={true}
+      />
+    </View>
+  ), [onAddItem]);
+
+  const renderServiceCard = useCallback(({ item }: { item: Product }) => (
+    <View className="w-1/2 p-1">
+      <ServiceCard
+        service={item}
+        onPress={onAddItem}
+        compact={true}
+      />
+    </View>
+  ), [onAddItem]);
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+    >
+      <SafeAreaView className="flex-1 bg-white">
+        <VStack className="flex-1">
+          {/* Modal Header */}
+          <HStack className="justify-between items-center p-4 border-b border-gray-200">
+            <Text className="text-lg font-semibold text-gray-900">
+              Seleccionar {selectedTab === 'products' ? 'Producto' : 'Servicio'}
+            </Text>
+            <Pressable
+              onPress={onClose}
+              className="w-8 h-8 items-center justify-center rounded-full bg-gray-100"
+            >
+              <Icon as={XIcon} className="w-5 h-5 text-gray-600" />
+            </Pressable>
+          </HStack>
+
+          {/* Tabs */}
+          <ItemTabs selectedTab={selectedTab} onTabChange={onTabChange} />
+
+          {/* Content */}
+          <View className="flex-1">
+            {selectedTab === 'products' ? (
+              loadingProducts ? (
+                <View className="flex-1 items-center justify-center">
+                  <Spinner size="large" />
+                  <Text className="text-gray-600 mt-2">Cargando productos...</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={productsData?.items || []}
+                  renderItem={renderProductCard}
+                  keyExtractor={(item) => item.id}
+                  numColumns={2}
+                  contentContainerStyle={{ padding: 16 }}
+                  showsVerticalScrollIndicator={false}
+                  ListEmptyComponent={() => (
+                    <View className="flex-1 items-center justify-center py-12">
+                      <Icon as={PackageIcon} className="w-16 h-16 text-gray-300 mb-4" />
+                      <Text className="text-gray-600 text-center">
+                        No hay productos disponibles
+                      </Text>
+                    </View>
+                  )}
+                />
+              )
+            ) : (
+              loadingServices ? (
+                <View className="flex-1 items-center justify-center">
+                  <Spinner size="large" />
+                  <Text className="text-gray-600 mt-2">Cargando servicios...</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={servicesData?.items || []}
+                  renderItem={renderServiceCard}
+                  keyExtractor={(item) => item.id}
+                  numColumns={2}
+                  contentContainerStyle={{ padding: 16 }}
+                  showsVerticalScrollIndicator={false}
+                  ListEmptyComponent={() => (
+                    <View className="flex-1 items-center justify-center py-12">
+                      <Icon as={WrenchIcon} className="w-16 h-16 text-gray-300 mb-4" />
+                      <Text className="text-gray-600 text-center">
+                        No hay servicios disponibles
+                      </Text>
+                    </View>
+                  )}
+                />
+              )
+            )}
+          </View>
+        </VStack>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
 interface SaleFormData {
   clientId?: string;
   notes?: string;
@@ -97,7 +457,7 @@ export default function NewSaleScreen() {
     setSelectedClient(client);
   }, []);
 
-  const handleAddProduct = useCallback((product: Product) => {
+  const handleAddItem = useCallback((product: Product) => {
     // Only check stock for products, not services
     if (product.type === PRODUCT_TYPES.PRODUCT && product.stock !== null && product.stock <= 0) {
       Alert.alert('Sin stock', 'Este producto no tiene stock disponible.');
@@ -113,8 +473,8 @@ export default function NewSaleScreen() {
 
   const handleRemoveItem = useCallback((productId: string) => {
     Alert.alert(
-      'Remover producto',
-      '¿Estás seguro de que quieres remover este producto del carrito?',
+      'Remover item',
+      '¿Estás seguro de que quieres remover este item del carrito?',
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Remover', style: 'destructive', onPress: () => removeItem(productId) },
@@ -124,7 +484,7 @@ export default function NewSaleScreen() {
 
   const handleCompleteSale = useCallback(async () => {
     if (!hasItems) {
-      Alert.alert('Carrito vacío', 'Agrega productos al carrito antes de completar la venta.');
+      Alert.alert('Carrito vacío', 'Agrega items al carrito antes de completar la venta.');
       return;
     }
 
@@ -198,64 +558,23 @@ export default function NewSaleScreen() {
     />
   ), [handleQuantityChange, handleRemoveItem]);
 
-  const renderProductCard = useCallback(({ item }: { item: Product }) => (
-    <View className="w-1/2 p-1">
-      <ProductCard
-        product={item}
-        onPress={handleAddProduct}
-        compact={true}
-        showStock={true}
-      />
-    </View>
-  ), [handleAddProduct]);
-
-  const renderServiceCard = useCallback(({ item }: { item: Product }) => (
-    <View className="w-1/2 p-1">
-      <ServiceCard
-        service={item}
-        onPress={handleAddProduct}
-        compact={true}
-      />
-    </View>
-  ), [handleAddProduct]);
-
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
-          {/* Header with Back Button */}
-          <HStack className="items-center mb-2">
-            <Pressable
-              onPress={() => router.back()}
-              className="p-2 -ml-2 rounded-lg"
-            >
-              <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
-            </Pressable>
-            <Text className="text-xl font-bold text-gray-900 ml-2">
-              Nueva Venta
-            </Text>
-          </HStack>
+          {/* Header */}
+          <SaleHeader onBack={() => router.back()} />
 
           {/* Cart Summary */}
-          <HStack className="justify-between items-center">
-            <Text className="text-gray-600">
-              {itemCount} producto{itemCount !== 1 ? 's' : ''} en el carrito
-            </Text>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onPress={() => setShowProductSelection(true)}
-            >
-              <Icon as={PlusIcon} className="w-4 h-4 mr-2 text-black" />
-              <ButtonText>Agregar</ButtonText>
-            </Button>
-          </HStack>
+          <CartSummary 
+            itemCount={itemCount} 
+            onAddItems={() => setShowProductSelection(true)} 
+          />
 
           {/* Cart Items */}
           <VStack space="sm">
             <Text className="text-lg font-semibold text-gray-900">
-              Productos
+              Items
             </Text>
             
             {hasItems ? (
@@ -267,231 +586,39 @@ export default function NewSaleScreen() {
                 ItemSeparatorComponent={() => <View className="h-2" />}
               />
             ) : (
-              <Card className="bg-gray-50 border-gray-200 border-dashed">
-                <VStack space="md" className="p-8 items-center">
-                  <Icon as={ShoppingCartIcon} className="w-12 h-12 text-gray-400" />
-                  <VStack space="xs" className="items-center">
-                    <Text className="text-gray-600 font-medium">
-                      Carrito vacío
-                    </Text>
-                    <Text className="text-gray-500 text-center text-sm">
-                      Agrega productos para comenzar una nueva venta
-                    </Text>
-                  </VStack>
-                  <Button
-                    onPress={() => setShowProductSelection(true)}
-                    variant="solid"
-                  >
-                    <Icon as={PlusIcon} className="w-4 h-4 mr-2" />
-                    <ButtonText>Agregar productos</ButtonText>
-                  </Button>
-                </VStack>
-              </Card>
+              <EmptyCart onAddItems={() => setShowProductSelection(true)} />
             )}
           </VStack>
 
           {/* Sale Details */}
           {hasItems && (
-            <FormProvider {...methods}>
-              <VStack space="md">
-                {/* Client Selector */}
-                <ClientSelector
-                  name="clientId"
-                  control={methods.control}
-                  label="Cliente (opcional)"
-                  placeholder="Seleccionar cliente"
-                  allowClear={true}
-                  onClientSelect={handleClientSelect}
-                />
-
-                {/* Notes */}
-                <VStack space="xs">
-                  <Text className="text-sm font-medium text-gray-700">
-                    Notas (opcional)
-                  </Text>
-                  <Input>
-                    <InputField
-                      placeholder="Notas adicionales"
-                      value={state.notes}
-                      onChangeText={setNotes}
-                      multiline
-                      numberOfLines={3}
-                      textAlignVertical="top"
-                    />
-                  </Input>
-                </VStack>
-
-              {/* Payment Status */}
-              <VStack space="xs">
-                <Text className="text-sm font-medium text-gray-700">
-                  Estado de pago
-                </Text>
-                <HStack space="md" className="items-center">
-                  <Switch
-                    value={state.paymentStatus === 'paid'}
-                    onValueChange={(value) => setPaymentStatus(value ? 'paid' : 'unpaid')}
-                  />
-                  <Text className="text-gray-600">
-                    {state.paymentStatus === 'paid' ? 'Pagado' : 'Pendiente de pago'}
-                  </Text>
-                </HStack>
-              </VStack>
-
-              {/* Total */}
-              <Card className="bg-blue-50 border-blue-200">
-                <HStack className="justify-between items-center p-4">
-                  <Text className="text-lg font-semibold text-blue-900">
-                    Total
-                  </Text>
-                  <Text className="text-2xl font-bold text-blue-900">
-                    {formatPrice(state.total)}
-                  </Text>
-                </HStack>
-              </Card>
-
-              {/* Complete Sale Button */}
-              <Button
-                onPress={handleCompleteSale}
-                variant="solid"
-              >
-                <HStack space="sm" className="items-center">
-                  <Icon as={CheckIcon} className="w-5 h-5" />
-                  <ButtonText className="font-semibold">
-                    Completar Venta
-                  </ButtonText>
-                </HStack>
-              </Button>
-              </VStack>
-            </FormProvider>
+            <SaleDetails
+              notes={state.notes}
+              paymentStatus={state.paymentStatus as 'paid' | 'unpaid'}
+              total={state.total}
+              formatPrice={formatPrice}
+              onNotesChange={setNotes}
+              onPaymentStatusChange={setPaymentStatus}
+              onClientSelect={handleClientSelect}
+              onCompleteSale={handleCompleteSale}
+              methods={methods}
+            />
           )}
         </VStack>
       </ScrollView>
 
-      {/* Product Selection Modal */}
-      <Modal
+      {/* Item Selection Modal */}
+      <ItemSelectionModal
         visible={showProductSelection}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView className="flex-1 bg-white">
-          <VStack className="flex-1">
-            {/* Modal Header */}
-            <HStack className="justify-between items-center p-4 border-b border-gray-200">
-              <Text className="text-lg font-semibold text-gray-900">
-                Seleccionar {selectedTab === 'products' ? 'Producto' : 'Servicio'}
-              </Text>
-              <Pressable
-                onPress={() => setShowProductSelection(false)}
-                className="w-8 h-8 items-center justify-center rounded-full bg-gray-100"
-              >
-                <Icon as={XIcon} className="w-5 h-5 text-gray-600" />
-              </Pressable>
-            </HStack>
-
-            {/* Tabs */}
-            <HStack className="p-2 bg-gray-100">
-              <Pressable
-                onPress={() => setSelectedTab('products')}
-                className={`flex-1 py-2 px-4 rounded-lg ${
-                  selectedTab === 'products' ? 'bg-white shadow-sm' : ''
-                }`}
-              >
-                <HStack className="items-center justify-center" space="sm">
-                  <Icon 
-                    as={PackageIcon} 
-                    className={`w-4 h-4 ${
-                      selectedTab === 'products' ? 'text-blue-600' : 'text-gray-500'
-                    }`} 
-                  />
-                  <Text 
-                    className={`font-medium ${
-                      selectedTab === 'products' ? 'text-blue-600' : 'text-gray-600'
-                    }`}
-                  >
-                    Productos
-                  </Text>
-                </HStack>
-              </Pressable>
-
-              <Pressable
-                onPress={() => setSelectedTab('services')}
-                className={`flex-1 py-2 px-4 rounded-lg ${
-                  selectedTab === 'services' ? 'bg-white shadow-sm' : ''
-                }`}
-              >
-                <HStack className="items-center justify-center" space="sm">
-                  <Icon 
-                    as={WrenchIcon} 
-                    className={`w-4 h-4 ${
-                      selectedTab === 'services' ? 'text-blue-600' : 'text-gray-500'
-                    }`} 
-                  />
-                  <Text 
-                    className={`font-medium ${
-                      selectedTab === 'services' ? 'text-blue-600' : 'text-gray-600'
-                    }`}
-                  >
-                    Servicios
-                  </Text>
-                </HStack>
-              </Pressable>
-            </HStack>
-
-            {/* Content */}
-            <View className="flex-1">
-              {selectedTab === 'products' ? (
-                loadingProducts ? (
-                  <View className="flex-1 items-center justify-center">
-                    <Spinner size="large" />
-                    <Text className="text-gray-600 mt-2">Cargando productos...</Text>
-                  </View>
-                ) : (
-                  <FlatList
-                    data={productsData?.items || []}
-                    renderItem={renderProductCard}
-                    keyExtractor={(item) => item.id}
-                    numColumns={2}
-                    contentContainerStyle={{ padding: 16 }}
-                    showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={() => (
-                      <View className="flex-1 items-center justify-center py-12">
-                        <Icon as={PackageIcon} className="w-16 h-16 text-gray-300 mb-4" />
-                        <Text className="text-gray-600 text-center">
-                          No hay productos disponibles
-                        </Text>
-                      </View>
-                    )}
-                  />
-                )
-              ) : (
-                loadingServices ? (
-                  <View className="flex-1 items-center justify-center">
-                    <Spinner size="large" />
-                    <Text className="text-gray-600 mt-2">Cargando servicios...</Text>
-                  </View>
-                ) : (
-                  <FlatList
-                    data={servicesData?.items || []}
-                    renderItem={renderServiceCard}
-                    keyExtractor={(item) => item.id}
-                    numColumns={2}
-                    contentContainerStyle={{ padding: 16 }}
-                    showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={() => (
-                      <View className="flex-1 items-center justify-center py-12">
-                        <Icon as={WrenchIcon} className="w-16 h-16 text-gray-300 mb-4" />
-                        <Text className="text-gray-600 text-center">
-                          No hay servicios disponibles
-                        </Text>
-                      </View>
-                    )}
-                  />
-                )
-              )}
-            </View>
-          </VStack>
-        </SafeAreaView>
-      </Modal>
+        selectedTab={selectedTab}
+        onClose={() => setShowProductSelection(false)}
+        onTabChange={setSelectedTab}
+        onAddItem={handleAddItem}
+        productsData={productsData}
+        servicesData={servicesData}
+        loadingProducts={loadingProducts}
+        loadingServices={loadingServices}
+      />
     </SafeAreaView>
   );
 }

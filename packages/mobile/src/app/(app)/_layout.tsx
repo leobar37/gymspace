@@ -2,22 +2,33 @@ import { Icon } from '@/components/ui/icon';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { Redirect, Tabs } from 'expo-router';
-import {
-  FileTextIcon,
-  HomeIcon,
-  MenuIcon,
-  UsersIcon,
-  ShoppingCartIcon
-} from 'lucide-react-native';
+import { FileTextIcon, HomeIcon, MenuIcon, UsersIcon, ShoppingCartIcon } from 'lucide-react-native';
 import React from 'react';
 import { Platform, View, ActivityIndicator } from 'react-native';
 
 function AppLayout() {
   const { isAuthenticated } = useGymSdk();
-  const { session, isLoading: isSessionLoading, isError } = useCurrentSession({
+  const {
+    session,
+    isLoading: isSessionLoading,
+    isError,
+  } = useCurrentSession({
     enabled: isAuthenticated,
   });
-  
+
+  console.log(
+    JSON.stringify(
+      {
+        session,
+        isSessionLoading,
+        isError,
+        isAuthenticated,
+      },
+      null,
+      2,
+    ),
+  );
+
   // If user is not authenticated, redirect to onboarding
   if (!isAuthenticated) {
     return <Redirect href="/(onboarding)" />;
@@ -32,11 +43,19 @@ function AppLayout() {
     );
   }
 
+  console.log('one', {
+    session,
+  });
+
   // If session fetch failed or user doesn't have a valid session, redirect to onboarding
   // This will trigger after max refresh attempts in useCurrentSession
   if (isError || !session || !session.isAuthenticated) {
     return <Redirect href="/(onboarding)" />;
   }
+
+  console.log('two', {
+    session,
+  });
 
   // If user doesn't have a gym (incomplete onboarding), redirect to appropriate onboarding step
   if (!session.gym || !session.gym.id) {
@@ -90,9 +109,7 @@ function AppLayout() {
         options={{
           title: 'Inicio',
           headerTitle: 'Panel de Control',
-          tabBarIcon: ({ color }) => (
-            <Icon as={HomeIcon} className="w-6 h-6" style={{ color }} />
-          ),
+          tabBarIcon: ({ color }) => <Icon as={HomeIcon} className="w-6 h-6" style={{ color }} />,
         }}
       />
       <Tabs.Screen
@@ -100,9 +117,7 @@ function AppLayout() {
         options={{
           title: 'Clientes',
           headerTitle: 'Clientes',
-          tabBarIcon: ({ color }) => (
-            <Icon as={UsersIcon} className="w-6 h-6" style={{ color }} />
-          ),
+          tabBarIcon: ({ color }) => <Icon as={UsersIcon} className="w-6 h-6" style={{ color }} />,
         }}
       />
       <Tabs.Screen
@@ -130,13 +145,11 @@ function AppLayout() {
         options={{
           title: 'Más',
           headerTitle: 'Más opciones',
-          tabBarIcon: ({ color }) => (
-            <Icon as={MenuIcon} className="w-6 h-6" style={{ color }} />
-          ),
+          tabBarIcon: ({ color }) => <Icon as={MenuIcon} className="w-6 h-6" style={{ color }} />,
         }}
       />
     </Tabs>
   );
 }
 
-export default AppLayout
+export default AppLayout;

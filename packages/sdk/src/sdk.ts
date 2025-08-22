@@ -21,6 +21,7 @@ import {
   SalesResource,
   SuppliersResource,
   UsersResource,
+  SubscriptionsResource,
 } from './resources';
 
 export class GymSpaceSdk {
@@ -47,6 +48,7 @@ export class GymSpaceSdk {
   public sales: SalesResource;
   public suppliers: SuppliersResource;
   public users: UsersResource;
+  public subscriptions: SubscriptionsResource;
 
   constructor(config: GymSpaceConfig) {
     this.client = new ApiClient(config);
@@ -72,6 +74,7 @@ export class GymSpaceSdk {
     this.sales = new SalesResource(this.client);
     this.suppliers = new SuppliersResource(this.client);
     this.users = new UsersResource(this.client);
+    this.subscriptions = new SubscriptionsResource(this.client);
   }
 
   /**

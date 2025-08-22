@@ -150,6 +150,26 @@ export interface CurrentSessionResponse {
     timezone: string;
     settings?: Record<string, any>;
   };
+  subscription?: {
+    id: string;
+    organizationId: string;
+    subscriptionPlanId: string;
+    subscriptionPlan?: {
+      id: string;
+      name: string;
+      price: any;
+      billingFrequency: string;
+      maxGyms: number;
+      maxClientsPerGym: number;
+      maxUsersPerGym: number;
+      features: any;
+      description?: string;
+    };
+    status: string;
+    startDate: Date;
+    endDate: Date;
+    isActive: boolean;
+  };
   permissions: string[];
   isAuthenticated: boolean;
 }

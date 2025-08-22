@@ -143,6 +143,7 @@ export class AuthController {
       user: context.user,
       gym: context.gym,
       organization: context.organization,
+      subscription: context.subscription,
       permissions: context.permissions,
       isAuthenticated: true,
     };

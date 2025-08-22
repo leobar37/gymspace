@@ -25,7 +25,15 @@ export class OrganizationsService {
         ownerUserId: userId,
       },
       include: {
-        subscriptionPlan: true,
+        subscriptionOrganizations: {
+          where: {
+            isActive: true,
+          },
+          include: {
+            subscriptionPlan: true,
+          },
+          take: 1,
+        },
         owner: {
           select: {
             id: true,
@@ -45,7 +53,13 @@ export class OrganizationsService {
       throw new ResourceNotFoundException('Organization', organizationId);
     }
 
-    return organization as Organization & { subscriptionPlan: any };
+    // Extract the subscription plan from the active subscription
+    const subscriptionPlan = organization.subscriptionOrganizations[0]?.subscriptionPlan || null;
+
+    return {
+      ...organization,
+      subscriptionPlan,
+    } as Organization & { subscriptionPlan: any };
   }
 
   /**
@@ -76,7 +90,15 @@ export class OrganizationsService {
         updatedByUserId: userId,
       },
       include: {
-        subscriptionPlan: true,
+        subscriptionOrganizations: {
+          where: {
+            isActive: true,
+          },
+          include: {
+            subscriptionPlan: true,
+          },
+          take: 1,
+        },
         owner: {
           select: {
             id: true,
@@ -131,6 +153,13 @@ export class OrganizationsService {
     ]);
 
     const org = organization as any; // Type assertion to access subscriptionPlan
+
+    if (!org.subscriptionPlan) {
+      throw new ResourceNotFoundException(
+        `No active subscription found for organization with ID: ${organizationId}`,
+      );
+    }
+
     return {
       organization: {
         id: org.id,
@@ -183,7 +212,15 @@ export class OrganizationsService {
     const organization = await this.prismaService.organization.findUnique({
       where: { id: organizationId },
       include: {
-        subscriptionPlan: true,
+        subscriptionOrganizations: {
+          where: {
+            isActive: true,
+          },
+          include: {
+            subscriptionPlan: true,
+          },
+          take: 1,
+        },
         _count: {
           select: { gyms: true },
         },
@@ -194,7 +231,12 @@ export class OrganizationsService {
       throw new ResourceNotFoundException('Organization', organizationId);
     }
 
-    return organization._count.gyms < organization.subscriptionPlan.maxGyms;
+    const subscriptionPlan = organization.subscriptionOrganizations[0]?.subscriptionPlan;
+    if (!subscriptionPlan) {
+      return false; // No active subscription
+    }
+
+    return organization._count.gyms < subscriptionPlan.maxGyms;
   }
 
   /**
@@ -206,7 +248,15 @@ export class OrganizationsService {
       include: {
         organization: {
           include: {
-            subscriptionPlan: true,
+            subscriptionOrganizations: {
+              where: {
+                isActive: true,
+              },
+              include: {
+                subscriptionPlan: true,
+              },
+              take: 1,
+            },
           },
         },
         _count: {
@@ -219,7 +269,12 @@ export class OrganizationsService {
       throw new ResourceNotFoundException('Gym', gymId);
     }
 
-    return gym._count.gymClients < gym.organization.subscriptionPlan.maxClientsPerGym;
+    const subscriptionPlan = gym.organization.subscriptionOrganizations[0]?.subscriptionPlan;
+    if (!subscriptionPlan) {
+      return false; // No active subscription
+    }
+
+    return gym._count.gymClients < subscriptionPlan.maxClientsPerGym;
   }
 
   /**
@@ -231,7 +286,15 @@ export class OrganizationsService {
       include: {
         organization: {
           include: {
-            subscriptionPlan: true,
+            subscriptionOrganizations: {
+              where: {
+                isActive: true,
+              },
+              include: {
+                subscriptionPlan: true,
+              },
+              take: 1,
+            },
           },
         },
         _count: {
@@ -248,6 +311,11 @@ export class OrganizationsService {
       throw new ResourceNotFoundException('Gym', gymId);
     }
 
-    return gym._count.collaborators < gym.organization.subscriptionPlan.maxUsersPerGym;
+    const subscriptionPlan = gym.organization.subscriptionOrganizations[0]?.subscriptionPlan;
+    if (!subscriptionPlan) {
+      return false; // No active subscription
+    }
+
+    return gym._count.collaborators < subscriptionPlan.maxUsersPerGym;
   }
 }

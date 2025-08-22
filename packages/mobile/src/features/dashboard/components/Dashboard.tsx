@@ -12,17 +12,11 @@ import { MonthlySummary } from './MonthlySummary';
 import { RecentActivity } from './RecentActivity';
 import { StatsGrid } from './StatsGrid';
 
-
 export const Dashboard: React.FC = () => {
   // Check authentication and redirect if not authenticated
   const { isAuthenticated, isLoadingSession } = useRequireAuth();
 
-  const {
-    stats,
-    isLoadingStats,
-    recentActivity,
-    refreshDashboard,
-  } = useDashboardController();
+  const { stats, isLoadingStats, recentActivity, refreshDashboard } = useDashboardController();
 
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -63,9 +57,7 @@ export const Dashboard: React.FC = () => {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
         <VStack className="p-4 gap-6">
           <Text className="text-gray-600 mb-2">

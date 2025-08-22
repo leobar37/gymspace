@@ -16,6 +16,8 @@ async function main() {
         USD_EC: { currency: 'USD', value: 0 }, // Ecuador - Dólares (moneda oficial)
       },
       billingFrequency: 'monthly',
+      duration: 30,
+      durationPeriod: 'DAY',
       maxGyms: 1,
       maxClientsPerGym: 10,
       maxUsersPerGym: 1,

@@ -27,6 +27,9 @@ export function SaleHistoryItem({
   onPress,
   showCustomer = true 
 }: SaleHistoryItemProps) {
+
+  console.log("saleasas", sale);
+  
   const formatPrice = useFormatPrice();
   
   const formatDate = (dateString: string) => {
@@ -53,7 +56,8 @@ export function SaleHistoryItem({
 
   const isPaid = sale.paymentStatus === 'paid';
   const itemCount = sale._count?.saleItems || sale.saleItems?.length || 0;
-  const totalQuantity = sale.saleItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  // ({totalQuantity} unidad{totalQuantity !== 1 ? 'es' : ''})
+  // const totalQuantity = sale.saleItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   return (
     <Card className="bg-white border border-gray-200 shadow-sm">
@@ -105,7 +109,7 @@ export function SaleHistoryItem({
             <HStack space="sm" className="items-center">
               <Icon as={ShoppingCartIcon} className="w-4 h-4 text-gray-500" />
               <Text className="text-sm text-gray-600">
-                {itemCount} producto{itemCount !== 1 ? 's' : ''} ({totalQuantity} unidad{totalQuantity !== 1 ? 'es' : ''})
+                {itemCount} items {itemCount !== 1 ? 's' : ''} 
               </Text>
             </HStack>
             

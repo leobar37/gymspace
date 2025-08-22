@@ -3,6 +3,7 @@ export { FormProvider } from './FormProvider';
 
 // Form Components
 export { FormInput } from './FormInput';
+export { FormPassword } from './FormPassword';
 export { FormTextarea } from './FormTextarea';
 export { FormSelect } from './FormSelect';
 export { FormCheckbox } from './FormCheckbox';

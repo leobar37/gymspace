@@ -18,3 +18,4 @@ export * from './products';
 export * from './sales';
 export * from './suppliers';
 export * from './users';
+export * from './subscriptions';

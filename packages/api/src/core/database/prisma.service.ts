@@ -18,6 +18,14 @@ const SOFT_DELETE_MODELS = [
   'CheckIn',
   'Evaluation',
   'EvaluationComment',
+  'SubscriptionPlan',
+  'SubscriptionOrganization',
+  'Lead',
+  'ProductCategory',
+  'Product',
+  'Supplier',
+  'Sale',
+  'SaleItem',
 ] as const;
 
 // Create a function to generate the extended Prisma client
@@ -194,6 +202,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   public readonly evaluation: ExtendedPrismaClient['evaluation'];
   public readonly evaluationComment: ExtendedPrismaClient['evaluationComment'];
   public readonly subscriptionPlan: ExtendedPrismaClient['subscriptionPlan'];
+  public readonly subscriptionOrganization: ExtendedPrismaClient['subscriptionOrganization'];
   public readonly lead: ExtendedPrismaClient['lead'];
   public readonly product: ExtendedPrismaClient['product'];
   public readonly productCategory: ExtendedPrismaClient['productCategory'];
@@ -243,6 +252,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     this.evaluation = this.extendedClient.evaluation;
     this.evaluationComment = this.extendedClient.evaluationComment;
     this.subscriptionPlan = this.extendedClient.subscriptionPlan;
+    this.subscriptionOrganization = this.extendedClient.subscriptionOrganization;
     this.lead = this.extendedClient.lead;
     this.product = this.extendedClient.product;
     this.productCategory = this.extendedClient.productCategory;

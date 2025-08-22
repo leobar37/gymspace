@@ -59,10 +59,34 @@ export interface IRole {
   canManageEvaluations: boolean;
 }
 
+export interface ISubscriptionPlan {
+  id: UUID;
+  name: string;
+  price: any;
+  billingFrequency: string;
+  maxGyms: number;
+  maxClientsPerGym: number;
+  maxUsersPerGym: number;
+  features: any;
+  description?: string;
+}
+
+export interface ISubscription {
+  id: UUID;
+  organizationId: UUID;
+  subscriptionPlanId: UUID;
+  subscriptionPlan?: ISubscriptionPlan;
+  status: string;
+  startDate: Date;
+  endDate: Date;
+  isActive: boolean;
+}
+
 export interface IRequestContext {
   user: IUser;
   gym?: IGym;
   organization?: IOrganization;
+  subscription?: ISubscription;
   permissions: Permission[];
   hasPermission(permission: Permission): boolean;
   canAccess(resource: string, action: string): boolean;

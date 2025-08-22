@@ -29,7 +29,15 @@ export class InvitationsService {
       include: {
         organization: {
           include: {
-            subscriptionPlan: true,
+            subscriptionOrganizations: {
+              where: {
+                isActive: true,
+              },
+              include: {
+                subscriptionPlan: true,
+              },
+              take: 1,
+            },
           },
         },
       },
@@ -47,7 +55,12 @@ export class InvitationsService {
       },
     });
 
-    if (currentUsers >= gym.organization.subscriptionPlan.maxUsersPerGym) {
+    const subscriptionPlan = gym.organization.subscriptionOrganizations[0]?.subscriptionPlan;
+    if (!subscriptionPlan) {
+      throw new BusinessException('No active subscription found for this organization');
+    }
+
+    if (currentUsers >= subscriptionPlan.maxUsersPerGym) {
       throw new BusinessException('User limit reached for this subscription plan');
     }
 

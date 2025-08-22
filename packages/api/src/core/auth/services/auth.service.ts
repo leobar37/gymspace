@@ -1,9 +1,15 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { SupabaseService } from './supabase.service';
 import { PrismaService } from '../../database/prisma.service';
 import { CacheService } from '../../cache/cache.service';
 import { EmailService } from '../../email/email.service';
-import { UserType, Permission, SubscriptionStatus, PERMISSIONS } from '@gymspace/shared';
+import { UserType, Permission, PERMISSIONS } from '@gymspace/shared';
 import {
   RegisterOwnerDto,
   LoginDto,
@@ -13,6 +19,7 @@ import {
   RegisterCollaboratorDto,
 } from '../../../modules/auth/dto';
 import { BusinessException } from '../../../common/exceptions';
+import { SubscriptionsService } from '../../../modules/subscriptions/subscriptions.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +28,8 @@ export class AuthService {
     private prismaService: PrismaService,
     private cacheService: CacheService,
     private emailService: EmailService,
+    @Inject(forwardRef(() => SubscriptionsService))
+    private subscriptionsService: SubscriptionsService,
   ) {}
 
   /**
@@ -178,12 +187,14 @@ export class AuthService {
 
   /**
    * Get gym context for user
+   * This validates user access to a specific gym
    */
   async getGymContext(gymId: string, userId: string): Promise<any> {
-    // Check if user has access to gym
     const gym = await this.prismaService.gym.findFirst({
       where: {
         id: gymId,
+        deletedAt: null,
+        isActive: true,
         OR: [
           // Owner access
           {
@@ -221,15 +232,6 @@ export class AuthService {
 
     if (existingUser) {
       throw new ConflictException('Email already registered');
-    }
-
-    // Validate subscription plan
-    const subscriptionPlan = await this.prismaService.subscriptionPlan.findUnique({
-      where: { id: dto.subscriptionPlanId },
-    });
-
-    if (!subscriptionPlan) {
-      throw new BusinessException('Invalid subscription plan');
     }
 
     try {
@@ -274,16 +276,12 @@ export class AuthService {
           data: {
             name: dto.organizationName,
             organizationCode: `ORG-${ownerOrgTimestamp.toUpperCase()}-${ownerOrgRandom.toUpperCase()}`,
-            subscriptionStatus: SubscriptionStatus.ACTIVE,
-            subscriptionStart: new Date(),
-            subscriptionEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days trial
             country: dto.country || 'US',
             currency: dto.currency || 'USD',
             timezone: dto.timezone || 'America/New_York',
             settings: {},
-            owner: { connect: { id: user.id } },
-            subscriptionPlan: { connect: { id: dto.subscriptionPlanId } },
-            createdBy: { connect: { id: user.id } },
+            ownerUserId: user.id,
+            createdByUserId: user.id,
           },
         });
 
@@ -307,8 +305,15 @@ export class AuthService {
         return { user, organization, gym };
       });
 
+      // Create free trial subscription using the subscription service
+      // This is done outside the transaction to avoid circular dependencies
+      await this.subscriptionsService.createFreeTrialSubscription(
+        result.organization.id,
+        result.user.id,
+      );
+
       return {
-        message: 'Registration successful. Please check your email to verify your account.',
+        message: 'Registro exitoso. Por favor, revisa tu correo para verificar tu cuenta.',
         user: {
           id: result.user.id,
           email: result.user.email,
@@ -337,10 +342,6 @@ export class AuthService {
    */
   async login(dto: LoginDto): Promise<LoginResponseDto> {
     try {
-      console.log({
-        dto,
-      });
-
       // Authenticate with Supabase
       const { data: authData, error: authError } = await this.supabaseService
         .getClient()
@@ -432,8 +433,6 @@ export class AuthService {
       const user = await this.prismaService.user.findUnique({
         where: { email: dto.email },
       });
-
-      console.log(user);
 
       if (!user) {
         throw new BusinessException('User not found');
@@ -599,13 +598,11 @@ export class AuthService {
 
   /**
    * Get available subscription plans
+   * @deprecated Use SubscriptionsService.getAvailablePlans() instead
    */
   async getSubscriptionPlans() {
-    const plans = await this.prismaService.subscriptionPlan.findMany({
-      where: { deletedAt: null },
-      orderBy: { price: 'asc' },
-    });
-
+    // Delegate to subscription service
+    const plans = await this.subscriptionsService.getAvailablePlans();
     return { data: plans };
   }
 
@@ -743,6 +740,71 @@ export class AuthService {
         throw error;
       }
       throw new BusinessException('Error en el registro. Por favor, inténtalo de nuevo.');
+    }
+  }
+
+  /**
+   * Get organization's active subscription
+   */
+  async getOrganizationSubscription(organizationId: string): Promise<any> {
+    try {
+      // Try to get from cache first
+      const cacheKey = `org-subscription:${organizationId}`;
+      const cached = await this.cacheService.get(cacheKey);
+      
+      if (cached) {
+        return cached;
+      }
+
+      // Fetch from database
+      const subscription = await this.prismaService.subscriptionOrganization.findFirst({
+        where: {
+          organizationId,
+          isActive: true,
+          deletedAt: null,
+        },
+        include: {
+          subscriptionPlan: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      if (!subscription) {
+        return null;
+      }
+
+      // Transform to ISubscription format
+      const transformedSubscription = {
+        id: subscription.id,
+        organizationId: subscription.organizationId,
+        subscriptionPlanId: subscription.subscriptionPlanId,
+        subscriptionPlan: subscription.subscriptionPlan ? {
+          id: subscription.subscriptionPlan.id,
+          name: subscription.subscriptionPlan.name,
+          price: subscription.subscriptionPlan.price,
+          billingFrequency: subscription.subscriptionPlan.billingFrequency,
+          maxGyms: subscription.subscriptionPlan.maxGyms,
+          maxClientsPerGym: subscription.subscriptionPlan.maxClientsPerGym,
+          maxUsersPerGym: subscription.subscriptionPlan.maxUsersPerGym,
+          features: subscription.subscriptionPlan.features,
+          description: subscription.subscriptionPlan.description,
+        } : undefined,
+        status: subscription.status,
+        startDate: subscription.startDate,
+        endDate: subscription.endDate,
+        isActive: subscription.isActive,
+      };
+
+      // Cache for 10 minutes
+      await this.cacheService.set(cacheKey, transformedSubscription, 600);
+
+      return transformedSubscription;
+    } catch (error) {
+      // Log error but don't throw - subscription is optional
+      console.error('Error loading organization subscription:', error);
+      return null;
     }
   }
 }

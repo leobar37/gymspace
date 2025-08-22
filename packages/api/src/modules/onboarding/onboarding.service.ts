@@ -147,10 +147,6 @@ export class OnboardingService {
             ownerUserId: user.id,
             name: dto.organizationName,
             organizationCode: organizationCode,
-            subscriptionPlanId: subscriptionPlanId,
-            subscriptionStatus: SubscriptionStatus.ACTIVE,
-            subscriptionStart: subscriptionStartDate,
-            subscriptionEnd: subscriptionEndDate,
             country: dto.country,
             currency: dto.currency,
             timezone: dto.timezone,
@@ -158,6 +154,19 @@ export class OnboardingService {
               onboardingStep: OnboardingStep.ACCOUNT_CREATED,
               onboardingCompleted: false,
             },
+            createdByUserId: user.id,
+          },
+        });
+
+        // Create subscription organization link
+        await tx.subscriptionOrganization.create({
+          data: {
+            organizationId: organization.id,
+            subscriptionPlanId: subscriptionPlanId,
+            status: SubscriptionStatus.ACTIVE,
+            startDate: subscriptionStartDate,
+            endDate: subscriptionEndDate,
+            isActive: true,
             createdByUserId: user.id,
           },
         });

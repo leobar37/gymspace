@@ -35,12 +35,8 @@ export function AssetPreview({
   resizeMode = 'cover',
 }: AssetPreviewProps) {
   // Construct the render URL directly without using hooks
-  const renderUrl = getAssetRenderUrl(assetId || asset?.id);
-
-  console.log("AssetPreview renderUrl:", renderUrl);
-  
+  const renderUrl = getAssetRenderUrl(assetId || asset?.id);  
   const assetData = asset;
-
   // Determine dimensions based on size prop or explicit width/height
   let imageWidth = width;
   let imageHeight = height;
@@ -87,14 +83,6 @@ export function AssetPreview({
 
   const url = renderUrl || assetData?.previewUrl || '';
 
-  console.log('Final URL to render:', url, {
-    width: imageWidth,
-    height: imageHeight,
-    hasSpecificDimensions: !!(width && height),
-  });
-
-  // Using expo-image for better performance and caching
-  // Use specific dimensions or flex: 1 for 'full' size
   const imageStyle = size === 'full' && !width && !height 
     ? { flex: 1 }
     : { width: imageWidth, height: imageHeight };

@@ -76,9 +76,9 @@ export class ProductsController {
 
   @Post('services')
   @Allow(PERMISSIONS.PRODUCTS_CREATE)
-  @ApiOperation({ 
-    summary: 'Create a new service', 
-    description: 'Create a new service (no inventory tracking)' 
+  @ApiOperation({
+    summary: 'Create a new service',
+    description: 'Create a new service (no inventory tracking)',
   })
   @ApiResponse({ status: 201, description: 'Service created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - invalid input data' })

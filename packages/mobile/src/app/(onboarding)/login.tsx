@@ -1,6 +1,7 @@
 import { Logo } from '@/components/Logo';
 import {
   FormInput,
+  FormPassword,
   FormProvider,
   useForm,
   zodResolver
@@ -75,9 +76,7 @@ export default function LoginScreen() {
   });
 
   // Error formatter for better UX - all messages in Spanish
-  const formatLoginError = (error: unknown): string => {
-    console.log("the error", error);
-    
+  const formatLoginError = (error: unknown): string => {    
     let message = 'Error de inicio de sesión. Por favor, inténtalo de nuevo.';
     
     if (error instanceof Error) {
@@ -269,11 +268,10 @@ export default function LoginScreen() {
                       />
 
                       <View ref={passwordInputRef}>
-                        <FormInput
+                        <FormPassword
                           name="password"
                           label="Contraseña"
                           placeholder="Tu contraseña"
-                          secureTextEntry={true}
                           autoComplete="password"
                           returnKeyType="done"
                           onFocus={handlePasswordFocus}

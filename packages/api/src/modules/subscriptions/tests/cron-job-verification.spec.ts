@@ -59,7 +59,7 @@ describe('SubscriptionCronService - Cron Job Verification', () => {
       // This test verifies that the cron decorator is properly configured
       // In a real environment, you would check the scheduler registry or metadata
       expect(typeof service.checkExpiredSubscriptions).toBe('function');
-      
+
       // The actual cron expression is defined in the @Cron decorator
       // This is more of a documentation test to ensure the method exists
       expect(service.checkExpiredSubscriptions).toBeDefined();
@@ -76,7 +76,9 @@ describe('SubscriptionCronService - Cron Job Verification', () => {
       await service.checkExpiredSubscriptions();
 
       expect(subscriptionsService.checkAndUpdateExpiredSubscriptions).toHaveBeenCalledTimes(1);
-      expect((service as any).logger.log).toHaveBeenCalledWith('Starting daily subscription expiration check...');
+      expect((service as any).logger.log).toHaveBeenCalledWith(
+        'Starting daily subscription expiration check...',
+      );
       expect((service as any).logger.log).toHaveBeenCalledWith(
         'Updated 3 expired subscriptions: Org A (org-a), Org B (org-b), Org C (org-c)',
       );
@@ -118,7 +120,9 @@ describe('SubscriptionCronService - Cron Job Verification', () => {
 
       await service.checkExpiredSubscriptions();
 
-      expect((service as any).logger.log).toHaveBeenCalledWith('Starting daily subscription expiration check...');
+      expect((service as any).logger.log).toHaveBeenCalledWith(
+        'Starting daily subscription expiration check...',
+      );
       expect((service as any).logger.log).toHaveBeenCalledWith(
         'Updated 2 expired subscriptions: Test Gym 1 (org-1), Test Gym 2 (org-2)',
       );
@@ -151,7 +155,9 @@ describe('SubscriptionCronService - Cron Job Verification', () => {
     it('should execute expiring soon check successfully', async () => {
       await service.checkExpiringSoonSubscriptions();
 
-      expect((service as any).logger.log).toHaveBeenCalledWith('Starting daily expiring soon subscription check...');
+      expect((service as any).logger.log).toHaveBeenCalledWith(
+        'Starting daily expiring soon subscription check...',
+      );
       expect((service as any).logger.log).toHaveBeenCalledWith('Expiring soon check completed');
     });
 
@@ -184,7 +190,9 @@ describe('SubscriptionCronService - Cron Job Verification', () => {
       const result = await service.manualCheckExpiredSubscriptions();
 
       expect(result).toEqual(mockResult);
-      expect((service as any).logger.log).toHaveBeenCalledWith('Manual subscription expiration check triggered...');
+      expect((service as any).logger.log).toHaveBeenCalledWith(
+        'Manual subscription expiration check triggered...',
+      );
       expect(subscriptionsService.checkAndUpdateExpiredSubscriptions).toHaveBeenCalledTimes(1);
     });
 
@@ -192,9 +200,13 @@ describe('SubscriptionCronService - Cron Job Verification', () => {
       const error = new Error('Manual trigger failed');
       subscriptionsService.checkAndUpdateExpiredSubscriptions.mockRejectedValue(error);
 
-      await expect(service.manualCheckExpiredSubscriptions()).rejects.toThrow('Manual trigger failed');
+      await expect(service.manualCheckExpiredSubscriptions()).rejects.toThrow(
+        'Manual trigger failed',
+      );
 
-      expect((service as any).logger.log).toHaveBeenCalledWith('Manual subscription expiration check triggered...');
+      expect((service as any).logger.log).toHaveBeenCalledWith(
+        'Manual subscription expiration check triggered...',
+      );
     });
 
     it('should return the same result as the service method', async () => {
@@ -239,7 +251,10 @@ describe('SubscriptionCronService - Cron Job Verification', () => {
       const automaticExecution = service.checkExpiredSubscriptions();
       const manualExecution = service.manualCheckExpiredSubscriptions();
 
-      const [automaticResult, manualResult] = await Promise.all([automaticExecution, manualExecution]);
+      const [automaticResult, manualResult] = await Promise.all([
+        automaticExecution,
+        manualExecution,
+      ]);
 
       expect(automaticResult).toBeUndefined(); // checkExpiredSubscriptions returns void
       expect(manualResult).toEqual({
@@ -304,7 +319,9 @@ describe('SubscriptionCronService - Cron Job Verification', () => {
 
       await service.checkExpiredSubscriptions();
 
-      expect((service as any).logger.log).toHaveBeenCalledWith('Starting daily subscription expiration check...');
+      expect((service as any).logger.log).toHaveBeenCalledWith(
+        'Starting daily subscription expiration check...',
+      );
       expect((service as any).logger.error).toHaveBeenCalledWith(
         'Failed to check expired subscriptions',
         expect.any(Error),
@@ -323,7 +340,7 @@ describe('SubscriptionCronService - Cron Job Verification', () => {
 
       for (const error of errorTypes) {
         subscriptionsService.checkAndUpdateExpiredSubscriptions.mockRejectedValue(error);
-        
+
         // Should not throw regardless of error type
         await expect(service.checkExpiredSubscriptions()).resolves.toBeUndefined();
       }

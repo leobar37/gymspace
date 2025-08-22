@@ -3,7 +3,11 @@ import { SubscriptionsService } from '../subscriptions.service';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { CacheService } from '../../../core/cache/cache.service';
 import { IRequestContext, SubscriptionStatus } from '@gymspace/shared';
-import { BusinessException, ValidationException, ResourceNotFoundException } from '../../../common/exceptions';
+import {
+  BusinessException,
+  ValidationException,
+  ResourceNotFoundException,
+} from '../../../common/exceptions';
 
 describe('SubscriptionsService - Plan Upgrade Functionality', () => {
   let service: SubscriptionsService;
@@ -296,14 +300,15 @@ describe('SubscriptionsService - Plan Upgrade Functionality', () => {
 
       await service.upgradeSubscription('org-1', 'plan-basic', mockRequestContext);
 
-      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock
+        .calls[0][0];
       const startDate = createCall.data.startDate;
       const endDate = createCall.data.endDate;
 
       // Should be approximately 1 month (30 days)
       const expectedDuration = 1 * 30 * 24 * 60 * 60 * 1000;
       const actualDuration = endDate.getTime() - startDate.getTime();
-      
+
       expect(Math.abs(actualDuration - expectedDuration)).toBeLessThan(1000);
     });
 
@@ -327,14 +332,15 @@ describe('SubscriptionsService - Plan Upgrade Functionality', () => {
 
       await service.upgradeSubscription('org-1', 'plan-basic', mockRequestContext);
 
-      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock
+        .calls[0][0];
       const startDate = createCall.data.startDate;
       const endDate = createCall.data.endDate;
 
       // Should be approximately 3 months (90 days)
       const expectedDuration = 3 * 30 * 24 * 60 * 60 * 1000;
       const actualDuration = endDate.getTime() - startDate.getTime();
-      
+
       expect(Math.abs(actualDuration - expectedDuration)).toBeLessThan(1000);
     });
 
@@ -358,14 +364,15 @@ describe('SubscriptionsService - Plan Upgrade Functionality', () => {
 
       await service.upgradeSubscription('org-1', 'plan-basic', mockRequestContext);
 
-      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prismaService.subscriptionOrganization.create as jest.Mock).mock
+        .calls[0][0];
       const startDate = createCall.data.startDate;
       const endDate = createCall.data.endDate;
 
       // Should default to 1 month (30 days)
       const expectedDuration = 30 * 24 * 60 * 60 * 1000;
       const actualDuration = endDate.getTime() - startDate.getTime();
-      
+
       expect(Math.abs(actualDuration - expectedDuration)).toBeLessThan(1000);
     });
 

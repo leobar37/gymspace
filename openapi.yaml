@@ -1,5 +1,101 @@
 openapi: 3.0.0
 paths:
+  /api/v1/subscriptions/plans:
+    get:
+      operationId: SubscriptionsController_getAvailablePlans
+      summary: Get available subscription plans (currently only free plans)
+      parameters: []
+      responses:
+        '200':
+          description: List of available subscription plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailablePlanDto'
+      tags:
+        - Subscriptions
+  /api/v1/subscriptions/organizations/{organizationId}/status:
+    get:
+      operationId: SubscriptionsController_getSubscriptionStatus
+      summary: Get subscription status for an organization
+      parameters:
+        - name: organizationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current subscription status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionStatusDto'
+      tags:
+        - Subscriptions
+  /api/v1/subscriptions/organizations/{organizationId}/affiliate:
+    post:
+      operationId: SubscriptionsController_affiliateOrganization
+      summary: Affiliate organization to a subscription plan
+      description: Currently only allows affiliation to free plans. The organization owner must perform this action.
+      parameters:
+        - name: organizationId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AffiliateOrganizationDto'
+      responses:
+        '200':
+          description: Updated subscription status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionStatusDto'
+      tags:
+        - Subscriptions
+  /api/v1/subscriptions/organizations/{organizationId}/limits/{limitType}:
+    get:
+      operationId: SubscriptionsController_checkSubscriptionLimit
+      summary: Check subscription limits
+      description: 'Check if an organization can perform an action based on subscription limits. Limit types: gyms, clients, users'
+      parameters:
+        - name: organizationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: limitType
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Limit check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  canPerform:
+                    type: boolean
+                  currentUsage:
+                    type: number
+                  limit:
+                    type: number
+                  message:
+                    type: string
+                    nullable: true
+      tags:
+        - Subscriptions
   /api/v1/health:
     get:
       operationId: HealthController_health
@@ -2306,102 +2402,6 @@ paths:
         - Onboarding
       security:
         - bearer: []
-  /api/v1/subscriptions/plans:
-    get:
-      operationId: SubscriptionsController_getAvailablePlans
-      summary: Get available subscription plans (currently only free plans)
-      parameters: []
-      responses:
-        '200':
-          description: List of available subscription plans
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AvailablePlanDto'
-      tags:
-        - Subscriptions
-  /api/v1/subscriptions/organizations/{organizationId}/status:
-    get:
-      operationId: SubscriptionsController_getSubscriptionStatus
-      summary: Get subscription status for an organization
-      parameters:
-        - name: organizationId
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Current subscription status
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SubscriptionStatusDto'
-      tags:
-        - Subscriptions
-  /api/v1/subscriptions/organizations/{organizationId}/affiliate:
-    post:
-      operationId: SubscriptionsController_affiliateOrganization
-      summary: Affiliate organization to a subscription plan
-      description: Currently only allows affiliation to free plans. The organization owner must perform this action.
-      parameters:
-        - name: organizationId
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AffiliateOrganizationDto'
-      responses:
-        '200':
-          description: Updated subscription status
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SubscriptionStatusDto'
-      tags:
-        - Subscriptions
-  /api/v1/subscriptions/organizations/{organizationId}/limits/{limitType}:
-    get:
-      operationId: SubscriptionsController_checkSubscriptionLimit
-      summary: Check subscription limits
-      description: 'Check if an organization can perform an action based on subscription limits. Limit types: gyms, clients, users'
-      parameters:
-        - name: organizationId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: limitType
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Limit check result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  canPerform:
-                    type: boolean
-                  currentUsage:
-                    type: number
-                  limit:
-                    type: number
-                  message:
-                    type: string
-                    nullable: true
-      tags:
-        - Subscriptions
   /api/v1/dashboard/stats:
     get:
       operationId: DashboardController_getDashboardStats
@@ -3288,6 +3288,141 @@ components:
       in: header
       name: X-Gym-Id
   schemas:
+    AvailablePlanDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Plan ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        name:
+          type: string
+          description: Plan name
+          example: Gratuito
+        description:
+          type: string
+          description: Plan description
+          example: Plan gratuito para comenzar - 30 días de prueba
+        price:
+          type: object
+          description: Price information by currency
+          example:
+            USD:
+              currency: USD
+              value: 0
+            COP:
+              currency: COP
+              value: 0
+            MXN:
+              currency: MXN
+              value: 0
+            USD_EC:
+              currency: USD
+              value: 0
+        billingFrequency:
+          type: string
+          description: Billing frequency
+          example: monthly
+        maxGyms:
+          type: number
+          description: Maximum number of gyms allowed
+          example: 1
+        maxClientsPerGym:
+          type: number
+          description: Maximum clients per gym
+          example: 10
+        maxUsersPerGym:
+          type: number
+          description: Maximum users per gym
+          example: 1
+        features:
+          type: object
+          description: Plan features
+          example:
+            evaluations: 5
+            checkIns: true
+            basicReports: false
+            emailSupport: false
+            trialPeriod: 30
+        isFreePlan:
+          type: boolean
+          description: Whether this is a free plan
+          example: true
+      required:
+        - id
+        - name
+        - description
+        - price
+        - billingFrequency
+        - maxGyms
+        - maxClientsPerGym
+        - maxUsersPerGym
+        - features
+        - isFreePlan
+    SubscriptionStatusDto:
+      type: object
+      properties:
+        organizationId:
+          type: string
+          description: Organization ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        subscriptionPlan:
+          type: object
+          description: Current subscription plan
+        status:
+          type: string
+          description: Subscription status
+          enum:
+            - active
+            - inactive
+            - expired
+          example: active
+        subscriptionStart:
+          format: date-time
+          type: string
+          description: Subscription start date
+        subscriptionEnd:
+          format: date-time
+          type: string
+          description: Subscription end date
+        daysRemaining:
+          type: number
+          description: Days remaining in subscription
+          example: 25
+        isExpired:
+          type: boolean
+          description: Whether the subscription is expired
+          example: false
+        isFreePlan:
+          type: boolean
+          description: Whether this is a free plan
+          example: true
+        usage:
+          type: object
+          description: Current usage statistics
+        limits:
+          type: object
+          description: Usage limits based on plan
+      required:
+        - organizationId
+        - subscriptionPlan
+        - status
+        - subscriptionStart
+        - subscriptionEnd
+        - daysRemaining
+        - isExpired
+        - isFreePlan
+        - usage
+        - limits
+    AffiliateOrganizationDto:
+      type: object
+      properties:
+        subscriptionPlanId:
+          type: string
+          description: Subscription plan ID to affiliate with (must be a free plan)
+          example: 123e4567-e89b-12d3-a456-426614174000
+      required:
+        - subscriptionPlanId
     RegisterOwnerDto:
       type: object
       properties:
@@ -3306,9 +3441,6 @@ components:
         organizationName:
           type: string
           example: My Fitness Center
-        subscriptionPlanId:
-          type: string
-          example: 123e4567-e89b-12d3-a456-426614174000
         country:
           type: string
           example: US
@@ -3324,7 +3456,6 @@ components:
         - phone
         - password
         - organizationName
-        - subscriptionPlanId
     LoginDto:
       type: object
       properties:
@@ -3421,6 +3552,9 @@ components:
         organization:
           type: object
           description: User organization
+        subscription:
+          type: object
+          description: Organization active subscription
         permissions:
           description: User permissions in current context
           type: array
@@ -4865,141 +4999,6 @@ components:
         - isCompleted
         - nextAction
         - completionPercentage
-    AvailablePlanDto:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Plan ID
-          example: 123e4567-e89b-12d3-a456-426614174000
-        name:
-          type: string
-          description: Plan name
-          example: Gratuito
-        description:
-          type: string
-          description: Plan description
-          example: Plan gratuito para comenzar - 30 días de prueba
-        price:
-          type: object
-          description: Price information by currency
-          example:
-            USD:
-              currency: USD
-              value: 0
-            COP:
-              currency: COP
-              value: 0
-            MXN:
-              currency: MXN
-              value: 0
-            USD_EC:
-              currency: USD
-              value: 0
-        billingFrequency:
-          type: string
-          description: Billing frequency
-          example: monthly
-        maxGyms:
-          type: number
-          description: Maximum number of gyms allowed
-          example: 1
-        maxClientsPerGym:
-          type: number
-          description: Maximum clients per gym
-          example: 10
-        maxUsersPerGym:
-          type: number
-          description: Maximum users per gym
-          example: 1
-        features:
-          type: object
-          description: Plan features
-          example:
-            evaluations: 5
-            checkIns: true
-            basicReports: false
-            emailSupport: false
-            trialPeriod: 30
-        isFreePlan:
-          type: boolean
-          description: Whether this is a free plan
-          example: true
-      required:
-        - id
-        - name
-        - description
-        - price
-        - billingFrequency
-        - maxGyms
-        - maxClientsPerGym
-        - maxUsersPerGym
-        - features
-        - isFreePlan
-    SubscriptionStatusDto:
-      type: object
-      properties:
-        organizationId:
-          type: string
-          description: Organization ID
-          example: 123e4567-e89b-12d3-a456-426614174000
-        subscriptionPlan:
-          type: object
-          description: Current subscription plan
-        status:
-          type: string
-          description: Subscription status
-          enum:
-            - active
-            - inactive
-            - expired
-          example: active
-        subscriptionStart:
-          format: date-time
-          type: string
-          description: Subscription start date
-        subscriptionEnd:
-          format: date-time
-          type: string
-          description: Subscription end date
-        daysRemaining:
-          type: number
-          description: Days remaining in subscription
-          example: 25
-        isExpired:
-          type: boolean
-          description: Whether the subscription is expired
-          example: false
-        isFreePlan:
-          type: boolean
-          description: Whether this is a free plan
-          example: true
-        usage:
-          type: object
-          description: Current usage statistics
-        limits:
-          type: object
-          description: Usage limits based on plan
-      required:
-        - organizationId
-        - subscriptionPlan
-        - status
-        - subscriptionStart
-        - subscriptionEnd
-        - daysRemaining
-        - isExpired
-        - isFreePlan
-        - usage
-        - limits
-    AffiliateOrganizationDto:
-      type: object
-      properties:
-        subscriptionPlanId:
-          type: string
-          description: Subscription plan ID to affiliate with (must be a free plan)
-          example: 123e4567-e89b-12d3-a456-426614174000
-      required:
-        - subscriptionPlanId
     DashboardStatsDto:
       type: object
       properties:

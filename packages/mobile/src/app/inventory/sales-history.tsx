@@ -41,7 +41,7 @@ export default function SalesHistoryScreen() {
     customerName: searchTerm || undefined,
   });
 
-  console.log("data", JSON.stringify(data?.items?.slice(0, 1), null, 3));
+  console.log("asas", JSON.stringify(data?.items?.slice(0, 1), null, 3));
   
   const handleFiltersChange = useCallback((newFilters: SearchSalesParams) => {
     setFilters(prev => ({

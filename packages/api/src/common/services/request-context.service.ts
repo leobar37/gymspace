@@ -1,10 +1,11 @@
-import { IGym, IOrganization, IRequestContext, IUser, Permission, UUID } from '@gymspace/shared';
+import { IGym, IOrganization, IRequestContext, ISubscription, IUser, Permission, UUID } from '@gymspace/shared';
 import { FastifyRequest } from 'fastify';
 
 export class RequestContext implements IRequestContext {
   private _user: IUser;
   private _gym?: IGym;
   private _organization?: IOrganization;
+  private _subscription?: ISubscription;
   private _permissions: Permission[] = [];
 
   get user(): IUser {
@@ -17,6 +18,10 @@ export class RequestContext implements IRequestContext {
 
   get organization(): IOrganization | undefined {
     return this._organization;
+  }
+
+  get subscription(): ISubscription | undefined {
+    return this._subscription;
   }
 
   get permissions(): Permission[] {
@@ -60,6 +65,11 @@ export class RequestContext implements IRequestContext {
     // Organization from user's context
     if (request.organization) {
       this._organization = request.organization as IOrganization;
+    }
+
+    // Subscription from organization's context
+    if (request.subscription) {
+      this._subscription = request.subscription as ISubscription;
     }
 
     // Permissions from user's role
@@ -108,6 +118,14 @@ export class RequestContext implements IRequestContext {
    */
   withPermissions(permissions: Permission[]): RequestContext {
     this._permissions = [...new Set([...this._permissions, ...permissions])];
+    return this;
+  }
+
+  /**
+   * Set subscription context
+   */
+  withSubscription(subscription: ISubscription): RequestContext {
+    this._subscription = subscription;
     return this;
   }
 }
