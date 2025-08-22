@@ -95,7 +95,7 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
           }
           
           // Clear token after max attempts
-          await clearToken();
+          await clearStoredTokens();
           refreshAttemptsRef.current = 0;
         }
         throw error;

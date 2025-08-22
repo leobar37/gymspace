@@ -22,7 +22,9 @@ import {
   Building2, 
   Phone, 
   Settings,
-  ChevronLeft
+  ChevronLeft,
+  Building,
+  ChevronRight
 } from 'lucide-react-native';
 
 // Validation schema
@@ -37,7 +39,7 @@ type GymSettingsFormData = z.infer<typeof gymSettingsSchema>;
 export default function GymSettingsScreen() {
   const router = useRouter();
   const toast = useToast();
-  const { gym: currentGym, isLoading, error, refetchSession } = useCurrentSession();
+  const { gym: currentGym, isLoading, error, refetchSession, isOwner } = useCurrentSession();
   const { data: gymStats } = useGymStats(currentGym?.id);
   const updateGym = useUpdateCurrentGym();
 
@@ -204,6 +206,44 @@ export default function GymSettingsScreen() {
                     </VStack>
                   </HStack>
                 </VStack>
+              </VStack>
+            </Card>
+          )}
+
+          {/* Organization Management Section - Only for Owners */}
+          {isOwner && (
+            <Card className="p-4 bg-white rounded-xl shadow-sm">
+              <VStack space="md">
+                <HStack className="items-center justify-between">
+                  <HStack className="items-center" space="sm">
+                    <Icon as={Building} size="sm" className="text-gray-500" />
+                    <Text className="text-lg font-semibold text-gray-900">
+                      Gestión de Organización
+                    </Text>
+                  </HStack>
+                </HStack>
+                
+                <Text className="text-sm text-gray-600">
+                  Administra tu organización y todos los gimnasios asociados
+                </Text>
+                
+                <Pressable
+                  onPress={() => router.push('/gym/organization')}
+                  className="flex-row items-center justify-between py-3 px-2 rounded-lg bg-gray-50 active:bg-gray-100"
+                >
+                  <HStack className="items-center flex-1" space="sm">
+                    <Icon as={Building2} size="sm" className="text-blue-600" />
+                    <VStack className="flex-1">
+                      <Text className="text-base font-medium text-gray-900">
+                        Ver Organización
+                      </Text>
+                      <Text className="text-sm text-gray-500">
+                        Resumen y gimnasios
+                      </Text>
+                    </VStack>
+                  </HStack>
+                  <Icon as={ChevronRight} size="sm" className="text-gray-400" />
+                </Pressable>
               </VStack>
             </Card>
           )}

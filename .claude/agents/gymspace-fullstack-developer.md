@@ -24,7 +24,9 @@ You must follow this exact sequence for every feature implementation:
 - Check existing NestJS controllers in the relevant module
 - Verify HTTP method, path, and functionality
 
-1.2 If the endpoint doesn't exist, create it following these patterns:
+**CRITICAL STOP POINT**: If the required API endpoint doesn't exist, SUSPEND implementation and request user review before proceeding with API creation. Do not continue with backend development until user approval is obtained.
+
+1.2 If the endpoint doesn't exist and user approves creation, create it following these patterns:
 - Use proper RESTful conventions
 - Apply RequestContext pattern for multi-tenancy
 - Implement exception-first error handling (throw exceptions, never return errors)
@@ -115,6 +117,7 @@ Ensure complete API documentation:
 
 5. **Import Pattern**: Always use @/ alias for imports
 
+
 **QUALITY REQUIREMENTS**
 
 - Complete type safety from API to UI
@@ -125,28 +128,6 @@ Ensure complete API documentation:
 - Permission-based access control
 - Mobile-first responsive design
 - Accessibility compliance
-
-**DOMAIN KNOWLEDGE REQUIREMENTS**
-
-Before implementing any feature, you must understand the business domain and technical architecture by reading these key documents:
-
-1. **Entity Documentation**: Always read `/Users/leobar37/code/gymspace/docs/use-cases-and-entities.md` to understand:
-   - Complete entity relationships and database schema
-   - Business rules and validation requirements
-   - Use cases and user flows
-   - Permission system and role definitions
-   - Soft delete policies and audit requirements
-   - Multi-tenancy constraints and gym-scoped data access
-
-2. **Architecture Documentation**: Always read `/Users/leobar37/code/gymspace/docs/backend-architecture.md` to understand:
-   - NestJS module structure and patterns
-   - RequestContext implementation and usage
-   - Permission system with @Allow() decorators
-   - Exception-first error handling strategy
-   - Pagination service implementation
-   - Assets module for file management
-   - Cache strategy with Redis
-   - SDK generation and integration patterns
 
 **IMPORTANT REMINDERS**
 
@@ -167,5 +148,18 @@ Before implementing any feature, you must understand the business domain and tec
 - Apply proper permissions based on role definitions in the entity documentation
 - **Component Verification Rule**: Before implementing or suggesting any component, always search the codebase to check if it already exists and verify its correct implementation and usage patterns
 - **DO NOT** implement test components or demo/testing screens after completing feature tasks
+
+**CRITICAL MOBILE APP PATTERNS**
+
+- **SDK Access Pattern**: NEVER import gymspaceClient directly from lib/api-client. ALWAYS use useGymSdk hook from @/providers/GymSdkProvider. Pattern: `const { sdk } = useGymSdk();`
+- **Features Organization**: Check packages/mobile/src/features for existing features. List folders and enter the corresponding feature before creating new components
+- **Form Components**: NEVER use inputs directly. ALL inputs must be wrapped in packages/mobile/src/components/forms
+- **Services Architecture**: Add RequestContext as first parameter in services and pass the complete RequestContext instead of individual fields
+- **State Management**: Use zustand for complex state management shared across components, create stores in features/[feature]/stores/ directory
+- **Loading Screen Pattern**: ALWAYS use useLoadingScreen from @/shared/loading-screen for create/update/delete operations. Pattern: `const { execute } = useLoadingScreen();`
+- **Configuration Context**: NEVER use useGymContext or useGymConfig. Use hooks from @/config/ConfigContext like useConfig(), useCountryConfig(), useDocumentTypes(), etc.
+- **Component Replacements**: CardContent component does not exist, use View with tailwind classes instead
+- **UI Components**: NEVER add custom color styles to buttons. ALWAYS use Button component variants and let design system handle colors
+- **API Development Stop Rule**: If any required API endpoint doesn't exist, SUSPEND implementation and request user review before creating new backend endpoints
 
 When implementing any feature, provide complete code examples for each step, explain architectural decisions, and ensure the entire flow works end-to-end from API to user interface.
