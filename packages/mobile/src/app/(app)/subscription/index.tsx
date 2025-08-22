@@ -165,15 +165,28 @@ export default function SubscriptionPlansScreen() {
   // Memoized utility functions
   const formatPlanPrice = useCallback((price: any): string => {
     if (typeof price === 'object' && price !== null) {
-      // Handle multi-currency pricing
+      // Handle multi-currency pricing with nested currency objects
       const currency = organization?.currency || 'USD';
+      
+      // Check if price has the expected structure: { COP: { currency: "COP", value: 0 } }
+      if (price[currency] && typeof price[currency] === 'object') {
+        const priceValue = price[currency].value;
+        return priceValue === 0 ? 'Gratis' : formatPrice(priceValue);
+      }
+      
+      // Legacy format: direct value { COP: 0 }
       if (price[currency] !== undefined) {
         return price[currency] === 0 ? 'Gratis' : formatPrice(price[currency]);
       }
+      
       // Fallback to first available price
       const firstCurrency = Object.keys(price)[0];
       if (firstCurrency && price[firstCurrency] !== undefined) {
-        return price[firstCurrency] === 0 ? 'Gratis' : `${firstCurrency} ${price[firstCurrency]}`;
+        if (typeof price[firstCurrency] === 'object' && price[firstCurrency].value !== undefined) {
+          const priceValue = price[firstCurrency].value;
+          return priceValue === 0 ? 'Gratis' : formatPrice(priceValue);
+        }
+        return price[firstCurrency] === 0 ? 'Gratis' : formatPrice(price[firstCurrency]);
       }
       return 'Gratis';
     }
@@ -194,7 +207,7 @@ export default function SubscriptionPlansScreen() {
     return 'text-green-600';
   }, []);
 
-  const formatDate = useCallback((dateString: string): string => {
+  const formatDate = useCallback((dateString: string | Date): string => {
     const dateObj = typeof dateString === 'string' ? new Date(dateString) : dateString;
     return dateObj.toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -385,7 +398,7 @@ export default function SubscriptionPlansScreen() {
                                   <X size={16} className="text-red-600 mr-2" />
                                 )}
                                 <Text className="text-sm capitalize">
-                                  {key.replace(/_/g, ' ')}
+                                  {key === 'prioritySupport' ? 'Soporte Prioritario' : key.replace(/_/g, ' ')}
                                 </Text>
                               </View>
                             );

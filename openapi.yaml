@@ -574,7 +574,7 @@ paths:
         - bearer: []
     put:
       operationId: OrganizationsController_updateOrganization
-      summary: Update organization settings
+      summary: Update organization name
       parameters:
         - name: id
           required: true
@@ -589,7 +589,7 @@ paths:
               $ref: '#/components/schemas/UpdateOrganizationDto'
       responses:
         '200':
-          description: Organization updated successfully
+          description: Organization name updated successfully
         '404':
           description: Organization not found
       tags:
@@ -3804,20 +3804,14 @@ components:
     UpdateOrganizationDto:
       type: object
       properties:
-        country:
+        name:
           type: string
-          example: US
-        currency:
-          type: string
-          example: USD
-        timezone:
-          type: string
-          example: America/New_York
-        settings:
-          type: object
-          example:
-            theme: light
-            language: en
+          example: Mi Gimnasio Elite
+          description: Organization name
+          minLength: 2
+          maxLength: 100
+      required:
+        - name
     CreateGymDto:
       type: object
       properties:

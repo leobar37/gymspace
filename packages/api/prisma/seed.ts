@@ -10,10 +10,10 @@ async function main() {
     {
       name: 'Gratuito',
       price: {
-        USD: { currency: 'USD', value: 0 }, // Estados Unidos - Dólares
+        USD: { currency: 'USD', value: 0 }, // Estados Unidos - Dólares (Ecuador uses USD)
         COP: { currency: 'COP', value: 0 }, // Colombia - Pesos Colombianos
         MXN: { currency: 'MXN', value: 0 }, // México - Pesos Mexicanos
-        USD_EC: { currency: 'USD', value: 0 }, // Ecuador - Dólares (moneda oficial)
+        PEN: { currency: 'PEN', value: 0 }, // Peru - Soles Peruanos
       },
       billingFrequency: 'monthly',
       duration: 30,
@@ -22,77 +22,58 @@ async function main() {
       maxClientsPerGym: 10,
       maxUsersPerGym: 1,
       features: {
-        evaluations: 5,
-        checkIns: true,
-        basicReports: false,
-        emailSupport: false,
-        trialPeriod: 30,
+        prioritySupport: false,
       },
       description: 'Plan gratuito para comenzar - 30 días de prueba',
     },
     {
       name: 'Básico',
       price: {
-        USD: { currency: 'USD', value: 29.99 }, // Estados Unidos - ~$30 USD
+        USD: { currency: 'USD', value: 29.99 }, // Estados Unidos + Ecuador - $30 USD
         COP: { currency: 'COP', value: 129900 }, // Colombia - ~$130K COP (1 USD ≈ 4,330 COP)
         MXN: { currency: 'MXN', value: 549 }, // México - ~$549 MXN (1 USD ≈ 18.3 MXN)
-        USD_EC: { currency: 'USD', value: 29.99 }, // Ecuador - Misma tarifa USD
+        PEN: { currency: 'PEN', value: 110 }, // Peru - ~110 PEN (1 USD ≈ 3.7 PEN)
       },
       billingFrequency: 'monthly',
       maxGyms: 1,
       maxClientsPerGym: 100,
       maxUsersPerGym: 3,
       features: {
-        evaluations: 50,
-        checkIns: true,
-        basicReports: true,
-        emailSupport: true,
+        prioritySupport: false,
       },
       description: 'Plan ideal para gimnasios pequeños',
     },
     {
       name: 'Premium',
       price: {
-        USD: { currency: 'USD', value: 79.99 }, // Estados Unidos - ~$80 USD
+        USD: { currency: 'USD', value: 79.99 }, // Estados Unidos + Ecuador - $80 USD
         COP: { currency: 'COP', value: 349900 }, // Colombia - ~$350K COP (1 USD ≈ 4,330 COP)
         MXN: { currency: 'MXN', value: 1449 }, // México - ~$1,449 MXN (1 USD ≈ 18.3 MXN)
-        USD_EC: { currency: 'USD', value: 79.99 }, // Ecuador - Misma tarifa USD
+        PEN: { currency: 'PEN', value: 295 }, // Peru - ~295 PEN (1 USD ≈ 3.7 PEN)
       },
       billingFrequency: 'monthly',
       maxGyms: 3,
       maxClientsPerGym: 500,
       maxUsersPerGym: 10,
       features: {
-        evaluations: 200,
-        checkIns: true,
-        advancedReports: true,
-        financialReports: true,
         prioritySupport: true,
-        customBranding: true,
       },
       description: 'Para gimnasios en crecimiento con múltiples ubicaciones',
     },
     {
       name: 'Enterprise',
       price: {
-        USD: { currency: 'USD', value: 199.99 }, // Estados Unidos - ~$200 USD
+        USD: { currency: 'USD', value: 199.99 }, // Estados Unidos + Ecuador - $200 USD
         COP: { currency: 'COP', value: 879900 }, // Colombia - ~$880K COP (1 USD ≈ 4,330 COP)
         MXN: { currency: 'MXN', value: 3599 }, // México - ~$3,599 MXN (1 USD ≈ 18.3 MXN)
-        USD_EC: { currency: 'USD', value: 199.99 }, // Ecuador - Misma tarifa USD
+        PEN: { currency: 'PEN', value: 739 }, // Peru - ~739 PEN (1 USD ≈ 3.7 PEN)
       },
       billingFrequency: 'monthly',
       maxGyms: 999, // Unlimited
       maxClientsPerGym: 9999, // Unlimited
       maxUsersPerGym: 999, // Unlimited
       features: {
-        evaluations: 9999, // Unlimited
-        checkIns: true,
-        advancedReports: true,
-        financialReports: true,
-        dedicatedSupport: true,
-        customBranding: true,
-        apiAccess: true,
-        whiteLabel: true,
+        prioritySupport: true,
       },
       description: 'Solución completa para cadenas de gimnasios',
     },
@@ -104,9 +85,17 @@ async function main() {
     });
     
     if (!existingPlan) {
-      await prisma.subscriptionPlan.create({
-        data: plan,
-      });
+      try {
+        await prisma.subscriptionPlan.create({
+          data: plan,
+        });
+        console.log(`✅ Created plan: ${plan.name}`);
+      } catch (error) {
+        console.error(`❌ Failed to create plan ${plan.name}:`, error);
+        throw error;
+      }
+    } else {
+      console.log(`⏭️ Plan already exists: ${plan.name}`);
     }
   }
 

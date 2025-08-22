@@ -6,8 +6,10 @@ export default function SubscriptionLayout() {
     <Stack
       screenOptions={{
         headerShown: true,
-        headerBackTitle: 'Atrás',
+        headerBackVisible: true,
+        headerBackTitle: 'Volver',
         headerTitleAlign: 'center',
+        presentation: 'card',
       }}
     >
       <Stack.Screen
@@ -15,6 +17,8 @@ export default function SubscriptionLayout() {
         options={{
           title: 'Planes de Suscripción',
           headerLargeTitle: false,
+          headerBackVisible: true,
+          headerBackTitle: 'Volver',
         }}
       />
     </Stack>
