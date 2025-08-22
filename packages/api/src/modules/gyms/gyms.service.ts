@@ -26,7 +26,7 @@ export class GymsService {
       throw new BusinessException('Organization context is required');
     }
     // Check if organization can add more gyms
-    const canAdd = await this.organizationsService.canAddGym(organizationId);
+    const canAdd = await this.organizationsService.canAddGym(context, organizationId);
     if (!canAdd) {
       throw new BusinessException('Gym limit reached for this subscription plan');
     }

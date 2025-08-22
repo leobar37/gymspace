@@ -3,6 +3,7 @@ import { PrismaService } from '../../core/database/prisma.service';
 import { CacheService } from '../../core/cache/cache.service';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { ResourceNotFoundException } from '../../common/exceptions';
+import { RequestContext } from '../../common/services/request-context.service';
 import { Organization } from '@prisma/client';
 
 @Injectable()
@@ -16,9 +17,10 @@ export class OrganizationsService {
    * Get organization by ID
    */
   async getOrganization(
+    context: RequestContext,
     organizationId: string,
-    userId: string,
   ): Promise<Organization & { subscriptionPlan: any }> {
+    const userId = context.getUserId();
     const organization = await this.prismaService.organization.findFirst({
       where: {
         id: organizationId,
@@ -66,10 +68,11 @@ export class OrganizationsService {
    * Update organization settings
    */
   async updateOrganization(
+    context: RequestContext,
     organizationId: string,
     dto: UpdateOrganizationDto,
-    userId: string,
   ): Promise<Organization> {
+    const userId = context.getUserId();
     // Verify ownership
     const organization = await this.prismaService.organization.findFirst({
       where: {
@@ -82,11 +85,11 @@ export class OrganizationsService {
       throw new ResourceNotFoundException('Organization', organizationId);
     }
 
-    // Update organization
+    // Update organization name only
     const updated = await this.prismaService.organization.update({
       where: { id: organizationId },
       data: {
-        ...dto,
+        name: dto.name,
         updatedByUserId: userId,
       },
       include: {
@@ -115,7 +118,12 @@ export class OrganizationsService {
     });
 
     // Invalidate cache
-    await this.cacheService.del(`org:${organizationId}`);
+    try {
+      await this.cacheService.del(`org:${organizationId}`);
+    } catch (error) {
+      // Log cache error but don't fail the operation
+      console.warn(`Failed to invalidate cache for organization ${organizationId}:`, error);
+    }
 
     return updated;
   }
@@ -123,9 +131,10 @@ export class OrganizationsService {
   /**
    * Get organization statistics
    */
-  async getOrganizationStats(organizationId: string, userId: string) {
+  async getOrganizationStats(context: RequestContext, organizationId: string) {
+    const userId = context.getUserId();
     // Verify ownership
-    const organization = await this.getOrganization(organizationId, userId);
+    const organization = await this.getOrganization(context, organizationId);
 
     const [gymsCount, totalClients, totalCollaborators, activeContracts] = await Promise.all([
       this.prismaService.gym.count({
@@ -177,23 +186,23 @@ export class OrganizationsService {
         gyms: {
           current: gymsCount,
           limit: org.subscriptionPlan.maxGyms,
-          percentage: (gymsCount / org.subscriptionPlan.maxGyms) * 100,
+          percentage: org.subscriptionPlan.maxGyms > 0 
+            ? Math.round((gymsCount / org.subscriptionPlan.maxGyms) * 100 * 100) / 100
+            : 0,
         },
         clients: {
           current: totalClients,
           limit: org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms,
-          percentage:
-            (totalClients /
-              (org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms)) *
-            100,
+          percentage: (org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms) > 0
+            ? Math.round((totalClients / (org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms)) * 100 * 100) / 100
+            : 0,
         },
         collaborators: {
           current: totalCollaborators,
           limit: org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms,
-          percentage:
-            (totalCollaborators /
-              (org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms)) *
-            100,
+          percentage: (org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms) > 0
+            ? Math.round((totalCollaborators / (org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms)) * 100 * 100) / 100
+            : 0,
         },
       },
       metrics: {
@@ -208,7 +217,7 @@ export class OrganizationsService {
   /**
    * Check if organization can add more gyms
    */
-  async canAddGym(organizationId: string): Promise<boolean> {
+  async canAddGym(context: RequestContext, organizationId: string): Promise<boolean> {
     const organization = await this.prismaService.organization.findUnique({
       where: { id: organizationId },
       include: {
@@ -242,7 +251,7 @@ export class OrganizationsService {
   /**
    * Check if gym can add more clients
    */
-  async canAddClient(gymId: string): Promise<boolean> {
+  async canAddClient(context: RequestContext, gymId: string): Promise<boolean> {
     const gym = await this.prismaService.gym.findUnique({
       where: { id: gymId },
       include: {
@@ -280,7 +289,7 @@ export class OrganizationsService {
   /**
    * Check if gym can add more collaborators
    */
-  async canAddCollaborator(gymId: string): Promise<boolean> {
+  async canAddCollaborator(context: RequestContext, gymId: string): Promise<boolean> {
     const gym = await this.prismaService.gym.findUnique({
       where: { id: gymId },
       include: {

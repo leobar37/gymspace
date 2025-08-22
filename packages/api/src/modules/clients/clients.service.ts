@@ -25,7 +25,7 @@ export class ClientsService {
     const userId = ctx.getUserId()!;
 
     // Check if gym can add more clients
-    const canAdd = await this.organizationsService.canAddClient(gymId);
+    const canAdd = await this.organizationsService.canAddClient(ctx, gymId);
     if (!canAdd) {
       throw new BusinessException('Límite de clientes alcanzado para este plan de suscripción');
     }

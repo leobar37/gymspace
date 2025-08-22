@@ -16,19 +16,19 @@ export class OrganizationsController {
   @ApiResponse({ status: 200, description: 'Organization details' })
   @ApiResponse({ status: 404, description: 'Organization not found' })
   async getOrganization(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.organizationsService.getOrganization(id, ctx.getUserId());
+    return await this.organizationsService.getOrganization(ctx, id);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update organization settings' })
-  @ApiResponse({ status: 200, description: 'Organization updated successfully' })
+  @ApiOperation({ summary: 'Update organization name' })
+  @ApiResponse({ status: 200, description: 'Organization name updated successfully' })
   @ApiResponse({ status: 404, description: 'Organization not found' })
   async updateOrganization(
     @Param('id') id: string,
     @Body() dto: UpdateOrganizationDto,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.organizationsService.updateOrganization(id, dto, ctx.getUserId());
+    return await this.organizationsService.updateOrganization(ctx, id, dto);
   }
 
   @Get(':id/stats')
@@ -36,6 +36,6 @@ export class OrganizationsController {
   @ApiResponse({ status: 200, description: 'Organization statistics' })
   @ApiResponse({ status: 404, description: 'Organization not found' })
   async getOrganizationStats(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.organizationsService.getOrganizationStats(id, ctx.getUserId());
+    return await this.organizationsService.getOrganizationStats(ctx, id);
   }
 }

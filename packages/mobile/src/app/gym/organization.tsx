@@ -9,6 +9,7 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useOrganization, useOrganizationStats } from '@/features/organizations/controllers/organizations.controller';
+import { OrganizationInfoCard, OrganizationStatsCard } from '@/features/organizations';
 import { useOrganizationGyms } from '@/features/gyms/controllers/gyms.controller';
 import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
@@ -16,12 +17,8 @@ import {
   Building2, 
   ChevronLeft,
   Building,
-  TrendingUp,
   Plus,
-  ChevronRight,
-  MapPin,
-  Phone,
-  Mail
+  ChevronRight
 } from 'lucide-react-native';
 
 export default function OrganizationScreen() {
@@ -70,6 +67,10 @@ export default function OrganizationScreen() {
         }
       ]
     );
+  };
+
+  const handleEditOrganization = () => {
+    router.push('/gym/organization/edit');
   };
 
   if (isLoading && !organizationData) {
@@ -126,88 +127,14 @@ export default function OrganizationScreen() {
       >
         <VStack className="p-4 pb-8" space="md">
           {/* Organization Summary */}
-          <Card className="p-4 bg-white rounded-xl shadow-sm">
-            <VStack space="md">
-              <HStack className="items-center justify-between">
-                <HStack className="items-center" space="sm">
-                  <Icon as={Building} size="sm" className="text-blue-600" />
-                  <Text className="text-lg font-semibold text-gray-900">
-                    {organizationData.name}
-                  </Text>
-                </HStack>
-              </HStack>
-              
-              <VStack space="sm">
-                {organizationData.country && (
-                  <HStack className="items-center" space="sm">
-                    <Icon as={MapPin} size="xs" className="text-gray-400" />
-                    <Text className="text-sm text-gray-600">País: {organizationData.country}</Text>
-                  </HStack>
-                )}
-                
-                {organizationData.currency && (
-                  <HStack className="items-center" space="sm">
-                    <Icon as={Mail} size="xs" className="text-gray-400" />
-                    <Text className="text-sm text-gray-600">Moneda: {organizationData.currency}</Text>
-                  </HStack>
-                )}
-                
-                {organizationData.timezone && (
-                  <HStack className="items-center" space="sm">
-                    <Icon as={Phone} size="xs" className="text-gray-400" />
-                    <Text className="text-sm text-gray-600">Zona horaria: {organizationData.timezone}</Text>
-                  </HStack>
-                )}
-              </VStack>
-            </VStack>
-          </Card>
+          <OrganizationInfoCard 
+            organization={organizationData}
+            onEdit={handleEditOrganization}
+          />
 
           {/* Organization Stats */}
           {organizationStats && (
-            <Card className="p-4 bg-white rounded-xl shadow-sm">
-              <VStack space="md">
-                <HStack className="items-center justify-between">
-                  <Text className="text-lg font-semibold text-gray-900">
-                    Estadísticas de la Organización
-                  </Text>
-                  <Icon as={TrendingUp} size="sm" className="text-gray-500" />
-                </HStack>
-                
-                <VStack space="md">
-                  <HStack space="md">
-                    <VStack space="xs" className="flex-1">
-                      <Text className="text-sm text-gray-500">Total Gimnasios</Text>
-                      <Text className="text-xl font-bold text-blue-600">
-                        {organizationStats.totalGyms}
-                      </Text>
-                    </VStack>
-                    
-                    <VStack space="xs" className="flex-1">
-                      <Text className="text-sm text-gray-500">Total Clientes</Text>
-                      <Text className="text-xl font-bold text-green-600">
-                        {organizationStats.totalClients}
-                      </Text>
-                    </VStack>
-                  </HStack>
-                  
-                  <HStack space="md">
-                    <VStack space="xs" className="flex-1">
-                      <Text className="text-sm text-gray-500">Total Contratos</Text>
-                      <Text className="text-xl font-bold text-purple-600">
-                        {organizationStats.totalContracts}
-                      </Text>
-                    </VStack>
-                    
-                    <VStack space="xs" className="flex-1">
-                      <Text className="text-sm text-gray-500">Contratos Activos</Text>
-                      <Text className="text-xl font-bold text-orange-600">
-                        {organizationStats.activeContracts}
-                      </Text>
-                    </VStack>
-                  </HStack>
-                </VStack>
-              </VStack>
-            </Card>
+            <OrganizationStatsCard stats={organizationStats} />
           )}
 
           {/* Gyms Section */}

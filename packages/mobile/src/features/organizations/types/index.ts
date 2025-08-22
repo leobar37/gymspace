@@ -1,7 +1,3 @@
-export interface UpdateOrganizationDto {
-  name: string;
-}
-
 export interface Organization {
   id: string;
   name: string;
@@ -9,8 +5,6 @@ export interface Organization {
   currency?: string;
   timezone?: string;
   settings?: Record<string, any>;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface OrganizationStats {
@@ -18,5 +12,8 @@ export interface OrganizationStats {
   totalClients: number;
   totalContracts: number;
   activeContracts: number;
-  totalRevenue: number;
+}
+
+export interface OrganizationUpdateData {
+  name: string;
 }

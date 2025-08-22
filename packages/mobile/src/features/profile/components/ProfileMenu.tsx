@@ -21,6 +21,7 @@ import {
   FileTextIcon,
   TruckIcon,
   PackageIcon,
+  Building2Icon,
 } from 'lucide-react-native';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
@@ -84,6 +85,8 @@ export const ProfileMenu: React.FC = () => {
     }
   };
 
+  const isOwner = user?.userType === 'owner';
+
   const menuSections = [
     {
       title: 'Gestión',
@@ -117,6 +120,12 @@ export const ProfileMenu: React.FC = () => {
           subtitle: 'Edita tu información personal',
           onPress: () => router.push('/profile/edit'),
         },
+        ...(isOwner ? [{
+          icon: Building2Icon,
+          title: 'Mi Organización',
+          subtitle: 'Gestiona tu organización y gimnasios',
+          onPress: () => router.push('/gym/organization'),
+        }] : []),
         {
           icon: BuildingIcon,
           title: 'Mi Gimnasio',
