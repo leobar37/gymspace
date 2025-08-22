@@ -16,19 +16,6 @@ function AppLayout() {
     enabled: isAuthenticated,
   });
 
-  console.log(
-    JSON.stringify(
-      {
-        session,
-        isSessionLoading,
-        isError,
-        isAuthenticated,
-      },
-      null,
-      2,
-    ),
-  );
-
   // If user is not authenticated, redirect to onboarding
   if (!isAuthenticated) {
     return <Redirect href="/(onboarding)" />;
@@ -42,11 +29,6 @@ function AppLayout() {
       </View>
     );
   }
-
-  console.log('one', {
-    session,
-  });
-
   // If session fetch failed or user doesn't have a valid session, redirect to onboarding
   // This will trigger after max refresh attempts in useCurrentSession
   if (isError || !session || !session.isAuthenticated) {

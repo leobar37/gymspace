@@ -72,6 +72,11 @@ export class CreateClientDto {
   @IsString()
   notes?: string;
 
+  @ApiProperty({ example: 'profile-photo-uuid', required: false })
+  @IsOptional()
+  @IsString()
+  profilePhotoId?: string;
+
   @ApiProperty({
     example: {
       referredBy: 'Facebook',

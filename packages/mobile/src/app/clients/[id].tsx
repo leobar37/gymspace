@@ -55,22 +55,15 @@ export default function ClientDetailScreen() {
   const [showStatusAlert, setShowStatusAlert] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [statusError, setStatusError] = useState<string | null>(null);
-  
-  const { 
-    useClientDetail, 
-    useClientStats, 
-    toggleStatus, 
-    isTogglingStatus
-  } = useClientsController();
-  
+
+  const { useClientDetail, useClientStats, toggleStatus, isTogglingStatus } =
+    useClientsController();
+
   const { data: client, isLoading } = useClientDetail(id);
   const { data: stats } = useClientStats(id);
-  
+
   // Fetch the profile photo if it exists
-  const { data: profilePhoto } = useFile(
-    client?.profilePhotoId || '',
-    !!client?.profilePhotoId
-  );
+  const { data: profilePhoto } = useFile(client?.profilePhotoId || '', !!client?.profilePhotoId);
 
   const handleEdit = () => {
     router.push(`/clients/${id}/edit`);
@@ -84,7 +77,10 @@ export default function ClientDetailScreen() {
     } catch (error: any) {
       // Check for active contracts error
       if (error?.response?.data?.code === 'CANNOT_DEACTIVATE_CLIENT_WITH_ACTIVE_CONTRACTS') {
-        setStatusError(error.response.data.message || 'No se puede desactivar el cliente porque tiene contratos activos.');
+        setStatusError(
+          error.response.data.message ||
+            'No se puede desactivar el cliente porque tiene contratos activos.',
+        );
       } else {
         setStatusError('Ocurrió un error al cambiar el estado del cliente.');
       }
@@ -142,7 +138,7 @@ export default function ClientDetailScreen() {
         <HStack className="items-center justify-between px-4 py-3">
           <HStack className="items-center flex-1">
             <Pressable onPress={() => router.back()} className="p-2 -ml-2">
-              <Icon as={ChevronLeftIcon} size="xl" className='text-black' />
+              <Icon as={ChevronLeftIcon} size="xl" className="text-black" />
             </Pressable>
             <Text className="text-lg font-semibold ml-2" numberOfLines={1}>
               {client?.name || 'Cliente'}
@@ -153,57 +149,63 @@ export default function ClientDetailScreen() {
           </Pressable>
         </HStack>
       </View>
-      
+
       {/* Tab Navigation */}
       <View className="bg-white border-b border-gray-200">
         <HStack className="px-4">
-          <Pressable 
+          <Pressable
             onPress={() => setActiveTab('info')}
             className={`flex-1 py-3 border-b-2 ${activeTab === 'info' ? 'border-blue-600' : 'border-transparent'}`}
           >
             <HStack className="items-center justify-center gap-2">
-              <Icon 
-                as={UserIcon} 
+              <Icon
+                as={UserIcon}
                 className={`w-4 h-4 ${activeTab === 'info' ? 'text-blue-600' : 'text-gray-500'}`}
               />
-              <Text className={`font-medium ${activeTab === 'info' ? 'text-blue-600' : 'text-gray-500'}`}>
+              <Text
+                className={`font-medium ${activeTab === 'info' ? 'text-blue-600' : 'text-gray-500'}`}
+              >
                 Información
               </Text>
             </HStack>
           </Pressable>
-          
-          <Pressable 
+
+          <Pressable
             onPress={() => setActiveTab('checkins')}
             className={`flex-1 py-3 border-b-2 ${activeTab === 'checkins' ? 'border-blue-600' : 'border-transparent'}`}
           >
             <HStack className="items-center justify-center gap-2">
-              <Icon 
-                as={CheckCircleIcon} 
+              <Icon
+                as={CheckCircleIcon}
                 className={`w-4 h-4 ${activeTab === 'checkins' ? 'text-blue-600' : 'text-gray-500'}`}
               />
-              <Text className={`font-medium ${activeTab === 'checkins' ? 'text-blue-600' : 'text-gray-500'}`}>
+              <Text
+                className={`font-medium ${activeTab === 'checkins' ? 'text-blue-600' : 'text-gray-500'}`}
+              >
                 Check-ins
               </Text>
             </HStack>
           </Pressable>
-          
-          <Pressable 
+
+          <Pressable
             onPress={() => setActiveTab('stats')}
             className={`flex-1 py-3 border-b-2 ${activeTab === 'stats' ? 'border-blue-600' : 'border-transparent'}`}
           >
             <HStack className="items-center justify-center gap-2">
-              <Icon 
-                as={BarChart3Icon} 
+              <Icon
+                as={BarChart3Icon}
                 className={`w-4 h-4 ${activeTab === 'stats' ? 'text-blue-600' : 'text-gray-500'}`}
               />
-              <Text className={`font-medium ${activeTab === 'stats' ? 'text-blue-600' : 'text-gray-500'}`}>
+              <Text
+                className={`font-medium ${activeTab === 'stats' ? 'text-blue-600' : 'text-gray-500'}`}
+              >
                 Estadísticas
               </Text>
             </HStack>
           </Pressable>
         </HStack>
       </View>
-      
+
       <ScrollView className="flex-1">
         <VStack className="px-4 pb-4 pt-2 gap-4">
           {/* Tab Content */}
@@ -211,40 +213,53 @@ export default function ClientDetailScreen() {
             <>
               {/* Client Header */}
               <Card className="p-6">
-            <HStack className="items-center gap-4">
-              <Avatar size="xl">
-                {profilePhoto?.previewUrl ? (
-                  <AvatarImage 
-                    source={{ uri: profilePhoto.previewUrl }} 
-                    alt={client?.name || 'Client'}
-                  />
-                ) : null}
-                <AvatarFallbackText>
-                  {client?.name ? client.name.split(' ').map((n: string) => n[0]).join('') : '?'}
-                </AvatarFallbackText>
-              </Avatar>
-              <VStack className="flex-1">
-                <Text className="text-xl font-semibold text-gray-900">
-                  {client?.name || 'Sin nombre'}
-                </Text>
-                <Text className="text-sm text-gray-600">
-                  Cliente #{client?.clientNumber || 'N/A'}
-                </Text>
-                <Badge
-                  variant="solid"
-                  action={client?.status === 'active' ? 'success' : 'muted'}
-                >
-                  <BadgeText>{client?.status === 'active' ? 'Activo' : 'Inactivo'}</BadgeText>
-                </Badge>
-              </VStack>
-            </HStack>
-          </Card>
+                <VStack className="gap-4">
+                  <HStack className="items-center gap-4">
+                    <Avatar size="xl">
+                      {profilePhoto?.previewUrl ? (
+                        <AvatarImage
+                          source={{ uri: profilePhoto.previewUrl }}
+                          alt={client?.name || 'Client'}
+                        />
+                      ) : null}
+                      <AvatarFallbackText>
+                        {client?.name
+                          ? client.name
+                              .split(' ')
+                              .map((n: string) => n[0])
+                              .join('')
+                          : '?'}
+                      </AvatarFallbackText>
+                    </Avatar>
+                    <VStack className="flex-1">
+                      <Text className="text-xl font-semibold text-gray-900">
+                        {client?.name || 'Sin nombre'}
+                      </Text>
+                      <Text className="text-sm text-gray-600">
+                        Cliente #{client?.clientNumber || 'N/A'}
+                      </Text>
+                      <Badge
+                        variant="solid"
+                        action={client?.status === 'active' ? 'success' : 'muted'}
+                      >
+                        <BadgeText>{client?.status === 'active' ? 'Activo' : 'Inactivo'}</BadgeText>
+                      </Badge>
+                    </VStack>
+                  </HStack>
+
+                  {/* Edit Button */}
+                  <Button onPress={handleEdit} variant="outline" className="w-full">
+                    <HStack className="items-center gap-2">
+                      <Icon as={EditIcon} className="w-4 h-4" />
+                      <ButtonText>Editar Cliente</ButtonText>
+                    </HStack>
+                  </Button>
+                </VStack>
+              </Card>
 
               {/* Contact Information */}
               <Card className="p-4">
-                <Text className="font-semibold text-gray-900 mb-3">
-                  Información de Contacto
-                </Text>
+                <Text className="font-semibold text-gray-900 mb-3">Información de Contacto</Text>
                 <VStack className="gap-3">
                   {client.phone && (
                     <HStack className="items-center gap-3">
@@ -269,13 +284,10 @@ export default function ClientDetailScreen() {
 
               {/* Statistics section removed from Información tab - now only shown in Estadísticas tab */}
 
-
               {/* Notes */}
               {client.notes && (
                 <Card className="p-4">
-                  <Text className="font-semibold text-gray-900 mb-3">
-                    Notas
-                  </Text>
+                  <Text className="font-semibold text-gray-900 mb-3">Notas</Text>
                   <Text className="text-gray-700">{client.notes}</Text>
                 </Card>
               )}
@@ -303,23 +315,25 @@ export default function ClientDetailScreen() {
       </ScrollView>
 
       {/* Action Sheet */}
-      <Actionsheet isOpen={showActionsheet} onClose={() => setShowActionsheet(false)} snapPoints={[30]}>
+      <Actionsheet
+        isOpen={showActionsheet}
+        onClose={() => setShowActionsheet(false)}
+        snapPoints={[30]}
+      >
         <ActionsheetBackdrop />
         <ActionsheetContent>
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
-          
+
           <ActionsheetItem onPress={handleEditFromMenu}>
             <Icon as={EditIcon} className="w-4 h-4 text-gray-500 mr-3" />
             <ActionsheetItemText>Editar</ActionsheetItemText>
           </ActionsheetItem>
-          
+
           <ActionsheetItem onPress={handleToggleStatusPress}>
             <Icon as={TrashIcon} className="w-4 h-4 text-red-500 mr-3" />
-            <ActionsheetItemText className="text-red-500">
-              Eliminar
-            </ActionsheetItemText>
+            <ActionsheetItemText className="text-red-500">Eliminar</ActionsheetItemText>
           </ActionsheetItem>
         </ActionsheetContent>
       </Actionsheet>
@@ -330,9 +344,7 @@ export default function ClientDetailScreen() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <HStack className="items-center gap-2">
-              {statusError && (
-                <Icon as={AlertTriangleIcon} className="w-5 h-5 text-red-500" />
-              )}
+              {statusError && <Icon as={AlertTriangleIcon} className="w-5 h-5 text-red-500" />}
               <Text className="text-lg font-semibold">
                 {client?.status === 'active' ? 'Desactivar Cliente' : 'Activar Cliente'}
               </Text>
@@ -342,18 +354,15 @@ export default function ClientDetailScreen() {
           <AlertDialogBody>
             {statusError ? (
               <VStack className="gap-3">
-                <Text className="text-red-600 font-medium">
-                  Error al cambiar el estado
-                </Text>
-                <Text className="text-gray-600">
-                  {statusError}
-                </Text>
+                <Text className="text-red-600 font-medium">Error al cambiar el estado</Text>
+                <Text className="text-gray-600">{statusError}</Text>
                 {statusError.includes('contratos activos') && (
                   <Card className="p-3 bg-yellow-50 border border-yellow-200">
                     <HStack className="items-start gap-2">
                       <Icon as={AlertTriangleIcon} className="w-4 h-4 text-yellow-600 mt-0.5" />
                       <Text className="text-sm text-gray-700">
-                        Para desactivar este cliente, primero debe cancelar o completar todos sus contratos activos.
+                        Para desactivar este cliente, primero debe cancelar o completar todos sus
+                        contratos activos.
                       </Text>
                     </HStack>
                   </Card>
@@ -362,16 +371,14 @@ export default function ClientDetailScreen() {
             ) : (
               <VStack className="gap-3">
                 <Text className="text-gray-600">
-                  {client?.status === 'active' 
+                  {client?.status === 'active'
                     ? `¿Estás seguro de que deseas desactivar a ${client?.name}?`
-                    : `¿Estás seguro de que deseas activar a ${client?.name}?`
-                  }
+                    : `¿Estás seguro de que deseas activar a ${client?.name}?`}
                 </Text>
                 <Text className="text-sm text-gray-500">
                   {client?.status === 'active'
                     ? 'El cliente no podrá acceder al gimnasio hasta que sea reactivado.'
-                    : 'El cliente podrá acceder nuevamente al gimnasio.'
-                  }
+                    : 'El cliente podrá acceder nuevamente al gimnasio.'}
                 </Text>
               </VStack>
             )}
@@ -381,14 +388,12 @@ export default function ClientDetailScreen() {
               <ButtonText>Cancelar</ButtonText>
             </Button>
             {!statusError && (
-              <Button 
+              <Button
                 action={client?.status === 'active' ? 'negative' : 'positive'}
                 onPress={handleConfirmToggleStatus}
                 disabled={isTogglingStatus}
               >
-                <ButtonText>
-                  {client?.status === 'active' ? 'Desactivar' : 'Activar'}
-                </ButtonText>
+                <ButtonText>{client?.status === 'active' ? 'Desactivar' : 'Activar'}</ButtonText>
               </Button>
             )}
           </AlertDialogFooter>

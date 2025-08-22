@@ -49,7 +49,7 @@ export const UIActionsheet = createActionsheet({
   Item: ItemWrapper,
   ItemText: Text,
   DragIndicator: View,
-  IndicatorWrapper: View,
+  DragIndicatorWrapper: View,
   Backdrop: AnimatedPressable,
   ScrollView: ScrollView,
   VirtualizedList: VirtualizedList,
@@ -240,7 +240,9 @@ type IActionsheetItemProps = VariantProps<typeof actionsheetItemStyle> &
   React.ComponentPropsWithoutRef<typeof UIActionsheet.Item>;
 
 type IActionsheetItemTextProps = VariantProps<typeof actionsheetItemTextStyle> &
-  React.ComponentPropsWithoutRef<typeof UIActionsheet.ItemText>;
+  Omit<React.ComponentPropsWithoutRef<typeof UIActionsheet.ItemText>, 'children'> & {
+    children?: React.ReactNode;
+  };
 
 type IActionsheetDragIndicatorProps = VariantProps<
   typeof actionsheetDragIndicatorStyle
@@ -250,7 +252,9 @@ type IActionsheetDragIndicatorProps = VariantProps<
 type IActionsheetDragIndicatorWrapperProps = VariantProps<
   typeof actionsheetDragIndicatorWrapperStyle
 > &
-  React.ComponentPropsWithoutRef<typeof UIActionsheet.DragIndicatorWrapper>;
+  Omit<React.ComponentPropsWithoutRef<typeof UIActionsheet.DragIndicatorWrapper>, 'children'> & {
+    children?: React.ReactNode;
+  };
 
 type IActionsheetBackdropProps = VariantProps<typeof actionsheetBackdropStyle> &
   React.ComponentPropsWithoutRef<typeof UIActionsheet.Backdrop> & {
@@ -336,18 +340,18 @@ const ActionsheetItem = React.forwardRef<
 const ActionsheetItemText = React.forwardRef<
   React.ComponentRef<typeof UIActionsheet.ItemText>,
   IActionsheetItemTextProps
->(function ActionsheetItemText(
-  {
+>((props: any, ref) => {
+  const {
     isTruncated,
     bold,
     underline,
     strikeThrough,
     size = 'sm',
     className,
-    ...props
-  },
-  ref
-) {
+    children,
+    ...rest
+  } = props;
+  
   return (
     <UIActionsheet.ItemText
       className={actionsheetItemTextStyle({
@@ -359,8 +363,10 @@ const ActionsheetItemText = React.forwardRef<
         size,
       })}
       ref={ref}
-      {...props}
-    />
+      {...rest}
+    >
+      {children}
+    </UIActionsheet.ItemText>
   );
 });
 
@@ -382,15 +388,19 @@ const ActionsheetDragIndicator = React.forwardRef<
 const ActionsheetDragIndicatorWrapper = React.forwardRef<
   React.ComponentRef<typeof UIActionsheet.DragIndicatorWrapper>,
   IActionsheetDragIndicatorWrapperProps
->(function ActionsheetDragIndicatorWrapper({ className, ...props }, ref) {
+>((props: any, ref) => {
+  const { className, children, ...rest } = props;
+  
   return (
     <UIActionsheet.DragIndicatorWrapper
       className={actionsheetDragIndicatorWrapperStyle({
         class: className,
       })}
       ref={ref}
-      {...props}
-    />
+      {...rest}
+    >
+      {children}
+    </UIActionsheet.DragIndicatorWrapper>
   );
 });
 

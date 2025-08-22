@@ -44,7 +44,7 @@ export const UIActionsheet = createActionsheet({
   Item: withStyleContext(Pressable),
   ItemText: Text,
   DragIndicator: View,
-  IndicatorWrapper: View,
+  DragIndicatorWrapper: View,
   Backdrop: AnimatedPressable,
   ScrollView: ScrollView,
   VirtualizedList: VirtualizedList,

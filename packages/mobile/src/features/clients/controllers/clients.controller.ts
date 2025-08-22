@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
+import type { CreateClientDto, UpdateClientDto, Client, SearchClientsParams } from '@gymspace/sdk';
 
 // Query keys
 export const clientsKeys = {
@@ -11,31 +12,30 @@ export const clientsKeys = {
   stats: (id: string) => [...clientsKeys.detail(id), 'stats'] as const,
 };
 
-// Types
+// Re-export SDK types
+export type { CreateClientDto, UpdateClientDto, Client } from '@gymspace/sdk';
+
+// Form data type for internal use (matches form schema)
 export interface ClientFormData {
   name: string;
-  email?: string; // Made optional
+  email?: string;
   phone?: string;
   documentValue?: string;
   documentType?: string;
-  birthDate?: string;
+  birthDate?: Date | string | null;
+  gender?: string;
+  maritalStatus?: string;
   address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  occupation?: string;
   notes?: string;
-  // Legacy fields for backward compatibility
-  document?: string;
-  documentId?: string;
-  emergencyContactName?: string;
-  emergencyContactPhone?: string;
-  medicalConditions?: string;
-  profilePhotoId?: string;
+  profilePhotoId?: string | null;
+  customData?: Record<string, any>;
 }
 
-export interface SearchFilters {
-  search?: string;
-  activeOnly?: boolean;
-  page?: number;
-  limit?: number;
-}
+export interface SearchFilters extends SearchClientsParams {}
 
 export const useClientsController = () => {
   const { sdk } = useGymSdk();
@@ -87,22 +87,8 @@ export const useClientsController = () => {
 
   // Create client mutation
   const createClientMutation = useMutation({
-    mutationFn: async (data: ClientFormData) => {
-      // Transform ClientFormData to CreateClientDto
-      const createData = {
-        name: data.name,
-        email: data.email, // Now optional
-        phone: data.phone,
-        documentValue: data.documentValue || data.document || data.documentId,
-        documentType: data.documentType,
-        birthDate: data.birthDate,
-        address: data.address,
-        notes: data.notes,
-        emergencyContactName: data.emergencyContactName,
-        emergencyContactPhone: data.emergencyContactPhone,
-        medicalConditions: data.medicalConditions,
-      };
-      const response = await sdk.clients.createClient(createData);
+    mutationFn: async (data: CreateClientDto) => {
+      const response = await sdk.clients.createClient(data);
       return response;
     },
     onSuccess: () => {
@@ -113,22 +99,8 @@ export const useClientsController = () => {
 
   // Update client mutation
   const updateClientMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<ClientFormData> }) => {
-      // Transform ClientFormData to UpdateClientDto
-      const updateData = {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        documentValue: data.documentValue || data.document || data.documentId,
-        documentType: data.documentType,
-        birthDate: data.birthDate,
-        address: data.address,
-        notes: data.notes,
-        emergencyContactName: data.emergencyContactName,
-        emergencyContactPhone: data.emergencyContactPhone,
-        medicalConditions: data.medicalConditions,
-      };
-      const response = await sdk.clients.updateClient(id, updateData);
+    mutationFn: async ({ id, data }: { id: string; data: UpdateClientDto }) => {
+      const response = await sdk.clients.updateClient(id, data);
       return response;
     },
     onSuccess: (data, variables) => {

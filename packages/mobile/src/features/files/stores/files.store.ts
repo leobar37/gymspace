@@ -1,16 +1,24 @@
 import { create } from 'zustand';
 
 interface FilesStore {
-  // Currently this store doesn't need any state since we removed modal functionality
-  // Keeping it for potential future file-related state management
+  // File-related global state
+  recentlyUploadedFiles: string[];
   
-  // You can add file-related global state here if needed, for example:
-  // - Recently uploaded files
-  // - File upload progress
-  // - File categories/tags
-  // - etc.
+  // Actions
+  addRecentlyUploaded: (fileId: string) => void;
+  clearRecentlyUploaded: () => void;
 }
 
 export const useFilesStore = create<FilesStore>((set, get) => ({
-  // Currently empty - can be extended as needed
+  recentlyUploadedFiles: [],
+  
+  addRecentlyUploaded: (fileId: string) => {
+    set(state => ({
+      recentlyUploadedFiles: [fileId, ...state.recentlyUploadedFiles.slice(0, 9)] // Keep last 10
+    }));
+  },
+  
+  clearRecentlyUploaded: () => {
+    set({ recentlyUploadedFiles: [] });
+  },
 }));

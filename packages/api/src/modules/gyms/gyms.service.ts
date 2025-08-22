@@ -118,12 +118,6 @@ export class GymsService {
       },
       include: {
         organization: {
-          select: {
-            id: true,
-            country: true,
-            currency: true,
-            timezone: true,
-          },
           include: {
             subscriptionOrganizations: {
               where: {

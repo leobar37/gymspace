@@ -30,15 +30,6 @@ export class FilesService {
     const uniqueFilename = `${uniqueIdentifier}.${fileExtension}`;
     const filePath = `files/user/${userId}/${uniqueFilename}`;
 
-    console.log(`[FilesService] Starting file upload`, {
-      originalName: file.filename,
-      mimeType: file.mimetype,
-      fileSize: file.size,
-      userId,
-      uniqueFilename,
-      filePath,
-    });
-
     try {
       // Upload to storage
       console.log(`[FilesService] Uploading to storage: ${filePath}`);
@@ -50,10 +41,7 @@ export class FilesService {
           ...(dto.metadata || {}),
         },
       });
-      console.log(`[FilesService] Successfully uploaded to storage`);
 
-      // Create database record
-      console.log(`[FilesService] Creating database record`);
       const fileRecord = await this.prisma.file.create({
         data: {
           filename: uniqueFilename,
@@ -67,23 +55,12 @@ export class FilesService {
           userId: userId,
         },
       });
-      console.log(`[FilesService] File record created with ID: ${fileRecord.id}`);
-
+      
       const result = this.mapToDto(fileRecord);
-      console.log(`[FilesService] File upload completed successfully`, {
-        fileId: result.id,
-        originalName: result.originalName,
-        previewUrl: result.previewUrl,
-      });
+ 
 
       return result;
     } catch (error) {
-      console.error(`[FilesService] Error during file upload`, {
-        error: error.message,
-        stack: error.stack,
-        originalName: file.filename,
-        userId,
-      });
 
       // Clean up storage if database save fails
       try {
@@ -114,9 +91,6 @@ export class FilesService {
         createdAt: 'desc',
       },
     });
-
-    console.log(`[FilesService] Found ${files.length} files for user: ${userId}`);
-
     return files.map((file) => this.mapToDto(file));
   }
 
@@ -179,13 +153,20 @@ export class FilesService {
   /**
    * Serve a file for rendering (inline display)
    */
-  async serve(_context: IRequestContext, id: string) {
-    // For public rendering, we don't need user context
+  async serve(context: IRequestContext, id: string) {
+    const isPublicAccess = context.getUserId() === 'public';
+    
+    // Build where clause based on access type
     const whereClause: any = {
       id,
       status: 'active',
       deletedAt: null,
     };
+
+    // Only filter by userId if not public access
+    if (!isPublicAccess) {
+      whereClause.userId = context.getUserId();
+    }
 
     const file = await this.prisma.file.findFirst({
       where: whereClause,
@@ -195,14 +176,19 @@ export class FilesService {
       throw new NotFoundException('File not found');
     }
 
-    const stream = await this.storageService.download(file.filePath);
+    try {
+      const stream = await this.storageService.download(file.filePath);
 
-    return {
-      stream,
-      filename: file.originalName,
-      mimeType: file.mimeType,
-      fileSize: file.fileSize,
-    };
+      return {
+        stream,
+        filename: file.originalName,
+        mimeType: file.mimeType,
+        fileSize: file.fileSize,
+      };
+    } catch (error) {
+      console.error('[FilesService] Error downloading file for rendering:', error);
+      throw new NotFoundException('File not found or cannot be accessed');
+    }
   }
 
   /**

@@ -78,6 +78,7 @@ export class ClientsService {
         birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
         documentValue: dto.documentValue || undefined,
         documentType: dto.documentType || undefined,
+        profilePhotoId: dto.profilePhotoId || undefined,
         gymId,
         clientNumber,
         name: dto.name.trim(),
@@ -155,6 +156,8 @@ export class ClientsService {
       customData,
       ...validClientData
     } = dto;
+
+    console.log('client', JSON.stringify(validClientData, null, 3));
 
     const updated = await this.prismaService.gymClient.update({
       where: { id: clientId },
@@ -322,9 +325,7 @@ export class ClientsService {
     const clients = await this.prismaService.gymClient.findMany({
       where,
       include: includeOptions,
-      orderBy: paginationParams.orderBy || [
-        { createdAt: 'desc' }, // Most recent clients first
-      ],
+      orderBy: paginationParams.orderBy || { createdAt: 'desc' }, // Most recent clients first
       ...paginationParams,
     });
 

@@ -9,6 +9,7 @@ import {
   Req,
   BadRequestException,
   Query,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -197,22 +198,39 @@ export class FilesController {
     description: 'File not found',
   })
   async render(@Param('id', ParseUUIDPipe) id: string, @Res() res: FastifyReply) {
-    // Create a minimal context for public rendering
-    const context = { getUserId: () => 'public' } as IRequestContext;
+    try {
+      // Create a minimal context for public rendering
+      const context = { 
+        getUserId: () => 'public',
+        getGymId: () => null 
+      } as IRequestContext;
 
-    const { stream, filename, mimeType, fileSize } = await this.filesService.serve(context, id);
+      const { stream, filename, mimeType, fileSize } = await this.filesService.serve(context, id);
 
-    // Set appropriate headers for rendering in browser
-    const contentDisposition = this.getContentDisposition(mimeType, filename);
+      // Set appropriate headers for rendering in browser
+      const contentDisposition = this.getContentDisposition(mimeType, filename);
 
-    res.headers({
-      'Content-Type': mimeType,
-      'Content-Disposition': contentDisposition,
-      'Content-Length': fileSize.toString(),
-      'Cache-Control': 'public, max-age=86400', // Cache for 1 day
-    });
+      res.headers({
+        'Content-Type': mimeType,
+        'Content-Disposition': contentDisposition,
+        'Content-Length': fileSize.toString(),
+        'Cache-Control': 'public, max-age=86400', // Cache for 1 day
+        'Access-Control-Allow-Origin': '*', // Allow cross-origin requests for public files
+      });
 
-    return res.send(stream);
+      return res.send(stream);
+    } catch (error) {
+      console.error('[FilesController] Error in render method:', error);
+      
+      // Send appropriate error response
+      if (error instanceof NotFoundException) {
+        res.status(404);
+        return res.send({ statusCode: 404, message: 'File not found' });
+      }
+      
+      res.status(500);
+      return res.send({ statusCode: 500, message: 'Internal server error' });
+    }
   }
 
   /**

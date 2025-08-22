@@ -16,7 +16,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ClientSelector } from '@/features/clients/components/ClientSelector';
 import { PlanListSelector } from '@/features/plans/components/PlanListSelector';
-import { AssetSelector } from '@/features/assets/components/AssetSelector';
+import { FileSelector } from '@/features/files/components/FileSelector';
 import { ContractFormData, useContractsController } from '../controllers/contracts.controller';
 import { useFormatPrice } from '@/config/ConfigContext';
 
@@ -235,7 +235,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
 
               {/* Attachments */}
               <View className="mb-4">
-                <AssetSelector
+                <FileSelector
                   name="receiptIds"
                   multi={true}
                   label="Recibos adjuntos (opcional)"

@@ -33,40 +33,52 @@ export async function requestCameraPermissions() {
 }
 
 export async function pickImageFromLibrary(options: ImagePickerOptions = {}) {
-  const hasPermission = await requestPermissions();
-  if (!hasPermission) return null;
+  try {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return null;
 
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: options.allowsEditing ?? true,
-    aspect: options.aspect ?? [4, 3],
-    quality: options.quality ?? 0.8,
-    allowsMultipleSelection: options.allowsMultipleSelection ?? false,
-  });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'Images' as any,
+      allowsEditing: options.allowsEditing ?? true,
+      aspect: options.aspect ?? [4, 3],
+      quality: options.quality ?? 0.8,
+      allowsMultipleSelection: options.allowsMultipleSelection ?? false,
+    });
 
-  if (!result.canceled) {
-    return result.assets;
+    if (!result.canceled) {
+      return result.assets;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error picking image from library:', error);
+    Alert.alert('Error', 'No se pudo abrir la galería de fotos');
+    return null;
   }
-
-  return null;
 }
 
 export async function pickImageFromCamera(options: ImagePickerOptions = {}) {
-  const hasPermission = await requestCameraPermissions();
-  if (!hasPermission) return null;
+  try {
+    const hasPermission = await requestCameraPermissions();
+    if (!hasPermission) return null;
 
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: options.allowsEditing ?? true,
-    aspect: options.aspect ?? [4, 3],
-    quality: options.quality ?? 0.8,
-  });
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: 'Images' as any,
+      allowsEditing: options.allowsEditing ?? true,
+      aspect: options.aspect ?? [4, 3],
+      quality: options.quality ?? 0.8,
+    });
 
-  if (!result.canceled) {
-    return result.assets;
+    if (!result.canceled) {
+      return result.assets;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error picking image from camera:', error);
+    Alert.alert('Error', 'No se pudo abrir la cámara');
+    return null;
   }
-
-  return null;
 }
 
 export function showImagePickerActionSheet(

@@ -3976,6 +3976,9 @@ components:
         notes:
           type: string
           example: 'Emergency Contact: Jane Doe - +1234567891'
+        profilePhotoId:
+          type: string
+          example: profile-photo-uuid
         customData:
           type: object
           example:
