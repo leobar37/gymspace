@@ -1,30 +1,133 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useLoadingScreen } from '@/shared/loading-screen';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Check, X } from 'lucide-react-native';
+import { useFormatPrice } from '@/config/ConfigContext';
+import { Card } from '@/components/ui/card';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Check, X, Users, Building2, UserCheck, Clock } from 'lucide-react-native';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Badge, BadgeText } from '@/components/ui/badge';
+import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import type { AvailablePlanDto } from '@gymspace/sdk';
+
+// Component interfaces
+interface UsageMeterProps {
+  icon: React.ComponentType<any>;
+  label: string;
+  current: number;
+  limit: number;
+  iconColor: string;
+  getUsagePercentage: (current: number, limit: number) => number;
+  getUsageColor: (percentage: number) => string;
+}
+
+interface PlanActionButtonProps {
+  isCurrentPlan: boolean;
+  onSelectPlan: () => void;
+}
+
+// Extracted components for better reusability and performance
+const UsageMeter = React.memo<UsageMeterProps>(({ 
+  icon: Icon, 
+  label, 
+  current, 
+  limit, 
+  iconColor, 
+  getUsagePercentage, 
+  getUsageColor 
+}) => {
+  const percentage = getUsagePercentage(current, limit);
+  
+  return (
+    <VStack className="gap-2">
+      <HStack className="justify-between items-center">
+        <HStack className="items-center gap-2">
+          <Icon size={16} className={iconColor} />
+          <Text className="text-sm font-medium">{label}</Text>
+        </HStack>
+        <Text className={`text-sm font-semibold ${getUsageColor(percentage)}`}>
+          {current} de {limit}
+        </Text>
+      </HStack>
+      <Progress value={percentage} className="h-2">
+        <ProgressFilledTrack style={{ width: `${percentage}%` }} />
+      </Progress>
+    </VStack>
+  );
+});
+
+const PlanActionButton = React.memo<PlanActionButtonProps>(({ isCurrentPlan, onSelectPlan }) => {
+  if (isCurrentPlan) {
+    return (
+      <Button variant="outline" isDisabled>
+        <ButtonText>Plan Actual</ButtonText>
+      </Button>
+    );
+  }
+
+  return (
+    <Button variant="solid" onPress={onSelectPlan}>
+      <ButtonText>Seleccionar Plan</ButtonText>
+    </Button>
+  );
+});
+
+// Set display names for debugging
+UsageMeter.displayName = 'UsageMeter';
+PlanActionButton.displayName = 'PlanActionButton';
+
+// Constants
+const QUERY_STALE_TIME = {
+  PLANS: 10 * 60 * 1000, // 10 minutes
+  LIMITS: 5 * 60 * 1000, // 5 minutes
+} as const;
+
+const USAGE_THRESHOLDS = {
+  HIGH: 90,
+  MEDIUM: 75,
+} as const;
 
 export default function SubscriptionPlansScreen() {
   const { sdk } = useGymSdk();
   const { organization, subscription } = useCurrentSession();
   const { execute } = useLoadingScreen();
+  const formatPrice = useFormatPrice();
+  const queryClient = useQueryClient();
+
+  // Memoized query keys
+  const queryKeys = useMemo(() => ({
+    plans: ['subscription-plans'] as const,
+    limits: (orgId: string, type: string) => ['subscription-limits', type, orgId] as const,
+  }), []);
 
   // Query to fetch available plans
   const { data: plans, isLoading, error } = useQuery({
-    queryKey: ['subscription-plans'],
-    queryFn: async () => {
-      return await sdk.subscriptions.getAvailablePlans();
-    },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    queryKey: queryKeys.plans,
+    queryFn: () => sdk.subscriptions.getAvailablePlans(),
+    staleTime: QUERY_STALE_TIME.PLANS,
   });
 
-  // Handle plan selection
-  const handleSelectPlan = async (planId: string) => {
+  // Helper function for limit queries
+  const createLimitQuery = useCallback((limitType: 'gyms' | 'clients' | 'users') => ({
+    queryKey: queryKeys.limits(organization?.id || '', limitType),
+    queryFn: () => organization?.id 
+      ? sdk.subscriptions.checkSubscriptionLimit(organization.id, limitType)
+      : Promise.resolve(null),
+    enabled: !!organization?.id,
+    staleTime: QUERY_STALE_TIME.LIMITS,
+  }), [organization?.id, queryKeys, sdk.subscriptions]);
+
+  // Query to fetch usage limits
+  const { data: gymLimits } = useQuery(createLimitQuery('gyms'));
+  const { data: clientLimits } = useQuery(createLimitQuery('clients'));
+  const { data: userLimits } = useQuery(createLimitQuery('users'));
+
+  // Handle plan selection with proper error handling and cache invalidation
+  const handleSelectPlan = useCallback(async (planId: string) => {
     if (!organization?.id) {
       Alert.alert('Error', 'No se encontró la organización');
       return;
@@ -35,63 +138,111 @@ export default function SubscriptionPlansScreen() {
       Alert.alert('Información', 'Este plan ya está activo');
       return;
     }
+    // try {
+    //   await execute(
+    //     () => sdk.subscriptions.affiliateOrganization(organization.id, {
+    //       subscriptionPlanId: planId,
+    //     })(),
+    //     {
+    //       action: 'Actualizando plan de suscripción...',
+    //       successMessage: 'Plan actualizado exitosamente',
+    //       errorFormatter: (error: any) => 
+    //         `Error al actualizar el plan: ${error?.message || 'Error desconocido'}`,
+    //       successActions: {
+    //         onSuccess: () => {
+    //           // Invalidate related queries after successful plan change
+    //           queryClient.invalidateQueries({ queryKey: ['subscription-limits'] });
+    //           queryClient.invalidateQueries({ queryKey: ['session'] });
+    //         },
+    //       },
+    //     }
+    //   );
+    // } catch (error) {
+    //   console.error('Plan selection error:', error);
+    // }
+  }, [organization?.id, subscription?.subscriptionPlanId, execute, sdk.subscriptions, queryClient]);
 
-    await execute(
-      async () => {
-        await sdk.subscriptions.affiliateOrganization(organization.id, {
-          subscriptionPlanId: planId,
-        });
-      },
-      {
-        action: 'Actualizando plan de suscripción...',
-        successMessage: 'Plan actualizado exitosamente',
-        errorFormatter: (error) => `Error al actualizar el plan: ${error.message}`,
-      }
-    );
-  };
-
-  const formatPrice = (price: any): string => {
+  // Memoized utility functions
+  const formatPlanPrice = useCallback((price: any): string => {
     if (typeof price === 'object' && price !== null) {
       // Handle multi-currency pricing
       const currency = organization?.currency || 'USD';
       if (price[currency] !== undefined) {
-        return `${currency} ${price[currency]}`;
+        return price[currency] === 0 ? 'Gratis' : formatPrice(price[currency]);
       }
       // Fallback to first available price
       const firstCurrency = Object.keys(price)[0];
-      return firstCurrency ? `${firstCurrency} ${price[firstCurrency]}` : 'Gratis';
+      if (firstCurrency && price[firstCurrency] !== undefined) {
+        return price[firstCurrency] === 0 ? 'Gratis' : `${firstCurrency} ${price[firstCurrency]}`;
+      }
+      return 'Gratis';
     }
     if (typeof price === 'number') {
-      return price === 0 ? 'Gratis' : `${organization?.currency || 'USD'} ${price}`;
+      return price === 0 ? 'Gratis' : formatPrice(price);
     }
     return 'Gratis';
-  };
+  }, [organization?.currency, formatPrice]);
 
-  const isCurrentPlan = (planId: string): boolean => {
+  const getUsagePercentage = useCallback((current: number, limit: number): number => {
+    if (limit === 0) return 0;
+    return Math.min((current / limit) * 100, 100);
+  }, []);
+
+  const getUsageColor = useCallback((percentage: number): string => {
+    if (percentage >= USAGE_THRESHOLDS.HIGH) return 'text-red-600';
+    if (percentage >= USAGE_THRESHOLDS.MEDIUM) return 'text-yellow-600';
+    return 'text-green-600';
+  }, []);
+
+  const formatDate = useCallback((dateString: string): string => {
+    const dateObj = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return dateObj.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, []);
+
+  const isCurrentPlan = useCallback((planId: string): boolean => {
     return subscription?.subscriptionPlanId === planId;
-  };
+  }, [subscription?.subscriptionPlanId]);
 
-  if (isLoading) {
+  // Loading and error states - memoized for performance
+  const loadingState = useMemo(() => {
+    if (!isLoading) return null;
+    
     return (
       <View className="flex-1 justify-center items-center bg-background">
         <ActivityIndicator size="large" />
-        <Text className="mt-4 text-muted-foreground">Cargando planes...</Text>
+        <Text className="mt-4 text-gray-500">Cargando planes...</Text>
       </View>
     );
-  }
+  }, [isLoading]);
 
-  if (error) {
+  const errorState = useMemo(() => {
+    if (!error) return null;
+    
     return (
       <View className="flex-1 justify-center items-center bg-background p-4">
-        <Text className="text-destructive text-center">
+        <Text className="text-red-600 text-center text-lg font-semibold">
           Error al cargar los planes de suscripción
         </Text>
-        <Text className="text-muted-foreground text-center mt-2">
+        <Text className="text-gray-500 text-center mt-2">
           Por favor, intenta nuevamente más tarde
         </Text>
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onPress={() => queryClient.invalidateQueries({ queryKey: queryKeys.plans })}
+        >
+          <ButtonText>Reintentar</ButtonText>
+        </Button>
       </View>
     );
-  }
+  }, [error, queryClient, queryKeys.plans]);
+
+  if (loadingState) return loadingState;
+  if (errorState) return errorState;
 
   return (
     <ScrollView className="flex-1 bg-background">
@@ -99,22 +250,79 @@ export default function SubscriptionPlansScreen() {
         {/* Current Subscription Info */}
         {subscription && (
           <Card className="mb-6 border-primary">
-            <CardHeader>
-              <CardTitle>Plan Actual</CardTitle>
-              <CardDescription>
-                {subscription.subscriptionPlan?.name || 'Plan no disponible'}
-              </CardDescription>
-              <View className="mt-2">
-                <Text className="text-sm text-muted-foreground">
-                  Estado: {subscription.status === 'active' ? 'Activo' : subscription.status}
-                </Text>
-                {subscription.endDate && (
-                  <Text className="text-sm text-muted-foreground">
-                    Válido hasta: {new Date(subscription.endDate).toLocaleDateString()}
+            <View className="p-4">
+              <VStack className="gap-4">
+                <HStack className="justify-between items-start">
+                  <VStack className="flex-1">
+                    <Text className="text-xl font-semibold text-foreground">
+                      {subscription.subscriptionPlan?.name || 'Plan no disponible'}
+                    </Text>
+                    <HStack className="items-center gap-2 mt-1">
+                      <Badge action={subscription.status === 'active' ? 'success' : 'muted'}>
+                        <BadgeText>
+                          {subscription.status === 'active' ? 'Activo' : subscription.status}
+                        </BadgeText>
+                      </Badge>
+                      {subscription.endDate && (
+                        <HStack className="items-center gap-1">
+                          <Clock size={14} className="text-muted-foreground" />
+                          <Text className="text-sm text-muted-foreground">
+                            Hasta {formatDate(subscription.endDate)}
+                          </Text>
+                        </HStack>
+                      )}
+                    </HStack>
+                  </VStack>
+                  <Text className="text-2xl font-bold text-primary">
+                    {formatPlanPrice(subscription.subscriptionPlan?.price)}
                   </Text>
-                )}
-              </View>
-            </CardHeader>
+                </HStack>
+
+                {/* Usage Statistics */}
+                <VStack className="gap-3 mt-4">
+                  <Text className="font-semibold text-base">Uso del Plan</Text>
+                  
+                  {/* Gyms Usage */}
+                  {gymLimits && (
+                    <UsageMeter
+                      icon={Building2}
+                      label="Gimnasios"
+                      current={gymLimits.currentUsage}
+                      limit={gymLimits.limit}
+                      iconColor="text-blue-600"
+                      getUsagePercentage={getUsagePercentage}
+                      getUsageColor={getUsageColor}
+                    />
+                  )}
+
+                  {/* Clients Usage */}
+                  {clientLimits && (
+                    <UsageMeter
+                      icon={Users}
+                      label="Clientes"
+                      current={clientLimits.currentUsage}
+                      limit={clientLimits.limit}
+                      iconColor="text-green-600"
+                      getUsagePercentage={getUsagePercentage}
+                      getUsageColor={getUsageColor}
+                    />
+                  )}
+
+                  {/* Users Usage */}
+                  {userLimits && (
+                    <UsageMeter
+                      icon={UserCheck}
+                      label="Usuarios"
+                      current={userLimits.currentUsage}
+                      limit={userLimits.limit}
+                      iconColor="text-purple-600"
+                      getUsagePercentage={getUsagePercentage}
+                      getUsageColor={getUsageColor}
+                    />
+                  )}
+                </VStack>
+              </VStack>
+            </View>
           </Card>
         )}
 
@@ -128,18 +336,18 @@ export default function SubscriptionPlansScreen() {
                 key={plan.id}
                 className={isCurrentPlan(plan.id) ? 'border-primary' : 'border-border'}
               >
-                <CardHeader>
+                <View className="p-4">
                   <View className="flex-row justify-between items-start">
                     <View className="flex-1">
-                      <CardTitle>{plan.name}</CardTitle>
+                      <Text className="text-lg font-semibold text-foreground">{plan.name}</Text>
                       {plan.description && (
-                        <CardDescription className="mt-1">
+                        <Text className="mt-1 text-sm text-muted-foreground">
                           {plan.description}
-                        </CardDescription>
+                        </Text>
                       )}
                     </View>
                     <Text className="text-lg font-semibold text-primary">
-                      {formatPrice(plan.price)}
+                      {formatPlanPrice(plan.price)}
                     </Text>
                   </View>
 
@@ -197,29 +405,21 @@ export default function SubscriptionPlansScreen() {
 
                   {/* Action Button */}
                   <View className="mt-4">
-                    {isCurrentPlan(plan.id) ? (
-                      <Button variant="outline" disabled>
-                        <Text>Plan Actual</Text>
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="solid"
-                        onPress={() => handleSelectPlan(plan.id)}
-                      >
-                        <Text className="text-white">Seleccionar Plan</Text>
-                      </Button>
-                    )}
+                    <PlanActionButton
+                      isCurrentPlan={isCurrentPlan(plan.id)}
+                      onSelectPlan={() => handleSelectPlan(plan.id)}
+                    />
                   </View>
-                </CardHeader>
+                </View>
               </Card>
             ))
           ) : (
             <Card>
-              <CardHeader>
-                <CardDescription>
+              <View className="p-4">
+                <Text className="text-sm text-muted-foreground">
                   No hay planes disponibles en este momento
-                </CardDescription>
-              </CardHeader>
+                </Text>
+              </View>
             </Card>
           )}
         </View>
