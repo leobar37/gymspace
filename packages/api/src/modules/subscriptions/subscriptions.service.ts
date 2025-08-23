@@ -1,5 +1,5 @@
 import { IRequestContext, SubscriptionStatus } from '@gymspace/shared';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import {
   BusinessException,
   ResourceNotFoundException,
@@ -8,6 +8,8 @@ import {
 import { CacheService } from '../../core/cache/cache.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { AffiliateOrganizationDto, AvailablePlanDto, SubscriptionStatusDto } from './dto';
+import { MercadoPagoService, CreateSubscriptionPlanDto } from './mercadopago.service';
+import { PreApprovalPlanResponse } from 'mercadopago';
 import dayjs from 'dayjs';
 
 export enum DurationPeriod {
@@ -16,12 +18,143 @@ export enum DurationPeriod {
   YEAR = 'YEAR',
 }
 
+interface PlanData {
+  id: string;
+  name: string;
+  price: any;
+  duration?: number | null;
+  durationPeriod?: string | null;
+  billingFrequency: string;
+}
+
+interface GymData {
+  id: string;
+  gymClients: any[];
+  collaborators: CollaboratorData[];
+}
+
+interface CollaboratorData {
+  userId: string;
+}
+
+interface SubscriptionData {
+  id: string;
+  organizationId: string;
+  organization: {
+    id: string;
+    name: string;
+  };
+}
+
 @Injectable()
-export class SubscriptionsService {
+export class SubscriptionsService implements OnModuleInit {
+  private readonly logger = new Logger(SubscriptionsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
+    private readonly mercadopagoService: MercadoPagoService,
   ) {}
+
+  async onModuleInit() {
+    if (!this.mercadopagoService.isConfigured()) {
+      this.logger.warn('MercadoPago is not configured, skipping plan synchronization');
+      return;
+    }
+
+    this.logger.log('Starting subscription plans synchronization with MercadoPago...');
+    await this.syncPlansWithMercadoPago();
+  }
+
+  /**
+   * Synchronize existing subscription plans with MercadoPago
+   */
+  private async syncPlansWithMercadoPago(): Promise<void> {
+    try {
+      const plans = await this.prisma.subscriptionPlan.findMany({
+        where: {
+          deletedAt: null,
+          isActive: true,
+          mercadopagoId: null, // Only sync plans that don't have MercadoPago ID yet
+        },
+      });
+
+      if (plans.length === 0) {
+        this.logger.log('No plans to sync with MercadoPago');
+        return;
+      }
+
+      this.logger.log(`Synchronizing ${plans.length} plans with MercadoPago...`);
+
+      for (const plan of plans) {
+        // Skip free plans as they don't need MercadoPago integration
+        if (this.isFreePlan(plan.price)) {
+          this.logger.log(`Skipping free plan: ${plan.name}`);
+          continue;
+        }
+
+        await this.createMercadoPagoPlan(plan as PlanData);
+      }
+
+      this.logger.log('Successfully synchronized plans with MercadoPago');
+    } catch (error) {
+      this.logger.error('Error synchronizing plans with MercadoPago', error);
+    }
+  }
+
+  /**
+   * Create a plan in MercadoPago for an existing subscription plan
+   */
+  private async createMercadoPagoPlan(plan: PlanData): Promise<void> {
+    try {
+      // Extract the first currency price for MercadoPago
+      const priceInfo = Object.values(plan.price as any)[0] as any;
+      if (!priceInfo || priceInfo.value === 0) {
+        this.logger.log(`Skipping plan ${plan.name} - no valid price found`);
+        return;
+      }
+
+      const mercadoPagoPlanData: CreateSubscriptionPlanDto = {
+        reason: plan.name,
+        external_reference: plan.id,
+        auto_recurring: {
+          frequency: plan.duration || 1,
+          frequency_type: this.mapDurationPeriodToMercadoPago(plan.durationPeriod || 'MONTH'),
+          transaction_amount: priceInfo.value,
+          currency_id: priceInfo.currency || 'ARS',
+        },
+        back_url: process.env.FRONTEND_URL || 'http://localhost:3000',
+      };
+
+      const mercadoPagoPlan = await this.mercadopagoService.createSubscriptionPlan(mercadoPagoPlanData);
+
+      // Update the plan with MercadoPago ID
+      await this.prisma.subscriptionPlan.update({
+        where: { id: plan.id },
+        data: { mercadopagoId: mercadoPagoPlan.id },
+      });
+
+      this.logger.log(`Successfully created MercadoPago plan for: ${plan.name} (ID: ${mercadoPagoPlan.id})`);
+    } catch (error) {
+      this.logger.error(`Error creating MercadoPago plan for ${plan.name}`, error);
+    }
+  }
+
+  /**
+   * Map internal duration period to MercadoPago format
+   */
+  private mapDurationPeriodToMercadoPago(period: string): 'months' | 'days' | 'weeks' {
+    switch (period) {
+      case 'MONTH':
+        return 'months';
+      case 'DAY':
+        return 'days';
+      case 'WEEK':
+        return 'weeks';
+      default:
+        return 'months';
+    }
+  }
 
   /**
    * Get all available subscription plans
@@ -47,7 +180,7 @@ export class SubscriptionsService {
 
     // Transform and filter to only free plans
     const availablePlans = plans
-      .map((plan) => ({
+      .map((plan: any) => ({
         id: plan.id,
         name: plan.name,
         description: plan.description,
@@ -59,7 +192,7 @@ export class SubscriptionsService {
         features: plan.features,
         isFreePlan: this.isFreePlan(plan.price),
       }))
-      .filter((plan) => plan.isFreePlan); // Only return free plans for now
+      .filter((plan: any) => plan.isFreePlan); // Only return free plans for now
 
     // Cache for 1 hour
     await this.cache.set(cacheKey, availablePlans, 3600);
@@ -120,8 +253,8 @@ export class SubscriptionsService {
     // Verify user has access to this organization
     if (organization.ownerUserId !== context.getUserId()) {
       // Check if user is a collaborator in any gym
-      const hasAccess = organization.gyms.some((gym) =>
-        gym.collaborators.some((collab) => collab.userId === context.getUserId()),
+      const hasAccess = organization.gyms.some((gym: GymData) =>
+        gym.collaborators.some((collab: CollaboratorData) => collab.userId === context.getUserId()),
       );
 
       if (!hasAccess) {
@@ -136,9 +269,9 @@ export class SubscriptionsService {
     }
 
     // Calculate usage
-    const totalClients = organization.gyms.reduce((sum, gym) => sum + gym.gymClients.length, 0);
+    const totalClients = organization.gyms.reduce((sum: number, gym: GymData) => sum + gym.gymClients.length, 0);
     const totalUsers = organization.gyms.reduce(
-      (sum, gym) => sum + gym.collaborators.length + 1, // +1 for owner
+      (sum: number, gym: GymData) => sum + gym.collaborators.length + 1, // +1 for owner
       0,
     );
 
@@ -253,7 +386,7 @@ export class SubscriptionsService {
       throw new BusinessException('Organization is already on this plan');
     }
 
-    await this.prisma.$transaction(async (prisma) => {
+    await this.prisma.$transaction(async (prisma: any) => {
       // Deactivate current subscription if exists
       if (currentSubscription) {
         await prisma.subscriptionOrganization.update({
@@ -374,7 +507,7 @@ export class SubscriptionsService {
             { field: 'gymId', message: 'Gym ID is required for client limit check' },
           ]);
         }
-        const gym = organization.gyms.find((g) => g.id === gymId);
+        const gym = organization.gyms.find((g: GymData) => g.id === gymId);
         if (!gym) {
           throw new ResourceNotFoundException('Gym not found');
         }
@@ -388,7 +521,7 @@ export class SubscriptionsService {
             { field: 'gymId', message: 'Gym ID is required for user limit check' },
           ]);
         }
-        const targetGym = organization.gyms.find((g) => g.id === gymId);
+        const targetGym = organization.gyms.find((g: GymData) => g.id === gymId);
         if (!targetGym) {
           throw new ResourceNotFoundException('Gym not found');
         }
@@ -526,7 +659,7 @@ export class SubscriptionsService {
     await this.prisma.subscriptionOrganization.updateMany({
       where: {
         id: {
-          in: expiredSubscriptions.map((sub) => sub.id),
+          in: expiredSubscriptions.map((sub: SubscriptionData) => sub.id),
         },
       },
       data: {
@@ -543,7 +676,7 @@ export class SubscriptionsService {
     return {
       updated: expiredSubscriptions.length,
       expired: expiredSubscriptions.map(
-        (sub) => `${sub.organization.name} (${sub.organizationId})`,
+        (sub: SubscriptionData) => `${sub.organization.name} (${sub.organizationId})`,
       ),
     };
   }
@@ -611,7 +744,7 @@ export class SubscriptionsService {
       throw new BusinessException('Organization is already on this plan');
     }
 
-    await this.prisma.$transaction(async (prisma) => {
+    await this.prisma.$transaction(async (prisma: any) => {
       // Deactivate current subscription if exists
       if (currentSubscription) {
         await prisma.subscriptionOrganization.update({

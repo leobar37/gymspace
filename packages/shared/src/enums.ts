@@ -7,6 +7,8 @@ export enum SubscriptionStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   EXPIRED = 'expired',
+  PAUSED = 'paused',
+  PENDING_UPGRADE = 'pending_upgrade',
 }
 
 export enum CollaboratorStatus {
