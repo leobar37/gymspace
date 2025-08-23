@@ -64,13 +64,6 @@ function AppLayout() {
         }}
       />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="clients" />
-      <Stack.Screen name="inventory" />
-      <Stack.Screen name="contracts" />
-      <Stack.Screen name="plans" />
-      <Stack.Screen name="suppliers" />
-      <Stack.Screen name="profile" />
-      <Stack.Screen name="gym" />
     </Stack>
   );
 }

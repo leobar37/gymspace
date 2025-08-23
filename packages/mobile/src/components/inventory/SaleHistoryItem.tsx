@@ -95,11 +95,16 @@ export function SaleHistoryItem({
           </HStack>
 
           {/* Customer Info */}
-          {showCustomer && sale.customerName && (
+          {showCustomer && (sale.customer?.name || sale.customerName) && (
             <HStack space="sm" className="items-center">
               <Icon as={UserIcon} className="w-4 h-4 text-gray-500" />
               <Text className="text-sm text-gray-700">
-                {sale.customerName}
+                {sale.customer?.name || sale.customerName}
+                {sale.customer?.clientNumber && (
+                  <Text className="text-xs text-gray-500 ml-2">
+                    #{sale.customer.clientNumber}
+                  </Text>
+                )}
               </Text>
             </HStack>
           )}

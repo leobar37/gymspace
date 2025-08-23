@@ -5,6 +5,7 @@ import {
   ArrayMinSize,
   ValidateNested,
   IsEnum,
+  IsUUID,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -29,6 +30,15 @@ export class CreateSaleDto {
   @Type(() => SaleItemDto)
   items: SaleItemDto[];
 
+  @ApiProperty({ 
+    example: 'uuid-client-id', 
+    description: 'Customer ID from gym clients', 
+    required: false 
+  })
+  @IsOptional()
+  @IsUUID()
+  customerId?: string;
+
   @ApiProperty({ example: 'John Doe', description: 'Customer name', required: false })
   @IsOptional()
   @IsString()
@@ -42,6 +52,17 @@ export class CreateSaleDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiProperty({
+    example: ['file-uuid-1', 'file-uuid-2'],
+    description: 'Array of file IDs attached to this sale',
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  fileIds?: string[];
 
   @ApiProperty({
     example: 'paid',

@@ -2870,6 +2870,13 @@ paths:
           schema:
             example: John
             type: string
+        - name: customerId
+          required: false
+          in: query
+          description: Filter by customer ID
+          schema:
+            example: uuid-client-id
+            type: string
         - name: paymentStatus
           required: false
           in: query
@@ -2990,6 +2997,29 @@ paths:
       responses:
         '200':
           description: Top selling products with statistics
+      tags:
+        - Sales
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/sales/reports/by-customer:
+    get:
+      operationId: SalesController_getSalesByCustomer
+      summary: Get sales report by customer
+      parameters:
+        - name: startDate
+          required: true
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Sales report grouped by customer
       tags:
         - Sales
       security:
@@ -5237,6 +5267,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SaleItemDto'
+        customerId:
+          type: string
+          example: uuid-client-id
+          description: Customer ID from gym clients
         customerName:
           type: string
           example: John Doe
@@ -5245,6 +5279,14 @@ components:
           type: string
           example: Customer requested extra packaging
           description: Sale notes
+        fileIds:
+          example:
+            - file-uuid-1
+            - file-uuid-2
+          description: Array of file IDs attached to this sale
+          type: array
+          items:
+            type: string
         paymentStatus:
           type: string
           example: paid
@@ -5257,6 +5299,10 @@ components:
     UpdateSaleDto:
       type: object
       properties:
+        customerId:
+          type: string
+          example: uuid-client-id
+          description: Customer ID from gym clients
         customerName:
           type: string
           example: John Doe
@@ -5265,6 +5311,14 @@ components:
           type: string
           example: Updated notes
           description: Sale notes
+        fileIds:
+          example:
+            - file-uuid-1
+            - file-uuid-2
+          description: Array of file IDs attached to this sale
+          type: array
+          items:
+            type: string
         paymentStatus:
           type: string
           example: paid

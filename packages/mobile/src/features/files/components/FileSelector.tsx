@@ -19,6 +19,7 @@ import {
   LoaderIcon,
   PlusIcon,
   TrashIcon,
+  EyeIcon,
 } from 'lucide-react-native';
 import React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
@@ -27,9 +28,10 @@ import { useDeleteFile, useFilesByIds, useUploadFile } from '../controllers/file
 import {
   createFileFromAsset,
   pickImageFromCamera,
-  pickImageFromLibrary
+  pickImageFromLibrary,
 } from '../utils/image-picker';
 import { FilePreview } from './FilePreview';
+import { useFilesStore } from '../stores/files.store';
 
 interface FileSelectorProps {
   name: string;
@@ -43,6 +45,7 @@ export function FileSelector({ name, multi = false, label, required = false }: F
   const uploadFile = useUploadFile();
   const deleteFile = useDeleteFile();
   const { execute } = useLoadingScreen();
+  const { openFileViewer } = useFilesStore();
 
   // State for action sheet
   const [showActionSheet, setShowActionSheet] = React.useState(false);
@@ -67,9 +70,9 @@ export function FileSelector({ name, multi = false, label, required = false }: F
 
   // Fetch file data
   const { data: files, isLoading } = useFilesByIds(fileIds);
-  
+
   // console.log("files updload", files);
-  
+
   const handlePickFromLibrary = async () => {
     setShowActionSheet(false);
 
@@ -152,6 +155,17 @@ export function FileSelector({ name, multi = false, label, required = false }: F
   const handleLongPress = (fileId: string) => {
     setFileToDelete(fileId);
     setShowDeleteSheet(true);
+  };
+
+  const handleViewFile = () => {
+    if (fileToDelete && files) {
+      const fileToView = files.find(file => file.id === fileToDelete);
+      if (fileToView) {
+        openFileViewer(fileToView);
+        setShowDeleteSheet(false);
+        setFileToDelete(null);
+      }
+    }
   };
 
   const handlePreviewPress = () => {
@@ -250,15 +264,11 @@ export function FileSelector({ name, multi = false, label, required = false }: F
                     onLongPress={() => handleLongPress(files[0].id)}
                     delayLongPress={500}
                   >
-                    <View className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
-                      <FilePreview
-                        file={files[0]}
-                        width={carouselWidth}
-                        height={192}
-                        resizeMode="contain"
-                        className="rounded-lg"
-                      />
-                    </View>
+                    <FilePreview
+                      file={files[0]}
+                      resizeMode="contain"
+                      className="rounded-sm h-80"
+                    />
                   </Pressable>
                 ) : (
                   // No files - show clickable placeholder
@@ -320,6 +330,20 @@ export function FileSelector({ name, multi = false, label, required = false }: F
             <Text className="text-lg font-semibold text-center text-gray-900">
               Opciones de archivo
             </Text>
+
+            {fileToDelete && files && (() => {
+              const file = files.find(f => f.id === fileToDelete);
+              const isViewable = file && (file.mimeType.startsWith('image/') || file.mimeType.startsWith('video/'));
+              
+              return isViewable && (
+                <ActionsheetItem onPress={handleViewFile}>
+                  <HStack space="md" className="items-center">
+                    <Icon as={EyeIcon} size="md" className="text-gray-600" />
+                    <ActionsheetItemText>Ver en pantalla completa</ActionsheetItemText>
+                  </HStack>
+                </ActionsheetItem>
+              );
+            })()}
 
             <ActionsheetItem onPress={() => fileToDelete && handleDeleteFile(fileToDelete)}>
               <HStack space="md" className="items-center">

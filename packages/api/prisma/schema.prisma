@@ -460,6 +460,7 @@ model GymClient {
     checkIns       CheckIn[]
     evaluations    Evaluation[]
     convertedLeads Lead[]
+    sales          Sale[]
 
     @@unique([gymId, clientNumber])
     @@unique([gymId, documentValue])
@@ -792,12 +793,14 @@ model Supplier {
 model Sale {
     id              String        @id @default(uuid())
     gymId           String        @map("gym_id")
+    customerId      String?       @map("customer_id")
     saleNumber      String        @map("sale_number")
     total           Decimal       @db.Decimal(10, 2)
     paymentStatus   PaymentStatus @default(unpaid) @map("payment_status")
     saleDate        DateTime      @default(now()) @map("sale_date")
     customerName    String?       @map("customer_name")
     notes           String?       @db.Text
+    fileIds         String[]      @map("file_ids")
     createdByUserId String        @map("created_by_user_id")
     updatedByUserId String?       @map("updated_by_user_id")
     createdAt       DateTime      @default(now()) @map("created_at")
@@ -806,6 +809,7 @@ model Sale {
 
     // Relations
     gym       Gym        @relation(fields: [gymId], references: [id])
+    customer  GymClient? @relation(fields: [customerId], references: [id])
     createdBy User       @relation("SaleCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy User?      @relation("SaleUpdatedBy", fields: [updatedByUserId], references: [id])
     saleItems SaleItem[]

@@ -8,7 +8,8 @@ import type {
   UpdateSaleDto,
   SaleItem,
   SearchSalesParams,
-  PaginatedResponseDto
+  PaginatedResponseDto,
+  CustomerSalesReport
 } from '@gymspace/sdk';
 
 // Query key factories
@@ -164,5 +165,22 @@ export function useDeleteSale() {
       queryClient.invalidateQueries({ queryKey: saleKeys.lists() });
       queryClient.invalidateQueries({ queryKey: saleKeys.today() });
     },
+  });
+}
+
+export function useSalesByCustomer(
+  options: { startDate?: string; endDate?: string; enabled?: boolean } = {}
+) {
+  const { sdk } = useGymSdk();
+  const { startDate, endDate, enabled = true } = options;
+
+  return useQuery({
+    queryKey: [...saleKeys.all, 'by-customer', startDate, endDate] as const,
+    queryFn: async () => {
+      return sdk.sales.getSalesByCustomer(startDate, endDate);
+    },
+    enabled,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 }

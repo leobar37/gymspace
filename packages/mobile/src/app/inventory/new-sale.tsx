@@ -11,7 +11,6 @@ import { View } from '@/components/ui/view';
 import { Icon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
-import { Switch } from '@/components/ui/switch';
 import {
   ShoppingCartIcon,
   PlusIcon,
@@ -19,7 +18,9 @@ import {
   XIcon,
   PackageIcon,
   ChevronLeftIcon,
-  WrenchIcon
+  WrenchIcon,
+  CreditCardIcon,
+  ClockIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useCart } from '@/contexts/CartContext';
@@ -33,6 +34,8 @@ import { ClientSelector } from '@/features/clients/components/ClientSelector';
 import { useForm, FormProvider } from 'react-hook-form';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import { PRODUCT_TYPES } from '@/shared/constants';
+import { ScreenForm } from '@/shared/components/ScreenForm';
+import { FileSelector } from '@/features/files/components/FileSelector';
 import type { Product, CreateSaleDto, SaleItemDto, Client } from '@gymspace/sdk';
 
 // Componente para el header con botón de retroceso
@@ -108,105 +111,6 @@ function EmptyCart({ onAddItems }: EmptyCartProps) {
         </Button>
       </VStack>
     </Card>
-  );
-}
-
-// Componente para los detalles de la venta
-interface SaleDetailsProps {
-  notes: string;
-  paymentStatus: 'paid' | 'unpaid';
-  total: number;
-  formatPrice: (amount: number) => string;
-  onNotesChange: (notes: string) => void;
-  onPaymentStatusChange: (status: 'paid' | 'unpaid') => void;
-  onClientSelect: (client: Client | null) => void;
-  onCompleteSale: () => void;
-  methods: any;
-}
-
-function SaleDetails({
-  notes,
-  paymentStatus,
-  total,
-  formatPrice,
-  onNotesChange,
-  onPaymentStatusChange,
-  onClientSelect,
-  onCompleteSale,
-  methods
-}: SaleDetailsProps) {
-  return (
-    <FormProvider {...methods}>
-      <VStack space="md">
-        {/* Client Selector */}
-        <ClientSelector
-          name="clientId"
-          control={methods.control}
-          label="Cliente (opcional)"
-          placeholder="Seleccionar cliente"
-          allowClear={true}
-          onClientSelect={onClientSelect}
-        />
-
-        {/* Notes */}
-        <VStack space="xs">
-          <Text className="text-sm font-medium text-gray-700">
-            Notas (opcional)
-          </Text>
-          <Input>
-            <InputField
-              placeholder="Notas adicionales"
-              value={notes}
-              onChangeText={onNotesChange}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-          </Input>
-        </VStack>
-
-        {/* Payment Status */}
-        <VStack space="xs">
-          <Text className="text-sm font-medium text-gray-700">
-            Estado de pago
-          </Text>
-          <HStack space="md" className="items-center">
-            <Switch
-              value={paymentStatus === 'paid'}
-              onValueChange={(value) => onPaymentStatusChange(value ? 'paid' : 'unpaid')}
-            />
-            <Text className="text-gray-600">
-              {paymentStatus === 'paid' ? 'Pagado' : 'Pendiente de pago'}
-            </Text>
-          </HStack>
-        </VStack>
-
-        {/* Total */}
-        <Card className="bg-blue-50 border-blue-200">
-          <HStack className="justify-between items-center p-4">
-            <Text className="text-lg font-semibold text-blue-900">
-              Total
-            </Text>
-            <Text className="text-2xl font-bold text-blue-900">
-              {formatPrice(total)}
-            </Text>
-          </HStack>
-        </Card>
-
-        {/* Complete Sale Button */}
-        <Button
-          onPress={onCompleteSale}
-          variant="solid"
-        >
-          <HStack space="sm" className="items-center">
-            <Icon as={CheckIcon} className="w-5 h-5" />
-            <ButtonText className="font-semibold">
-              Completar Venta
-            </ButtonText>
-          </HStack>
-        </Button>
-      </VStack>
-    </FormProvider>
   );
 }
 
@@ -398,6 +302,7 @@ function ItemSelectionModal({
 interface SaleFormData {
   clientId?: string;
   notes?: string;
+  fileIds?: string[];
 }
 
 export default function NewSaleScreen() {
@@ -424,6 +329,7 @@ export default function NewSaleScreen() {
     defaultValues: {
       clientId: '',
       notes: '',
+      fileIds: [],
     },
   });
 
@@ -488,6 +394,7 @@ export default function NewSaleScreen() {
       return;
     }
 
+    const formData = methods.getValues();
     const saleItems: SaleItemDto[] = state.items.map(item => ({
       productId: item.product.id,
       quantity: item.quantity,
@@ -496,9 +403,11 @@ export default function NewSaleScreen() {
 
     const saleData: CreateSaleDto = {
       items: saleItems,
+      customerId: selectedClient?.id,
       paymentStatus: state.paymentStatus as 'paid' | 'unpaid',
       customerName: state.customerName || undefined,
       notes: state.notes || undefined,
+      fileIds: formData.fileIds?.filter(id => id) || [],
     };
 
     await execute(
@@ -515,10 +424,10 @@ export default function NewSaleScreen() {
             variant: 'solid',
           },
           {
-            label: 'Ver historial',
+            label: 'Volver al inicio',
             onPress: () => {
               resetCart();
-              router.push('/inventory/sales-history');
+              router.push('/(app)');
             },
             variant: 'outline',
           },
@@ -548,7 +457,7 @@ export default function NewSaleScreen() {
         hideOnSuccess: false,
       }
     );
-  }, [hasItems, state, createSaleMutation, resetCart, execute, formatPrice]);
+  }, [hasItems, state, createSaleMutation, resetCart, execute, formatPrice, methods, selectedClient]);
 
   const renderCartItem = useCallback(({ item }: { item: typeof state.items[0] }) => (
     <CartItem
@@ -559,66 +468,171 @@ export default function NewSaleScreen() {
   ), [handleQuantityChange, handleRemoveItem]);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <VStack space="md" className="p-4">
-          {/* Header */}
-          <SaleHeader onBack={() => router.back()} />
+    <FormProvider {...methods}>
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <ScreenForm
+          useSafeArea={false}
+          showBackButton={false}
+          actions={hasItems && (
+            <VStack space="sm">
+              {/* Total Display */}
+              <HStack className="justify-between items-center p-4 bg-gray-50 rounded-lg">
+                <Text className="text-lg font-medium text-gray-700">Total</Text>
+                <Text className="text-2xl font-bold text-gray-900">
+                  {formatPrice(state.total)}
+                </Text>
+              </HStack>
+              
+              {/* Complete Sale Button */}
+              <Button
+                onPress={handleCompleteSale}
+                variant="solid"
+                size="lg"
+                className="w-full"
+              >
+                <HStack space="sm" className="items-center">
+                  <Icon as={CheckIcon} className="w-5 h-5" />
+                  <ButtonText className="font-semibold">
+                    Completar Venta
+                  </ButtonText>
+                </HStack>
+              </Button>
+            </VStack>
+          )}
+        >
+          <VStack space="md">
+            {/* Header */}
+            <SaleHeader onBack={() => router.back()} />
 
-          {/* Cart Summary */}
-          <CartSummary 
-            itemCount={itemCount} 
-            onAddItems={() => setShowProductSelection(true)} 
-          />
+            {/* Cart Summary */}
+            <CartSummary 
+              itemCount={itemCount} 
+              onAddItems={() => setShowProductSelection(true)} 
+            />
 
-          {/* Cart Items */}
-          <VStack space="sm">
-            <Text className="text-lg font-semibold text-gray-900">
-              Items
-            </Text>
-            
-            {hasItems ? (
-              <FlatList
-                data={state.items}
-                renderItem={renderCartItem}
-                keyExtractor={(item) => item.product.id}
-                scrollEnabled={false}
-                ItemSeparatorComponent={() => <View className="h-2" />}
-              />
-            ) : (
-              <EmptyCart onAddItems={() => setShowProductSelection(true)} />
+            {/* Cart Items */}
+            <VStack space="sm">
+              <Text className="text-lg font-semibold text-gray-900">
+                Items
+              </Text>
+              
+              {hasItems ? (
+                <FlatList
+                  data={state.items}
+                  renderItem={renderCartItem}
+                  keyExtractor={(item) => item.product.id}
+                  scrollEnabled={false}
+                  ItemSeparatorComponent={() => <View className="h-2" />}
+                />
+              ) : (
+                <EmptyCart onAddItems={() => setShowProductSelection(true)} />
+              )}
+            </VStack>
+
+            {/* Sale Details Form */}
+            {hasItems && (
+              <VStack space="md">
+                {/* Client Selector */}
+                <ClientSelector
+                  name="clientId"
+                  control={methods.control}
+                  label="Cliente (opcional)"
+                  placeholder="Seleccionar cliente"
+                  allowClear={true}
+                  onClientSelect={handleClientSelect}
+                />
+
+                {/* Notes Input */}
+                <VStack space="xs">
+                  <Text className="text-sm font-medium text-gray-700">Notas (opcional)</Text>
+                  <Input>
+                    <InputField
+                      placeholder="Agregar notas sobre la venta..."
+                      value={state.notes}
+                      onChangeText={setNotes}
+                      multiline
+                      numberOfLines={3}
+                      textAlignVertical="top"
+                    />
+                  </Input>
+                </VStack>
+
+                {/* Payment Status */}
+                <VStack space="xs">
+                  <Text className="text-sm font-medium text-gray-700">Estado de pago</Text>
+                  <HStack space="md">
+                    <Pressable
+                      onPress={() => setPaymentStatus('paid')}
+                      className={`flex-1 p-3 rounded-lg border ${
+                        state.paymentStatus === 'paid' 
+                          ? 'border-green-500 bg-green-50' 
+                          : 'border-gray-300 bg-white'
+                      }`}
+                    >
+                      <HStack space="sm" className="items-center justify-center">
+                        <Icon 
+                          as={CreditCardIcon} 
+                          className={`w-4 h-4 ${
+                            state.paymentStatus === 'paid' ? 'text-green-600' : 'text-gray-500'
+                          }`} 
+                        />
+                        <Text className={`font-medium ${
+                          state.paymentStatus === 'paid' ? 'text-green-700' : 'text-gray-600'
+                        }`}>
+                          Pagado
+                        </Text>
+                      </HStack>
+                    </Pressable>
+                    
+                    <Pressable
+                      onPress={() => setPaymentStatus('unpaid')}
+                      className={`flex-1 p-3 rounded-lg border ${
+                        state.paymentStatus === 'unpaid' 
+                          ? 'border-orange-500 bg-orange-50' 
+                          : 'border-gray-300 bg-white'
+                      }`}
+                    >
+                      <HStack space="sm" className="items-center justify-center">
+                        <Icon 
+                          as={ClockIcon} 
+                          className={`w-4 h-4 ${
+                            state.paymentStatus === 'unpaid' ? 'text-orange-600' : 'text-gray-500'
+                          }`} 
+                        />
+                        <Text className={`font-medium ${
+                          state.paymentStatus === 'unpaid' ? 'text-orange-700' : 'text-gray-600'
+                        }`}>
+                          Pendiente
+                        </Text>
+                      </HStack>
+                    </Pressable>
+                  </HStack>
+                </VStack>
+
+                {/* File Attachments */}
+                <FileSelector
+                  name="fileIds"
+                  multi={true}
+                  label="Archivos adjuntos (opcional)"
+                />
+              </VStack>
             )}
           </VStack>
+        </ScreenForm>
 
-          {/* Sale Details */}
-          {hasItems && (
-            <SaleDetails
-              notes={state.notes}
-              paymentStatus={state.paymentStatus as 'paid' | 'unpaid'}
-              total={state.total}
-              formatPrice={formatPrice}
-              onNotesChange={setNotes}
-              onPaymentStatusChange={setPaymentStatus}
-              onClientSelect={handleClientSelect}
-              onCompleteSale={handleCompleteSale}
-              methods={methods}
-            />
-          )}
-        </VStack>
-      </ScrollView>
-
-      {/* Item Selection Modal */}
-      <ItemSelectionModal
-        visible={showProductSelection}
-        selectedTab={selectedTab}
-        onClose={() => setShowProductSelection(false)}
-        onTabChange={setSelectedTab}
-        onAddItem={handleAddItem}
-        productsData={productsData}
-        servicesData={servicesData}
-        loadingProducts={loadingProducts}
-        loadingServices={loadingServices}
-      />
-    </SafeAreaView>
+        {/* Item Selection Modal */}
+        <ItemSelectionModal
+          visible={showProductSelection}
+          selectedTab={selectedTab}
+          onClose={() => setShowProductSelection(false)}
+          onTabChange={setSelectedTab}
+          onAddItem={handleAddItem}
+          productsData={productsData}
+          servicesData={servicesData}
+          loadingProducts={loadingProducts}
+          loadingServices={loadingServices}
+        />
+      </SafeAreaView>
+    </FormProvider>
   );
 }

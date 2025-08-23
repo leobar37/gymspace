@@ -6,7 +6,8 @@ import {
   UpdatePaymentStatusDto,
   SearchSalesParams,
   SalesStats,
-  TopSellingProduct
+  TopSellingProduct,
+  CustomerSalesReport
 } from '../models/sales';
 import { RequestOptions, PaginatedResponseDto } from '../types';
 
@@ -38,10 +39,10 @@ export class SalesResource extends BaseResource {
 
   async updatePaymentStatus(
     id: string,
-    data: UpdatePaymentStatusDto,
+    paymentStatus: 'paid' | 'unpaid',
     options?: RequestOptions
   ): Promise<Sale> {
-    return this.client.put<Sale>(`${this.basePath}/${id}/payment-status`, data, options);
+    return this.client.put<Sale>(`${this.basePath}/${id}/payment-status`, { paymentStatus }, options);
   }
 
   async deleteSale(id: string, options?: RequestOptions): Promise<void> {
@@ -77,6 +78,22 @@ export class SalesResource extends BaseResource {
     return this.client.get<TopSellingProduct[]>(
       `${this.basePath}/top-products`,
       params,
+      options
+    );
+  }
+
+  async getSalesByCustomer(
+    startDate?: string,
+    endDate?: string,
+    options?: RequestOptions
+  ): Promise<CustomerSalesReport> {
+    const params: Record<string, string> = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+
+    return this.client.get<CustomerSalesReport>(
+      `${this.basePath}/reports/by-customer`,
+      Object.keys(params).length > 0 ? params : undefined,
       options
     );
   }

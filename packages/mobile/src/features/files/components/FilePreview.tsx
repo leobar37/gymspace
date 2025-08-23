@@ -41,17 +41,13 @@ export function FilePreview({
         className={`bg-gray-100 items-center justify-center ${className}`}
         style={{ width, height }}
       >
-        <Icon
-          as={FileIconComponent}
-          size="xl"
-          className="text-gray-400"
-        />
+        <Icon as={FileIconComponent} size="xl" className="text-gray-400" />
       </View>
     );
   }
 
   return (
-    <View style={{ width, height }} className={className}>
+    <View className={className}>
       {loading && (
         <View className="absolute inset-0 bg-gray-100 items-center justify-center">
           <ActivityIndicator size="small" />
@@ -60,7 +56,7 @@ export function FilePreview({
       <Image
         source={{ uri: file.previewUrl || '' }}
         style={{ width: '100%', height: '100%' }}
-        resizeMode={resizeMode}
+        resizeMode={"cover"}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
         onError={() => {

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEnum, IsDateString, IsNumber, Min } from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsDateString, IsNumber, Min, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { PaymentStatus } from '@prisma/client';
@@ -8,6 +8,15 @@ export class SearchSalesDto {
   @IsOptional()
   @IsString()
   customerName?: string;
+
+  @ApiProperty({ 
+    example: 'uuid-client-id', 
+    description: 'Filter by customer ID', 
+    required: false 
+  })
+  @IsOptional()
+  @IsUUID()
+  customerId?: string;
 
   @ApiProperty({
     example: 'paid',

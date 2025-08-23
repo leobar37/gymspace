@@ -31,14 +31,18 @@ export interface SaleItem {
 // Sale Models
 export interface CreateSaleDto {
   items: SaleItemDto[];
+  customerId?: string;
   customerName?: string;
   notes?: string;
+  fileIds?: string[];
   paymentStatus?: 'paid' | 'unpaid';
 }
 
 export interface UpdateSaleDto {
+  customerId?: string;
   customerName?: string;
   notes?: string;
+  fileIds?: string[];
   paymentStatus?: 'paid' | 'unpaid';
 }
 
@@ -49,15 +53,24 @@ export interface UpdatePaymentStatusDto {
 export interface Sale {
   id: string;
   gymId: string;
+  customerId?: string;
   saleNumber: string;
   total: number;
   paymentStatus: 'paid' | 'unpaid';
   saleDate: string;
   customerName?: string;
   notes?: string;
+  fileIds?: string[];
   createdAt: string;
   updatedAt: string;
   saleItems?: SaleItem[];
+  customer?: {
+    id: string;
+    clientNumber: string;
+    name: string;
+    phone?: string;
+    email?: string;
+  };
   createdBy?: {
     id: string;
     name: string;
@@ -75,6 +88,7 @@ export interface Sale {
 
 export interface SearchSalesParams extends PaginationQueryDto {
   customerName?: string;
+  customerId?: string;
   paymentStatus?: 'paid' | 'unpaid';
   startDate?: string;
   endDate?: string;
@@ -105,4 +119,28 @@ export interface TopSellingProduct {
   };
   totalQuantity: number;
   totalRevenue: number;
+}
+
+export interface CustomerSalesReport {
+  summary: {
+    totalCustomers: number;
+    totalSales: number;
+    totalRevenue: number;
+  };
+  customers: Array<{
+    customer: {
+      id: string | null;
+      clientNumber?: string;
+      name: string;
+      phone?: string;
+      email?: string;
+    };
+    totalSales: number;
+    totalRevenue: number;
+    sales: Array<{
+      id: string;
+      total: number;
+      saleDate: string;
+    }>;
+  }>;
 }

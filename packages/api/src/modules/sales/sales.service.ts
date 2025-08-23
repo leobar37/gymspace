@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { PaginationService } from '../../common/services/pagination.service';
+import { RequestContext } from '../../common/services/request-context.service';
 import {
   CreateSaleDto,
   UpdateSaleDto,
@@ -18,7 +19,8 @@ export class SalesService {
     private readonly paginationService: PaginationService,
   ) {}
 
-  private async generateSaleNumber(gymId: string): Promise<string> {
+  private async generateSaleNumber(context: RequestContext): Promise<string> {
+    const gymId = context.getGymId()!;
     // Generate sale number based on date + sequential number
     const today = new Date();
     const datePrefix = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
@@ -44,7 +46,8 @@ export class SalesService {
     return `${datePrefix}${sequenceNumber.toString().padStart(4, '0')}`;
   }
 
-  private async validateSaleItems(gymId: string, items: SaleItemDto[]) {
+  private async validateSaleItems(context: RequestContext, items: SaleItemDto[]) {
+    const gymId = context.getGymId()!;
     const productIds = items.map((item) => item.productId);
 
     // Get all products in one query
@@ -99,12 +102,15 @@ export class SalesService {
     return products;
   }
 
-  async createSale(gymId: string, dto: CreateSaleDto, userId: string) {
+  async createSale(context: RequestContext, dto: CreateSaleDto) {
+    const gymId = context.getGymId()!;
+    const userId = context.getUserId();
+
     // Validate all products and stock
-    const products = await this.validateSaleItems(gymId, dto.items);
+    const products = await this.validateSaleItems(context, dto.items);
 
     // Generate unique sale number
-    const saleNumber = await this.generateSaleNumber(gymId);
+    const saleNumber = await this.generateSaleNumber(context);
 
     // Calculate total
     const total = dto.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -115,10 +121,12 @@ export class SalesService {
       const sale = await tx.sale.create({
         data: {
           gymId,
+          customerId: dto.customerId,
           saleNumber,
           total,
           customerName: dto.customerName,
           notes: dto.notes,
+          fileIds: dto.fileIds || [],
           paymentStatus: dto.paymentStatus ?? PaymentStatus.unpaid,
           createdByUserId: userId,
         },
@@ -139,6 +147,15 @@ export class SalesService {
                   },
                 },
               },
+            },
+          },
+          customer: {
+            select: {
+              id: true,
+              clientNumber: true,
+              name: true,
+              phone: true,
+              email: true,
             },
           },
         },
@@ -205,10 +222,14 @@ export class SalesService {
     });
   }
 
-  async updateSale(saleId: string, dto: UpdateSaleDto, userId: string) {
+  async updateSale(context: RequestContext, saleId: string, dto: UpdateSaleDto) {
+    const gymId = context.getGymId()!;
+    const userId = context.getUserId();
+
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
+        gymId,
         deletedAt: null,
       },
     });
@@ -242,6 +263,15 @@ export class SalesService {
             },
           },
         },
+        customer: {
+          select: {
+            id: true,
+            clientNumber: true,
+            name: true,
+            phone: true,
+            email: true,
+          },
+        },
         createdBy: {
           select: { id: true, name: true, email: true },
         },
@@ -252,10 +282,13 @@ export class SalesService {
     });
   }
 
-  async getSale(saleId: string, userId?: string) {
+  async getSale(context: RequestContext, saleId: string) {
+    const gymId = context.getGymId()!;
+
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
+        gymId,
         deletedAt: null,
       },
       include: {
@@ -277,6 +310,15 @@ export class SalesService {
             },
           },
         },
+        customer: {
+          select: {
+            id: true,
+            clientNumber: true,
+            name: true,
+            phone: true,
+            email: true,
+          },
+        },
         createdBy: {
           select: { id: true, name: true, email: true },
         },
@@ -293,9 +335,11 @@ export class SalesService {
     return sale;
   }
 
-  async searchSales(gymId: string, dto: SearchSalesDto, userId: string) {
+  async searchSales(context: RequestContext, dto: SearchSalesDto) {
+    const gymId = context.getGymId()!;
     const {
       customerName,
+      customerId,
       paymentStatus,
       startDate,
       endDate,
@@ -315,6 +359,10 @@ export class SalesService {
     // Apply filters
     if (customerName) {
       where.customerName = { contains: customerName, mode: 'insensitive' };
+    }
+
+    if (customerId) {
+      where.customerId = customerId;
     }
 
     if (paymentStatus) {
@@ -372,10 +420,14 @@ export class SalesService {
     return this.paginationService.paginate(sales, total, { page, limit });
   }
 
-  async updatePaymentStatus(saleId: string, dto: UpdatePaymentStatusDto, userId: string) {
+  async updatePaymentStatus(context: RequestContext, saleId: string, dto: UpdatePaymentStatusDto) {
+    const gymId = context.getGymId()!;
+    const userId = context.getUserId();
+
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
+        gymId,
         deletedAt: null,
       },
     });
@@ -402,14 +454,25 @@ export class SalesService {
             },
           },
         },
+        customer: {
+          select: {
+            id: true,
+            clientNumber: true,
+            name: true,
+          },
+        },
       },
     });
   }
 
-  async deleteSale(saleId: string, userId: string) {
+  async deleteSale(context: RequestContext, saleId: string) {
+    const gymId = context.getGymId()!;
+    const userId = context.getUserId();
+
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
+        gymId,
         deletedAt: null,
       },
       include: {
@@ -457,7 +520,8 @@ export class SalesService {
     });
   }
 
-  async getSalesStats(gymId: string, startDate?: Date, endDate?: Date) {
+  async getSalesStats(context: RequestContext, startDate?: Date, endDate?: Date) {
+    const gymId = context.getGymId()!;
     const where: Prisma.SaleWhereInput = {
       gymId,
       deletedAt: null,
@@ -496,7 +560,8 @@ export class SalesService {
     };
   }
 
-  async getTopSellingProducts(gymId: string, limit: number = 10, startDate?: Date, endDate?: Date) {
+  async getTopSellingProducts(context: RequestContext, limit: number = 10, startDate?: Date, endDate?: Date) {
+    const gymId = context.getGymId()!;
     const where: Prisma.SaleWhereInput = {
       gymId,
       deletedAt: null,
@@ -558,5 +623,107 @@ export class SalesService {
         totalRevenue: item._sum.total || 0,
       };
     });
+  }
+
+  async getSalesByCustomer(context: RequestContext, startDate?: Date, endDate?: Date) {
+    const gymId = context.getGymId()!;
+    const where: Prisma.SaleWhereInput = {
+      gymId,
+      deletedAt: null,
+    };
+
+    if (startDate || endDate) {
+      where.saleDate = {};
+      if (startDate) {
+        where.saleDate.gte = startDate;
+      }
+      if (endDate) {
+        where.saleDate.lte = endDate;
+      }
+    }
+
+    // Get sales grouped by customer (both registered customers and walk-in customers)
+    const sales = await this.prisma.sale.findMany({
+      where,
+      select: {
+        id: true,
+        total: true,
+        saleDate: true,
+        customerId: true,
+        customerName: true,
+        customer: {
+          select: {
+            id: true,
+            clientNumber: true,
+            name: true,
+            phone: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        saleDate: 'desc',
+      },
+    });
+
+    // Group sales by customer
+    const customerSalesMap = new Map<string, {
+      customer: {
+        id: string | null;
+        clientNumber?: string;
+        name: string;
+        phone?: string;
+        email?: string;
+      };
+      totalSales: number;
+      totalRevenue: number;
+      sales: Array<{
+        id: string;
+        total: number;
+        saleDate: Date;
+      }>;
+    }>();
+
+    sales.forEach(sale => {
+      const customerKey = sale.customerId || `walk-in-${sale.customerName}`;
+      const customerData = {
+        id: sale.customerId,
+        clientNumber: sale.customer?.clientNumber,
+        name: sale.customer?.name || sale.customerName || 'Walk-in Customer',
+        phone: sale.customer?.phone,
+        email: sale.customer?.email,
+      };
+
+      if (!customerSalesMap.has(customerKey)) {
+        customerSalesMap.set(customerKey, {
+          customer: customerData,
+          totalSales: 0,
+          totalRevenue: 0,
+          sales: [],
+        });
+      }
+
+      const customerSales = customerSalesMap.get(customerKey)!;
+      customerSales.totalSales += 1;
+      customerSales.totalRevenue += parseFloat(sale.total.toString());
+      customerSales.sales.push({
+        id: sale.id,
+        total: parseFloat(sale.total.toString()),
+        saleDate: sale.saleDate,
+      });
+    });
+
+    // Convert map to array and sort by total revenue
+    const result = Array.from(customerSalesMap.values())
+      .sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+    return {
+      summary: {
+        totalCustomers: result.length,
+        totalSales: sales.length,
+        totalRevenue: sales.reduce((sum, sale) => sum + parseFloat(sale.total.toString()), 0),
+      },
+      customers: result,
+    };
   }
 }

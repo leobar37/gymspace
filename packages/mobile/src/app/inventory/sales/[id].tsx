@@ -1,330 +1,78 @@
-import React, { useState } from 'react';
-import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
+import React from 'react';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { View } from '@/components/ui/view';
-import { Icon } from '@/components/ui/icon';
-import { Badge, BadgeText } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { Switch } from '@/components/ui/switch';
 import { Alert as UIAlert, AlertIcon, AlertText } from '@/components/ui/alert';
-import {
-  CalendarIcon,
-  UserIcon,
-  FileTextIcon,
-  CreditCardIcon,
-  ClockIcon,
-  InfoIcon,
-  ArrowLeftIcon,
-  ShoppingCartIcon
-} from 'lucide-react-native';
-import { useLocalSearchParams, router } from 'expo-router';
-import { useSale, useUpdatePaymentStatus } from '@/hooks/useSales';
+import { InfoIcon } from 'lucide-react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { useSale } from '@/hooks/useSales';
 import { useFormatPrice } from '@/config/ConfigContext';
-import { Pressable } from '@/components/ui/pressable';
-import { useLoadingScreen } from '@/shared/loading-screen';
+import { ScreenForm } from '@/shared/components/ScreenForm';
+import { SaleInfoCard, PaymentStatusCard, FilesSection, ProductsList } from './components';
 
 export default function SaleDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id as string;
   const formatPrice = useFormatPrice();
-  const { execute } = useLoadingScreen();
 
   const { data: sale, isLoading, isError, error, refetch } = useSale(id);
-  const updatePaymentMutation = useUpdatePaymentStatus();
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('es-PE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(date);
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('es-PE', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }).format(date);
-  };
-
-
-  const handleUpdatePaymentStatus = async (newStatus: 'paid' | 'unpaid') => {
-    if (!sale) return;
-
-    const statusText = newStatus === 'paid' ? 'pagado' : 'pendiente';
-    
-    await execute(
-      updatePaymentMutation.mutateAsync({
-        id: sale.id,
-        paymentStatus: newStatus,
-      }),
-      {
-        action: `Marcando venta como ${statusText}...`,
-        successMessage: `Venta marcada como ${statusText} exitosamente`,
-        successActions: [
-          {
-            label: 'Aceptar',
-            onPress: () => {
-              // Modal will be closed automatically
-            },
-            variant: 'solid',
-          },
-        ],
-        errorFormatter: (error) => {
-          if (error instanceof Error) {
-            return `Error al actualizar: ${error.message}`;
-          }
-          return 'No se pudo actualizar el estado de pago. Por favor intenta nuevamente.';
-        },
-        errorActions: [
-          {
-            label: 'Reintentar',
-            onPress: () => {
-              // Modal will be closed automatically
-              handleUpdatePaymentStatus(newStatus);
-            },
-            variant: 'solid',
-          },
-          {
-            label: 'Cancelar',
-            onPress: () => {
-              // Modal will be closed automatically
-            },
-            variant: 'outline',
-          },
-        ],
-        hideOnSuccess: false,
-      }
-    );
-  };
-
-
 
   if (!id) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50">
-        <VStack className="flex-1 p-4">
-          <Pressable
-            onPress={() => router.back()}
-            className="p-2 -ml-2 rounded-lg mb-4"
-          >
-            <Icon as={ArrowLeftIcon} className="w-6 h-6 text-gray-700" />
-          </Pressable>
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-gray-600">ID de venta no válido</Text>
-          </View>
-        </VStack>
-      </SafeAreaView>
+      <ScreenForm title="Detalle de Venta">
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-gray-600">ID de venta no válido</Text>
+        </View>
+      </ScreenForm>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50">
+      <ScreenForm title="Detalle de Venta">
         <View className="flex-1 items-center justify-center">
           <Spinner size="large" />
           <Text className="text-gray-600 mt-4">Cargando venta...</Text>
         </View>
-      </SafeAreaView>
+      </ScreenForm>
     );
   }
 
   if (isError || !sale) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50">
-        <VStack className="flex-1 p-4">
-          <Pressable
-            onPress={() => router.back()}
-            className="p-2 -ml-2 rounded-lg mb-4"
+      <ScreenForm title="Detalle de Venta">
+        <View className="flex-1 items-center justify-center">
+          <UIAlert action="error" variant="solid" className="max-w-sm">
+            <AlertIcon as={InfoIcon} />
+            <AlertText>
+              Error al cargar la venta: {error?.message || 'Venta no encontrada'}
+            </AlertText>
+          </UIAlert>
+          <Button
+            variant="outline"
+            onPress={() => refetch()}
+            className="mt-4"
           >
-            <Icon as={ArrowLeftIcon} className="w-6 h-6 text-gray-700" />
-          </Pressable>
-          
-          <View className="flex-1 items-center justify-center">
-            <UIAlert action="error" variant="solid" className="max-w-sm">
-              <AlertIcon as={InfoIcon} />
-              <AlertText>
-                Error al cargar la venta: {error?.message || 'Venta no encontrada'}
-              </AlertText>
-            </UIAlert>
-            <Button
-              variant="outline"
-              onPress={() => refetch()}
-              className="mt-4"
-            >
-              <ButtonText>Reintentar</ButtonText>
-            </Button>
-          </View>
-        </VStack>
-      </SafeAreaView>
+            <ButtonText>Reintentar</ButtonText>
+          </Button>
+        </View>
+      </ScreenForm>
     );
   }
 
-  const isPaid = sale.paymentStatus === 'paid';
-  const totalQuantity = sale.saleItems?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0;
-
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <VStack space="md" className="p-4">
-          {/* Header */}
-          <HStack className="justify-between items-center mb-2">
-            <Pressable
-              onPress={() => router.back()}
-              className="p-2 -ml-2 rounded-lg"
-            >
-              <Icon as={ArrowLeftIcon} className="w-6 h-6 text-gray-700" />
-            </Pressable>
-            <Text className="text-xl font-bold text-gray-900 flex-1 ml-2">
-              Detalle de Venta
-            </Text>
-          </HStack>
-
-          {/* Sale Info Card */}
-          <Card className="bg-white border border-gray-200">
-            <VStack space="md" className="p-4">
-              {/* Date and Time */}
-              <HStack className="justify-between items-center">
-                <HStack space="sm" className="items-center">
-                  <Icon as={CalendarIcon} className="w-5 h-5 text-gray-500" />
-                  <VStack>
-                    <Text className="text-lg font-semibold text-gray-900">
-                      {formatDate(sale.saleDate)}
-                    </Text>
-                    <Text className="text-sm text-gray-600">
-                      {formatTime(sale.saleDate)}
-                    </Text>
-                  </VStack>
-                </HStack>
-                
-                <Badge 
-                  variant={isPaid ? "solid" : "outline"}
-                  className={isPaid ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200'}
-                >
-                  <Icon 
-                    as={isPaid ? CreditCardIcon : ClockIcon}
-                    className={`w-4 h-4 mr-1 ${isPaid ? 'text-green-600' : 'text-red-600'}`}
-                  />
-                  <BadgeText className={isPaid ? 'text-green-700' : 'text-red-700'}>
-                    {isPaid ? 'Pagado' : 'Pendiente'}
-                  </BadgeText>
-                </Badge>
-              </HStack>
-
-              {/* Customer */}
-              {sale.customerName && (
-                <HStack space="sm" className="items-center">
-                  <Icon as={UserIcon} className="w-5 h-5 text-gray-500" />
-                  <Text className="text-base text-gray-900">
-                    {sale.customerName}
-                  </Text>
-                </HStack>
-              )}
-
-              {/* Notes */}
-              {sale.notes && (
-                <VStack space="xs">
-                  <HStack space="sm" className="items-center">
-                    <Icon as={FileTextIcon} className="w-5 h-5 text-gray-500" />
-                    <Text className="text-sm font-medium text-gray-700">
-                      Notas:
-                    </Text>
-                  </HStack>
-                  <Text className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                    {sale.notes}
-                  </Text>
-                </VStack>
-              )}
-            </VStack>
-          </Card>
-
-          {/* Payment Status Control */}
-          <Card className="bg-white border border-gray-200">
-            <VStack space="md" className="p-4">
-              <Text className="text-lg font-semibold text-gray-900">
-                Estado de Pago
-              </Text>
-              
-              <HStack className="justify-between items-center">
-                <Text className="text-base text-gray-700">
-                  {isPaid ? 'Marcar como pendiente' : 'Marcar como pagado'}
-                </Text>
-                
-                <Switch
-                  value={isPaid}
-                  onValueChange={(value) => 
-                    handleUpdatePaymentStatus(value ? 'paid' : 'unpaid')
-                  }
-                />
-              </HStack>
-            </VStack>
-          </Card>
-
-          {/* Products Sold */}
-          <Card className="bg-white border border-gray-200">
-            <VStack space="md" className="p-4">
-              <HStack className="justify-between items-center">
-                <Text className="text-lg font-semibold text-gray-900">
-                  Productos Vendidos
-                </Text>
-                <Text className="text-sm text-gray-600">
-                  {sale.saleItems?.length || 0} productos ({totalQuantity} unidades)
-                </Text>
-              </HStack>
-              
-              {sale.saleItems && sale.saleItems.length > 0 ? (
-                <VStack space="sm">
-                  {sale.saleItems.map((item: any, index: number) => (
-                    <Card key={index} className="bg-gray-50 border-gray-200">
-                      <HStack className="justify-between items-center p-3">
-                        <VStack className="flex-1">
-                          <Text className="text-base font-medium text-gray-900">
-                            {item.product?.name || 'Producto'}
-                          </Text>
-                          <Text className="text-sm text-gray-600">
-                            {formatPrice(item.unitPrice)} × {item.quantity}
-                          </Text>
-                        </VStack>
-                        
-                        <Text className="text-base font-semibold text-gray-900">
-                          {formatPrice(item.unitPrice * item.quantity)}
-                        </Text>
-                      </HStack>
-                    </Card>
-                  ))}
-                </VStack>
-              ) : (
-                <HStack space="sm" className="items-center justify-center py-4">
-                  <Icon as={ShoppingCartIcon} className="w-6 h-6 text-gray-400" />
-                  <Text className="text-gray-600">
-                    No se encontraron productos
-                  </Text>
-                </HStack>
-              )}
-            </VStack>
-          </Card>
-
-          {/* Total */}
-          <Card className="bg-blue-50 border-blue-200">
-            <HStack className="justify-between items-center p-4">
-              <Text className="text-xl font-semibold text-blue-900">
-                Total de la Venta
-              </Text>
-              <Text className="text-3xl font-bold text-blue-900">
-                {formatPrice(sale.total)}
-              </Text>
-            </HStack>
-          </Card>
-        </VStack>
-      </ScrollView>
-    </SafeAreaView>
+    <ScreenForm 
+      title="Detalle de Venta"
+      showTotal
+      totalLabel="Total de la Venta"
+      totalValue={formatPrice(sale.total)}
+      totalVariant="default"
+    >
+      <SaleInfoCard sale={sale} />
+      <PaymentStatusCard sale={sale} />
+      <FilesSection fileIds={sale.fileIds || []} />
+      <ProductsList sale={sale} />
+    </ScreenForm>
   );
 }
