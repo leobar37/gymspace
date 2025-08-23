@@ -12,8 +12,7 @@ import {
   SelectPortal, 
   SelectBackdrop, 
   SelectContent, 
-  SelectItem, 
-  SelectScrollView 
+  SelectItem
 } from '@/components/ui/select';
 import { ChevronDownIcon } from 'lucide-react-native';
 
@@ -82,15 +81,13 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
           <SelectPortal>
             <SelectBackdrop />
             <SelectContent>
-              <SelectScrollView>
-                {options.map((option) => (
-                  <SelectItem 
-                    key={option.value} 
-                    label={option.label} 
-                    value={option.value}
-                  />
-                ))}
-              </SelectScrollView>
+              {options.map((option) => (
+                <SelectItem 
+                  key={option.value} 
+                  label={option.label} 
+                  value={option.value}
+                />
+              ))}
             </SelectContent>
           </SelectPortal>
         </Select>

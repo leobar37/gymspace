@@ -4,11 +4,22 @@ import type { UseControllerProps, FieldValues } from 'react-hook-form';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
-import { Checkbox as GluestackCheckbox, CheckboxIndicator, CheckboxIcon, CheckboxLabel } from '@/components/ui/checkbox';
-import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
+import {
+  Checkbox as GluestackCheckbox,
+  CheckboxIndicator,
+  CheckboxIcon,
+  CheckboxLabel,
+} from '@/components/ui/checkbox';
+import {
+  FormControl,
+  FormControlError,
+  FormControlErrorText,
+  FormControlHelper,
+  FormControlHelperText,
+} from '@/components/ui/form-control';
 import { CheckIcon } from 'lucide-react-native';
 
-interface FormCheckboxProps<TFieldValues extends FieldValues = FieldValues> 
+interface FormCheckboxProps<TFieldValues extends FieldValues = FieldValues>
   extends UseControllerProps<TFieldValues> {
   label: string;
   description?: string;
@@ -16,25 +27,25 @@ interface FormCheckboxProps<TFieldValues extends FieldValues = FieldValues>
   disabled?: boolean;
 }
 
-export function FormCheckbox<TFieldValues extends FieldValues = FieldValues>({ 
-  name, 
+export function FormCheckbox<TFieldValues extends FieldValues = FieldValues>({
+  name,
   control,
   rules,
   defaultValue,
   shouldUnregister,
-  label, 
+  label,
   description,
   size = 'md',
-  disabled = false
+  disabled = false,
 }: FormCheckboxProps<TFieldValues>) {
-  const { field, fieldState } = useController({ 
-    name, 
+  const { field, fieldState } = useController({
+    name,
     control,
     rules,
     defaultValue,
-    shouldUnregister
+    shouldUnregister,
   });
-  
+
   return (
     <FormControl isInvalid={!!fieldState.error}>
       <VStack className="gap-1">
@@ -54,13 +65,13 @@ export function FormCheckbox<TFieldValues extends FieldValues = FieldValues>({
             </CheckboxLabel>
           </GluestackCheckbox>
         </HStack>
-        
+
         {description && (
           <FormControlHelper>
             <FormControlHelperText className="ml-6">{description}</FormControlHelperText>
           </FormControlHelper>
         )}
-        
+
         {fieldState.error && (
           <FormControlError>
             <FormControlErrorText>{fieldState.error.message}</FormControlErrorText>
