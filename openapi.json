@@ -7156,53 +7156,6 @@
           "sunday"
         ]
       },
-      "AmenitiesDto": {
-        "type": "object",
-        "properties": {
-          "hasParking": {
-            "type": "boolean",
-            "example": true
-          },
-          "hasShowers": {
-            "type": "boolean",
-            "example": true
-          },
-          "hasLockers": {
-            "type": "boolean",
-            "example": true
-          },
-          "hasPool": {
-            "type": "boolean",
-            "example": false
-          },
-          "hasSauna": {
-            "type": "boolean",
-            "example": true
-          },
-          "hasWifi": {
-            "type": "boolean",
-            "example": true
-          },
-          "hasChildcare": {
-            "type": "boolean",
-            "example": false
-          },
-          "hasCafeteria": {
-            "type": "boolean",
-            "example": true
-          }
-        },
-        "required": [
-          "hasParking",
-          "hasShowers",
-          "hasLockers",
-          "hasPool",
-          "hasSauna",
-          "hasWifi",
-          "hasChildcare",
-          "hasCafeteria"
-        ]
-      },
       "SocialMediaDto": {
         "type": "object",
         "properties": {
@@ -7285,14 +7238,6 @@
             "example": "The best gym in downtown with state-of-the-art equipment",
             "description": "Gym description"
           },
-          "amenities": {
-            "description": "Available amenities",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/AmenitiesDto"
-              }
-            ]
-          },
           "socialMedia": {
             "description": "Social media links",
             "allOf": [
@@ -7327,8 +7272,7 @@
           "phone",
           "email",
           "businessHours",
-          "capacity",
-          "amenities"
+          "capacity"
         ]
       },
       "ClientManagementDto": {

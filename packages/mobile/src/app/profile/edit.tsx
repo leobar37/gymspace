@@ -11,37 +11,24 @@ import { useProfileController } from '@/controllers/profile.controller';
 import { UpdateProfileDto } from '@gymspace/sdk';
 import { format, parseISO } from 'date-fns';
 import { UserIcon, PhoneIcon, CalendarIcon, EditIcon, XIcon, LockIcon } from 'lucide-react-native';
-import {
-  FormProvider,
-  FormInput,
-  FormDatePicker,
-  useForm,
-  zodResolver,
-} from '@/components/forms';
+import { FormProvider, FormInput, FormDatePicker, useForm, zodResolver } from '@/components/forms';
 import { z } from 'zod';
 
 // Validation schema
 const profileSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  phone: z.string()
+  phone: z
+    .string()
     .optional()
-    .refine(
-      (val) => !val || /^\+?[\d\s\-()]+$/.test(val),
-      'Número de teléfono inválido'
-    ),
+    .refine((val) => !val || /^\+?[\d\s\-()]+$/.test(val), 'Número de teléfono inválido'),
   birthDate: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function EditProfileScreen() {
-  const {
-    profile,
-    isLoadingProfile,
-    updateProfile,
-    isUpdatingProfile,
-    isUpdateSuccess,
-  } = useProfileController();
+  const { profile, isLoadingProfile, updateProfile, isUpdatingProfile, isUpdateSuccess } =
+    useProfileController();
 
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -62,8 +49,10 @@ export default function EditProfileScreen() {
       methods.reset({
         name: profile.name || '',
         phone: profile.phone || '',
-        birthDate: profile.birthDate ? 
-          (typeof profile.birthDate === 'string' ? profile.birthDate : format(profile.birthDate, 'yyyy-MM-dd')) 
+        birthDate: profile.birthDate
+          ? typeof profile.birthDate === 'string'
+            ? profile.birthDate
+            : format(profile.birthDate, 'yyyy-MM-dd')
           : undefined,
       });
     }
@@ -91,8 +80,10 @@ export default function EditProfileScreen() {
       methods.reset({
         name: profile.name || '',
         phone: profile.phone || '',
-        birthDate: profile.birthDate ? 
-          (typeof profile.birthDate === 'string' ? profile.birthDate : format(profile.birthDate, 'yyyy-MM-dd')) 
+        birthDate: profile.birthDate
+          ? typeof profile.birthDate === 'string'
+            ? profile.birthDate
+            : format(profile.birthDate, 'yyyy-MM-dd')
           : undefined,
       });
     }
@@ -120,14 +111,23 @@ export default function EditProfileScreen() {
         options={{
           title: isEditMode ? 'Editar Perfil' : 'Mi Perfil',
           headerBackTitle: 'Atrás',
+          animation: 'simple_push',
+          headerShown: true,
+          headerLeft: () => {
+            return (
+              <Button size="sm" onPress={() => router.replace('/more')}>
+                <ButtonText>Volver</ButtonText>
+              </Button>
+            );
+          },
         }}
       />
-      
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1 bg-gray-50"
       >
-        <ScrollView 
+        <ScrollView
           className="flex-1"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -143,16 +143,12 @@ export default function EditProfileScreen() {
                       <Text className="text-lg font-semibold text-gray-900">
                         Información Personal
                       </Text>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onPress={() => setIsEditMode(true)}
-                      >
+                      <Button variant="outline" size="sm" onPress={() => setIsEditMode(true)}>
                         <Icon as={EditIcon} className="w-4 h-4 mr-1" />
                         <ButtonText>Editar</ButtonText>
                       </Button>
                     </HStack>
-                    
+
                     <VStack className="gap-4">
                       {/* Name */}
                       <VStack className="gap-1">
@@ -196,34 +192,39 @@ export default function EditProfileScreen() {
                     <Text className="text-lg font-semibold text-gray-900">
                       Información de Cuenta
                     </Text>
-                    
+
                     <VStack className="gap-3">
                       <VStack>
                         <Text className="text-sm text-gray-500">Correo electrónico</Text>
                         <Text className="text-gray-900">{profile?.email}</Text>
                       </VStack>
-                      
+
                       <VStack>
                         <Text className="text-sm text-gray-500">Tipo de cuenta</Text>
                         <Text className="text-gray-900">
                           {profile?.userType === 'owner' ? 'Propietario' : 'Colaborador'}
                         </Text>
                       </VStack>
-                      
+
                       <VStack>
                         <Text className="text-sm text-gray-500">Estado de verificación</Text>
-                        <Text className={profile?.emailVerified ? 'text-green-600' : 'text-orange-600'}>
+                        <Text
+                          className={profile?.emailVerified ? 'text-green-600' : 'text-orange-600'}
+                        >
                           {profile?.emailVerified ? 'Verificado' : 'Pendiente de verificación'}
                         </Text>
                       </VStack>
-                      
+
                       <VStack>
                         <Text className="text-sm text-gray-500">Miembro desde</Text>
                         <Text className="text-gray-900">
-                          {profile?.createdAt && format(
-                            typeof profile.createdAt === 'string' ? parseISO(profile.createdAt) : profile.createdAt,
-                            'dd/MM/yyyy'
-                          )}
+                          {profile?.createdAt &&
+                            format(
+                              typeof profile.createdAt === 'string'
+                                ? parseISO(profile.createdAt)
+                                : profile.createdAt,
+                              'dd/MM/yyyy',
+                            )}
                         </Text>
                       </VStack>
                     </VStack>
@@ -251,16 +252,12 @@ export default function EditProfileScreen() {
                       <Text className="text-lg font-semibold text-gray-900">
                         Información Personal
                       </Text>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onPress={handleCancel}
-                      >
+                      <Button variant="link" size="sm" onPress={handleCancel}>
                         <Icon as={XIcon} className="w-4 h-4 mr-1" />
                         <ButtonText>Cancelar</ButtonText>
                       </Button>
                     </HStack>
-                    
+
                     {/* Name Field */}
                     <FormInput
                       name="name"
@@ -297,13 +294,13 @@ export default function EditProfileScreen() {
                     <Text className="text-lg font-semibold text-gray-900">
                       Información de Cuenta
                     </Text>
-                    
+
                     <VStack className="gap-3">
                       <VStack>
                         <Text className="text-sm text-gray-500">Correo electrónico</Text>
                         <Text className="text-gray-900">{profile?.email}</Text>
                       </VStack>
-                      
+
                       <VStack>
                         <Text className="text-sm text-gray-500">Tipo de cuenta</Text>
                         <Text className="text-gray-900">
@@ -311,7 +308,7 @@ export default function EditProfileScreen() {
                         </Text>
                       </VStack>
                     </VStack>
-                    
+
                     <Text className="text-xs text-gray-500 italic mt-2">
                       El correo electrónico y tipo de cuenta no se pueden cambiar
                     </Text>
@@ -335,7 +332,7 @@ export default function EditProfileScreen() {
                       <ButtonText>Guardar Cambios</ButtonText>
                     )}
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     onPress={handleCancel}
@@ -350,7 +347,6 @@ export default function EditProfileScreen() {
           </VStack>
         </ScrollView>
       </KeyboardAvoidingView>
-      
     </>
   );
 }

@@ -87,7 +87,7 @@ async function main() {
     if (!existingPlan) {
       try {
         await prisma.subscriptionPlan.create({
-          data: plan,
+          data: plan as any,
         });
         console.log(`✅ Created plan: ${plan.name}`);
       } catch (error) {

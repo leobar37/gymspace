@@ -5,7 +5,7 @@ import { OrganizationsService } from '../organizations/organizations.service';
 import { CreateGymDto, UpdateGymDto, UpdateCurrentGymDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Gym } from '@prisma/client';
-import { IRequestContext } from '@gymspace/shared';
+import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
 export class GymsService {
@@ -18,7 +18,7 @@ export class GymsService {
   /**
    * Create a new gym (CU-004)
    */
-  async createGym(context: IRequestContext, dto: CreateGymDto): Promise<Gym> {
+  async createGym(context: RequestContext, dto: CreateGymDto): Promise<Gym> {
     const userId = context.getUserId();
     const organizationId = context.getOrganizationId();
 
@@ -65,7 +65,7 @@ export class GymsService {
   /**
    * Update gym details (CU-005)
    */
-  async updateGym(context: IRequestContext, gymId: string, dto: UpdateGymDto): Promise<Gym> {
+  async updateGym(context: RequestContext, gymId: string, dto: UpdateGymDto): Promise<Gym> {
     const userId = context.getUserId();
     // Verify gym exists and user has access
     const gym = await this.prismaService.gym.findFirst({
@@ -109,7 +109,7 @@ export class GymsService {
   /**
    * Get gym by ID
    */
-  async getGym(context: IRequestContext, gymId: string): Promise<Gym> {
+  async getGym(context: RequestContext, gymId: string): Promise<Gym> {
     const userId = context.getUserId();
     const gym = await this.prismaService.gym.findFirst({
       where: {
@@ -150,7 +150,7 @@ export class GymsService {
   /**
    * Get gyms for organization
    */
-  async getOrganizationGyms(context: IRequestContext) {
+  async getOrganizationGyms(context: RequestContext) {
     const userId = context.getUserId();
     const organizationId = context.getOrganizationId();
 
@@ -159,7 +159,7 @@ export class GymsService {
     }
 
     // Verify user has access to organization
-    await this.organizationsService.getOrganization(organizationId, userId);
+    await this.organizationsService.getOrganization(context, organizationId);
 
     const gyms = await this.prismaService.gym.findMany({
       where: {
@@ -186,7 +186,7 @@ export class GymsService {
   /**
    * Get gym statistics
    */
-  async getGymStats(context: IRequestContext, gymId: string) {
+  async getGymStats(context: RequestContext, gymId: string) {
     // Verify access
     const gym = await this.getGym(context, gymId);
 
@@ -273,7 +273,7 @@ export class GymsService {
   /**
    * Toggle gym active status
    */
-  async toggleGymStatus(context: IRequestContext, gymId: string): Promise<Gym> {
+  async toggleGymStatus(context: RequestContext, gymId: string): Promise<Gym> {
     const userId = context.getUserId();
     const gym = await this.prismaService.gym.findFirst({
       where: {
@@ -298,7 +298,7 @@ export class GymsService {
   /**
    * Update current gym in session (only basic fields)
    */
-  async updateCurrentGym(context: IRequestContext, dto: UpdateCurrentGymDto): Promise<Gym> {
+  async updateCurrentGym(context: RequestContext, dto: UpdateCurrentGymDto): Promise<Gym> {
     const gymId = context.getGymId();
     const userId = context.getUserId();
 

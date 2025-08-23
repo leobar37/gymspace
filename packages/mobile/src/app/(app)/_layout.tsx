@@ -33,10 +33,6 @@ function AppLayout() {
     return <Redirect href="/(onboarding)" />;
   }
 
-  console.log('two', {
-    session,
-  });
-
   // If user doesn't have a gym (incomplete onboarding), redirect to appropriate onboarding step
   if (!session.gym || !session.gym.id) {
     // Determine the correct onboarding step based on user type
@@ -55,11 +51,19 @@ function AppLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
       }}
     >
+      <Stack.Screen
+        name="subscription/index"
+        options={{
+          title: 'Planes de Suscripción',
+          headerLargeTitle: false,
+          headerBackVisible: true,
+          headerBackTitle: 'Volver',
+        }}
+      />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="subscription" />
       <Stack.Screen name="clients" />
       <Stack.Screen name="inventory" />
       <Stack.Screen name="contracts" />

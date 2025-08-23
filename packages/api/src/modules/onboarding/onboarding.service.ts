@@ -268,7 +268,6 @@ export class OnboardingService {
         description: dto.description,
         openingTime: dto.businessHours.monday.open, // Default opening time
         closingTime: dto.businessHours.monday.close, // Default closing time
-        amenities: dto.amenities as any,
         socialMedia: dto.socialMedia as any,
         settings: {
           ...(gym.settings as object),

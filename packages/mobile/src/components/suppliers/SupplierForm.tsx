@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
-import { FormSwitch } from '@/components/forms/FormSwitch';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
@@ -19,10 +18,7 @@ const supplierSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   address: z.string().optional(),
-  rfc: z.string().optional(),
-  contactName: z.string().optional(),
-  notes: z.string().optional(),
-  active: z.boolean().default(true),
+  contactInfo: z.string().optional(),
 });
 
 type SupplierFormData = z.infer<typeof supplierSchema>;
@@ -51,10 +47,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
       phone: initialData?.phone || '',
       email: initialData?.email || '',
       address: initialData?.address || '',
-      rfc: initialData?.rfc || '',
-      contactName: initialData?.contactName || '',
-      notes: initialData?.notes || '',
-      active: initialData?.active ?? true,
+      contactInfo: initialData?.contactInfo || '',
     },
   });
 
@@ -102,12 +95,6 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
                 placeholder="Ej: Distribuidora ABC"
               />
 
-              <FormInput
-                name="rfc"
-                label="RFC"
-                placeholder="Ej: ABC123456789"
-                autoCapitalize="characters"
-              />
 
               <FormInput
                 name="phone"
@@ -140,35 +127,15 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
                 Información de Contacto
               </Heading>
 
-              <FormInput
-                name="contactName"
-                label="Nombre del Contacto"
-                placeholder="Ej: Juan Pérez"
-              />
-
               <FormTextarea
-                name="notes"
-                label="Notas"
-                placeholder="Información adicional sobre el proveedor"
+                name="contactInfo"
+                label="Información de Contacto"
+                placeholder="Persona de contacto, notas adicionales, etc."
                 numberOfLines={4}
               />
             </VStack>
           </Card>
 
-          {/* Status */}
-          <Card className="bg-white border border-gray-200">
-            <VStack space="md" className="p-4">
-              <Heading size="md" className="text-gray-900">
-                Estado
-              </Heading>
-
-              <FormSwitch
-                name="active"
-                label="Proveedor Activo"
-                description="Desactiva este proveedor si ya no trabajas con él"
-              />
-            </VStack>
-          </Card>
 
           {/* Action Buttons */}
           <HStack space="sm" className="pb-4">

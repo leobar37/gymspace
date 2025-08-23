@@ -8,65 +8,53 @@ import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
-import { useOrganization, useOrganizationStats } from '@/features/organizations/controllers/organizations.controller';
+import {
+  useOrganization,
+  useOrganizationStats,
+} from '@/features/organizations/controllers/organizations.controller';
 import { OrganizationInfoCard, OrganizationStatsCard } from '@/features/organizations';
 import { useOrganizationGyms } from '@/features/gyms/controllers/gyms.controller';
 import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
-import { 
-  Building2, 
-  ChevronLeft,
-  Building,
-  Plus,
-  ChevronRight
-} from 'lucide-react-native';
+import { Building2, ChevronLeft, Building, Plus, ChevronRight } from 'lucide-react-native';
 
 export default function OrganizationScreen() {
   const router = useRouter();
   const { organization, isLoading: sessionLoading, refetchSession } = useCurrentSession();
-  
-  const { 
-    data: organizationData, 
-    isLoading: orgLoading, 
-    refetch: refetchOrganization 
+
+  const {
+    data: organizationData,
+    isLoading: orgLoading,
+    refetch: refetchOrganization,
   } = useOrganization(organization?.id || '');
-  
-  const { 
-    data: organizationStats, 
-    isLoading: statsLoading 
-  } = useOrganizationStats(organization?.id || '');
-  
-  const { 
-    data: organizationGyms, 
+
+  const { data: organizationStats, isLoading: statsLoading } = useOrganizationStats(
+    organization?.id || '',
+  );
+
+  const {
+    data: organizationGyms,
     isLoading: gymsLoading,
-    refetch: refetchGyms 
+    refetch: refetchGyms,
   } = useOrganizationGyms();
 
   const isLoading = sessionLoading || orgLoading || statsLoading || gymsLoading;
 
   const handleRefresh = async () => {
-    await Promise.all([
-      refetchSession(),
-      refetchOrganization(),
-      refetchGyms()
-    ]);
+    await Promise.all([refetchSession(), refetchOrganization(), refetchGyms()]);
   };
 
   const handleAddGym = () => {
-    Alert.alert(
-      'Agregar Gimnasio',
-      '¿Deseas crear un nuevo gimnasio para tu organización?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Crear', 
-          onPress: () => {
-            // Navigate to gym creation screen
-            router.push('/gym/create');
-          }
-        }
-      ]
-    );
+    Alert.alert('Agregar Gimnasio', '¿Deseas crear un nuevo gimnasio para tu organización?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Crear',
+        onPress: () => {
+          // Navigate to gym creation screen
+          router.push('/gym/create');
+        },
+      },
+    ]);
   };
 
   const handleEditOrganization = () => {
@@ -120,22 +108,15 @@ export default function OrganizationScreen() {
 
       <ScrollView
         className="flex-1 bg-gray-50"
-        refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}
         showsVerticalScrollIndicator={false}
       >
         <VStack className="p-4 pb-8" space="md">
           {/* Organization Summary */}
-          <OrganizationInfoCard 
-            organization={organizationData}
-            onEdit={handleEditOrganization}
-          />
+          <OrganizationInfoCard organization={organizationData} onEdit={handleEditOrganization} />
 
           {/* Organization Stats */}
-          {organizationStats && (
-            <OrganizationStatsCard stats={organizationStats} />
-          )}
+          {organizationStats && <OrganizationStatsCard stats={organizationStats as any} />}
 
           {/* Gyms Section */}
           <Card className="p-4 bg-white rounded-xl shadow-sm">
@@ -143,23 +124,16 @@ export default function OrganizationScreen() {
               <HStack className="items-center justify-between">
                 <HStack className="items-center" space="sm">
                   <Icon as={Building2} size="sm" className="text-gray-500" />
-                  <Text className="text-lg font-semibold text-gray-900">
-                    Gimnasios
-                  </Text>
+                  <Text className="text-lg font-semibold text-gray-900">Gimnasios</Text>
                 </HStack>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onPress={handleAddGym}
-                  className="px-3"
-                >
+                <Button size="sm" variant="outline" onPress={handleAddGym} className="px-3">
                   <HStack className="items-center" space="xs">
                     <Icon as={Plus} size="xs" />
                     <ButtonText className="text-sm">Agregar</ButtonText>
                   </HStack>
                 </Button>
               </HStack>
-              
+
               {organizationGyms && organizationGyms.length > 0 ? (
                 <VStack space="sm">
                   {organizationGyms.map((gym) => (
@@ -174,19 +148,15 @@ export default function OrganizationScreen() {
                       <HStack className="items-center flex-1" space="sm">
                         <Icon as={Building2} size="sm" className="text-blue-600" />
                         <VStack className="flex-1">
-                          <Text className="text-base font-medium text-gray-900">
-                            {gym.name}
-                          </Text>
+                          <Text className="text-base font-medium text-gray-900">{gym.name}</Text>
                           {gym.address && (
-                            <Text className="text-sm text-gray-500">
-                              {gym.address}
-                            </Text>
+                            <Text className="text-sm text-gray-500">{gym.address}</Text>
                           )}
                           <HStack className="items-center" space="xs">
-                            <View 
+                            <View
                               className={`w-2 h-2 rounded-full ${
                                 gym.isActive ? 'bg-green-500' : 'bg-gray-400'
-                              }`} 
+                              }`}
                             />
                             <Text className="text-xs text-gray-500 capitalize">
                               {gym.isActive ? 'Activo' : 'Inactivo'}

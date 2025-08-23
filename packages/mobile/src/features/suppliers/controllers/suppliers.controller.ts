@@ -8,7 +8,7 @@ export const useSuppliers = (options?: {
   search?: string;
   status?: string;
 }) => {
-  const sdk = useGymSdk();
+  const { sdk } = useGymSdk();
   const searchQuery = useSuppliersStore((state) => state.searchQuery);
   const filters = useSuppliersStore((state) => state.filters);
 
@@ -27,34 +27,31 @@ export const useSuppliers = (options?: {
         params.status = options?.status || filters.status;
       }
 
-      const response = await sdk.suppliers.list(params);
-      return response.data;
+      return await sdk.suppliers.searchSuppliers(params);
     },
   });
 };
 
 export const useSupplier = (id: string) => {
-  const sdk = useGymSdk();
+  const { sdk } = useGymSdk();
 
   return useQuery({
     queryKey: ['supplier', id],
     queryFn: async () => {
-      const response = await sdk.suppliers.get(id);
-      return response.data;
+      return await sdk.suppliers.getSupplier(id);
     },
     enabled: !!id,
   });
 };
 
 export const useCreateSupplier = () => {
-  const sdk = useGymSdk();
+  const { sdk } = useGymSdk();
   const queryClient = useQueryClient();
   const closeModal = useSuppliersStore((state) => state.closeModal);
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await sdk.suppliers.create(data);
-      return response.data;
+      return await sdk.suppliers.createSupplier(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
@@ -71,14 +68,13 @@ export const useCreateSupplier = () => {
 };
 
 export const useUpdateSupplier = () => {
-  const sdk = useGymSdk();
+  const { sdk } = useGymSdk();
   const queryClient = useQueryClient();
   const closeModal = useSuppliersStore((state) => state.closeModal);
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const response = await sdk.suppliers.update(id, data);
-      return response.data;
+      return await sdk.suppliers.updateSupplier(id, data);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
@@ -96,12 +92,12 @@ export const useUpdateSupplier = () => {
 };
 
 export const useDeleteSupplier = () => {
-  const sdk = useGymSdk();
+  const { sdk } = useGymSdk();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await sdk.suppliers.delete(id);
+      await sdk.suppliers.deleteSupplier(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });

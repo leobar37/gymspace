@@ -18,7 +18,7 @@ import {
   ArrowLeftIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { useSuppliers } from '@/hooks/useSuppliers';
+import { useSuppliers } from '@/features/suppliers/controllers/suppliers.controller';
 import { SupplierCard } from '@/components/suppliers/SupplierCard';
 import type { Supplier, SearchSuppliersParams } from '@gymspace/sdk';
 
@@ -28,14 +28,13 @@ export default function SuppliersScreen() {
   const [searchInput, setSearchInput] = useState('');
 
   const {
-    data,
+    data: suppliers,
     isLoading,
     isError,
     error,
     isFetching,
     refetch
   } = useSuppliers({
-    ...filters,
     search: searchTerm || undefined,
   });
 
@@ -65,13 +64,13 @@ export default function SuppliersScreen() {
   }, []);
 
   const handleLoadMore = useCallback(() => {
-    if (data?.hasNextPage && !isFetching) {
+    if (suppliers?.meta?.hasNext && !isFetching) {
       setFilters(prev => ({
         ...prev,
         page: (prev.page || 1) + 1,
       }));
     }
-  }, [data?.hasNextPage, isFetching]);
+  }, [suppliers?.meta?.hasNext, isFetching]);
 
   const renderSupplierCard = useCallback(({ item }: { item: Supplier }) => (
     <SupplierCard
@@ -142,14 +141,14 @@ export default function SuppliersScreen() {
       </HStack>
       
       {/* Results Summary */}
-      {data && (
+      {suppliers && (
         <HStack className="justify-between items-center">
           <Text className="text-sm text-gray-600">
-            {data.total} proveedor{data.total !== 1 ? 'es' : ''} encontrado{data.total !== 1 ? 's' : ''}
+            {suppliers.meta.total} proveedor{suppliers.meta.total !== 1 ? 'es' : ''} encontrado{suppliers.meta.total !== 1 ? 's' : ''}
           </Text>
-          {data.totalPages > 1 && (
+          {suppliers.meta.totalPages > 1 && (
             <Text className="text-sm text-gray-500">
-              Página {data.page} de {data.totalPages}
+              Página {suppliers.meta.page} de {suppliers.meta.totalPages}
             </Text>
           )}
         </HStack>
@@ -158,7 +157,7 @@ export default function SuppliersScreen() {
   ), [
     searchInput,
     searchTerm,
-    data,
+    suppliers,
     handleSearch,
     handleClearSearch,
     handleAddSupplier,
@@ -202,7 +201,7 @@ export default function SuppliersScreen() {
   }, [isLoading, searchTerm, handleAddSupplier]);
 
   const renderFooter = useCallback(() => {
-    if (!isFetching || !data?.hasNextPage) return null;
+    if (!isFetching || !suppliers?.meta?.hasNext) return null;
 
     return (
       <View className="py-4 items-center">
@@ -212,7 +211,7 @@ export default function SuppliersScreen() {
         </HStack>
       </View>
     );
-  }, [isFetching, data?.hasNextPage]);
+  }, [isFetching, suppliers?.meta?.hasNext]);
 
   if (isError) {
     return (
@@ -242,7 +241,7 @@ export default function SuppliersScreen() {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <FlatList
-        data={data?.items || []}
+        data={suppliers?.data || []}
         renderItem={renderSupplierCard}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderHeader}
@@ -251,7 +250,7 @@ export default function SuppliersScreen() {
         contentContainerStyle={{ 
           padding: 16,
           paddingBottom: 20,
-          flexGrow: data?.items?.length === 0 ? 1 : undefined,
+          flexGrow: suppliers?.data?.length === 0 ? 1 : undefined,
         }}
         ItemSeparatorComponent={() => <View className="h-3" />}
         refreshControl={

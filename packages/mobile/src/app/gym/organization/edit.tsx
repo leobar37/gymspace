@@ -20,6 +20,8 @@ export default function EditOrganizationScreen() {
     isLoading: orgLoading 
   } = useOrganization(organization?.id || '');
 
+  console.log("organization data:", organizationData);
+
   const isLoading = sessionLoading || orgLoading;
 
   const handleSuccess = () => {

@@ -5,7 +5,7 @@ export default function ProfileLayout() {
     <Stack
       screenOptions={{
         headerShown: true,
-        headerBackTitleVisible: false,
+        headerBackTitle: 'Volver',
       }}
     />
   );

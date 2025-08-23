@@ -51,13 +51,9 @@ const MenuItem: React.FC<MenuItemProps> = ({
         <Icon as={icon} className={`w-5 h-5 ${iconColor} mr-3`} />
         <VStack className="flex-1">
           <Text className="text-gray-900 font-medium">{title}</Text>
-          {subtitle && (
-            <Text className="text-sm text-gray-500 mt-0.5">{subtitle}</Text>
-          )}
+          {subtitle && <Text className="text-sm text-gray-500 mt-0.5">{subtitle}</Text>}
         </VStack>
-        {showArrow && (
-          <Icon as={ChevronRightIcon} className="w-5 h-5 text-gray-400" />
-        )}
+        {showArrow && <Icon as={ChevronRightIcon} className="w-5 h-5 text-gray-400" />}
       </HStack>
     </Pressable>
   );
@@ -98,12 +94,6 @@ export const ProfileMenu: React.FC = () => {
           onPress: () => router.push('/plans'),
         },
         {
-          icon: FileTextIcon,
-          title: 'Contratos',
-          subtitle: 'Gestiona contratos y membresías',
-          onPress: () => router.push('/contracts'),
-        },
-        {
           icon: TruckIcon,
           title: 'Proveedores',
           subtitle: 'Gestiona proveedores de productos',
@@ -120,12 +110,16 @@ export const ProfileMenu: React.FC = () => {
           subtitle: 'Edita tu información personal',
           onPress: () => router.push('/profile/edit'),
         },
-        ...(isOwner ? [{
-          icon: Building2Icon,
-          title: 'Mi Organización',
-          subtitle: 'Gestiona tu organización y gimnasios',
-          onPress: () => router.push('/gym/organization'),
-        }] : []),
+        ...(isOwner
+          ? [
+              {
+                icon: Building2Icon,
+                title: 'Mi Organización',
+                subtitle: 'Gestiona tu organización y gimnasios',
+                onPress: () => router.push('/gym/organization'),
+              },
+            ]
+          : []),
         {
           icon: BuildingIcon,
           title: 'Mi Gimnasio',
@@ -189,16 +183,15 @@ export const ProfileMenu: React.FC = () => {
           <HStack className="items-center gap-4">
             <Avatar className="w-16 h-16 bg-blue-600">
               <Text className="text-white text-xl font-semibold">
-                {user?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                {user?.name
+                  ?.split(' ')
+                  .map((n: string) => n[0])
+                  .join('') || 'U'}
               </Text>
             </Avatar>
             <VStack className="flex-1">
-              <Text className="text-lg font-semibold text-gray-900">
-                {user?.name || 'Usuario'}
-              </Text>
-              <Text className="text-sm text-gray-600">
-                {user?.email || 'email@ejemplo.com'}
-              </Text>
+              <Text className="text-lg font-semibold text-gray-900">{user?.name || 'Usuario'}</Text>
+              <Text className="text-sm text-gray-600">{user?.email || 'email@ejemplo.com'}</Text>
               <Text className="text-xs text-gray-500 mt-1">
                 {user?.userType === 'owner' ? 'Propietario' : 'Colaborador'}
               </Text>
@@ -225,20 +218,14 @@ export const ProfileMenu: React.FC = () => {
 
         {/* Logout Button */}
         <View className="mx-4 mt-8">
-          <Button
-            onPress={handleLogout}
-            variant="outline"
-            className="w-full"
-          >
+          <Button onPress={handleLogout} variant="outline" className="w-full">
             <Icon as={LogOutIcon} className="text-red-600 mr-2" />
             <ButtonText className="text-red-600">Cerrar Sesión</ButtonText>
           </Button>
         </View>
 
         {/* App Version */}
-        <Text className="text-center text-xs text-gray-500 mt-6">
-          GymSpace v1.0.0
-        </Text>
+        <Text className="text-center text-xs text-gray-500 mt-6">GymSpace v1.0.0</Text>
       </VStack>
     </ScrollView>
   );

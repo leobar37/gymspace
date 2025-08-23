@@ -44,23 +44,19 @@ export class SubscriptionsService {
         name: 'asc',
       },
     });
-
     // Transform and filter to only free plans
-    const availablePlans = plans
-      .map((plan) => ({
-        id: plan.id,
-        name: plan.name,
-        description: plan.description,
-        price: plan.price,
-        billingFrequency: plan.billingFrequency,
-        maxGyms: plan.maxGyms,
-        maxClientsPerGym: plan.maxClientsPerGym,
-        maxUsersPerGym: plan.maxUsersPerGym,
-        features: plan.features,
-        isFreePlan: this.isFreePlan(plan.price),
-      }))
-      .filter((plan) => plan.isFreePlan); // Only return free plans for now
-
+    const availablePlans = plans.map((plan) => ({
+      id: plan.id,
+      name: plan.name,
+      description: plan.description,
+      price: plan.price,
+      billingFrequency: plan.billingFrequency,
+      maxGyms: plan.maxGyms,
+      maxClientsPerGym: plan.maxClientsPerGym,
+      maxUsersPerGym: plan.maxUsersPerGym,
+      features: plan.features,
+      isFreePlan: this.isFreePlan(plan.price),
+    }));
     // Cache for 1 hour
     await this.cache.set(cacheKey, availablePlans, 3600);
 

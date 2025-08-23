@@ -68,39 +68,6 @@ class WeeklyScheduleDto {
   sunday: BusinessHoursDto;
 }
 
-class AmenitiesDto {
-  @ApiProperty({ example: true })
-  @IsBoolean()
-  hasParking: boolean;
-
-  @ApiProperty({ example: true })
-  @IsBoolean()
-  hasShowers: boolean;
-
-  @ApiProperty({ example: true })
-  @IsBoolean()
-  hasLockers: boolean;
-
-  @ApiProperty({ example: false })
-  @IsBoolean()
-  hasPool: boolean;
-
-  @ApiProperty({ example: true })
-  @IsBoolean()
-  hasSauna: boolean;
-
-  @ApiProperty({ example: true })
-  @IsBoolean()
-  hasWifi: boolean;
-
-  @ApiProperty({ example: false })
-  @IsBoolean()
-  hasChildcare: boolean;
-
-  @ApiProperty({ example: true })
-  @IsBoolean()
-  hasCafeteria: boolean;
-}
 
 class SocialMediaDto {
   @ApiPropertyOptional({ example: 'https://facebook.com/mygym' })
@@ -187,11 +154,6 @@ export class UpdateGymSettingsDto {
   @IsString()
   description?: string;
 
-  // Amenities
-  @ApiProperty({ type: AmenitiesDto, description: 'Available amenities' })
-  @ValidateNested()
-  @Type(() => AmenitiesDto)
-  amenities: AmenitiesDto;
 
   // Social Media
   @ApiPropertyOptional({ type: SocialMediaDto, description: 'Social media links' })

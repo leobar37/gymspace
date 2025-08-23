@@ -156,16 +156,6 @@ export class SetupDefaultUserCommand extends CommandRunner {
           saturday: { open: '08:00', close: '18:00', closed: false },
           sunday: { open: '08:00', close: '18:00', closed: false },
         },
-        amenities: {
-          hasParking: true,
-          hasShowers: true,
-          hasLockers: true,
-          hasPool: false,
-          hasSauna: false,
-          hasWifi: true,
-          hasChildcare: false,
-          hasCafeteria: true,
-        },
         socialMedia: {
           facebook: 'https://facebook.com/gimnasioelitelima',
           instagram: 'https://instagram.com/gimnasioelitelima',
@@ -174,55 +164,8 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       console.log('✅ Gym settings configured');
 
-      // Step 4: Configure features
-      console.log('\n🎨 Configuring gym features...');
-      await this.onboardingService.configureFeatures(context, {
-        gymId: onboardingResult.gym.id,
-        clientManagement: {
-          enabled: true,
-          requireDocumentId: false,
-          enablePhotos: true,
-          trackEmergencyContacts: true,
-          trackMedicalConditions: true,
-        },
-        membershipManagement: {
-          enabled: true,
-          allowCustomPricing: true,
-          allowContractFreezing: true,
-          expiryWarningDays: 30,
-          autoRenewalReminders: true,
-        },
-        checkInSystem: {
-          enabled: true,
-          requireActiveContract: true,
-          trackCheckInTime: true,
-          allowMultiplePerDay: false,
-        },
-        evaluationSystem: {
-          enabled: true,
-          trackMeasurements: true,
-          trackBodyComposition: true,
-          trackPerformance: true,
-          defaultFrequencyDays: 90,
-        },
-        leadManagement: {
-          enabled: true,
-          publicCatalogListing: true,
-          enableOnlineForm: true,
-          autoAssignLeads: false,
-        },
-        notifications: {
-          emailEnabled: true,
-          smsEnabled: false,
-          welcomeEmails: true,
-          contractExpiryAlerts: true,
-          evaluationReminders: true,
-        },
-      });
 
-      console.log('✅ Features configured');
-
-      // Step 5: Complete guided setup
+      // Step 4: Complete guided setup
       console.log('\n🏁 Completing guided setup...');
       await this.onboardingService.completeGuidedSetup(context, {
         gymId: onboardingResult.gym.id,
@@ -230,7 +173,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
       console.log('✅ Guided setup completed');
 
-      // Step 6: Initialize default products and services
+      // Step 5: Initialize default products and services
       console.log('\n📦 Creating default products...');
       const defaultProducts = [
         {
@@ -291,7 +234,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
         }
       }
 
-      // Step 6.1: Initialize default services
+      // Step 5.1: Initialize default services
       console.log('\n🛎️ Creating default services...');
       const defaultServices = [
         {
@@ -335,7 +278,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
         }
       }
 
-      // Step 7: Initialize default clients
+      // Step 6: Initialize default clients
       console.log('\n👥 Creating default clients...');
       const defaultClients = [
         {

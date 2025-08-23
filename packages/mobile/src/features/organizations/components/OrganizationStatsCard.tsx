@@ -9,10 +9,41 @@ import { TrendingUp } from 'lucide-react-native';
 
 interface OrganizationStatsCardProps {
   stats: {
-    totalGyms: number;
-    totalClients: number;
-    totalContracts: number;
-    activeContracts: number;
+    organization: {
+      id: string;
+      country: string;
+      currency: string;
+      timezone: string;
+    };
+    subscriptionPlan: {
+      name: string;
+      maxGyms: number;
+      maxClientsPerGym: number;
+      maxUsersPerGym: number;
+    };
+    usage: {
+      gyms: {
+        current: number;
+        limit: number;
+        percentage: number;
+      };
+      clients: {
+        current: number;
+        limit: number;
+        percentage: number;
+      };
+      collaborators: {
+        current: number;
+        limit: number;
+        percentage: number;
+      };
+    };
+    metrics: {
+      totalClients: number;
+      activeContracts: number;
+      totalCollaborators: number;
+      gymsCount: number;
+    };
   };
 }
 
@@ -32,30 +63,30 @@ export default function OrganizationStatsCard({ stats }: OrganizationStatsCardPr
             <VStack space="xs" className="flex-1">
               <Text className="text-sm text-gray-500">Total Gimnasios</Text>
               <Text className="text-xl font-bold text-blue-600">
-                {stats.totalGyms}
+                {stats.metrics.gymsCount}
               </Text>
             </VStack>
             
             <VStack space="xs" className="flex-1">
               <Text className="text-sm text-gray-500">Total Clientes</Text>
               <Text className="text-xl font-bold text-green-600">
-                {stats.totalClients}
+                {stats.metrics.totalClients}
               </Text>
             </VStack>
           </HStack>
           
           <HStack space="md">
             <VStack space="xs" className="flex-1">
-              <Text className="text-sm text-gray-500">Total Contratos</Text>
+              <Text className="text-sm text-gray-500">Contratos Activos</Text>
               <Text className="text-xl font-bold text-purple-600">
-                {stats.totalContracts}
+                {stats.metrics.activeContracts}
               </Text>
             </VStack>
             
             <VStack space="xs" className="flex-1">
-              <Text className="text-sm text-gray-500">Contratos Activos</Text>
+              <Text className="text-sm text-gray-500">Colaboradores</Text>
               <Text className="text-xl font-bold text-orange-600">
-                {stats.activeContracts}
+                {stats.metrics.totalCollaborators}
               </Text>
             </VStack>
           </HStack>

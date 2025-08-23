@@ -106,6 +106,8 @@ export class AuthService {
       where: { id: supabaseUser.id },
     });
 
+    console.log('subase user ', user);
+
     if (!user) {
       // Create user from Supabase data
       user = await this.prismaService.user.create({
@@ -751,7 +753,7 @@ export class AuthService {
       // Try to get from cache first
       const cacheKey = `org-subscription:${organizationId}`;
       const cached = await this.cacheService.get(cacheKey);
-      
+
       if (cached) {
         return cached;
       }
@@ -780,17 +782,19 @@ export class AuthService {
         id: subscription.id,
         organizationId: subscription.organizationId,
         subscriptionPlanId: subscription.subscriptionPlanId,
-        subscriptionPlan: subscription.subscriptionPlan ? {
-          id: subscription.subscriptionPlan.id,
-          name: subscription.subscriptionPlan.name,
-          price: subscription.subscriptionPlan.price,
-          billingFrequency: subscription.subscriptionPlan.billingFrequency,
-          maxGyms: subscription.subscriptionPlan.maxGyms,
-          maxClientsPerGym: subscription.subscriptionPlan.maxClientsPerGym,
-          maxUsersPerGym: subscription.subscriptionPlan.maxUsersPerGym,
-          features: subscription.subscriptionPlan.features,
-          description: subscription.subscriptionPlan.description,
-        } : undefined,
+        subscriptionPlan: subscription.subscriptionPlan
+          ? {
+              id: subscription.subscriptionPlan.id,
+              name: subscription.subscriptionPlan.name,
+              price: subscription.subscriptionPlan.price,
+              billingFrequency: subscription.subscriptionPlan.billingFrequency,
+              maxGyms: subscription.subscriptionPlan.maxGyms,
+              maxClientsPerGym: subscription.subscriptionPlan.maxClientsPerGym,
+              maxUsersPerGym: subscription.subscriptionPlan.maxUsersPerGym,
+              features: subscription.subscriptionPlan.features,
+              description: subscription.subscriptionPlan.description,
+            }
+          : undefined,
         status: subscription.status,
         startDate: subscription.startDate,
         endDate: subscription.endDate,
