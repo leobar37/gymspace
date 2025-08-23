@@ -67,6 +67,9 @@ export interface UpdateProductDto {
 
 export interface UpdateStockDto {
   quantity: number;
+  notes?: string;
+  supplierId?: string;
+  fileId?: string;
 }
 
 export interface Product {
@@ -80,7 +83,7 @@ export interface Product {
   imageId?: string;
   status: 'active' | 'inactive';
   type?: 'Product' | 'Service';
-  trackInventory?: 'none' | 'stock' | 'batch';
+  trackInventory?: 'none' | 'simple' | 'advanced' | 'capacity';
   createdAt: string;
   updatedAt: string;
   category?: ProductCategory;
@@ -107,4 +110,30 @@ export interface SearchProductsParams extends PaginationQueryDto {
   inStock?: boolean;
   minPrice?: number;
   maxPrice?: number;
+}
+
+// Stock Movement Models
+export interface StockMovement {
+  id: string;
+  productId: string;
+  gymId: string;
+  type: 'manual_entry' | 'sale' | 'return' | 'adjustment' | 'initial_stock';
+  quantity: number;
+  previousStock?: number;
+  newStock?: number;
+  notes?: string;
+  supplierId?: string;
+  fileId?: string;
+  createdByUserId: string;
+  createdAt: string;
+  product?: Product;
+  supplier?: {
+    id: string;
+    name: string;
+  };
+  createdBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }

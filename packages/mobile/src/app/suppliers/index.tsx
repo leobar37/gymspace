@@ -18,7 +18,7 @@ import {
   ArrowLeftIcon
 } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { useSuppliers } from '@/hooks/useSuppliers';
+import { useSuppliers } from '@/features/suppliers/controllers/suppliers.controller';
 import { SupplierCard } from '@/components/suppliers/SupplierCard';
 import type { Supplier, SearchSuppliersParams } from '@gymspace/sdk';
 
@@ -35,7 +35,6 @@ export default function SuppliersScreen() {
     isFetching,
     refetch
   } = useSuppliers({
-    ...filters,
     search: searchTerm || undefined,
   });
 

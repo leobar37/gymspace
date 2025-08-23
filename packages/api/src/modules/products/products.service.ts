@@ -8,9 +8,10 @@ import {
   SearchProductsDto,
   CreateProductCategoryDto,
   UpdateProductCategoryDto,
+  UpdateStockDto,
 } from './dto';
 import { ResourceNotFoundException, BusinessException } from '../../common/exceptions';
-import { Prisma, ProductStatus, ProductType, TrackInventory } from '@prisma/client';
+import { Prisma, ProductStatus, ProductType, TrackInventory, StockMovementType } from '@prisma/client';
 import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
@@ -485,8 +486,9 @@ export class ProductsService {
     });
   }
 
-  async updateStock(ctx: RequestContext, productId: string, quantity: number) {
+  async updateStock(ctx: RequestContext, productId: string, dto: UpdateStockDto) {
     const userId = ctx.getUserId()!;
+    const gymId = ctx.getGymId()!;
 
     const product = await this.prisma.product.findFirst({
       where: {
@@ -499,16 +501,58 @@ export class ProductsService {
       throw new ResourceNotFoundException('Product not found');
     }
 
-    return this.prisma.product.update({
-      where: { id: productId },
-      data: {
-        stock: quantity,
-        updatedByUserId: userId,
-      },
-      include: {
-        category: true,
-      },
-    });
+    // Only track stock movements if the product has inventory tracking enabled
+    const shouldTrackMovement = product.trackInventory !== TrackInventory.none;
+
+    if (shouldTrackMovement) {
+      // Use transaction to ensure consistency
+      return this.prisma.$transaction(async (tx) => {
+        const previousStock = product.stock || 0;
+        const newStock = dto.quantity;
+
+        // Update product stock
+        const updatedProduct = await tx.product.update({
+          where: { id: productId },
+          data: {
+            stock: newStock,
+            updatedByUserId: userId,
+          },
+          include: {
+            category: true,
+          },
+        });
+
+        // Create stock movement record
+        await tx.stockMovement.create({
+          data: {
+            productId,
+            gymId,
+            type: StockMovementType.manual_entry,
+            quantity: newStock - previousStock,
+            previousStock,
+            newStock,
+            notes: dto.notes,
+            supplierId: dto.supplierId,
+            fileId: dto.fileId,
+            createdByUserId: userId,
+          },
+        });
+
+        return updatedProduct;
+      });
+    } else {
+      // Simple stock update without movement tracking
+      return this.prisma.product.update({
+        where: { id: productId },
+        data: {
+          stock: dto.quantity,
+          updatedByUserId: userId,
+        },
+        include: {
+          category: true,
+        },
+      });
+    }
   }
 
   async getLowStockProducts(ctx: RequestContext, threshold: number = 10) {
