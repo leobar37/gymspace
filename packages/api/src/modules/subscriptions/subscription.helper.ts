@@ -46,7 +46,7 @@ export class SubscriptionHelperService {
 
     const subscription = await this.getSubscriptionWithDetails(subscriptionId);
 
-    if (subscription.status === 'paused' as SubscriptionStatus) {
+    if (subscription.status === ('paused' as SubscriptionStatus)) {
       throw new BusinessException('Subscription is already paused');
     }
 
@@ -62,7 +62,7 @@ export class SubscriptionHelperService {
           status: 'paused' as SubscriptionStatus,
           updatedByUserId: context.getUserId(),
           metadata: {
-            ...(subscription.metadata as object || {}),
+            ...((subscription.metadata as object) || {}),
             pausedAt: new Date().toISOString(),
             pausedBy: context.getUserId(),
           },
@@ -73,7 +73,9 @@ export class SubscriptionHelperService {
       const mercadopagoSubscriptionId = this.getMercadoPagoSubscriptionId(subscription);
       if (mercadopagoSubscriptionId && this.mercadopagoService.isConfigured()) {
         await this.mercadopagoService.pauseSubscription(mercadopagoSubscriptionId);
-        this.logger.log(`Successfully paused MercadoPago subscription: ${mercadopagoSubscriptionId}`);
+        this.logger.log(
+          `Successfully paused MercadoPago subscription: ${mercadopagoSubscriptionId}`,
+        );
       }
 
       this.logger.log(`Successfully paused subscription: ${subscriptionId}`);
@@ -123,7 +125,9 @@ export class SubscriptionHelperService {
           status: 'pending',
         };
 
-        const mercadopagoSubscription = await this.mercadopagoService.createSubscription(mercadopagoSubscriptionData);
+        const mercadopagoSubscription = await this.mercadopagoService.createSubscription(
+          mercadopagoSubscriptionData,
+        );
 
         // Update internal subscription with pending upgrade status and MercadoPago reference
         await this.prisma.subscriptionOrganization.update({
@@ -132,7 +136,7 @@ export class SubscriptionHelperService {
             status: 'pending_upgrade' as SubscriptionStatus,
             updatedByUserId: context.getUserId(),
             metadata: {
-              ...(currentSubscription.metadata as object || {}),
+              ...((currentSubscription.metadata as object) || {}),
               upgradeRequest: {
                 targetPlanId: params.newPlanId,
                 mercadopagoSubscriptionId: mercadopagoSubscription.id,
@@ -143,7 +147,9 @@ export class SubscriptionHelperService {
           },
         });
 
-        this.logger.log(`Created MercadoPago subscription for upgrade: ${mercadopagoSubscription.id}`);
+        this.logger.log(
+          `Created MercadoPago subscription for upgrade: ${mercadopagoSubscription.id}`,
+        );
 
         // Return payment URL for client redirection
         return {
@@ -153,7 +159,7 @@ export class SubscriptionHelperService {
       } else {
         // For free plans, directly upgrade without payment
         await this.completeFreeUpgrade(subscriptionId, params.newPlanId, context);
-        
+
         return {
           paymentUrl: params.backUrl, // Redirect back to success page
           subscriptionId: subscriptionId,
@@ -185,7 +191,7 @@ export class SubscriptionHelperService {
           status: SubscriptionStatus.ACTIVE,
           updatedByUserId: context.getUserId(),
           metadata: {
-            ...(subscription.metadata as object || {}),
+            ...((subscription.metadata as object) || {}),
             resumedAt: new Date().toISOString(),
             resumedBy: context.getUserId(),
           },
@@ -196,7 +202,9 @@ export class SubscriptionHelperService {
       const mercadopagoSubscriptionId = this.getMercadoPagoSubscriptionId(subscription);
       if (mercadopagoSubscriptionId && this.mercadopagoService.isConfigured()) {
         await this.mercadopagoService.resumeSubscription(mercadopagoSubscriptionId);
-        this.logger.log(`Successfully resumed MercadoPago subscription: ${mercadopagoSubscriptionId}`);
+        this.logger.log(
+          `Successfully resumed MercadoPago subscription: ${mercadopagoSubscriptionId}`,
+        );
       }
 
       this.logger.log(`Successfully resumed subscription: ${subscriptionId}`);
@@ -213,14 +221,16 @@ export class SubscriptionHelperService {
     this.logger.log(`Completing upgrade for subscription: ${subscriptionId}`);
 
     const subscription = await this.getSubscriptionWithDetails(subscriptionId);
-    
+
     if (subscription.status !== ('pending_upgrade' as SubscriptionStatus)) {
       throw new BusinessException('Subscription is not in pending upgrade status');
     }
 
     const upgradeRequest = (subscription.metadata as any)?.upgradeRequest;
     if (!upgradeRequest || upgradeRequest.mercadopagoSubscriptionId !== mercadopagoSubscriptionId) {
-      throw new BusinessException('Invalid upgrade request or MercadoPago subscription ID mismatch');
+      throw new BusinessException(
+        'Invalid upgrade request or MercadoPago subscription ID mismatch',
+      );
     }
 
     try {
@@ -234,7 +244,7 @@ export class SubscriptionHelperService {
           status: SubscriptionStatus.ACTIVE,
           endDate: newEndDate,
           metadata: {
-            ...(subscription.metadata as object || {}),
+            ...((subscription.metadata as object) || {}),
             upgradeCompleted: {
               completedAt: new Date().toISOString(),
               fromPlanId: subscription.subscriptionPlan.id,
@@ -255,7 +265,9 @@ export class SubscriptionHelperService {
 
   // Private helper methods
 
-  private async getSubscriptionWithDetails(subscriptionId: string): Promise<SubscriptionMercadoPagoData> {
+  private async getSubscriptionWithDetails(
+    subscriptionId: string,
+  ): Promise<SubscriptionMercadoPagoData> {
     const subscription = await this.prisma.subscriptionOrganization.findUnique({
       where: { id: subscriptionId },
       include: {
@@ -283,7 +295,10 @@ export class SubscriptionHelperService {
     return plan;
   }
 
-  private validateUpgradeEligibility(currentSubscription: SubscriptionMercadoPagoData, newPlan: any): void {
+  private validateUpgradeEligibility(
+    currentSubscription: SubscriptionMercadoPagoData,
+    newPlan: any,
+  ): void {
     if (currentSubscription.status !== SubscriptionStatus.ACTIVE) {
       throw new BusinessException('Only active subscriptions can be upgraded');
     }
@@ -291,9 +306,6 @@ export class SubscriptionHelperService {
     if (currentSubscription.subscriptionPlan.id === newPlan.id) {
       throw new BusinessException('Cannot upgrade to the same plan');
     }
-
-    // Add additional business logic validation here
-    // e.g., check if upgrade is to a higher tier, validate pricing, etc.
   }
 
   private isFreePlan(price: any): boolean {
@@ -303,7 +315,11 @@ export class SubscriptionHelperService {
     return price === 0;
   }
 
-  private async completeFreeUpgrade(subscriptionId: string, newPlanId: string, context: IRequestContext): Promise<void> {
+  private async completeFreeUpgrade(
+    subscriptionId: string,
+    newPlanId: string,
+    context: IRequestContext,
+  ): Promise<void> {
     const newPlan = await this.getSubscriptionPlan(newPlanId);
     const subscription = await this.getSubscriptionWithDetails(subscriptionId);
     const newEndDate = this.calculateNewEndDate(subscription.startDate, newPlan);
@@ -316,7 +332,7 @@ export class SubscriptionHelperService {
         endDate: newEndDate,
         updatedByUserId: context.getUserId(),
         metadata: {
-          ...(subscription.metadata as object || {}),
+          ...((subscription.metadata as object) || {}),
           upgradeCompleted: {
             completedAt: new Date().toISOString(),
             fromPlanId: subscription.subscriptionPlan.id,
@@ -330,9 +346,11 @@ export class SubscriptionHelperService {
 
   private getMercadoPagoSubscriptionId(subscription: SubscriptionMercadoPagoData): string | null {
     const metadata = subscription.metadata as any;
-    return metadata?.mercadopagoSubscriptionId || 
-           metadata?.upgradeRequest?.mercadopagoSubscriptionId || 
-           null;
+    return (
+      metadata?.mercadopagoSubscriptionId ||
+      metadata?.upgradeRequest?.mercadopagoSubscriptionId ||
+      null
+    );
   }
 
   private getFrequencyFromBillingFrequency(billingFrequency: string): number {
@@ -348,7 +366,9 @@ export class SubscriptionHelperService {
     }
   }
 
-  private getFrequencyTypeFromBillingFrequency(billingFrequency: string): 'months' | 'days' | 'weeks' {
+  private getFrequencyTypeFromBillingFrequency(
+    billingFrequency: string,
+  ): 'months' | 'days' | 'weeks' {
     switch (billingFrequency.toLowerCase()) {
       case 'yearly':
         return 'months'; // 12 months
@@ -374,12 +394,12 @@ export class SubscriptionHelperService {
       const currencies = Object.keys(price);
       return currencies.length > 0 ? currencies[0].toUpperCase() : 'ARS';
     }
-    return 'ARS'; // Default currency
+    return 'PE'; // Default currency
   }
 
   private calculateNewEndDate(startDate: Date, newPlan: any): Date {
     const start = new Date(startDate);
-    
+
     if (!newPlan.duration || !newPlan.durationPeriod) {
       // If no duration specified, set to 1 year from now
       return new Date(start.getFullYear() + 1, start.getMonth(), start.getDate());
@@ -387,7 +407,7 @@ export class SubscriptionHelperService {
 
     switch (newPlan.durationPeriod) {
       case 'DAY':
-        return new Date(start.getTime() + (newPlan.duration * 24 * 60 * 60 * 1000));
+        return new Date(start.getTime() + newPlan.duration * 24 * 60 * 60 * 1000);
       case 'MONTH':
         return new Date(start.getFullYear(), start.getMonth() + newPlan.duration, start.getDate());
       case 'YEAR':

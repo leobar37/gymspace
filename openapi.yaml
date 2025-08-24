@@ -2814,6 +2814,7 @@ paths:
     patch:
       operationId: ProductsController_updateStock
       summary: Update product stock quantity
+      description: Updates stock and creates movement record if product has inventory tracking enabled
       parameters:
         - name: id
           required: true
@@ -5233,7 +5234,19 @@ components:
         quantity:
           type: number
           example: 10
-          description: Quantity to add (positive) or remove (negative) from stock
+          description: New stock quantity (absolute value)
+        notes:
+          type: string
+          example: Restock from supplier ABC
+          description: Optional notes about the stock update
+        supplierId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174000
+          description: Optional supplier ID
+        fileId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174001
+          description: Optional file ID for receipt/document
       required:
         - quantity
     SaleItemDto:

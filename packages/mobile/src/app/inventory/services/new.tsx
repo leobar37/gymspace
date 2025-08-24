@@ -88,11 +88,13 @@ export default function NewServiceScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <FormProvider {...methods}>
         <ScreenForm
-          actions={
+          showFixedFooter={true}
+          footerContent={
             <Button
               onPress={methods.handleSubmit(handleSubmit)}
               isDisabled={isButtonDisabled}
               variant="solid"
+              className="w-full"
             >
               <ButtonText>Crear Servicio</ButtonText>
             </Button>

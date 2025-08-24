@@ -1,7 +1,7 @@
 import { IsString, IsEmail, IsUrl, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UpgradeSubscriptionDto {
+export class UpgradeSubscriptionWithPaymentDto {
   @ApiProperty({
     description: 'ID of the new subscription plan to upgrade to',
     example: 'uuid-of-new-plan',

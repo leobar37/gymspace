@@ -75,7 +75,7 @@ function createExtendedPrismaClient(configService: ConfigService) {
           async findMany({ model, args, query }) {
             if (SOFT_DELETE_MODELS.includes(model as any)) {
               if (args.where) {
-                if (args.where.deletedAt === undefined) {
+                if ((args.where as any).deletedAt === undefined) {
                   args.where = { ...args.where, deletedAt: null };
                 }
               } else {
@@ -140,32 +140,52 @@ function createExtendedPrismaClient(configService: ConfigService) {
           },
 
           // Override create to add timestamps
-          async create({ args, query }) {
+          async create({ args, query, model }) {
             const now = new Date();
-            args.data = {
-              ...args.data,
-              createdAt: args.data.createdAt || now,
-              updatedAt: args.data.updatedAt || now,
-            };
+            const data: any = { ...args.data };
+            
+            // Always add createdAt if not present
+            if (!data.createdAt) {
+              data.createdAt = now;
+            }
+            
+            // Only add updatedAt for models that have this field
+            // StockMovement doesn't have updatedAt field
+            if (model !== 'StockMovement' && !data.updatedAt) {
+              data.updatedAt = now;
+            }
+            
+            args.data = data;
             return query(args);
           },
 
           // Override createMany to add timestamps
-          async createMany({ args, query }) {
+          async createMany({ args, query, model }) {
             const now = new Date();
+            
+            const processItem = (item: any) => {
+              const data: any = { ...item };
+              
+              // Always add createdAt if not present
+              if (!data.createdAt) {
+                data.createdAt = now;
+              }
+              
+              // Only add updatedAt for models that have this field
+              // StockMovement doesn't have updatedAt field
+              if (model !== 'StockMovement' && !data.updatedAt) {
+                data.updatedAt = now;
+              }
+              
+              return data;
+            };
+            
             if (Array.isArray(args.data)) {
-              args.data = args.data.map((item: any) => ({
-                ...item,
-                createdAt: item.createdAt || now,
-                updatedAt: item.updatedAt || now,
-              }));
+              args.data = args.data.map(processItem);
             } else {
-              args.data = {
-                ...args.data,
-                createdAt: args.data.createdAt || now,
-                updatedAt: args.data.updatedAt || now,
-              };
+              args.data = processItem(args.data);
             }
+            
             return query(args);
           },
         },

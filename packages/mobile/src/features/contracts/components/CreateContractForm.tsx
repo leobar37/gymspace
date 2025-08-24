@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, parse } from 'date-fns';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { View } from 'react-native';
 import { z } from 'zod';
@@ -19,7 +19,6 @@ import { PlanListSelector } from '@/features/plans/components/PlanListSelector';
 import { FileSelector } from '@/features/files/components/FileSelector';
 import { ContractFormData, useContractsController } from '../controllers/contracts.controller';
 import { useFormatPrice } from '@/config/ConfigContext';
-import { useScreenForm } from '@/shared/components/ScreenForm';
 
 // Form validation schema
 const createContractSchema = z.object({
@@ -29,8 +28,15 @@ const createContractSchema = z.object({
     required_error: 'La fecha de inicio es requerida',
     invalid_type_error: 'Fecha inválida',
   }),
-  discountPercentage: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional().default('0'),
-  customPrice: z.string().regex(/^\d*\.?\d*$/, 'Debe ser un número válido').optional(),
+  discountPercentage: z
+    .string()
+    .regex(/^\d*\.?\d*$/, 'Debe ser un número válido')
+    .optional()
+    .default('0'),
+  customPrice: z
+    .string()
+    .regex(/^\d*\.?\d*$/, 'Debe ser un número válido')
+    .optional(),
   receiptIds: z.array(z.string()).optional().default([]),
 });
 
@@ -40,35 +46,20 @@ interface CreateContractFormProps {
   initialData?: Partial<ContractFormData>;
   onSuccess?: (contractId: string) => void;
   clientId?: string; // Pre-select client if provided
-  useFixedFooter?: boolean; // When true, renders button in ScreenForm's fixed footer
 }
 
 export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   initialData,
   onSuccess,
   clientId,
-  useFixedFooter = false,
 }) => {
   const router = useRouter();
   const formatPrice = useFormatPrice();
   const { createContract } = useContractsController();
   const { execute } = useLoadingScreen();
 
-  // Get screen form context if available (when useFixedFooter is true)
-  const screenForm = useFixedFooter ? (() => {
-    try {
-      return useScreenForm();
-    } catch {
-      return null;
-    }
-  })() : null;
-
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
-
-  console.log("inicialData", JSON.stringify(initialData, null, 2));
-
-
-  // Parse initial date if provided as string
+    // Parse initial date if provided as string
   const parseInitialDate = (dateStr?: string) => {
     if (!dateStr) return new Date();
     try {
@@ -114,35 +105,9 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
     // Otherwise calculate based on plan price and discount
     const basePrice = selectedPlan.basePrice || 0;
     const discount = watchedDiscount ? Number(watchedDiscount) : 0;
-    const finalPrice = basePrice - (basePrice * discount / 100);
+    const finalPrice = basePrice - (basePrice * discount) / 100;
     return finalPrice >= 0 ? finalPrice : 0;
   };
-
-  // Update ScreenForm footer when useFixedFooter is true
-  useEffect(() => {
-    if (screenForm && useFixedFooter) {
-      const finalPrice = calculateFinalPrice();
-      
-      // Set footer content (submit button)
-      screenForm.setFooterContent(
-        <Button
-          onPress={handleSubmit(onSubmit)}
-          isDisabled={!isValid}
-          className="w-full"
-        >
-          <ButtonText>Crear contrato</ButtonText>
-        </Button>
-      );
-
-      // Set total display if we have a plan selected
-      screenForm.setTotalDisplay({
-        show: finalPrice > 0,
-        label: 'Precio final',
-        value: formatPrice(finalPrice),
-        variant: 'success'
-      });
-    }
-  }, [screenForm, useFixedFooter, isValid, selectedPlan, watchedDiscount, watchedCustomPrice, handleSubmit, onSubmit, formatPrice]);
 
   const onSubmit = async (data: CreateContractSchema) => {
     const contractData: ContractFormData = {
@@ -165,18 +130,18 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
         action: 'Creando contrato...',
         successMessage: 'El contrato se ha creado correctamente',
         errorFormatter: (error: any) => {
-          console.log("err", error);
+          console.log('err', error);
 
           // Check for message in details first (new error format)
           if (error?.details?.message) {
             return error.details.message;
           }
-          
+
           // Fallback to old error format
           if (error?.response?.data?.message) {
             return error.response.data.message;
           }
-          
+
           // Check for direct message property
           if (error?.message) {
             if (typeof error.message === 'string') {
@@ -187,7 +152,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
               return error.message.join(', ');
             }
           }
-          
+
           return 'No se pudo crear el contrato. Por favor, intenta de nuevo.';
         },
         successActions: [],
@@ -199,17 +164,18 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
             router.replace(`../contracts/${newContract.id}`);
           }
         },
-      }
+      },
     );
   };
-
 
   return (
     <FormProvider {...methods}>
       <VStack className="gap-4">
         <Card>
           <View className="p-4">
-            <Heading size="md" className="mb-4">Información del contrato</Heading>
+            <Heading size="md" className="mb-4">
+              Información del contrato
+            </Heading>
             {/* Client Selection */}
             <View className="mb-4">
               <ClientSelector
@@ -272,11 +238,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
 
             {/* Attachments */}
             <View className="mb-4">
-              <FileSelector
-                name="receiptIds"
-                multi={true}
-                label="Recibos adjuntos (opcional)"
-              />
+              <FileSelector name="receiptIds" multi={true} label="Recibos adjuntos (opcional)" />
             </View>
           </View>
         </Card>
@@ -285,7 +247,9 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
         {selectedPlan && (
           <Card>
             <View className="p-4">
-              <Heading size="sm" className="mb-3">Resumen de precios</Heading>
+              <Heading size="sm" className="mb-3">
+                Resumen de precios
+              </Heading>
               <VStack className="gap-2">
                 <HStack className="justify-between">
                   <Text className="text-gray-600">Precio del plan:</Text>
@@ -296,7 +260,8 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                   <HStack className="justify-between">
                     <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                     <Text className="font-medium text-green-600">
-                      -{formatPrice((selectedPlan.basePrice || 0) * Number(watchedDiscount) / 100)}
+                      -
+                      {formatPrice(((selectedPlan.basePrice || 0) * Number(watchedDiscount)) / 100)}
                     </Text>
                   </HStack>
                 )}
@@ -319,16 +284,10 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
           </Card>
         )}
 
-        {/* Show inline submit button only when not using fixed footer */}
-        {!useFixedFooter && (
-          <Button
-            onPress={handleSubmit(onSubmit)}
-            isDisabled={!isValid}
-            className="mt-4"
-          >
-            <ButtonText>Crear contrato</ButtonText>
-          </Button>
-        )}
+        {/* Submit button */}
+        <Button onPress={handleSubmit(onSubmit)} isDisabled={!isValid} className="mt-4">
+          <ButtonText>Crear contrato</ButtonText>
+        </Button>
       </VStack>
     </FormProvider>
   );

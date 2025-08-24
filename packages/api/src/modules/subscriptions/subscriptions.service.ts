@@ -9,7 +9,6 @@ import { CacheService } from '../../core/cache/cache.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { AffiliateOrganizationDto, AvailablePlanDto, SubscriptionStatusDto } from './dto';
 import { MercadoPagoService, CreateSubscriptionPlanDto } from './mercadopago.service';
-import { PreApprovalPlanResponse } from 'mercadopago';
 import dayjs from 'dayjs';
 
 export enum DurationPeriod {
@@ -126,7 +125,8 @@ export class SubscriptionsService implements OnModuleInit {
         back_url: process.env.FRONTEND_URL || 'http://localhost:3000',
       };
 
-      const mercadoPagoPlan = await this.mercadopagoService.createSubscriptionPlan(mercadoPagoPlanData);
+      const mercadoPagoPlan =
+        await this.mercadopagoService.createSubscriptionPlan(mercadoPagoPlanData);
 
       // Update the plan with MercadoPago ID
       await this.prisma.subscriptionPlan.update({
@@ -134,7 +134,9 @@ export class SubscriptionsService implements OnModuleInit {
         data: { mercadopagoId: mercadoPagoPlan.id },
       });
 
-      this.logger.log(`Successfully created MercadoPago plan for: ${plan.name} (ID: ${mercadoPagoPlan.id})`);
+      this.logger.log(
+        `Successfully created MercadoPago plan for: ${plan.name} (ID: ${mercadoPagoPlan.id})`,
+      );
     } catch (error) {
       this.logger.error(`Error creating MercadoPago plan for ${plan.name}`, error);
     }
@@ -178,20 +180,18 @@ export class SubscriptionsService implements OnModuleInit {
       },
     });
     // Transform and filter to only free plans
-    const availablePlans = plans
-      .map((plan: any) => ({
-        id: plan.id,
-        name: plan.name,
-        description: plan.description,
-        price: plan.price,
-        billingFrequency: plan.billingFrequency,
-        maxGyms: plan.maxGyms,
-        maxClientsPerGym: plan.maxClientsPerGym,
-        maxUsersPerGym: plan.maxUsersPerGym,
-        features: plan.features,
-        isFreePlan: this.isFreePlan(plan.price),
-      }))
-      .filter((plan: any) => plan.isFreePlan); // Only return free plans for now
+    const availablePlans = plans.map((plan: any) => ({
+      id: plan.id,
+      name: plan.name,
+      description: plan.description,
+      price: plan.price,
+      billingFrequency: plan.billingFrequency,
+      maxGyms: plan.maxGyms,
+      maxClientsPerGym: plan.maxClientsPerGym,
+      maxUsersPerGym: plan.maxUsersPerGym,
+      features: plan.features,
+      isFreePlan: this.isFreePlan(plan.price),
+    }));
 
     // Cache for 1 hour
     await this.cache.set(cacheKey, availablePlans, 3600);
@@ -268,7 +268,10 @@ export class SubscriptionsService implements OnModuleInit {
     }
 
     // Calculate usage
-    const totalClients = organization.gyms.reduce((sum: number, gym: GymData) => sum + gym.gymClients.length, 0);
+    const totalClients = organization.gyms.reduce(
+      (sum: number, gym: GymData) => sum + gym.gymClients.length,
+      0,
+    );
     const totalUsers = organization.gyms.reduce(
       (sum: number, gym: GymData) => sum + gym.collaborators.length + 1, // +1 for owner
       0,
@@ -583,6 +586,7 @@ export class SubscriptionsService implements OnModuleInit {
     const startDate = new Date();
     let endDate: Date;
 
+    
     if (freePlan.duration && freePlan.durationPeriod) {
       if (freePlan.durationPeriod === DurationPeriod.MONTH) {
         endDate = dayjs(startDate).add(freePlan.duration, 'month').toDate();

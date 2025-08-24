@@ -22,9 +22,8 @@ export default function CreateContractScreen() {
         title="Nuevo Contrato"
         showBackButton={true}
         onBackPress={handleBack}
-        showFixedFooter={true}
       >
-        <CreateContractForm useFixedFooter={true} />
+        <CreateContractForm />
       </ScreenForm>
     </Fragment>
   );

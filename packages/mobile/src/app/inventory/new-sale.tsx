@@ -473,7 +473,8 @@ export default function NewSaleScreen() {
         <ScreenForm
           useSafeArea={false}
           showBackButton={false}
-          actions={hasItems && (
+          showFixedFooter={hasItems}
+          footerContent={hasItems && (
             <VStack space="sm">
               {/* Total Display */}
               <HStack className="justify-between items-center p-4 bg-gray-50 rounded-lg">

@@ -64,10 +64,15 @@ export default function SaleDetailScreen() {
   return (
     <ScreenForm 
       title="Detalle de Venta"
-      showTotal
-      totalLabel="Total de la Venta"
-      totalValue={formatPrice(sale.total)}
-      totalVariant="default"
+      showFixedFooter={true}
+      footerContent={
+        <View className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <View className="flex-row justify-between items-center">
+            <Text className="text-xl font-semibold text-blue-900">Total de la Venta</Text>
+            <Text className="text-3xl font-bold text-blue-900">{formatPrice(sale.total)}</Text>
+          </View>
+        </View>
+      }
     >
       <SaleInfoCard sale={sale} />
       <PaymentStatusCard sale={sale} />

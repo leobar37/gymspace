@@ -144,7 +144,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
 
   return (
     <FormProvider {...methods}>
-      <ScreenForm actions={actions}>
+      <ScreenForm showFixedFooter={true} footerContent={actions}>
         <VStack space="lg">
           {/* Basic Information */}
           <Card className="bg-white border border-gray-200">

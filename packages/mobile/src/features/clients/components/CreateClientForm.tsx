@@ -258,7 +258,7 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <FormProvider {...methods}>
-          <ScreenForm actions={actions}>
+          <ScreenForm showFixedFooter={true} footerContent={actions}>
             <VStack className="gap-6">
               <HStack className="items-center gap-2 mb-2">
                 <Pressable onPress={() => router.back()} className="p-2 -ml-2">
