@@ -32,6 +32,7 @@ import { UsersModule } from './modules/users/users.module';
 import { ProductsModule } from './modules/products/products.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
+import { PaymentMethodsModule } from './modules/payment-methods/payment-methods.module';
 
 // Global providers
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
@@ -83,6 +84,7 @@ import validationSchema from './config/validation.schema';
     ProductsModule,
     SalesModule,
     SuppliersModule,
+    PaymentMethodsModule,
   ],
   providers: [
     {

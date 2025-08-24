@@ -10,6 +10,7 @@ import {
 } from './dto';
 import { ResourceNotFoundException, BusinessException } from '../../common/exceptions';
 import { Prisma, PaymentStatus, ProductStatus, TrackInventory } from '@prisma/client';
+import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
 export class SalesService {
@@ -42,6 +43,27 @@ export class SalesService {
     }
 
     return `${datePrefix}${sequenceNumber.toString().padStart(4, '0')}`;
+  }
+
+  private async validatePaymentMethod(organizationId: string, paymentMethodId?: string) {
+    if (!paymentMethodId) {
+      return null; // Payment method is optional
+    }
+
+    const paymentMethod = await this.prisma.paymentMethod.findFirst({
+      where: {
+        id: paymentMethodId,
+        organizationId,
+        enabled: true,
+        deletedAt: null,
+      },
+    });
+
+    if (!paymentMethod) {
+      throw new BusinessException('Payment method not found or not enabled for this organization');
+    }
+
+    return paymentMethod;
   }
 
   private async validateSaleItems(gymId: string, items: SaleItemDto[]) {
@@ -99,7 +121,14 @@ export class SalesService {
     return products;
   }
 
-  async createSale(gymId: string, dto: CreateSaleDto, userId: string) {
+  async createSale(ctx: RequestContext, dto: CreateSaleDto) {
+    const gymId = ctx.getGymId()!;
+    const organizationId = ctx.getOrganizationId()!;
+    const userId = ctx.getUserId();
+
+    // Validate payment method if provided
+    await this.validatePaymentMethod(organizationId, dto.paymentMethodId);
+
     // Validate all products and stock
     const products = await this.validateSaleItems(gymId, dto.items);
 
@@ -120,9 +149,18 @@ export class SalesService {
           customerName: dto.customerName,
           notes: dto.notes,
           paymentStatus: dto.paymentStatus ?? PaymentStatus.unpaid,
+          paymentMethodId: dto.paymentMethodId,
           createdByUserId: userId,
         },
         include: {
+          paymentMethod: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+              enabled: true,
+            },
+          },
           saleItems: {
             include: {
               product: {
@@ -179,6 +217,14 @@ export class SalesService {
       return await tx.sale.findUnique({
         where: { id: sale.id },
         include: {
+          paymentMethod: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+              enabled: true,
+            },
+          },
           saleItems: {
             include: {
               product: {
@@ -205,7 +251,10 @@ export class SalesService {
     });
   }
 
-  async updateSale(saleId: string, dto: UpdateSaleDto, userId: string) {
+  async updateSale(ctx: RequestContext, saleId: string, dto: UpdateSaleDto) {
+    const organizationId = ctx.getOrganizationId()!;
+    const userId = ctx.getUserId();
+    
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
@@ -217,6 +266,11 @@ export class SalesService {
       throw new ResourceNotFoundException('Sale not found');
     }
 
+    // Validate payment method if provided
+    if (dto.paymentMethodId) {
+      await this.validatePaymentMethod(organizationId, dto.paymentMethodId);
+    }
+
     return this.prisma.sale.update({
       where: { id: saleId },
       data: {
@@ -224,6 +278,14 @@ export class SalesService {
         updatedByUserId: userId,
       },
       include: {
+        paymentMethod: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            enabled: true,
+          },
+        },
         saleItems: {
           include: {
             product: {
@@ -252,13 +314,21 @@ export class SalesService {
     });
   }
 
-  async getSale(saleId: string, userId?: string) {
+  async getSale(saleId: string) {
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
         deletedAt: null,
       },
       include: {
+        paymentMethod: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            enabled: true,
+          },
+        },
         saleItems: {
           include: {
             product: {
@@ -293,7 +363,8 @@ export class SalesService {
     return sale;
   }
 
-  async searchSales(gymId: string, dto: SearchSalesDto, userId: string) {
+  async searchSales(ctx: RequestContext, dto: SearchSalesDto) {
+    const gymId = ctx.getGymId()!;
     const {
       customerName,
       paymentStatus,
@@ -372,7 +443,9 @@ export class SalesService {
     return this.paginationService.paginate(sales, total, { page, limit });
   }
 
-  async updatePaymentStatus(saleId: string, dto: UpdatePaymentStatusDto, userId: string) {
+  async updatePaymentStatus(saleId: string, dto: UpdatePaymentStatusDto, ctx: RequestContext) {
+    const userId = ctx.getUserId();
+    
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
@@ -391,6 +464,14 @@ export class SalesService {
         updatedByUserId: userId,
       },
       include: {
+        paymentMethod: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            enabled: true,
+          },
+        },
         saleItems: {
           include: {
             product: {
@@ -406,7 +487,9 @@ export class SalesService {
     });
   }
 
-  async deleteSale(saleId: string, userId: string) {
+  async deleteSale(saleId: string, ctx: RequestContext) {
+    const userId = ctx.getUserId();
+    
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,

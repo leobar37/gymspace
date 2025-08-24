@@ -127,6 +127,7 @@ enum StockMovementType {
     initial_stock
 }
 
+
 // Models
 model SubscriptionPlan {
     id               String    @id @default(uuid())
@@ -258,6 +259,8 @@ model User {
     createdSaleItems          SaleItem[]          @relation("SaleItemCreatedBy")
     updatedSaleItems          SaleItem[]          @relation("SaleItemUpdatedBy")
     createdStockMovements     StockMovement[]     @relation("StockMovementCreatedBy")
+    createdPaymentMethods     PaymentMethod[]     @relation("PaymentMethodCreatedBy")
+    updatedPaymentMethods     PaymentMethod[]     @relation("PaymentMethodUpdatedBy")
 
     @@map("users")
 }
@@ -284,6 +287,7 @@ model Organization {
     updatedBy                 User?                       @relation("OrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
     gyms                      Gym[]
     subscriptionOrganizations SubscriptionOrganization[]
+    paymentMethods            PaymentMethod[]
 
     @@map("organizations")
 }
@@ -351,6 +355,30 @@ model Gym {
     stockMovements  StockMovement[]
 
     @@map("gyms")
+}
+
+model PaymentMethod {
+    id               String    @id @default(uuid())
+    organizationId   String    @map("organization_id")
+    name             String
+    description      String?   @db.Text
+    code             String
+    enabled          Boolean   @default(true)
+    metadata         Json?
+    createdByUserId  String    @map("created_by_user_id")
+    updatedByUserId  String?   @map("updated_by_user_id")
+    createdAt        DateTime  @default(now()) @map("created_at")
+    updatedAt        DateTime  @updatedAt @map("updated_at")
+    deletedAt        DateTime? @map("deleted_at")
+
+    // Relations
+    organization Organization @relation(fields: [organizationId], references: [id])
+    createdBy    User         @relation("PaymentMethodCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy    User?        @relation("PaymentMethodUpdatedBy", fields: [updatedByUserId], references: [id])
+    sales        Sale[]
+
+    @@unique([code, organizationId])
+    @@map("payment_methods")
 }
 
 model Role {
@@ -831,6 +859,7 @@ model Sale {
     saleNumber      String        @map("sale_number")
     total           Decimal       @db.Decimal(10, 2)
     paymentStatus   PaymentStatus @default(unpaid) @map("payment_status")
+    paymentMethodId String?       @map("payment_method_id")
     saleDate        DateTime      @default(now()) @map("sale_date")
     customerName    String?       @map("customer_name")
     notes           String?       @db.Text
@@ -841,10 +870,11 @@ model Sale {
     deletedAt       DateTime?     @map("deleted_at")
 
     // Relations
-    gym       Gym        @relation(fields: [gymId], references: [id])
-    createdBy User       @relation("SaleCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User?      @relation("SaleUpdatedBy", fields: [updatedByUserId], references: [id])
-    saleItems SaleItem[]
+    gym           Gym            @relation(fields: [gymId], references: [id])
+    paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+    createdBy     User           @relation("SaleCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy     User?          @relation("SaleUpdatedBy", fields: [updatedByUserId], references: [id])
+    saleItems     SaleItem[]
 
     @@unique([gymId, saleNumber])
     @@map("sales")

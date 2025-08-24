@@ -21,6 +21,7 @@ import {
   FileTextIcon,
   TruckIcon,
   PackageIcon,
+  WalletIcon,
 } from 'lucide-react-native';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
@@ -133,6 +134,12 @@ export const ProfileMenu: React.FC = () => {
           title: 'Plan y Facturación',
           subtitle: 'Gestiona tu suscripción',
           onPress: () => router.push('/subscription'),
+        },
+        {
+          icon: WalletIcon,
+          title: 'Métodos de Pago',
+          subtitle: 'Tarjetas y formas de pago',
+          onPress: () => router.push('/payment-methods'),
         },
       ],
     },

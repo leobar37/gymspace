@@ -19,3 +19,4 @@ export * from './sales';
 export * from './suppliers';
 export * from './users';
 export * from './subscriptions';
+export * from './payment-methods';

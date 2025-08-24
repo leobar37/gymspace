@@ -20,7 +20,7 @@ export class SalesController {
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
   @ApiResponse({ status: 409, description: 'Insufficient stock or invalid product' })
   async createSale(@Body() dto: CreateSaleDto, @AppCtxt() ctx: RequestContext) {
-    return await this.salesService.createSale(ctx.getGymId()!, dto, ctx.getUserId()!);
+    return await this.salesService.createSale(ctx, dto);
   }
 
   @Get()
@@ -28,7 +28,7 @@ export class SalesController {
   @ApiOperation({ summary: 'Search sales with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Paginated list of sales' })
   async searchSales(@Query() dto: SearchSalesDto, @AppCtxt() ctx: RequestContext) {
-    return await this.salesService.searchSales(ctx.getGymId()!, dto, ctx.getUserId()!);
+    return await this.salesService.searchSales(ctx, dto);
   }
 
   @Get('stats')
@@ -67,7 +67,7 @@ export class SalesController {
   @ApiResponse({ status: 200, description: 'Sale details with items' })
   @ApiResponse({ status: 404, description: 'Sale not found' })
   async getSale(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.salesService.getSale(id, ctx.getUserId());
+    return await this.salesService.getSale(id);
   }
 
   @Put(':id')
@@ -80,7 +80,7 @@ export class SalesController {
     @Body() dto: UpdateSaleDto,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.salesService.updateSale(id, dto, ctx.getUserId()!);
+    return await this.salesService.updateSale(ctx, id, dto);
   }
 
   @Put(':id/payment-status')
@@ -93,7 +93,7 @@ export class SalesController {
     @Body() dto: UpdatePaymentStatusDto,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.salesService.updatePaymentStatus(id, dto, ctx.getUserId()!);
+    return await this.salesService.updatePaymentStatus(id, dto, ctx);
   }
 
   @Delete(':id')
@@ -102,6 +102,6 @@ export class SalesController {
   @ApiResponse({ status: 200, description: 'Sale deleted successfully' })
   @ApiResponse({ status: 404, description: 'Sale not found' })
   async deleteSale(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.salesService.deleteSale(id, ctx.getUserId()!);
+    return await this.salesService.deleteSale(id, ctx);
   }
 }
