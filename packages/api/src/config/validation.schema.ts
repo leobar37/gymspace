@@ -49,4 +49,7 @@ export default Joi.object({
   // Rate limiting
   RATE_LIMIT_TTL: Joi.number().default(60),
   RATE_LIMIT_MAX: Joi.number().default(100),
+
+  // MercadoPago
+  MERCADOPAGO_ACCESS_TOKEN: Joi.string().optional(),
 });

@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import React from 'react';
 import { useRouter } from 'expo-router';
-import { TouchableOpacity, Text } from 'react-native';
+import { BackButton } from '@/shared/components';
 
 export default function InventoryLayout() {
   const router = useRouter();
@@ -105,12 +105,7 @@ export default function InventoryLayout() {
           title: 'Servicios',
           headerBackTitle: 'Volver',
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.push('/inventory')}
-              style={{ marginLeft: 10 }}
-            >
-              <Text style={{ color: '#374151' }}>Volver</Text>
-            </TouchableOpacity>
+            <BackButton onPress={() => router.push('/inventory')} />
           ),
         }}
       />

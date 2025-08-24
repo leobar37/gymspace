@@ -5,14 +5,8 @@ import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 function AppLayout() {
-  const { isAuthenticated } = useGymSdk();
-  const {
-    session,
-    isLoading: isSessionLoading,
-    isError,
-  } = useCurrentSession({
-    enabled: isAuthenticated,
-  });
+  const { session, isLoading: isSessionLoading, isError, isAuthenticated } = useCurrentSession();
+
 
   // If user is not authenticated, redirect to onboarding
   if (!isAuthenticated) {
@@ -54,7 +48,7 @@ function AppLayout() {
         headerShown: true,
       }}
     >
-      <Stack.Screen
+      {/* <Stack.Screen
         name="subscription/index"
         options={{
           title: 'Planes de Suscripción',
@@ -62,7 +56,7 @@ function AppLayout() {
           headerBackVisible: true,
           headerBackTitle: 'Volver',
         }}
-      />
+      /> */}
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );

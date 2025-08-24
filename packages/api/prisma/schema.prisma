@@ -17,6 +17,8 @@ enum SubscriptionStatus {
     active
     inactive
     expired
+    paused
+    pending_upgrade
 }
 
 enum CollaboratorStatus {
@@ -117,6 +119,14 @@ enum TrackInventory {
     capacity
 }
 
+enum StockMovementType {
+    manual_entry
+    sale
+    return
+    adjustment
+    initial_stock
+}
+
 // Models
 model SubscriptionPlan {
     id               String    @id @default(uuid())
@@ -130,6 +140,7 @@ model SubscriptionPlan {
     maxUsersPerGym   Int       @map("max_users_per_gym")
     features         Json
     description      String?   @db.Text
+    mercadopagoId    String?   @map("mercadopago_id")
     isActive         Boolean   @default(true) @map("is_active")
     createdByUserId  String?   @map("created_by_user_id")
     updatedByUserId  String?   @map("updated_by_user_id")
@@ -246,6 +257,7 @@ model User {
     updatedSales              Sale[]              @relation("SaleUpdatedBy")
     createdSaleItems          SaleItem[]          @relation("SaleItemCreatedBy")
     updatedSaleItems          SaleItem[]          @relation("SaleItemUpdatedBy")
+    createdStockMovements     StockMovement[]     @relation("StockMovementCreatedBy")
 
     @@map("users")
 }
@@ -336,6 +348,7 @@ model Gym {
     products        Product[]
     suppliers       Supplier[]
     sales           Sale[]
+    stockMovements  StockMovement[]
 
     @@map("gyms")
 }
@@ -765,7 +778,29 @@ model Product {
     updatedBy User?            @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id])
     saleItems SaleItem[]
 
+    stockMovements StockMovement[]
     @@map("products")
+}
+
+model StockMovement {
+    id              String            @id @default(uuid())
+    productId       String            @map("product_id")
+    gymId           String            @map("gym_id")
+    type            StockMovementType
+    quantity        Int
+    previousStock   Int?              @map("previous_stock")
+    newStock        Int?              @map("new_stock")
+    notes           String?           @db.Text
+    supplierId      String?           @map("supplier_id")
+    fileId          String?           @map("file_id") // For receipts/documents
+    createdByUserId String            @map("created_by_user_id")
+    createdAt       DateTime          @default(now()) @map("created_at")
+    // Relations
+    product   Product   @relation(fields: [productId], references: [id])
+    gym       Gym       @relation(fields: [gymId], references: [id])
+    supplier  Supplier? @relation(fields: [supplierId], references: [id])
+    createdBy User      @relation("StockMovementCreatedBy", fields: [createdByUserId], references: [id])
+    @@map("stock_movements")
 }
 
 model Supplier {
@@ -783,9 +818,10 @@ model Supplier {
     deletedAt       DateTime? @map("deleted_at")
 
     // Relations
-    gym       Gym   @relation(fields: [gymId], references: [id])
-    createdBy User  @relation("SupplierCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User? @relation("SupplierUpdatedBy", fields: [updatedByUserId], references: [id])
+    gym            Gym             @relation(fields: [gymId], references: [id])
+    createdBy      User            @relation("SupplierCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy      User?           @relation("SupplierUpdatedBy", fields: [updatedByUserId], references: [id])
+    stockMovements StockMovement[]
 
     @@map("suppliers")
 }

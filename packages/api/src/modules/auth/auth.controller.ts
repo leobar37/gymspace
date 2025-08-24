@@ -22,9 +22,9 @@ import {
   ResendResetCodeDto,
   ResendResetCodeResponseDto,
 } from './dto';
-import { Public } from '../../common/decorators';
+import { Allow, Public } from '../../common/decorators';
 import { AppCtxt } from '../../common/decorators/request-context.decorator';
-import { IRequestContext } from '@gymspace/shared';
+import { IRequestContext, PERMISSIONS } from '@gymspace/shared';
 import { CacheService } from '../../core/cache/cache.service';
 
 @ApiTags('Authentication')
@@ -137,8 +137,11 @@ export class AuthController {
     description: 'Current session information',
     type: CurrentSessionDto,
   })
+  @Allow()
   @ApiResponse({ status: 401, description: 'User not authenticated' })
   async getCurrentSession(@AppCtxt() context: IRequestContext): Promise<CurrentSessionDto> {
+    console.log('server context', context);
+
     return {
       user: context.user,
       gym: context.gym,

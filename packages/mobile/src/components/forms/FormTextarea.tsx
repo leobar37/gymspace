@@ -7,9 +7,14 @@ import { Textarea, TextareaInput } from '@/components/ui/textarea';
 import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
 import type { ComponentProps } from 'react';
 
+type TextareaInputPropsWithoutConflicts = Omit<
+  ComponentProps<typeof TextareaInput>,
+  'value' | 'onChangeText' | 'onBlur' | 'defaultValue'
+>;
+
 interface FormTextareaProps<TFieldValues extends FieldValues = FieldValues>
   extends UseControllerProps<TFieldValues>,
-  Omit<ComponentProps<typeof TextareaInput>, 'value' | 'onChangeText' | 'onBlur'> {
+    TextareaInputPropsWithoutConflicts {
   label: string;
   description?: string;
 }

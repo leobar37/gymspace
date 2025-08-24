@@ -2,7 +2,7 @@ import React from 'react';
 import { FormProvider as RHFProvider } from 'react-hook-form';
 import type { FieldValues, UseFormReturn } from 'react-hook-form';
 
-interface FormProviderProps extends UseFormReturn<FieldValues> {
+export interface FormProviderProps<TFieldValues extends FieldValues = FieldValues> extends UseFormReturn<TFieldValues> {
   children: React.ReactNode;
 }
 

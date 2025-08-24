@@ -88,4 +88,9 @@ export default () => ({
     ttl: parseInt(process.env.RATE_LIMIT_TTL || '60', 10),
     max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
   },
+
+  // MercadoPago
+  mercadopago: {
+    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
+  },
 });

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VStack } from '@/components/ui/vstack';
@@ -10,6 +10,21 @@ import { Icon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
 import { ArrowLeftIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
+
+interface ScreenFormContextType {
+  setFooterContent: (content: React.ReactNode) => void;
+  setTotalDisplay: (config: { show: boolean; label?: string; value?: string; variant?: 'default' | 'success' | 'warning' | 'error' }) => void;
+}
+
+const ScreenFormContext = createContext<ScreenFormContextType | null>(null);
+
+export const useScreenForm = () => {
+  const context = useContext(ScreenFormContext);
+  if (!context) {
+    throw new Error('useScreenForm must be used within a ScreenForm');
+  }
+  return context;
+};
 
 interface ScreenFormProps {
   children: React.ReactNode;
@@ -52,6 +67,22 @@ export const ScreenForm: React.FC<ScreenFormProps> = ({
   headerActions,
   useSafeArea = true,
 }) => {
+  // State for dynamic footer content
+  const [dynamicFooterContent, setDynamicFooterContent] = useState<React.ReactNode>(null);
+  const [dynamicTotalConfig, setDynamicTotalConfig] = useState({
+    show: showTotal,
+    label: totalLabel,
+    value: totalValue,
+    variant: totalVariant as 'default' | 'success' | 'warning' | 'error'
+  });
+
+  // Context value
+  const contextValue: ScreenFormContextType = {
+    setFooterContent: setDynamicFooterContent,
+    setTotalDisplay: (config) => {
+      setDynamicTotalConfig(prev => ({ ...prev, ...config }));
+    }
+  };
   
   const handleBackPress = () => {
     if (onBackPress) {
@@ -61,8 +92,8 @@ export const ScreenForm: React.FC<ScreenFormProps> = ({
     }
   };
 
-  const getTotalCardStyles = () => {
-    switch (totalVariant) {
+  const getTotalCardStyles = (variant: string) => {
+    switch (variant) {
       case 'success':
         return 'bg-green-50 border-green-200';
       case 'warning':
@@ -74,8 +105,8 @@ export const ScreenForm: React.FC<ScreenFormProps> = ({
     }
   };
 
-  const getTotalTextStyles = () => {
-    switch (totalVariant) {
+  const getTotalTextStyles = (variant: string) => {
+    switch (variant) {
       case 'success':
         return 'text-green-900';
       case 'warning':
@@ -87,9 +118,10 @@ export const ScreenForm: React.FC<ScreenFormProps> = ({
     }
   };
 
-  // Legacy support for actions prop
-  const finalFooterContent = footerContent || actions;
-  const shouldShowFooter = showFixedFooter || showTotal || finalFooterContent;
+  // Priority: dynamic content > static props > legacy actions
+  const finalFooterContent = dynamicFooterContent || footerContent || actions;
+  const finalShowTotal = dynamicTotalConfig.show;
+  const shouldShowFooter = showFixedFooter || finalShowTotal || finalFooterContent;
 
   const ContentWrapper = useSafeArea ? SafeAreaView : View;
   
@@ -145,14 +177,14 @@ export const ScreenForm: React.FC<ScreenFormProps> = ({
       {/* Fixed Footer */}
       {shouldShowFooter && (
         <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-          {showTotal && totalValue && (
-            <Card className={`m-4 mb-2 ${getTotalCardStyles()}`}>
+          {finalShowTotal && dynamicTotalConfig.value && (
+            <Card className={`m-4 mb-2 ${getTotalCardStyles(dynamicTotalConfig.variant)}`}>
               <HStack className="justify-between items-center p-4">
-                <Text className={`text-xl font-semibold ${getTotalTextStyles()}`}>
-                  {totalLabel}
+                <Text className={`text-xl font-semibold ${getTotalTextStyles(dynamicTotalConfig.variant)}`}>
+                  {dynamicTotalConfig.label}
                 </Text>
-                <Text className={`text-3xl font-bold ${getTotalTextStyles()}`}>
-                  {totalValue}
+                <Text className={`text-3xl font-bold ${getTotalTextStyles(dynamicTotalConfig.variant)}`}>
+                  {dynamicTotalConfig.value}
                 </Text>
               </HStack>
             </Card>
@@ -169,8 +201,10 @@ export const ScreenForm: React.FC<ScreenFormProps> = ({
   );
 
   return (
-    <ContentWrapper className={`flex-1 bg-gray-50 ${className}`}>
-      {content}
-    </ContentWrapper>
+    <ScreenFormContext.Provider value={contextValue}>
+      <ContentWrapper className={`flex-1 bg-gray-50 ${className}`}>
+        {content}
+      </ContentWrapper>
+    </ScreenFormContext.Provider>
   );
 };

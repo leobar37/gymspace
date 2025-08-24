@@ -374,7 +374,6 @@ export default function SubscriptionPlansScreen() {
     queryFn: () => sdk.subscriptions.getAvailablePlans(),
     staleTime: QUERY_STALE_TIME.PLANS,
   });
-  console.log("PLANS", JSON.stringify(plans, null, 3));
 
   // Helper function for limit queries
   const createLimitQuery = useCallback((limitType: 'gyms' | 'clients' | 'users') => ({

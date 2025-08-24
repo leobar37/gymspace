@@ -22,7 +22,7 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
   const { sdk, isAuthenticated, authToken, currentGymId, setCurrentGymId } = useGymSdk();
   const { hasValidToken, refreshToken, clearStoredTokens } = useAuthToken();
   const queryClient = useQueryClient();
-  
+
   // Track refresh attempts to avoid infinite loops
   const refreshAttemptsRef = React.useRef(0);
   const MAX_REFRESH_ATTEMPTS = 2;
@@ -38,7 +38,6 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
   const sessionQuery = useQuery({
     queryKey: sessionKeys.current(),
     queryFn: async (): Promise<CurrentSessionResponse | null> => {
-      // Double-check token validity before making the request
       const tokenValid = await hasValidToken();
 
       if (!tokenValid) {
@@ -61,10 +60,10 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
       }
       try {
         const response = await sdk.auth.getCurrentSession();
-
+        console.log('ask for response', JSON.stringify(response));
         // Reset refresh attempts on successful request
         refreshAttemptsRef.current = 0;
-        
+
         // If we get a gym in the response but don't have a current gym ID stored,
         // store it automatically (this handles the onboarding case)
         if (response?.gym?.id && !currentGymId) {
@@ -87,13 +86,13 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
               if (response?.gym?.id && !currentGymId) {
                 await setCurrentGymId(response.gym.id);
               }
-              
+
               // Reset counter on successful refresh
               refreshAttemptsRef.current = 0;
               return response;
             }
           }
-          
+
           // Clear token after max attempts
           await clearStoredTokens();
           refreshAttemptsRef.current = 0;

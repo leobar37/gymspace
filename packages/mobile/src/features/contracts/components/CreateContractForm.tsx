@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, parse } from 'date-fns';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { z } from 'zod';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import { FormInput } from '@/components/forms/FormInput';
@@ -19,6 +19,7 @@ import { PlanListSelector } from '@/features/plans/components/PlanListSelector';
 import { FileSelector } from '@/features/files/components/FileSelector';
 import { ContractFormData, useContractsController } from '../controllers/contracts.controller';
 import { useFormatPrice } from '@/config/ConfigContext';
+import { useScreenForm } from '@/shared/components/ScreenForm';
 
 // Form validation schema
 const createContractSchema = z.object({
@@ -39,17 +40,28 @@ interface CreateContractFormProps {
   initialData?: Partial<ContractFormData>;
   onSuccess?: (contractId: string) => void;
   clientId?: string; // Pre-select client if provided
+  useFixedFooter?: boolean; // When true, renders button in ScreenForm's fixed footer
 }
 
 export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   initialData,
   onSuccess,
   clientId,
+  useFixedFooter = false,
 }) => {
   const router = useRouter();
   const formatPrice = useFormatPrice();
   const { createContract } = useContractsController();
   const { execute } = useLoadingScreen();
+
+  // Get screen form context if available (when useFixedFooter is true)
+  const screenForm = useFixedFooter ? (() => {
+    try {
+      return useScreenForm();
+    } catch {
+      return null;
+    }
+  })() : null;
 
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
@@ -105,6 +117,32 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
     const finalPrice = basePrice - (basePrice * discount / 100);
     return finalPrice >= 0 ? finalPrice : 0;
   };
+
+  // Update ScreenForm footer when useFixedFooter is true
+  useEffect(() => {
+    if (screenForm && useFixedFooter) {
+      const finalPrice = calculateFinalPrice();
+      
+      // Set footer content (submit button)
+      screenForm.setFooterContent(
+        <Button
+          onPress={handleSubmit(onSubmit)}
+          isDisabled={!isValid}
+          className="w-full"
+        >
+          <ButtonText>Crear contrato</ButtonText>
+        </Button>
+      );
+
+      // Set total display if we have a plan selected
+      screenForm.setTotalDisplay({
+        show: finalPrice > 0,
+        label: 'Precio final',
+        value: formatPrice(finalPrice),
+        variant: 'success'
+      });
+    }
+  }, [screenForm, useFixedFooter, isValid, selectedPlan, watchedDiscount, watchedCustomPrice, handleSubmit, onSubmit, formatPrice]);
 
   const onSubmit = async (data: CreateContractSchema) => {
     const contractData: ContractFormData = {
@@ -168,121 +206,121 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
 
   return (
     <FormProvider {...methods}>
-      <ScrollView className="flex-1 bg-gray-50">
-        <VStack className="p-4 gap-4">
+      <VStack className="gap-4">
+        <Card>
+          <View className="p-4">
+            <Heading size="md" className="mb-4">Información del contrato</Heading>
+            {/* Client Selection */}
+            <View className="mb-4">
+              <ClientSelector
+                control={control}
+                name="gymClientId"
+                label="Cliente *"
+                placeholder="Seleccionar cliente"
+                description="Selecciona el cliente para este contrato"
+                allowClear={false}
+              />
+            </View>
+
+            {/* Plan Selection */}
+            <View className="mb-4">
+              <PlanListSelector
+                control={control}
+                name="gymMembershipPlanId"
+                label="Plan de membresía *"
+                placeholder="Seleccionar plan"
+                description="Selecciona el plan de membresía para este contrato"
+                allowClear={false}
+                activeOnly={true}
+                onPlanSelect={(plan) => setSelectedPlan(plan)}
+              />
+            </View>
+
+            {/* Start Date */}
+            <View className="mb-4">
+              <FormDatePicker
+                control={control}
+                name="startDate"
+                label="Fecha de inicio"
+                placeholder="Seleccionar fecha de inicio"
+                minimumDate={new Date()}
+              />
+            </View>
+
+            {/* Discount */}
+            <View className="mb-4">
+              <FormInput
+                control={control}
+                name="discountPercentage"
+                label="Descuento (%)"
+                placeholder="0"
+                keyboardType="numeric"
+              />
+            </View>
+
+            {/* Custom Price */}
+            <View className="mb-4">
+              <FormInput
+                control={control}
+                name="customPrice"
+                label="Precio personalizado (opcional)"
+                placeholder="0.00"
+                keyboardType="numeric"
+                description="Si se especifica, este precio reemplazará el precio del plan"
+              />
+            </View>
+
+            {/* Attachments */}
+            <View className="mb-4">
+              <FileSelector
+                name="receiptIds"
+                multi={true}
+                label="Recibos adjuntos (opcional)"
+              />
+            </View>
+          </View>
+        </Card>
+
+        {/* Price Summary */}
+        {selectedPlan && (
           <Card>
             <View className="p-4">
-              <Heading size="md" className="mb-4">Información del contrato</Heading>
-              {/* Client Selection */}
-              <View className="mb-4">
-                <ClientSelector
-                  control={control}
-                  name="gymClientId"
-                  label="Cliente *"
-                  placeholder="Seleccionar cliente"
-                  description="Selecciona el cliente para este contrato"
-                  allowClear={false}
-                />
-              </View>
+              <Heading size="sm" className="mb-3">Resumen de precios</Heading>
+              <VStack className="gap-2">
+                <HStack className="justify-between">
+                  <Text className="text-gray-600">Precio del plan:</Text>
+                  <Text className="font-medium">{formatPrice(selectedPlan.basePrice || 0)}</Text>
+                </HStack>
 
-              {/* Plan Selection */}
-              <View className="mb-4">
-                <PlanListSelector
-                  control={control}
-                  name="gymMembershipPlanId"
-                  label="Plan de membresía *"
-                  placeholder="Seleccionar plan"
-                  description="Selecciona el plan de membresía para este contrato"
-                  allowClear={false}
-                  activeOnly={true}
-                  onPlanSelect={(plan) => setSelectedPlan(plan)}
-                />
-              </View>
+                {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
+                  <HStack className="justify-between">
+                    <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
+                    <Text className="font-medium text-green-600">
+                      -{formatPrice((selectedPlan.basePrice || 0) * Number(watchedDiscount) / 100)}
+                    </Text>
+                  </HStack>
+                )}
 
-              {/* Start Date */}
-              <View className="mb-4">
-                <FormDatePicker
-                  control={control}
-                  name="startDate"
-                  label="Fecha de inicio"
-                  placeholder="Seleccionar fecha de inicio"
-                  minimumDate={new Date()}
-                />
-              </View>
+                {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
+                  <HStack className="justify-between">
+                    <Text className="text-gray-600">Precio personalizado:</Text>
+                    <Text className="font-medium text-blue-600">
+                      {formatPrice(Number(watchedCustomPrice))}
+                    </Text>
+                  </HStack>
+                )}
 
-              {/* Discount */}
-              <View className="mb-4">
-                <FormInput
-                  control={control}
-                  name="discountPercentage"
-                  label="Descuento (%)"
-                  placeholder="0"
-                  keyboardType="numeric"
-                />
-              </View>
-
-              {/* Custom Price */}
-              <View className="mb-4">
-                <FormInput
-                  control={control}
-                  name="customPrice"
-                  label="Precio personalizado (opcional)"
-                  placeholder="0.00"
-                  keyboardType="numeric"
-                  description="Si se especifica, este precio reemplazará el precio del plan"
-                />
-              </View>
-
-              {/* Attachments */}
-              <View className="mb-4">
-                <FileSelector
-                  name="receiptIds"
-                  multi={true}
-                  label="Recibos adjuntos (opcional)"
-                />
-              </View>
+                <HStack className="justify-between pt-2 border-t border-gray-200">
+                  <Text className="font-semibold">Precio final:</Text>
+                  <Text className="font-bold text-lg">{formatPrice(calculateFinalPrice())}</Text>
+                </HStack>
+              </VStack>
             </View>
           </Card>
+        )}
 
-          {/* Price Summary */}
-          {selectedPlan && (
-            <Card>
-              <View className="p-4">
-                <Heading size="sm" className="mb-3">Resumen de precios</Heading>
-                <VStack className="gap-2">
-                  <HStack className="justify-between">
-                    <Text className="text-gray-600">Precio del plan:</Text>
-                    <Text className="font-medium">{formatPrice(selectedPlan.basePrice || 0)}</Text>
-                  </HStack>
-
-                  {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
-                    <HStack className="justify-between">
-                      <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
-                      <Text className="font-medium text-green-600">
-                        -{formatPrice((selectedPlan.basePrice || 0) * Number(watchedDiscount) / 100)}
-                      </Text>
-                    </HStack>
-                  )}
-
-                  {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
-                    <HStack className="justify-between">
-                      <Text className="text-gray-600">Precio personalizado:</Text>
-                      <Text className="font-medium text-blue-600">
-                        {formatPrice(Number(watchedCustomPrice))}
-                      </Text>
-                    </HStack>
-                  )}
-
-                  <HStack className="justify-between pt-2 border-t border-gray-200">
-                    <Text className="font-semibold">Precio final:</Text>
-                    <Text className="font-bold text-lg">{formatPrice(calculateFinalPrice())}</Text>
-                  </HStack>
-                </VStack>
-              </View>
-            </Card>
-          )}
-
-          {/* Submit Button */}
+        {/* Show inline submit button only when not using fixed footer */}
+        {!useFixedFooter && (
           <Button
             onPress={handleSubmit(onSubmit)}
             isDisabled={!isValid}
@@ -290,8 +328,8 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
           >
             <ButtonText>Crear contrato</ButtonText>
           </Button>
-        </VStack>
-      </ScrollView>
+        )}
+      </VStack>
     </FormProvider>
   );
 };

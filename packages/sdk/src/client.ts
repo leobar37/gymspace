@@ -62,20 +62,6 @@ export class ApiClient {
     const requestPath = error.config?.url || 'unknown';
     const method = error.config?.method?.toUpperCase() || 'unknown';
 
-    console.error(
-      'API Error:',
-      JSON.stringify(
-        {
-          method,
-          path: requestPath,
-          message: error.message,
-          baseURL: error.config?.baseURL,
-        },
-        null,
-        3,
-      ),
-    );
-
     if (!error.response) {
       console.error('Network Error:', {
         method,

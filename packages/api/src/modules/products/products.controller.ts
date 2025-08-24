@@ -151,7 +151,10 @@ export class ProductsController {
 
   @Patch(':id/stock')
   @Allow(PERMISSIONS.PRODUCTS_UPDATE)
-  @ApiOperation({ summary: 'Update product stock quantity' })
+  @ApiOperation({ 
+    summary: 'Update product stock quantity',
+    description: 'Updates stock and creates movement record if product has inventory tracking enabled'
+  })
   @ApiResponse({ status: 200, description: 'Stock updated successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async updateStock(
@@ -159,6 +162,6 @@ export class ProductsController {
     @Body() dto: UpdateStockDto,
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.productsService.updateStock(ctx, id, dto.quantity);
+    return await this.productsService.updateStock(ctx, id, dto);
   }
 }

@@ -9,7 +9,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useSale } from '@/hooks/useSales';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { ScreenForm } from '@/shared/components/ScreenForm';
-import { SaleInfoCard, PaymentStatusCard, FilesSection, ProductsList } from './components';
+import { SaleInfoCard, PaymentStatusCard, FilesSection, ProductsList } from '@/features/inventory/components/sales';
 
 export default function SaleDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
