@@ -38,7 +38,7 @@ export const GlowButton: React.FC<GlowButtonProps> = ({
 
   const content = (
     <>
-      <span className="relative z-10">{children}</span>
+      <span className="relative z-10 inline-flex items-center justify-center">{children}</span>
       {variant === 'primary' && (
         <motion.div
           className="absolute inset-0 bg-gradient-to-r from-gymspace-orange-light to-gymspace-orange opacity-0 group-hover:opacity-100 transition-opacity duration-300"
