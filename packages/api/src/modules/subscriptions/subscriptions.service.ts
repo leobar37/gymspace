@@ -8,8 +8,6 @@ import {
 import { CacheService } from '../../core/cache/cache.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { AffiliateOrganizationDto, AvailablePlanDto, SubscriptionStatusDto } from './dto';
-import { MercadoPagoService, CreateSubscriptionPlanDto } from './mercadopago.service';
-import { PreApprovalPlanResponse } from 'mercadopago';
 import dayjs from 'dayjs';
 
 export enum DurationPeriod {
@@ -53,108 +51,14 @@ export class SubscriptionsService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
-    private readonly mercadopagoService: MercadoPagoService,
   ) {}
 
   async onModuleInit() {
-    if (!this.mercadopagoService.isConfigured()) {
-      this.logger.warn('MercadoPago is not configured, skipping plan synchronization');
-      return;
-    }
-
-    this.logger.log('Starting subscription plans synchronization with MercadoPago...');
-    await this.syncPlansWithMercadoPago();
+    this.logger.log('SubscriptionsService initialized');
   }
 
-  /**
-   * Synchronize existing subscription plans with MercadoPago
-   */
-  private async syncPlansWithMercadoPago(): Promise<void> {
-    try {
-      const plans = await this.prisma.subscriptionPlan.findMany({
-        where: {
-          deletedAt: null,
-          isActive: true,
-          mercadopagoId: null, // Only sync plans that don't have MercadoPago ID yet
-        },
-      });
 
-      if (plans.length === 0) {
-        this.logger.log('No plans to sync with MercadoPago');
-        return;
-      }
 
-      this.logger.log(`Synchronizing ${plans.length} plans with MercadoPago...`);
-
-      for (const plan of plans) {
-        // Skip free plans as they don't need MercadoPago integration
-        if (this.isFreePlan(plan.price)) {
-          this.logger.log(`Skipping free plan: ${plan.name}`);
-          continue;
-        }
-
-        await this.createMercadoPagoPlan(plan as PlanData);
-      }
-
-      this.logger.log('Successfully synchronized plans with MercadoPago');
-    } catch (error) {
-      this.logger.error('Error synchronizing plans with MercadoPago', error);
-    }
-  }
-
-  /**
-   * Create a plan in MercadoPago for an existing subscription plan
-   */
-  private async createMercadoPagoPlan(plan: PlanData): Promise<void> {
-    try {
-      // Extract the first currency price for MercadoPago
-      const priceInfo = Object.values(plan.price as any)[0] as any;
-      if (!priceInfo || priceInfo.value === 0) {
-        this.logger.log(`Skipping plan ${plan.name} - no valid price found`);
-        return;
-      }
-
-      const mercadoPagoPlanData: CreateSubscriptionPlanDto = {
-        reason: plan.name,
-        external_reference: plan.id,
-        auto_recurring: {
-          frequency: plan.duration || 1,
-          frequency_type: this.mapDurationPeriodToMercadoPago(plan.durationPeriod || 'MONTH'),
-          transaction_amount: priceInfo.value,
-          currency_id: priceInfo.currency || 'ARS',
-        },
-        back_url: process.env.FRONTEND_URL || 'http://localhost:3000',
-      };
-
-      const mercadoPagoPlan = await this.mercadopagoService.createSubscriptionPlan(mercadoPagoPlanData);
-
-      // Update the plan with MercadoPago ID
-      await this.prisma.subscriptionPlan.update({
-        where: { id: plan.id },
-        data: { mercadopagoId: mercadoPagoPlan.id },
-      });
-
-      this.logger.log(`Successfully created MercadoPago plan for: ${plan.name} (ID: ${mercadoPagoPlan.id})`);
-    } catch (error) {
-      this.logger.error(`Error creating MercadoPago plan for ${plan.name}`, error);
-    }
-  }
-
-  /**
-   * Map internal duration period to MercadoPago format
-   */
-  private mapDurationPeriodToMercadoPago(period: string): 'months' | 'days' | 'weeks' {
-    switch (period) {
-      case 'MONTH':
-        return 'months';
-      case 'DAY':
-        return 'days';
-      case 'WEEK':
-        return 'weeks';
-      default:
-        return 'months';
-    }
-  }
 
   /**
    * Get all available subscription plans
@@ -622,64 +526,6 @@ export class SubscriptionsService implements OnModuleInit {
     });
   }
 
-  /**
-   * Check subscription expiration and update status
-   * This method will be called by the cron job
-   */
-  async checkAndUpdateExpiredSubscriptions(): Promise<{
-    updated: number;
-    expired: string[];
-  }> {
-    const now = new Date();
-
-    const expiredSubscriptions = await this.prisma.subscriptionOrganization.findMany({
-      where: {
-        endDate: {
-          lt: now,
-        },
-        status: SubscriptionStatus.ACTIVE,
-        isActive: true,
-        deletedAt: null,
-      },
-      include: {
-        organization: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
-
-    if (expiredSubscriptions.length === 0) {
-      return { updated: 0, expired: [] };
-    }
-
-    // Update expired subscriptions
-    await this.prisma.subscriptionOrganization.updateMany({
-      where: {
-        id: {
-          in: expiredSubscriptions.map((sub: SubscriptionData) => sub.id),
-        },
-      },
-      data: {
-        status: SubscriptionStatus.EXPIRED,
-        updatedAt: now,
-      },
-    });
-
-    // Clear caches for affected organizations
-    for (const subscription of expiredSubscriptions) {
-      await this.cache.del(`org:${subscription.organizationId}:*`);
-    }
-
-    return {
-      updated: expiredSubscriptions.length,
-      expired: expiredSubscriptions.map(
-        (sub: SubscriptionData) => `${sub.organization.name} (${sub.organizationId})`,
-      ),
-    };
-  }
 
   /**
    * Upgrade organization subscription to a paid plan

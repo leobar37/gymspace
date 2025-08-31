@@ -141,7 +141,6 @@ model SubscriptionPlan {
     maxUsersPerGym   Int       @map("max_users_per_gym")
     features         Json
     description      String?   @db.Text
-    mercadopagoId    String?   @map("mercadopago_id")
     isActive         Boolean   @default(true) @map("is_active")
     createdByUserId  String?   @map("created_by_user_id")
     updatedByUserId  String?   @map("updated_by_user_id")
