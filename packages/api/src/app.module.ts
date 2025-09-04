@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
@@ -9,6 +10,7 @@ import { AuthModule } from './core/auth/auth.module';
 import { CacheModule } from './core/cache/cache.module';
 import { CommonModule } from './common/common.module';
 import { LoggerModule } from './core/logger/logger.module';
+import { IngestModule } from './core/ingest/ingest.module';
 
 // Business modules
 import { HealthModule } from './modules/health/health.module';
@@ -59,6 +61,7 @@ import validationSchema from './config/validation.schema';
     AuthModule,
     CacheModule,
     CommonModule,
+    IngestModule,
     ScheduleModule.forRoot(),
 
     // Business modules
@@ -105,4 +108,12 @@ import validationSchema from './config/validation.schema';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  static injector: ModuleRef;
+
+  constructor(private moduleRef: ModuleRef) {}
+
+  onModuleInit() {
+    AppModule.injector = this.moduleRef;
+  }
+}
