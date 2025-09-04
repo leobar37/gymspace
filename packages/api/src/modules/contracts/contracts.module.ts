@@ -11,6 +11,6 @@ import { ContractBaseService } from './helpers/contract.base';
   imports: [GymsModule, ClientsModule, MembershipPlansModule],
   controllers: [ContractsController],
   providers: [ContractsService, ContractStatusHelper, ContractBaseService],
-  exports: [ContractsService, ContractStatusHelper],
+  exports: [ContractsService, ContractStatusHelper, ContractBaseService],
 })
 export class ContractsModule {}

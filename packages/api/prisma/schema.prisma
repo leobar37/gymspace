@@ -491,6 +491,7 @@ model GymClient {
     emergencyContactPhone String?   @map("emergency_contact_phone")
     medicalConditions     String?   @map("medical_conditions") @db.Text
     notes                 String?   @db.Text
+    metadata              Json?     @default("{}") // Additional flexible data storage
     createdByUserId       String    @map("created_by_user_id")
     updatedByUserId       String?   @map("updated_by_user_id")
     createdAt             DateTime  @default(now()) @map("created_at")
@@ -571,6 +572,8 @@ model Contract {
     contractDocumentId String?  @map("contract_document_id")
     paymentReceiptIds  Json?    @map("payment_receipt_ids") // Array of asset IDs
     receiptIds         String[] @default([]) @map("receipt_ids")
+    
+    metadata            Json?    @default("{}") // Additional flexible data storage
 
     createdByUserId   String    @map("created_by_user_id")
     updatedByUserId   String?   @map("updated_by_user_id")
@@ -882,6 +885,7 @@ model Sale {
     customerName    String?       @map("customer_name")
     notes           String?       @db.Text
     fileIds         String[]      @map("file_ids")
+    metadata        Json?         @default("{}") // Additional flexible data storage
     createdByUserId String        @map("created_by_user_id")
     updatedByUserId String?       @map("updated_by_user_id")
     createdAt       DateTime      @default(now()) @map("created_at")
@@ -907,6 +911,7 @@ model SaleItem {
     quantity        Int
     unitPrice       Decimal   @map("unit_price") @db.Decimal(10, 2)
     total           Decimal   @db.Decimal(10, 2)
+    metadata        Json?     @default("{}") // Additional flexible data storage
     createdByUserId String    @map("created_by_user_id")
     updatedByUserId String?   @map("updated_by_user_id")
     createdAt       DateTime  @default(now()) @map("created_at")

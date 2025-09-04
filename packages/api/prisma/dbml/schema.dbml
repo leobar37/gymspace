@@ -312,6 +312,7 @@ Table gym_clients {
   emergencyContactPhone String
   medicalConditions String
   notes String
+  metadata Json [default: '{}']
   createdByUserId String [not null]
   updatedByUserId String
   createdAt DateTime [default: `now()`, not null]
@@ -382,6 +383,7 @@ Table contracts {
   contractDocumentId String
   paymentReceiptIds Json
   receiptIds String[] [not null]
+  metadata Json [default: '{}']
   createdByUserId String [not null]
   updatedByUserId String
   approvedByUserId String
@@ -637,6 +639,7 @@ Table sales {
   customerName String
   notes String
   fileIds String[] [not null]
+  metadata Json [default: '{}']
   createdByUserId String [not null]
   updatedByUserId String
   createdAt DateTime [default: `now()`, not null]
@@ -661,6 +664,7 @@ Table sale_items {
   quantity Int [not null]
   unitPrice Decimal [not null]
   total Decimal [not null]
+  metadata Json [default: '{}']
   createdByUserId String [not null]
   updatedByUserId String
   createdAt DateTime [default: `now()`, not null]

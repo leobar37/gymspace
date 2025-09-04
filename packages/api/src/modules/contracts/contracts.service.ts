@@ -1,19 +1,19 @@
-import { ContractStatus, IRequestContext } from '@gymspace/shared';
+import { IRequestContext } from '@gymspace/shared';
 import { Injectable, Logger } from '@nestjs/common';
 import { Contract, Prisma } from '@prisma/client';
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import ms from 'ms';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
-import { RequestContext } from '../../common/services/request-context.service';
 import { PaginationService } from '../../common/services/pagination.service';
+import { RequestContext } from '../../common/services/request-context.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { ClientsService } from '../clients/clients.service';
 import { GymsService } from '../gyms/gyms.service';
 import { GymMembershipPlansService } from '../membership-plans/membership-plans.service';
-import { CreateContractDto, FreezeContractDto, RenewContractDto, GetContractsDto } from './dto';
+import { CreateContractDto, FreezeContractDto, GetContractsDto, RenewContractDto } from './dto';
 import { ContractStatusHelper } from './helpers/contract-status.helper';
 import { ContractBaseService } from './helpers/contract.base';
-import dayjs from 'dayjs';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import ms from 'ms';
 
 // Extend dayjs with plugins
 dayjs.extend(isSameOrAfter);
