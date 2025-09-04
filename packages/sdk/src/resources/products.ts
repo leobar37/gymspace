@@ -2,6 +2,7 @@ import { BaseResource } from './base';
 import { 
   Product,
   ProductCategory,
+  StockMovement,
   CreateProductDto, 
   CreateServiceDto,
   UpdateProductDto,
@@ -92,5 +93,12 @@ export class ProductsResource extends BaseResource {
       { threshold },
       options
     );
+  }
+
+  async getProductStockMovements(
+    id: string,
+    options?: RequestOptions
+  ): Promise<StockMovement[]> {
+    return this.client.get<StockMovement[]>(`${this.basePath}/${id}/stock-movements`, undefined, options);
   }
 }

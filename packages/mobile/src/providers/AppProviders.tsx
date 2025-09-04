@@ -2,13 +2,16 @@ import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { ConfigProvider } from '@/config/ConfigContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
+
 import { Provider as JotaiProvider } from 'jotai';
 import React, { useState } from 'react';
 import { Alert } from 'react-native';
+import { SheetProvider } from 'react-native-actions-sheet';
 import { GymSdkProvider } from './GymSdkProvider';
 import { LoadingScreen } from '@/shared/loading-screen/LoadingScreen';
 import { AssetPreviewGlobal } from '@/features/assets';
+import '@/sheets'; // Import sheet registrations
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -16,22 +19,19 @@ interface AppProvidersProps {
 
 export function AppProviders({ children }: AppProvidersProps) {
   const router = useRouter();
-
+  const segments = useSegments();
   // Create QueryClient inside component with useState to ensure single instance
   const [queryClient] = useState(() => {
     // Create QueryCache with error handling
     const queryCache = new QueryCache({
       onError: async (error: any, query) => {
-        console.log('Query error:', JSON.stringify({ error: error.statusCode }));
-
         // Check for authentication errors
         if (error?.statusCode === 401 || error?.statusCode === 403) {
           // Clear all queries
-
-          console.log('pass here to login');
-
+          console.log('pass here to login', {
+            segments,
+          });
           try {
-            router.push('/login');
             queryClient.clear();
           } catch (error) {
             console.log('error to login', error);
@@ -110,20 +110,22 @@ export function AppProviders({ children }: AppProvidersProps) {
   });
 
   return (
-    <GluestackUIProvider>
-      <QueryClientProvider client={queryClient}>
-        <JotaiProvider>
-          <GymSdkProvider>
+    <QueryClientProvider client={queryClient}>
+      <JotaiProvider>
+        <GymSdkProvider>
+          <GluestackUIProvider>
             <ConfigProvider>
               <CartProvider>
-                {children}
-                <LoadingScreen />
-                <AssetPreviewGlobal />
+                <SheetProvider>
+                  {children}
+                  <LoadingScreen />
+                  <AssetPreviewGlobal />
+                </SheetProvider>
               </CartProvider>
             </ConfigProvider>
-          </GymSdkProvider>
-        </JotaiProvider>
-      </QueryClientProvider>
-    </GluestackUIProvider>
+          </GluestackUIProvider>
+        </GymSdkProvider>
+      </JotaiProvider>
+    </QueryClientProvider>
   );
 }

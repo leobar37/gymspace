@@ -4,6 +4,7 @@ import {
   CreateClientDto, 
   UpdateClientDto, 
   ClientStats,
+  ClientStat,
   SearchClientsParams,
   ClientSearchForCheckInResponse
 } from '../models/clients';
@@ -42,6 +43,18 @@ export class ClientsResource extends BaseResource {
 
   async getClientStats(id: string, options?: RequestOptions): Promise<ClientStats> {
     return this.client.get<ClientStats>(`${this.basePath}/${id}/stats`, undefined, options);
+  }
+
+  async getClientStat(id: string, statKey: string, options?: RequestOptions): Promise<ClientStat> {
+    return this.client.get<ClientStat>(`${this.basePath}/${id}/stats/${statKey}`, undefined, options);
+  }
+
+  async getClientStatsByCategory(id: string, category: string, options?: RequestOptions): Promise<ClientStat[]> {
+    return this.client.get<ClientStat[]>(`${this.basePath}/${id}/stats/category/${category}`, undefined, options);
+  }
+
+  async getAvailableStats(options?: RequestOptions): Promise<ClientStat[]> {
+    return this.client.get<ClientStat[]>(`${this.basePath}/stats/available`, undefined, options);
   }
 
   async searchClientsForCheckIn(

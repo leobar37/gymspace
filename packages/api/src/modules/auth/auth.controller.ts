@@ -1,31 +1,32 @@
-import { Controller, Post, Get, Body, Param, HttpCode, HttpStatus, Headers } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { AuthService } from '../../core/auth/services/auth.service';
-import { ResetPasswordMeService } from '../../core/auth/services/reset-password-me.service';
-import {
-  RegisterOwnerDto,
-  LoginDto,
-  LoginResponseDto,
-  VerifyEmailDto,
-  ResendVerificationDto,
-  RegisterCollaboratorDto,
-  GenerateVerificationCodeDto,
-  CurrentSessionDto,
-  ChangePasswordDto,
-  ChangePasswordResponseDto,
-  RequestPasswordResetDto,
-  RequestPasswordResetResponseDto,
-  VerifyResetCodeDto,
-  VerifyResetCodeResponseDto,
-  ResetPasswordDto,
-  ResetPasswordResponseDto,
-  ResendResetCodeDto,
-  ResendResetCodeResponseDto,
-} from './dto';
+import { IRequestContext } from '@gymspace/shared';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Allow, Public } from '../../common/decorators';
 import { AppCtxt } from '../../common/decorators/request-context.decorator';
-import { IRequestContext, PERMISSIONS } from '@gymspace/shared';
+import { AuthService } from '../../core/auth/services/auth.service';
+import { ResetPasswordMeService } from '../../core/auth/services/reset-password-me.service';
 import { CacheService } from '../../core/cache/cache.service';
+import {
+  ChangePasswordDto,
+  ChangePasswordResponseDto,
+  CurrentSessionDto,
+  GenerateVerificationCodeDto,
+  LoginDto,
+  LoginResponseDto,
+  RegisterCollaboratorDto,
+  RegisterOwnerDto,
+  RequestPasswordResetDto,
+  RequestPasswordResetResponseDto,
+  ResendResetCodeDto,
+  ResendResetCodeResponseDto,
+  ResendVerificationDto,
+  ResetPasswordDto,
+  ResetPasswordResponseDto,
+  VerifyEmailDto,
+  VerifyResetCodeDto,
+  VerifyResetCodeResponseDto,
+} from './dto';
+import { RequestContext } from '~/common/services/request-context.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -141,7 +142,6 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'User not authenticated' })
   async getCurrentSession(@AppCtxt() context: IRequestContext): Promise<CurrentSessionDto> {
     console.log('server context', context);
-
     return {
       user: context.user,
       gym: context.gym,
@@ -159,7 +159,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'User not authenticated' })
   async logout(
     @Headers('authorization') authorization: string,
-    @AppCtxt() context: IRequestContext,
+    @AppCtxt() context: RequestContext,
   ) {
     if (authorization) {
       const token = authorization.replace('Bearer ', '');

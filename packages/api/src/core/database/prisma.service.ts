@@ -26,6 +26,7 @@ const SOFT_DELETE_MODELS = [
   'Supplier',
   'Sale',
   'SaleItem',
+  'PaymentMethod',
 ] as const;
 
 // Create a function to generate the extended Prisma client
@@ -143,18 +144,18 @@ function createExtendedPrismaClient(configService: ConfigService) {
           async create({ args, query, model }) {
             const now = new Date();
             const data: any = { ...args.data };
-            
+
             // Always add createdAt if not present
             if (!data.createdAt) {
               data.createdAt = now;
             }
-            
+
             // Only add updatedAt for models that have this field
             // StockMovement doesn't have updatedAt field
             if (model !== 'StockMovement' && !data.updatedAt) {
               data.updatedAt = now;
             }
-            
+
             args.data = data;
             return query(args);
           },
@@ -162,30 +163,30 @@ function createExtendedPrismaClient(configService: ConfigService) {
           // Override createMany to add timestamps
           async createMany({ args, query, model }) {
             const now = new Date();
-            
+
             const processItem = (item: any) => {
               const data: any = { ...item };
-              
+
               // Always add createdAt if not present
               if (!data.createdAt) {
                 data.createdAt = now;
               }
-              
+
               // Only add updatedAt for models that have this field
               // StockMovement doesn't have updatedAt field
               if (model !== 'StockMovement' && !data.updatedAt) {
                 data.updatedAt = now;
               }
-              
+
               return data;
             };
-            
+
             if (Array.isArray(args.data)) {
               args.data = args.data.map(processItem);
             } else {
               args.data = processItem(args.data);
             }
-            
+
             return query(args);
           },
         },
@@ -229,6 +230,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   public readonly supplier: ExtendedPrismaClient['supplier'];
   public readonly sale: ExtendedPrismaClient['sale'];
   public readonly saleItem: ExtendedPrismaClient['saleItem'];
+  public readonly stockMovement: ExtendedPrismaClient['stockMovement'];
+  public readonly paymentMethod: ExtendedPrismaClient['paymentMethod'];
 
   // Expose transaction methods
   public readonly $transaction: ExtendedPrismaClient['$transaction'];
@@ -279,6 +282,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     this.supplier = this.extendedClient.supplier;
     this.sale = this.extendedClient.sale;
     this.saleItem = this.extendedClient.saleItem;
+    this.stockMovement = this.extendedClient.stockMovement;
+    this.paymentMethod = this.extendedClient.paymentMethod;
 
     // Bind Prisma methods
     this.$transaction = this.extendedClient.$transaction.bind(this.extendedClient);

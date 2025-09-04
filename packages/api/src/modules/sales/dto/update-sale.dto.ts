@@ -1,12 +1,12 @@
-import { IsString, IsOptional, IsEnum, IsUUID, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PaymentStatus } from '@prisma/client';
+import { IsArray, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class UpdateSaleDto {
-  @ApiProperty({ 
-    example: 'uuid-client-id', 
-    description: 'Customer ID from gym clients', 
-    required: false 
+  @ApiProperty({
+    example: 'uuid-client-id',
+    description: 'Customer ID from gym clients',
+    required: false,
   })
   @IsOptional()
   @IsUUID()
@@ -42,4 +42,13 @@ export class UpdateSaleDto {
   @IsOptional()
   @IsEnum(PaymentStatus)
   paymentStatus?: PaymentStatus;
+
+  @ApiProperty({
+    example: 'uuid-payment-method-id',
+    description: 'Payment method ID',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  paymentMethodId?: string;
 }

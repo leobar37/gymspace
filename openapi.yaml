@@ -920,6 +920,19 @@ paths:
       security:
         - gym-id: []
         - bearer: []
+  /api/v1/clients/stats/available:
+    get:
+      operationId: ClientsController_getAvailableStats
+      summary: Get available statistics definitions
+      parameters: []
+      responses:
+        '200':
+          description: Available statistics definitions
+      tags:
+        - Clients
+      security:
+        - gym-id: []
+        - bearer: []
   /api/v1/clients/{id}/stats:
     get:
       operationId: ClientsController_getClientStats
@@ -933,6 +946,56 @@ paths:
       responses:
         '200':
           description: Client statistics
+        '404':
+          description: Client not found
+      tags:
+        - Clients
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/clients/{id}/stats/{statKey}:
+    get:
+      operationId: ClientsController_getClientStat
+      summary: Get individual client statistic
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: statKey
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Client statistic
+        '404':
+          description: Client or statistic not found
+      tags:
+        - Clients
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/clients/{id}/stats/category/{category}:
+    get:
+      operationId: ClientsController_getClientStatsByCategory
+      summary: Get client statistics by category
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: category
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Client statistics by category
         '404':
           description: Client not found
       tags:
@@ -1169,27 +1232,93 @@ paths:
       operationId: ContractsController_getGymContracts
       summary: Get contracts for gym
       parameters:
+        - name: page
+          required: false
+          in: query
+          description: Page number
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: Items per page
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+        - name: sortOrder
+          required: false
+          in: query
+          description: Sort order
+          schema:
+            default: desc
+            enum:
+              - asc
+              - desc
+            type: string
         - name: status
           required: false
           in: query
+          description: Filter by contract status
           schema:
             enum:
               - pending
               - active
               - expiring_soon
               - expired
+              - frozen
               - cancelled
+              - for_renew
             type: string
-        - name: limit
+        - name: clientName
           required: false
           in: query
+          description: Filter by client name
           schema:
-            type: number
-        - name: offset
+            type: string
+        - name: clientId
           required: false
           in: query
+          description: Filter by client ID
           schema:
-            type: number
+            type: string
+        - name: startDateFrom
+          required: false
+          in: query
+          description: Start date for the contract start date range (ISO 8601 format)
+          schema:
+            example: '2024-01-01T00:00:00.000Z'
+            type: string
+        - name: startDateTo
+          required: false
+          in: query
+          description: End date for the contract start date range (ISO 8601 format)
+          schema:
+            example: '2024-01-31T23:59:59.999Z'
+            type: string
+        - name: endDateFrom
+          required: false
+          in: query
+          description: Start date for the contract end date range (ISO 8601 format)
+          schema:
+            example: '2024-01-01T00:00:00.000Z'
+            type: string
+        - name: endDateTo
+          required: false
+          in: query
+          description: End date for the contract end date range (ISO 8601 format)
+          schema:
+            example: '2024-01-31T23:59:59.999Z'
+            type: string
       responses:
         '200':
           description: List of contracts
@@ -2406,7 +2535,7 @@ paths:
     get:
       operationId: DashboardController_getDashboardStats
       summary: Get dashboard statistics
-      description: Get aggregated statistics for the gym dashboard including clients, contracts, revenue, and check-ins
+      description: Get lightweight statistics for the gym dashboard (counts only, no revenue)
       parameters: []
       responses:
         '200':
@@ -2422,28 +2551,169 @@ paths:
       security:
         - gym-id: []
         - bearer: []
-  /api/v1/dashboard/recent-activity:
+  /api/v1/dashboard/contracts-revenue:
     get:
-      operationId: DashboardController_getRecentActivity
-      summary: Get recent activity
-      description: Get recent activities in the gym including check-ins, new clients, and contracts
+      operationId: DashboardController_getContractsRevenue
+      summary: Get contracts revenue
+      description: Get revenue from contracts within the specified date range
       parameters:
-        - name: limit
+        - name: startDate
           required: false
           in: query
-          description: Maximum number of activities to return
+          description: Start date for the data range (ISO 8601 format)
           schema:
-            example: 10
-            type: number
+            example: '2024-01-01T00:00:00.000Z'
+            type: string
+        - name: endDate
+          required: false
+          in: query
+          description: End date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-31T23:59:59.999Z'
+            type: string
       responses:
         '200':
-          description: List of recent activities
+          description: Contracts revenue data
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RecentActivityDto'
+                $ref: '#/components/schemas/ContractsRevenueDto'
+        '403':
+          description: Forbidden
+      tags:
+        - Dashboard
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/dashboard/sales-revenue:
+    get:
+      operationId: DashboardController_getSalesRevenue
+      summary: Get sales revenue
+      description: Get revenue from product sales within the specified date range
+      parameters:
+        - name: startDate
+          required: false
+          in: query
+          description: Start date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-01T00:00:00.000Z'
+            type: string
+        - name: endDate
+          required: false
+          in: query
+          description: End date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-31T23:59:59.999Z'
+            type: string
+      responses:
+        '200':
+          description: Sales revenue data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesRevenueDto'
+        '403':
+          description: Forbidden
+      tags:
+        - Dashboard
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/dashboard/debts:
+    get:
+      operationId: DashboardController_getDebts
+      summary: Get total debts
+      description: Get outstanding debts within the specified date range
+      parameters:
+        - name: startDate
+          required: false
+          in: query
+          description: Start date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-01T00:00:00.000Z'
+            type: string
+        - name: endDate
+          required: false
+          in: query
+          description: End date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-31T23:59:59.999Z'
+            type: string
+      responses:
+        '200':
+          description: Debts data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtsDto'
+        '403':
+          description: Forbidden
+      tags:
+        - Dashboard
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/dashboard/check-ins:
+    get:
+      operationId: DashboardController_getCheckIns
+      summary: Get check-ins count
+      description: Get check-ins count within the specified date range
+      parameters:
+        - name: startDate
+          required: false
+          in: query
+          description: Start date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-01T00:00:00.000Z'
+            type: string
+        - name: endDate
+          required: false
+          in: query
+          description: End date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-31T23:59:59.999Z'
+            type: string
+      responses:
+        '200':
+          description: Check-ins data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckInsDto'
+        '403':
+          description: Forbidden
+      tags:
+        - Dashboard
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/dashboard/new-clients:
+    get:
+      operationId: DashboardController_getNewClients
+      summary: Get new clients count
+      description: Get new clients count within the specified date range
+      parameters:
+        - name: startDate
+          required: false
+          in: query
+          description: Start date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-01T00:00:00.000Z'
+            type: string
+        - name: endDate
+          required: false
+          in: query
+          description: End date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-31T23:59:59.999Z'
+            type: string
+      responses:
+        '200':
+          description: New clients data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewClientsDto'
         '403':
           description: Forbidden
       tags:
@@ -2455,8 +2725,22 @@ paths:
     get:
       operationId: DashboardController_getExpiringContracts
       summary: Get expiring contracts
-      description: Get contracts that are expiring in the next 30 days
+      description: Get contracts that are expiring within the specified date range
       parameters:
+        - name: startDate
+          required: false
+          in: query
+          description: Start date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-01T00:00:00.000Z'
+            type: string
+        - name: endDate
+          required: false
+          in: query
+          description: End date for the data range (ISO 8601 format)
+          schema:
+            example: '2024-01-31T23:59:59.999Z'
+            type: string
         - name: limit
           required: false
           in: query
@@ -2830,6 +3114,27 @@ paths:
       responses:
         '200':
           description: Stock updated successfully
+        '404':
+          description: Product not found
+      tags:
+        - Products
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/products/{id}/stock-movements:
+    get:
+      operationId: ProductsController_getProductStockMovements
+      summary: Get product stock movements
+      description: Retrieve stock movement history for a specific product
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of stock movements
         '404':
           description: Product not found
       tags:
@@ -3265,6 +3570,180 @@ paths:
       security:
         - gym-id: []
         - bearer: []
+  /api/v1/payment-methods:
+    post:
+      operationId: PaymentMethodsController_createPaymentMethod
+      summary: Create a new payment method
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentMethodDto'
+      responses:
+        '201':
+          description: Payment method created successfully
+        '400':
+          description: Bad request
+        '409':
+          description: Conflict - Code already exists
+      tags:
+        - Payment Methods
+      security:
+        - gym-id: []
+        - bearer: []
+    get:
+      operationId: PaymentMethodsController_searchPaymentMethods
+      summary: Search payment methods in gym
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Page number
+          schema:
+            minimum: 1
+            default: 1
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: Items per page
+          schema:
+            minimum: 1
+            maximum: 100
+            default: 20
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+        - name: sortOrder
+          required: false
+          in: query
+          description: Sort order
+          schema:
+            default: desc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Search by name, description or code
+          schema:
+            example: efectivo
+            type: string
+        - name: enabledOnly
+          required: false
+          in: query
+          schema:
+            example: true
+            type: boolean
+        - name: code
+          required: false
+          in: query
+          description: Search by exact payment method code
+          schema:
+            example: CASH_001
+            type: string
+      responses:
+        '200':
+          description: List of payment methods
+      tags:
+        - Payment Methods
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/payment-methods/{id}:
+    get:
+      operationId: PaymentMethodsController_getPaymentMethod
+      summary: Get payment method details
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment method details
+        '404':
+          description: Payment method not found
+      tags:
+        - Payment Methods
+      security:
+        - gym-id: []
+        - bearer: []
+    put:
+      operationId: PaymentMethodsController_updatePaymentMethod
+      summary: Update payment method information
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePaymentMethodDto'
+      responses:
+        '200':
+          description: Payment method updated successfully
+        '404':
+          description: Payment method not found
+        '409':
+          description: Conflict - Code already exists
+      tags:
+        - Payment Methods
+      security:
+        - gym-id: []
+        - bearer: []
+    delete:
+      operationId: PaymentMethodsController_deletePaymentMethod
+      summary: Soft delete payment method
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment method deleted successfully
+        '404':
+          description: Payment method not found
+      tags:
+        - Payment Methods
+      security:
+        - gym-id: []
+        - bearer: []
+  /api/v1/payment-methods/{id}/toggle:
+    put:
+      operationId: PaymentMethodsController_togglePaymentMethod
+      summary: Toggle payment method enabled/disabled status
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment method status toggled successfully
+        '404':
+          description: Payment method not found
+      tags:
+        - Payment Methods
+      security:
+        - gym-id: []
+        - bearer: []
 info:
   title: GymSpace API
   description: The GymSpace Gym Management System API
@@ -3304,7 +3783,7 @@ tags:
 servers:
   - url: http://localhost:5200/api/v1
     description: Development (localhost)
-  - url: http://192.168.100.18:5200/api/v1
+  - url: http://192.168.100.19:5200/api/v1
     description: Development (LAN)
   - url: https://api.gymspace.com/api/v1
     description: Production
@@ -3407,6 +3886,8 @@ components:
             - active
             - inactive
             - expired
+            - paused
+            - pending_upgrade
           example: active
         subscriptionStart:
           format: date-time
@@ -4149,6 +4630,9 @@ components:
         gymMembershipPlanId:
           type: string
           example: 123e4567-e89b-12d3-a456-426614174001
+        paymentMethodId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174002
         startDate:
           type: string
           example: '2024-01-01'
@@ -4177,6 +4661,7 @@ components:
       required:
         - gymClientId
         - gymMembershipPlanId
+        - paymentMethodId
         - startDate
     RenewContractDto:
       type: object
@@ -4185,6 +4670,10 @@ components:
           type: string
           example: '2024-02-01'
           description: New start date
+        paymentMethodId:
+          type: string
+          example: 123e4567-e89b-12d3-a456-426614174002
+          description: Payment method ID for renewal (uses existing if not provided)
         discountPercentage:
           type: number
           example: 0
@@ -4193,11 +4682,26 @@ components:
           type: number
           example: 49.99
           description: Custom price for renewal
-        metadata:
-          type: object
+        applyAtEndOfContract:
+          type: boolean
+          example: true
+          description: Apply renewal at the end of current contract
+        notes:
+          type: string
+          example: Special discount notes
+          description: Notes for the renewal contract
+        contractDocumentId:
+          type: string
+          example: doc-123
+          description: Contract document ID
+        receiptIds:
           example:
-            renewalReason: loyalty
-            notes: Renewal with loyalty discount
+            - receipt-1
+            - receipt-2
+          description: Receipt IDs for the renewal
+          type: array
+          items:
+            type: string
     FreezeContractDto:
       type: object
       properties:
@@ -5030,43 +5534,146 @@ components:
         - todayCheckIns
         - expiringContractsCount
         - newClientsThisMonth
-    RecentActivityDto:
+    ContractsRevenueDto:
       type: object
       properties:
-        id:
+        totalRevenue:
+          type: number
+          description: Total revenue from contracts in the specified period
+          example: 15250
+        contractCount:
+          type: number
+          description: Number of contracts contributing to this revenue
+          example: 45
+        averageRevenue:
+          type: number
+          description: Average revenue per contract
+          example: 338.89
+        startDate:
           type: string
-          description: Activity ID
-          example: 123e4567-e89b-12d3-a456-426614174000
-        type:
+          description: Start date of the data range
+          example: '2024-01-01T00:00:00.000Z'
+        endDate:
           type: string
-          description: Type of activity
-          enum:
-            - check_in
-            - new_client
-            - new_contract
-            - contract_expired
-          example: check_in
-        description:
-          type: string
-          description: Description of the activity
-          example: Check-in registrado
-        timestamp:
-          type: string
-          description: Timestamp of the activity
-          example: '2024-01-15T10:30:00Z'
-        clientName:
-          type: string
-          description: Name of the client related to the activity
-          example: Juan Pérez
-        clientId:
-          type: string
-          description: ID of the client related to the activity
-          example: 123e4567-e89b-12d3-a456-426614174000
+          description: End date of the data range
+          example: '2024-01-31T23:59:59.999Z'
       required:
-        - id
-        - type
-        - description
-        - timestamp
+        - totalRevenue
+        - contractCount
+        - averageRevenue
+        - startDate
+        - endDate
+    SalesRevenueDto:
+      type: object
+      properties:
+        totalRevenue:
+          type: number
+          description: Total revenue from sales in the specified period
+          example: 5250
+        salesCount:
+          type: number
+          description: Number of sales transactions
+          example: 156
+        averageRevenue:
+          type: number
+          description: Average revenue per sale
+          example: 33.65
+        startDate:
+          type: string
+          description: Start date of the data range
+          example: '2024-01-01T00:00:00.000Z'
+        endDate:
+          type: string
+          description: End date of the data range
+          example: '2024-01-31T23:59:59.999Z'
+      required:
+        - totalRevenue
+        - salesCount
+        - averageRevenue
+        - startDate
+        - endDate
+    DebtsDto:
+      type: object
+      properties:
+        totalDebt:
+          type: number
+          description: Total outstanding debt amount
+          example: 3500
+        clientsWithDebt:
+          type: number
+          description: Number of clients with outstanding debts
+          example: 12
+        averageDebt:
+          type: number
+          description: Average debt per client
+          example: 291.67
+        startDate:
+          type: string
+          description: Start date of the data range
+          example: '2024-01-01T00:00:00.000Z'
+        endDate:
+          type: string
+          description: End date of the data range
+          example: '2024-01-31T23:59:59.999Z'
+      required:
+        - totalDebt
+        - clientsWithDebt
+        - averageDebt
+        - startDate
+        - endDate
+    CheckInsDto:
+      type: object
+      properties:
+        totalCheckIns:
+          type: number
+          description: Total number of check-ins in the specified period
+          example: 345
+        uniqueClients:
+          type: number
+          description: Number of unique clients who checked in
+          example: 89
+        averagePerDay:
+          type: number
+          description: Average check-ins per day
+          example: 11.13
+        startDate:
+          type: string
+          description: Start date of the data range
+          example: '2024-01-01T00:00:00.000Z'
+        endDate:
+          type: string
+          description: End date of the data range
+          example: '2024-01-31T23:59:59.999Z'
+      required:
+        - totalCheckIns
+        - uniqueClients
+        - averagePerDay
+        - startDate
+        - endDate
+    NewClientsDto:
+      type: object
+      properties:
+        totalNewClients:
+          type: number
+          description: Number of new clients registered in the specified period
+          example: 25
+        averagePerDay:
+          type: number
+          description: Average new clients per day
+          example: 0.81
+        startDate:
+          type: string
+          description: Start date of the data range
+          example: '2024-01-01T00:00:00.000Z'
+        endDate:
+          type: string
+          description: End date of the data range
+          example: '2024-01-31T23:59:59.999Z'
+      required:
+        - totalNewClients
+        - averagePerDay
+        - startDate
+        - endDate
     ExpiringContractDto:
       type: object
       properties:
@@ -5307,6 +5914,10 @@ components:
             - paid
             - unpaid
           description: Payment status
+        paymentMethodId:
+          type: string
+          example: uuid-payment-method-id
+          description: Payment method ID
       required:
         - items
     UpdateSaleDto:
@@ -5339,6 +5950,10 @@ components:
             - paid
             - unpaid
           description: Payment status
+        paymentMethodId:
+          type: string
+          example: uuid-payment-method-id
+          description: Payment method ID
     UpdatePaymentStatusDto:
       type: object
       properties:
@@ -5399,3 +6014,54 @@ components:
           type: string
           example: 123 Industrial Ave, Business District, NY 10001
           description: Supplier address
+    CreatePaymentMethodDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Efectivo
+        description:
+          type: string
+          example: Pagos en efectivo para membresías y productos
+        code:
+          type: string
+          example: CASH_001
+          description: Unique code for the payment method
+        enabled:
+          type: boolean
+          example: true
+          description: Whether the payment method is enabled
+        metadata:
+          type: object
+          example:
+            processingFee: 0.03
+            provider: stripe
+            accountId: acct_123456789
+          description: Additional metadata for the payment method
+      required:
+        - name
+        - code
+    UpdatePaymentMethodDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Efectivo
+        description:
+          type: string
+          example: Pagos en efectivo para membresías y productos
+        code:
+          type: string
+          example: CASH_001
+          description: Unique code for the payment method
+        enabled:
+          type: boolean
+          example: true
+          description: Whether the payment method is enabled
+        metadata:
+          type: object
+          example:
+            processingFee: 0.03
+            provider: stripe
+            accountId: acct_123456789
+          description: Additional metadata for the payment method

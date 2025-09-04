@@ -106,8 +106,6 @@ export class AuthService {
       where: { id: supabaseUser.id },
     });
 
-    console.log('subase user ', user);
-
     if (!user) {
       // Create user from Supabase data
       user = await this.prismaService.user.create({

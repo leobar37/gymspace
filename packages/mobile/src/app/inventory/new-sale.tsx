@@ -24,8 +24,8 @@ import {
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useCart } from '@/contexts/CartContext';
-import { useProducts } from '@/hooks/useProducts';
-import { useCreateSale } from '@/hooks/useSales';
+import { useProducts } from '@/features/products/hooks/useProducts';
+import { useCreateSale } from '@/features/inventory/hooks/useSales';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { ProductCard } from '@/components/inventory/ProductCard';
 import { ServiceCard } from '@/components/inventory/services';
@@ -36,6 +36,7 @@ import { useLoadingScreen } from '@/shared/loading-screen';
 import { PRODUCT_TYPES } from '@/shared/constants';
 import { ScreenForm } from '@/shared/components/ScreenForm';
 import { FileSelector } from '@/features/files/components/FileSelector';
+import { PaymentMethodSelectorField } from '@/features/payment-methods/components/PaymentMethodSelectorField';
 import type { Product, CreateSaleDto, SaleItemDto, Client } from '@gymspace/sdk';
 
 // Componente para el header con botón de retroceso
@@ -303,6 +304,7 @@ interface SaleFormData {
   clientId?: string;
   notes?: string;
   fileIds?: string[];
+  paymentMethodId?: string;
 }
 
 export default function NewSaleScreen() {
@@ -330,6 +332,7 @@ export default function NewSaleScreen() {
       clientId: '',
       notes: '',
       fileIds: [],
+      paymentMethodId: '',
     },
   });
 
@@ -405,6 +408,7 @@ export default function NewSaleScreen() {
       items: saleItems,
       customerId: selectedClient?.id,
       paymentStatus: state.paymentStatus as 'paid' | 'unpaid',
+      paymentMethodId: formData.paymentMethodId || undefined,
       customerName: state.customerName || undefined,
       notes: state.notes || undefined,
       fileIds: formData.fileIds?.filter(id => id) || [],
@@ -501,7 +505,7 @@ export default function NewSaleScreen() {
             </VStack>
           )}
         >
-          <VStack space="md">
+          <VStack space="md" className='pb-16'>
             {/* Header */}
             <SaleHeader onBack={() => router.back()} />
 
@@ -609,6 +613,17 @@ export default function NewSaleScreen() {
                     </Pressable>
                   </HStack>
                 </VStack>
+
+                {/* Payment Method Selector */}
+                <PaymentMethodSelectorField
+                  name="paymentMethodId"
+                  control={methods.control}
+                  label="Método de Pago"
+                  placeholder="Seleccionar método de pago"
+                  description="Seleccione el método de pago utilizado para esta venta"
+                  allowClear={true}
+                  enabledOnly={true}
+                />
 
                 {/* File Attachments */}
                 <FileSelector

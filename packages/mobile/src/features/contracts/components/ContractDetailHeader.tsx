@@ -6,11 +6,11 @@ import { Text } from '@/components/ui/text';
 import { Pressable } from '@/components/ui/pressable';
 import { Icon } from '@/components/ui/icon';
 import { ArrowLeft, MoreVertical } from 'lucide-react-native';
-import type { ContractResponseDto } from '@gymspace/sdk';
+import type { Contract } from '@gymspace/sdk';
 
 interface ContractDetailHeaderProps {
-  contract: ContractResponseDto;
-  onMenuPress: () => void;
+  contract: Contract;
+  onMenuPress?: () => void;
 }
 
 export const ContractDetailHeader: React.FC<ContractDetailHeaderProps> = ({ 
@@ -36,12 +36,14 @@ export const ContractDetailHeader: React.FC<ContractDetailHeaderProps> = ({
       </View>
       
       <View className="flex-1 items-end">
-        <Pressable
-          onPress={onMenuPress}
-          className="p-2"
-        >
-          <Icon as={MoreVertical} size="md" className="text-gray-700" />
-        </Pressable>
+        {onMenuPress && (
+          <Pressable
+            onPress={onMenuPress}
+            className="p-2"
+          >
+            <Icon as={MoreVertical} size="md" className="text-gray-700" />
+          </Pressable>
+        )}
       </View>
     </HStack>
   );

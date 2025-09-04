@@ -1,11 +1,24 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Platform, Modal, TouchableWithoutFeedback, ActivityIndicator, TextInput } from 'react-native';
+import {
+  View,
+  Platform,
+  Modal,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
 import { useController } from 'react-hook-form';
 import type { UseControllerProps, FieldValues } from 'react-hook-form';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
-import { FormControl, FormControlError, FormControlErrorText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
+import {
+  FormControl,
+  FormControlError,
+  FormControlErrorText,
+  FormControlHelper,
+  FormControlHelperText,
+} from '@/components/ui/form-control';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Pressable } from '@/components/ui/pressable';
 import { Icon } from '@/components/ui/icon';
@@ -14,7 +27,7 @@ import { ScrollView } from 'react-native';
 import { useClientsController } from '../controllers/clients.controller';
 import type { Client } from '@gymspace/sdk';
 
-interface ClientSelectorProps<TFieldValues extends FieldValues = FieldValues> 
+interface ClientSelectorProps<TFieldValues extends FieldValues = FieldValues>
   extends UseControllerProps<TFieldValues> {
   label?: string;
   description?: string;
@@ -24,47 +37,52 @@ interface ClientSelectorProps<TFieldValues extends FieldValues = FieldValues>
   onClientSelect?: (client: Client | null) => void;
 }
 
-export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({ 
-  name, 
+export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
+  name,
   control,
   rules,
   defaultValue,
   shouldUnregister,
-  label = 'Cliente', 
+  label = 'Cliente',
   description,
   placeholder = 'Seleccionar cliente',
   enabled = true,
   allowClear = false,
-  onClientSelect
+  onClientSelect,
 }: ClientSelectorProps<TFieldValues>) {
-  const { field, fieldState } = useController({ 
-    name, 
+  const { field, fieldState } = useController({
+    name,
     control,
     rules,
     defaultValue,
-    shouldUnregister
+    shouldUnregister,
   });
-  
+
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [tempValue, setTempValue] = useState(field.value || '');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  
+
   const { useClientsList, useClientDetail } = useClientsController();
-  
+
   // Fetch clients list with search
-  const { data: clientsData, isLoading, error } = useClientsList({
+  const {
+    data: clientsData,
+    isLoading,
+    error,
+  } = useClientsList({
     search: searchQuery,
-    limit: 50
+    limit: 50,
+    page: 0,
   });
-  
+
   // Only fetch selected client details when field.value exists and is not empty
   const { data: clientDetailData } = useClientDetail(
-    field.value && typeof field.value === 'string' && field.value.length > 0 
-      ? field.value 
-      : undefined
+    field.value && typeof field.value === 'string' && field.value.length > 0
+      ? field.value
+      : undefined,
   );
-  
+
   // Update selectedClient when clientDetailData changes
   useEffect(() => {
     if (clientDetailData) {
@@ -73,14 +91,14 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
       setSelectedClient(null);
     }
   }, [clientDetailData, field.value]);
-  
+
   const clients = useMemo(() => {
     return clientsData?.data || [];
   }, [clientsData]);
-  
+
   const handleSave = () => {
     field.onChange(tempValue);
-    const selected = clients.find(c => c.id === tempValue);
+    const selected = clients.find((c) => c.id === tempValue);
     if (selected) {
       setSelectedClient(selected);
       onClientSelect?.(selected);
@@ -90,19 +108,19 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
     }
     setShowModal(false);
   };
-  
+
   const handleCancel = () => {
     setTempValue(field.value || '');
     setSearchQuery('');
     setShowModal(false);
   };
-  
+
   const handleClear = () => {
     field.onChange('');
     setSelectedClient(null);
     onClientSelect?.(null);
   };
-  
+
   const openModal = () => {
     if (enabled) {
       setTempValue(field.value || '');
@@ -110,28 +128,26 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
       setShowModal(true);
     }
   };
-  
+
   const handleClientPress = (clientId: string) => {
     setTempValue(clientId);
   };
-  
+
   return (
     <>
       <FormControl isInvalid={!!fieldState.error}>
         <VStack className="gap-1">
           {label && <Text className="font-medium text-gray-900">{label}</Text>}
-          
+
           {description && (
             <FormControlHelper>
               <FormControlHelperText>{description}</FormControlHelperText>
             </FormControlHelper>
           )}
-          
-          <Pressable
-            onPress={openModal}
-            disabled={!enabled}
-          >
-            <View className={`
+
+          <Pressable onPress={openModal} disabled={!enabled}>
+            <View
+              className={`
               bg-white 
               border 
               ${fieldState.error ? 'border-red-500' : 'border-gray-300'} 
@@ -140,13 +156,16 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
               py-4
               min-h-[60px]
               ${!enabled ? 'opacity-50' : ''}
-            `}>
+            `}
+            >
               <HStack className="justify-between items-center flex-1">
                 {selectedClient ? (
                   <VStack className="flex-1 gap-0.5">
                     <Text className="text-gray-900 font-medium">{selectedClient.name}</Text>
                     {selectedClient.documentValue && (
-                      <Text className="text-xs text-gray-500">Doc: {selectedClient.documentValue}</Text>
+                      <Text className="text-xs text-gray-500">
+                        Doc: {selectedClient.documentValue}
+                      </Text>
                     )}
                   </VStack>
                 ) : (
@@ -154,7 +173,7 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
                 )}
                 <HStack className="gap-2 items-center">
                   {allowClear && field.value && (
-                    <Pressable 
+                    <Pressable
                       onPress={(e) => {
                         e.stopPropagation();
                         handleClear();
@@ -169,7 +188,7 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
               </HStack>
             </View>
           </Pressable>
-          
+
           {fieldState.error && (
             <FormControlError>
               <FormControlErrorText>{fieldState.error.message}</FormControlErrorText>
@@ -177,7 +196,7 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
           )}
         </VStack>
       </FormControl>
-      
+
       <Modal
         visible={showModal}
         transparent={true}
@@ -188,7 +207,7 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
           <TouchableWithoutFeedback onPress={handleCancel}>
             <View className="flex-1" />
           </TouchableWithoutFeedback>
-          
+
           <View className="bg-white rounded-t-3xl h-5/6">
             {/* Header */}
             <View className="px-6 py-4 border-b border-gray-200">
@@ -200,7 +219,7 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
                   <Icon as={XIcon} className="text-gray-400" size="md" />
                 </Pressable>
               </HStack>
-              
+
               {/* Search Bar */}
               <View className="relative">
                 <View className="absolute left-3 top-3 z-10">
@@ -217,7 +236,7 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
                 />
               </View>
             </View>
-            
+
             {/* Clients List */}
             <ScrollView className="flex-1 px-6">
               {isLoading ? (
@@ -244,31 +263,38 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
                       onPress={() => handleClientPress(client.id)}
                       className={`
                         p-4 rounded-lg border
-                        ${tempValue === client.id 
-                          ? 'bg-blue-50 border-blue-400' 
-                          : 'bg-white border-gray-200'
+                        ${
+                          tempValue === client.id
+                            ? 'bg-blue-50 border-blue-400'
+                            : 'bg-white border-gray-200'
                         }
                       `}
                     >
                       <VStack className="gap-1">
                         <HStack className="justify-between items-start">
                           <VStack className="flex-1 gap-0.5">
-                            <Text className={`font-medium ${
-                              tempValue === client.id ? 'text-blue-900' : 'text-gray-900'
-                            }`}>
+                            <Text
+                              className={`font-medium ${
+                                tempValue === client.id ? 'text-blue-900' : 'text-gray-900'
+                              }`}
+                            >
                               {client.name}
                             </Text>
                             {client.email && (
-                              <Text className={`text-xs ${
-                                tempValue === client.id ? 'text-blue-700' : 'text-gray-500'
-                              }`}>
+                              <Text
+                                className={`text-xs ${
+                                  tempValue === client.id ? 'text-blue-700' : 'text-gray-500'
+                                }`}
+                              >
                                 {client.email}
                               </Text>
                             )}
                             {client.documentValue && (
-                              <Text className={`text-xs ${
-                                tempValue === client.id ? 'text-blue-700' : 'text-gray-500'
-                              }`}>
+                              <Text
+                                className={`text-xs ${
+                                  tempValue === client.id ? 'text-blue-700' : 'text-gray-500'
+                                }`}
+                              >
                                 Doc: {client.documentValue}
                               </Text>
                             )}
@@ -290,24 +316,14 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
                 </VStack>
               )}
             </ScrollView>
-            
+
             {/* Footer */}
             <View className="px-6 py-4 border-t border-gray-200">
               <HStack className="gap-3">
-                <Button
-                  variant="outline"
-                  size="md"
-                  onPress={handleCancel}
-                  className="flex-1"
-                >
+                <Button variant="outline" size="md" onPress={handleCancel} className="flex-1">
                   <ButtonText>Cancelar</ButtonText>
                 </Button>
-                <Button
-                  size="md"
-                  onPress={handleSave}
-                  className="flex-1"
-                  disabled={!tempValue}
-                >
+                <Button size="md" onPress={handleSave} className="flex-1" disabled={!tempValue}>
                   <ButtonText>Seleccionar</ButtonText>
                 </Button>
               </HStack>

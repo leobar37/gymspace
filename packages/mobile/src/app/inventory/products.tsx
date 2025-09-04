@@ -9,7 +9,7 @@ import { Text } from '@/components/ui/text';
 import { View } from '@/components/ui/view';
 import { VStack } from '@/components/ui/vstack';
 import { useRequireAuth } from '@/controllers/auth.controller';
-import { useProducts } from '@/hooks/useProducts';
+import { useProducts } from '@/features/products/hooks/useProducts';
 import type { Product, SearchProductsParams } from '@gymspace/sdk';
 import { router } from 'expo-router';
 import { ChevronLeftIcon, InfoIcon, PackageIcon, PlusIcon } from 'lucide-react-native';

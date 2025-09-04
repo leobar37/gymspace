@@ -1,76 +1,61 @@
-import React, { useState } from 'react';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import { ScrollView, Alert } from 'react-native';
-import { format } from 'date-fns';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Box } from '@/components/ui/box';
-import { VStack } from '@/components/ui/vstack';
-import { Text } from '@/components/ui/text';
-import { Heading } from '@/components/ui/heading';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import { AlertDialog, AlertDialogBackdrop, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter } from '@/components/ui/alert-dialog';
-import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton } from '@/components/ui/modal';
-import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicator, ActionsheetItem, ActionsheetItemText } from '@/components/ui/actionsheet';
-import { Icon } from '@/components/ui/icon';
-import { EditIcon, XIcon, PauseIcon } from 'lucide-react-native';
-import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
-import { 
-  useContractsController,
+import {
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from '@/components/ui/alert-dialog';
+import { Card } from '@/components/ui/card';
+import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { Icon } from '@/components/ui/icon';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import {
   ContractDetailHeader,
-  ContractStatusCard,
   ContractInfoCard,
+  ContractPaymentMethodCard,
   ContractPricingCard,
   ContractReceiptsCard,
-  ContractActionsCard
+  ContractStatusCard,
+  useContractsController,
 } from '@/features/contracts';
 import { ContractStatus } from '@gymspace/sdk';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { PauseIcon, RefreshCwIcon, XIcon } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
+import { Alert, ScrollView } from 'react-native';
+import { SheetManager } from 'react-native-actions-sheet';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { z } from 'zod';
+
 import { useFormatPrice } from '@/config/ConfigContext';
 
-// Form schemas
-const freezeSchema = z.object({
-  freezeStartDate: z.string().min(1, 'La fecha de inicio es requerida'),
-  freezeEndDate: z.string().min(1, 'La fecha de fin es requerida'),
-  reason: z.string().optional(),
-});
-
+// Form schema for cancel
 const cancelSchema = z.object({
   reason: z.string().min(1, 'El motivo es requerido'),
 });
 
-type FreezeFormData = z.infer<typeof freezeSchema>;
 type CancelFormData = z.infer<typeof cancelSchema>;
 
 export default function ContractDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const formatPriceConfig = useFormatPrice();
-  const [showFreezeModal, setShowFreezeModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showActionSheet, setShowActionSheet] = useState(false);
 
   const {
     useContractDetail,
-    freezeContract,
-    isFreezingContract,
     cancelContract,
     isCancellingContract,
   } = useContractsController();
 
   const { data: contract, isLoading } = useContractDetail(id!);
-
-  // Freeze form
-  const freezeForm = useForm<FreezeFormData>({
-    resolver: zodResolver(freezeSchema),
-    defaultValues: {
-      freezeStartDate: format(new Date(), 'yyyy-MM-dd'),
-      freezeEndDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-      reason: '',
-    },
-  });
 
   // Cancel form
   const cancelForm = useForm<CancelFormData>({
@@ -81,28 +66,6 @@ export default function ContractDetailScreen() {
   });
 
   const formatPrice = formatPriceConfig;
-
-  const handleFreeze = async (data: FreezeFormData) => {
-    freezeContract(
-      { 
-        id: id!, 
-        data: {
-          freezeStartDate: data.freezeStartDate,
-          freezeEndDate: data.freezeEndDate,
-          reason: data.reason
-        }
-      },
-      {
-        onSuccess: () => {
-          setShowFreezeModal(false);
-          Alert.alert('Éxito', 'El contrato ha sido congelado');
-        },
-        onError: (error: any) => {
-          Alert.alert('Error', error.response?.data?.message || 'No se pudo congelar el contrato');
-        },
-      }
-    );
-  };
 
   const handleCancel = async (data: CancelFormData) => {
     cancelContract(
@@ -115,10 +78,9 @@ export default function ContractDetailScreen() {
         onError: (error: any) => {
           Alert.alert('Error', error.response?.data?.message || 'No se pudo cancelar el contrato');
         },
-      }
+      },
     );
   };
-
 
   if (isLoading) {
     return (
@@ -145,110 +107,105 @@ export default function ContractDetailScreen() {
         }}
       />
       <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-        <ContractDetailHeader 
-          contract={contract}
-          onMenuPress={() => setShowActionSheet(true)}
-        />
-        
+        <ContractDetailHeader contract={contract} />
+
         <ScrollView className="flex-1 bg-gray-50">
           <VStack className="p-4 gap-4">
             <ContractStatusCard contract={contract} />
             <ContractInfoCard contract={contract} />
+            <ContractPaymentMethodCard contract={contract} />
             <ContractPricingCard contract={contract} formatPrice={formatPrice} />
             <ContractReceiptsCard contract={contract} />
-            <ContractActionsCard 
-              contract={contract}
-              onFreezePress={() => setShowFreezeModal(true)}
-              onCancelPress={() => setShowCancelDialog(true)}
-            />
+
+            {/* Actions Section */}
+            <Card className="p-4">
+              <Text className="text-sm font-semibold text-gray-700 mb-3">Acciones</Text>
+              <VStack className="gap-3">
+                {/* Renew Button */}
+                {(contract.status === ContractStatus.ACTIVE ||
+                  contract.status === ContractStatus.EXPIRING_SOON) &&
+                  (!contract.renewals || contract.renewals.length === 0) && (
+                    <Button
+                      onPress={() =>
+                        SheetManager.show('contract-renewal', {
+                          payload: {
+                            contract,
+                            onSuccess: () => {
+                              // Refetch contract data after successful renewal
+                            },
+                          },
+                        })
+                      }
+                      variant="solid"
+                      className="w-full"
+                    >
+                      <Icon as={RefreshCwIcon} size="sm" className="mr-2" />
+                      <ButtonText>Renovar Contrato</ButtonText>
+                    </Button>
+                  )}
+
+                {/* Freeze Button */}
+                {contract.status === ContractStatus.ACTIVE && !contract.freezeStartDate && (
+                  <Button
+                    onPress={() =>
+                      SheetManager.show('contract-freeze', {
+                        payload: {
+                          contract,
+                          onSuccess: () => {
+                            // Refetch contract data after successful freeze
+                          },
+                        },
+                      })
+                    }
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Icon as={PauseIcon} size="sm" className="mr-2" />
+                    <ButtonText>Congelar Contrato</ButtonText>
+                  </Button>
+                )}
+
+                {/* Cancel Button */}
+                {contract.status === ContractStatus.ACTIVE && (
+                  <Button
+                    onPress={() => setShowCancelDialog(true)}
+                    action="negative"
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Icon as={XIcon} size="sm" className="mr-2" />
+                    <ButtonText>Cancelar Contrato</ButtonText>
+                  </Button>
+                )}
+              </VStack>
+            </Card>
           </VStack>
         </ScrollView>
 
-
-        {/* Freeze Modal */}
-        <Modal
-          isOpen={showFreezeModal}
-          onClose={() => setShowFreezeModal(false)}
-          size="lg"
-        >
-          <ModalBackdrop />
-          <ModalContent>
-            <ModalHeader>
-              <Heading size="md">Congelar contrato</Heading>
-              <ModalCloseButton />
-            </ModalHeader>
-            <ModalBody>
-              <VStack className="gap-4">
-                <FormInput
-                  control={freezeForm.control}
-                  name="freezeStartDate"
-                  label="Fecha de inicio"
-                  placeholder="YYYY-MM-DD"
-                />
-
-                <FormInput
-                  control={freezeForm.control}
-                  name="freezeEndDate"
-                  label="Fecha de fin"
-                  placeholder="YYYY-MM-DD"
-                />
-
-                <FormTextarea
-                  control={freezeForm.control}
-                  name="reason"
-                  label="Motivo (opcional)"
-                  placeholder="Ingrese el motivo del congelamiento"
-                />
-              </VStack>
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                onPress={() => setShowFreezeModal(false)}
-                variant="outline"
-                className="mr-3"
-              >
-                <ButtonText>Cancelar</ButtonText>
-              </Button>
-              <Button
-                onPress={freezeForm.handleSubmit(handleFreeze)}
-                isDisabled={isFreezingContract}
-              >
-                <ButtonText>Congelar</ButtonText>
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-
         {/* Cancel Dialog */}
-        <AlertDialog
-          isOpen={showCancelDialog}
-          onClose={() => setShowCancelDialog(false)}
-        >
+        <AlertDialog isOpen={showCancelDialog} onClose={() => setShowCancelDialog(false)}>
           <AlertDialogBackdrop />
           <AlertDialogContent>
             <AlertDialogHeader>
               <Heading size="md">Cancelar contrato</Heading>
             </AlertDialogHeader>
             <AlertDialogBody>
-              <VStack className="gap-4">
-                <Text>
-                  ¿Está seguro que desea cancelar este contrato? Esta acción no se puede deshacer.
-                </Text>
-                
-                <FormTextarea
-                  control={cancelForm.control}
-                  name="reason"
-                  label="Motivo de cancelación"
-                  placeholder="Ingrese el motivo"
-                />
-              </VStack>
+              <FormProvider {...cancelForm}>
+                <VStack className="gap-4">
+                  <Text>
+                    ¿Está seguro que desea cancelar este contrato? Esta acción no se puede deshacer.
+                  </Text>
+
+                  <FormTextarea
+                    name="reason"
+                    label="Motivo de cancelación"
+                    placeholder="Ingrese el motivo"
+                  />
+                </VStack>
+              </FormProvider>
             </AlertDialogBody>
             <AlertDialogFooter>
-              <Button
-                onPress={() => setShowCancelDialog(false)}
-                variant="outline"
-                className="mr-3"
-              >
+              <Button onPress={() => setShowCancelDialog(false)} variant="outline" className="mr-3">
                 <ButtonText>No, mantener</ButtonText>
               </Button>
               <Button
@@ -262,42 +219,7 @@ export default function ContractDetailScreen() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Action Sheet */}
-        <Actionsheet isOpen={showActionSheet} onClose={() => setShowActionSheet(false)}>
-          <ActionsheetBackdrop />
-          <ActionsheetContent>
-            <ActionsheetDragIndicator />
-            
-            <ActionsheetItem onPress={() => {
-              setShowActionSheet(false);
-              // router.push(`/contracts/${id}/edit`);
-            }}>
-              <Icon as={EditIcon} size="sm" className="mr-2" />
-              <ActionsheetItemText>Editar contrato</ActionsheetItemText>
-            </ActionsheetItem>
-
-            {contract.status === ContractStatus.ACTIVE && !contract.freezeStartDate && (
-              <ActionsheetItem onPress={() => {
-                setShowActionSheet(false);
-                setShowFreezeModal(true);
-              }}>
-                <Icon as={PauseIcon} size="sm" className="mr-2" />
-                <ActionsheetItemText>Congelar contrato</ActionsheetItemText>
-              </ActionsheetItem>
-            )}
-
-            {contract.status === ContractStatus.ACTIVE && (
-              <ActionsheetItem onPress={() => {
-                setShowActionSheet(false);
-                setShowCancelDialog(true);
-              }}>
-                <Icon as={XIcon} size="sm" className="mr-2 text-red-500" />
-                <ActionsheetItemText className="text-red-500">Cancelar contrato</ActionsheetItemText>
-              </ActionsheetItem>
-            )}
-          </ActionsheetContent>
-        </Actionsheet>
-
+        {/* Renewal Drawer */}
       </SafeAreaView>
     </>
   );

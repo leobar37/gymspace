@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
+import { dashboardKeys } from '@/features/dashboard/controllers/dashboard.controller';
+import { clientsKeys } from '@/features/clients/controllers/clients.controller';
 import { 
-  Contract, 
   CreateContractDto, 
   RenewContractDto, 
   FreezeContractDto,
@@ -19,32 +20,14 @@ export const contractsKeys = {
   clientContracts: (clientId: string) => [...contractsKeys.all, 'client', clientId] as const,
 };
 
-// Types
-export interface ContractFormData {
-  gymClientId: string;
-  gymMembershipPlanId: string;
-  startDate: string;
-  discountPercentage?: number;
-  customPrice?: number;
-  metadata?: Record<string, any>;
-  receiptIds?: string[];
-}
-
-export interface RenewFormData {
-  startDate?: string;
-  discountPercentage?: number;
-  customPrice?: number;
-  metadata?: Record<string, any>;
-}
-
-export interface FreezeFormData {
-  freezeStartDate: string;
-  freezeEndDate: string;
-  reason?: string;
-}
+// Use SDK types directly instead of duplicating them
+export type ContractFormData = CreateContractDto;
+export type RenewFormData = RenewContractDto;
+export type FreezeFormData = FreezeContractDto;
 
 export interface SearchFilters {
   status?: ContractStatus;
+  clientName?: string;
   page?: number;
   limit?: number;
 }
@@ -53,22 +36,22 @@ export const useContractsController = () => {
   const { sdk } = useGymSdk();
   const queryClient = useQueryClient();
 
-  // Get contracts list
+  // Get contracts list with pagination support
   const useContractsList = (filters: SearchFilters = {}) => {
     return useQuery({
       queryKey: contractsKeys.list(filters),
       queryFn: async () => {
         const page = filters.page || 1;
         const limit = filters.limit || 20;
-        const offset = (page - 1) * limit;
         
         const params: GetContractsParams = {
           status: filters.status,
+          clientName: filters.clientName,
+          page,
           limit,
-          offset,
-        } as any; // Type assertion needed as SDK types expect page/limit but API uses offset/limit
+        };
         
-        const response = await sdk.contracts.getGymContracts(params);
+        const response = await sdk.contracts.searchContracts(params);
         return response;
       },
       staleTime: 2 * 60 * 1000, // 2 minutes
@@ -104,16 +87,8 @@ export const useContractsController = () => {
   // Create contract mutation
   const createContractMutation = useMutation({
     mutationFn: async (data: ContractFormData) => {
-      const createData: CreateContractDto = {
-        gymClientId: data.gymClientId,
-        gymMembershipPlanId: data.gymMembershipPlanId,
-        startDate: data.startDate,
-        discountPercentage: data.discountPercentage,
-        customPrice: data.customPrice,
-        receiptIds: data.receiptIds,
-        metadata: data.metadata,
-      };
-      const response = await sdk.contracts.createContract(createData);
+      // Since ContractFormData is now the same as CreateContractDto, we can pass it directly
+      const response = await sdk.contracts.createContract(data);
       return response;
     },
     onSuccess: (data) => {
@@ -124,25 +99,26 @@ export const useContractsController = () => {
         queryClient.invalidateQueries({ 
           queryKey: contractsKeys.clientContracts(data.gymClientId) 
         });
+        // Invalidate client stats to refresh contract-related data
+        queryClient.invalidateQueries({ queryKey: clientsKeys.stats(data.gymClientId) });
       }
+      
+      // Invalidate dashboard stats (contract counts, recent activity, revenue)
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.recentActivity() });
     },
   });
 
   // Renew contract mutation
   const renewContractMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: RenewFormData }) => {
-      const renewData: RenewContractDto = {
-        startDate: data.startDate,
-        discountPercentage: data.discountPercentage,
-        customPrice: data.customPrice,
-        metadata: data.metadata,
-      };
-      const response = await sdk.contracts.renewContract(id, renewData);
+      // Since RenewFormData is now the same as RenewContractDto, we can pass it directly
+      const response = await sdk.contracts.renewContract(id, data);
       return response;
     },
     onSuccess: (data, variables) => {
-      // Update cache for this contract
-      queryClient.setQueryData(contractsKeys.detail(variables.id), data);
+      // Invalidate the specific contract detail to refetch with renewals
+      queryClient.invalidateQueries({ queryKey: contractsKeys.detail(variables.id) });
       // Invalidate list to show updated data
       queryClient.invalidateQueries({ queryKey: contractsKeys.lists() });
       // Also invalidate client contracts
@@ -150,19 +126,22 @@ export const useContractsController = () => {
         queryClient.invalidateQueries({ 
           queryKey: contractsKeys.clientContracts(data.gymClientId) 
         });
+        // Invalidate client stats to refresh contract-related data
+        queryClient.invalidateQueries({ queryKey: clientsKeys.stats(data.gymClientId) });
       }
+      
+      // Invalidate dashboard stats (contract renewals affect revenue, recent activity)
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.recentActivity() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.expiringContracts() });
     },
   });
 
   // Freeze contract mutation
   const freezeContractMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: FreezeFormData }) => {
-      const freezeData: FreezeContractDto = {
-        freezeStartDate: data.freezeStartDate,
-        freezeEndDate: data.freezeEndDate,
-        reason: data.reason,
-      };
-      const response = await sdk.contracts.freezeContract(id, freezeData);
+      // Since FreezeFormData is now the same as FreezeContractDto, we can pass it directly
+      const response = await sdk.contracts.freezeContract(id, data);
       return response;
     },
     onSuccess: (data, variables) => {
@@ -175,7 +154,13 @@ export const useContractsController = () => {
         queryClient.invalidateQueries({ 
           queryKey: contractsKeys.clientContracts(data.gymClientId) 
         });
+        // Invalidate client stats to refresh contract-related data
+        queryClient.invalidateQueries({ queryKey: clientsKeys.stats(data.gymClientId) });
       }
+      
+      // Invalidate dashboard stats (frozen contracts affect active count, recent activity)
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.recentActivity() });
     },
   });
 
@@ -195,7 +180,14 @@ export const useContractsController = () => {
         queryClient.invalidateQueries({ 
           queryKey: contractsKeys.clientContracts(data.gymClientId) 
         });
+        // Invalidate client stats to refresh contract-related data
+        queryClient.invalidateQueries({ queryKey: clientsKeys.stats(data.gymClientId) });
       }
+      
+      // Invalidate dashboard stats (cancelled contracts affect active count, recent activity)
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.recentActivity() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.expiringContracts() });
     },
   });
 

@@ -42,9 +42,12 @@ export interface CreateProductDto {
   description?: string;
   price: number;
   stock?: number;
+  minStock?: number;
+  maxStock?: number;
   categoryId?: string;
   imageId?: string;
   status?: 'active' | 'inactive';
+  trackInventory?: 'none' | 'simple' | 'advanced' | 'capacity';
 }
 
 export interface CreateServiceDto {
@@ -60,9 +63,12 @@ export interface UpdateProductDto {
   description?: string;
   price?: number;
   stock?: number;
+  minStock?: number;
+  maxStock?: number;
   categoryId?: string;
   imageId?: string;
   status?: 'active' | 'inactive';
+  trackInventory?: 'none' | 'simple' | 'advanced' | 'capacity';
 }
 
 export interface UpdateStockDto {
@@ -80,6 +86,8 @@ export interface Product {
   description?: string;
   price: number;
   stock: number | null;
+  minStock?: number | null;
+  maxStock?: number | null;
   imageId?: string;
   status: 'active' | 'inactive';
   type?: 'Product' | 'Service';
@@ -134,6 +142,5 @@ export interface StockMovement {
   createdBy?: {
     id: string;
     name: string;
-    email: string;
   };
 }

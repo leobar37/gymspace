@@ -186,23 +186,36 @@ export class OrganizationsService {
         gyms: {
           current: gymsCount,
           limit: org.subscriptionPlan.maxGyms,
-          percentage: org.subscriptionPlan.maxGyms > 0 
-            ? Math.round((gymsCount / org.subscriptionPlan.maxGyms) * 100 * 100) / 100
-            : 0,
+          percentage:
+            org.subscriptionPlan.maxGyms > 0
+              ? Math.round((gymsCount / org.subscriptionPlan.maxGyms) * 100 * 100) / 100
+              : 0,
         },
         clients: {
           current: totalClients,
           limit: org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms,
-          percentage: (org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms) > 0
-            ? Math.round((totalClients / (org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms)) * 100 * 100) / 100
-            : 0,
+          percentage:
+            org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms > 0
+              ? Math.round(
+                  (totalClients /
+                    (org.subscriptionPlan.maxClientsPerGym * org.subscriptionPlan.maxGyms)) *
+                    100 *
+                    100,
+                ) / 100
+              : 0,
         },
         collaborators: {
           current: totalCollaborators,
           limit: org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms,
-          percentage: (org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms) > 0
-            ? Math.round((totalCollaborators / (org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms)) * 100 * 100) / 100
-            : 0,
+          percentage:
+            org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms > 0
+              ? Math.round(
+                  (totalCollaborators /
+                    (org.subscriptionPlan.maxUsersPerGym * org.subscriptionPlan.maxGyms)) *
+                    100 *
+                    100,
+                ) / 100
+              : 0,
         },
       },
       metrics: {

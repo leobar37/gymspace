@@ -1,27 +1,24 @@
-import React from 'react';
-import { View, ScrollView } from 'react-native';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
-import { Icon } from '@/components/ui/icon';
 import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
-import { Divider } from '@/components/ui/divider';
-import { 
-  TrendingUpIcon,
-  CalendarIcon,
-  DollarSignIcon,
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { useFormatPrice } from '@/config/ConfigContext';
+import {
   ActivityIcon,
-  ClipboardListIcon,
-  FileTextIcon,
+  CalendarIcon,
   CheckCircleIcon,
+  DollarSignIcon,
+  FileTextIcon,
+  TrendingUpIcon,
   UserIcon
 } from 'lucide-react-native';
-import { useFormatPrice } from '@/config/ConfigContext';
+import React from 'react';
+import { ScrollView, View } from 'react-native';
 
 interface ClientStatisticsProps {
-  clientId: string;
   stats: any;
   isLoading?: boolean;
 }
@@ -79,7 +76,6 @@ const StatCard: React.FC<StatCardProps> = ({
 };
 
 export const ClientStatisticsSection: React.FC<ClientStatisticsProps> = ({ 
-  clientId, 
   stats,
   isLoading = false 
 }) => {
@@ -194,31 +190,6 @@ export const ClientStatisticsSection: React.FC<ClientStatisticsProps> = ({
           </View>
         </VStack>
 
-        {/* Evaluations */}
-        <VStack className="gap-3">
-          <Heading className="text-lg font-semibold text-gray-900">
-            Evaluaciones
-          </Heading>
-          
-          <Card className="p-4 bg-white">
-            <HStack className="items-center justify-between">
-              <VStack className="gap-2">
-                <HStack className="items-center gap-2">
-                  <Icon as={ClipboardListIcon} className="w-5 h-5 text-purple-600" />
-                  <Text className="font-medium text-gray-900">
-                    {stats.evaluations?.total || 0} Evaluaciones Totales
-                  </Text>
-                </HStack>
-                
-                {stats.evaluations?.lastEvaluation && (
-                  <Text className="text-sm text-gray-600">
-                    Última: {formatDate(stats.evaluations.lastEvaluation)}
-                  </Text>
-                )}
-              </VStack>
-            </HStack>
-          </Card>
-        </VStack>
 
         {/* Financial Stats */}
         <VStack className="gap-3">
@@ -255,7 +226,7 @@ export const ClientStatisticsSection: React.FC<ClientStatisticsProps> = ({
             </Heading>
             
             <VStack className="gap-3">
-              {stats.membershipHistory.map((membership: any, index: number) => (
+              {stats.membershipHistory.map((membership: any) => (
                 <Card key={membership.id} className="p-4 bg-white">
                   <VStack className="gap-2">
                     <HStack className="items-center justify-between">

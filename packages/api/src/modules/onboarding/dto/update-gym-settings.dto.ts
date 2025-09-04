@@ -68,7 +68,6 @@ class WeeklyScheduleDto {
   sunday: BusinessHoursDto;
 }
 
-
 class SocialMediaDto {
   @ApiPropertyOptional({ example: 'https://facebook.com/mygym' })
   @IsOptional()
@@ -153,7 +152,6 @@ export class UpdateGymSettingsDto {
   @IsOptional()
   @IsString()
   description?: string;
-
 
   // Social Media
   @ApiPropertyOptional({ type: SocialMediaDto, description: 'Social media links' })

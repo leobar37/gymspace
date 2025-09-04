@@ -11,7 +11,13 @@ import {
   UpdateStockDto,
 } from './dto';
 import { ResourceNotFoundException, BusinessException } from '../../common/exceptions';
-import { Prisma, ProductStatus, ProductType, TrackInventory, StockMovementType } from '@prisma/client';
+import {
+  Prisma,
+  ProductStatus,
+  ProductType,
+  TrackInventory,
+  StockMovementType,
+} from '@prisma/client';
 import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
@@ -570,6 +576,48 @@ export class ProductsService {
       },
       orderBy: {
         stock: 'asc',
+      },
+    });
+  }
+
+  async getProductStockMovements(ctx: RequestContext, productId: string) {
+    const gymId = ctx.getGymId()!;
+
+    // First verify the product exists and belongs to the gym
+    const product = await this.prisma.product.findFirst({
+      where: {
+        id: productId,
+        gymId,
+        deletedAt: null,
+      },
+    });
+
+    if (!product) {
+      throw new ResourceNotFoundException('Product not found');
+    }
+
+    // Get stock movements for the product
+    return this.prisma.stockMovement.findMany({
+      where: {
+        productId,
+        gymId,
+      },
+      include: {
+        supplier: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }

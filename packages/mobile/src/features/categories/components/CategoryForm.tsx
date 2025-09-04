@@ -40,6 +40,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
       description: initialData?.description || '',
       color: initialData?.color || PRESET_COLORS[0],
     },
+    mode: 'onChange',
   });
 
   const selectedColor = form.watch('color');
@@ -116,7 +117,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
 
         <Button
           onPress={handleSubmit}
-          disabled={isSubmitting}
+          isDisabled={isSubmitting || !form.formState.isValid}
           className="mt-4"
         >
           <ButtonText>

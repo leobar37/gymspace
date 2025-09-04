@@ -1,32 +1,32 @@
-import React from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
-import { Icon } from '@/components/ui/icon';
-import { Divider } from '@/components/ui/divider';
 import { Button, ButtonText } from '@/components/ui/button';
-import {
-  UserIcon,
-  BuildingIcon,
-  CreditCardIcon,
-  BellIcon,
-  LockIcon,
-  HelpCircleIcon,
-  LogOutIcon,
-  ChevronRightIcon,
-  SettingsIcon,
-  FileTextIcon,
-  TruckIcon,
-  PackageIcon,
-  Building2Icon,
-} from 'lucide-react-native';
-import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useCurrentSession } from '@/hooks/useCurrentSession';
+import { Card } from '@/components/ui/card';
+import { Divider } from '@/components/ui/divider';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useAuthToken } from '@/hooks/useAuthToken';
+import { useCurrentSession } from '@/hooks/useCurrentSession';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { router } from 'expo-router';
+import {
+  BellIcon,
+  Building2Icon,
+  BuildingIcon,
+  ChevronRightIcon,
+  CreditCardIcon,
+  HelpCircleIcon,
+  LockIcon,
+  LogOutIcon,
+  PackageIcon,
+  SettingsIcon,
+  TruckIcon,
+  UserIcon,
+  WalletIcon
+} from 'lucide-react-native';
+import React from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 
 interface MenuItemProps {
   icon: any;
@@ -136,6 +136,12 @@ export const ProfileMenu: React.FC = () => {
           title: 'Plan y Facturación',
           subtitle: 'Gestiona tu suscripción',
           onPress: () => router.push('/subscription'),
+        },
+        {
+          icon: WalletIcon,
+          title: 'Métodos de Pago',
+          subtitle: 'Tarjetas y formas de pago',
+          onPress: () => router.push('/payment-methods'),
         },
       ],
     },

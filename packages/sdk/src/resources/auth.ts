@@ -33,8 +33,8 @@ export class AuthResource extends BaseResource {
     return this.client.post<LoginResponseDto>(`${this.basePath}/login`, data, options);
   }
 
-  async refreshToken(options?: RequestOptions): Promise<LoginResponseDto> {
-    return this.client.post<LoginResponseDto>(`${this.basePath}/refresh`, undefined, options);
+  async refreshToken(refreshToken: string, options?: RequestOptions): Promise<LoginResponseDto> {
+    return this.client.post<LoginResponseDto>(`${this.basePath}/refresh`, { refresh_token: refreshToken }, options);
   }
 
   async verifyEmail(

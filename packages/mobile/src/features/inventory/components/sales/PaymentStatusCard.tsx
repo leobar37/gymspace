@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useLoadingScreen } from '@/shared/loading-screen';
-import { useUpdatePaymentStatus } from '@/hooks/useSales';
+import { useUpdatePaymentStatus } from '@/features/inventory/hooks/useSales';
 import type { Sale } from '@gymspace/sdk';
 
 interface PaymentStatusCardProps {

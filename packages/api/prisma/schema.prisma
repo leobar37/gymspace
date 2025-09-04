@@ -7,6 +7,10 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+generator dbml {
+    provider = "prisma-dbml-generator"
+}
+
 // Enums
 enum UserType {
     owner
@@ -49,7 +53,9 @@ enum ContractStatus {
     active
     expiring_soon
     expired
+    frozen
     cancelled
+    for_renew
 }
 
 enum PaymentFrequency {
@@ -129,25 +135,24 @@ enum StockMovementType {
 
 // Models
 model SubscriptionPlan {
-    id               String    @id @default(uuid())
+    id               String          @id @default(uuid())
     name             String
     price            Json
-    billingFrequency String    @map("billing_frequency")
+    billingFrequency String          @map("billing_frequency")
     duration         Int?
     durationPeriod   DurationPeriod? @map("duration_period")
-    maxGyms          Int       @map("max_gyms")
-    maxClientsPerGym Int       @map("max_clients_per_gym")
-    maxUsersPerGym   Int       @map("max_users_per_gym")
+    maxGyms          Int             @map("max_gyms")
+    maxClientsPerGym Int             @map("max_clients_per_gym")
+    maxUsersPerGym   Int             @map("max_users_per_gym")
     features         Json
-    description      String?   @db.Text
-    mercadopagoId    String?   @map("mercadopago_id")
-    isActive         Boolean   @default(true) @map("is_active")
-    createdByUserId  String?   @map("created_by_user_id")
-    updatedByUserId  String?   @map("updated_by_user_id")
-    createdAt        DateTime  @default(now()) @map("created_at")
-    updatedAt        DateTime  @updatedAt @map("updated_at")
-    deletedAt        DateTime? @map("deleted_at")
-    
+    description      String?         @db.Text
+    isActive         Boolean         @default(true) @map("is_active")
+    createdByUserId  String?         @map("created_by_user_id")
+    updatedByUserId  String?         @map("updated_by_user_id")
+    createdAt        DateTime        @default(now()) @map("created_at")
+    updatedAt        DateTime        @updatedAt @map("updated_at")
+    deletedAt        DateTime?       @map("deleted_at")
+
     // Relations
     createdBy                 User?                      @relation("SubscriptionPlanCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy                 User?                      @relation("SubscriptionPlanUpdatedBy", fields: [updatedByUserId], references: [id])
@@ -182,21 +187,21 @@ model SubscriptionOrganization {
 }
 
 model User {
-    id                String    @id @default(uuid())
-    email             String    @unique
-    password          String? // Optional - auth handled by Supabase
-    name              String
-    phone             String?
-    birthDate         DateTime? @map("birth_date") // Date of birth for profile
-    userType          UserType  @map("user_type")
-    emailVerifiedAt   DateTime? @map("email_verified_at")
-    verificationCode  String?   @map("verification_code")
+    id                        String    @id @default(uuid())
+    email                     String    @unique
+    password                  String? // Optional - auth handled by Supabase
+    name                      String
+    phone                     String?
+    birthDate                 DateTime? @map("birth_date") // Date of birth for profile
+    userType                  UserType  @map("user_type")
+    emailVerifiedAt           DateTime? @map("email_verified_at")
+    verificationCode          String?   @map("verification_code")
     verificationCodeExpiresAt DateTime? @map("verification_code_expires_at")
-    createdByUserId   String?   @map("created_by_user_id")
-    updatedByUserId String?   @map("updated_by_user_id")
-    createdAt       DateTime  @default(now()) @map("created_at")
-    updatedAt       DateTime  @updatedAt @map("updated_at")
-    deletedAt       DateTime? @map("deleted_at")
+    createdByUserId           String?   @map("created_by_user_id")
+    updatedByUserId           String?   @map("updated_by_user_id")
+    createdAt                 DateTime  @default(now()) @map("created_at")
+    updatedAt                 DateTime  @updatedAt @map("updated_at")
+    deletedAt                 DateTime? @map("deleted_at")
 
     // Relations
     createdBy    User?  @relation("UserCreatedBy", fields: [createdByUserId], references: [id])
@@ -216,48 +221,50 @@ model User {
     updatedSubscriptionOrganizations SubscriptionOrganization[] @relation("SubscriptionOrganizationUpdatedBy")
     createdOrganizations             Organization[]             @relation("OrganizationCreatedBy")
     updatedOrganizations             Organization[]             @relation("OrganizationUpdatedBy")
-    createdGyms               Gym[]               @relation("GymCreatedBy")
-    updatedGyms               Gym[]               @relation("GymUpdatedBy")
-    createdRoles              Role[]              @relation("RoleCreatedBy")
-    updatedRoles              Role[]              @relation("RoleUpdatedBy")
-    createdCollaborators      Collaborator[]      @relation("CollaboratorCreatedBy")
-    updatedCollaborators      Collaborator[]      @relation("CollaboratorUpdatedBy")
-    createdInvitations        Invitation[]        @relation("InvitationCreatedBy")
-    updatedInvitations        Invitation[]        @relation("InvitationUpdatedBy")
-    createdGymClients         GymClient[]         @relation("GymClientCreatedBy")
-    updatedGymClients         GymClient[]         @relation("GymClientUpdatedBy")
-    createdGymMembershipPlans GymMembershipPlan[] @relation("GymMembershipPlanCreatedBy")
-    updatedGymMembershipPlans GymMembershipPlan[] @relation("GymMembershipPlanUpdatedBy")
-    createdContracts          Contract[]          @relation("ContractCreatedBy")
-    updatedContracts          Contract[]          @relation("ContractUpdatedBy")
-    approvedContracts         Contract[]          @relation("ContractApprovedBy")
-    cancelledContracts        Contract[]          @relation("ContractCancelledBy")
-    uploadedAssets            Asset[]             @relation("AssetUploadedBy")
-    createdAssets             Asset[]             @relation("AssetCreatedBy")
-    updatedAssets             Asset[]             @relation("AssetUpdatedBy")
-    files                     File[]              @relation("UserFiles")
-    registeredCheckIns        CheckIn[]           @relation("CheckInRegisteredBy")
-    createdCheckIns           CheckIn[]           @relation("CheckInCreatedBy")
-    updatedCheckIns           CheckIn[]           @relation("CheckInUpdatedBy")
-    createdEvaluations        Evaluation[]        @relation("EvaluationCreatedBy")
-    updatedEvaluations        Evaluation[]        @relation("EvaluationUpdatedBy")
-    completedEvaluations      Evaluation[]        @relation("EvaluationCompletedBy")
-    createdEvaluationComments EvaluationComment[] @relation("EvaluationCommentCreatedBy")
-    updatedEvaluationComments EvaluationComment[] @relation("EvaluationCommentUpdatedBy")
-    assignedLeads             Lead[]              @relation("LeadAssignedTo")
-    createdLeads              Lead[]              @relation("LeadCreatedBy")
-    updatedLeads              Lead[]              @relation("LeadUpdatedBy")
-    createdProductCategories  ProductCategory[]   @relation("ProductCategoryCreatedBy")
-    updatedProductCategories  ProductCategory[]   @relation("ProductCategoryUpdatedBy")
-    createdProducts           Product[]           @relation("ProductCreatedBy")
-    updatedProducts           Product[]           @relation("ProductUpdatedBy")
-    createdSuppliers          Supplier[]          @relation("SupplierCreatedBy")
-    updatedSuppliers          Supplier[]          @relation("SupplierUpdatedBy")
-    createdSales              Sale[]              @relation("SaleCreatedBy")
-    updatedSales              Sale[]              @relation("SaleUpdatedBy")
-    createdSaleItems          SaleItem[]          @relation("SaleItemCreatedBy")
-    updatedSaleItems          SaleItem[]          @relation("SaleItemUpdatedBy")
-    createdStockMovements     StockMovement[]     @relation("StockMovementCreatedBy")
+    createdGyms                      Gym[]                      @relation("GymCreatedBy")
+    updatedGyms                      Gym[]                      @relation("GymUpdatedBy")
+    createdRoles                     Role[]                     @relation("RoleCreatedBy")
+    updatedRoles                     Role[]                     @relation("RoleUpdatedBy")
+    createdCollaborators             Collaborator[]             @relation("CollaboratorCreatedBy")
+    updatedCollaborators             Collaborator[]             @relation("CollaboratorUpdatedBy")
+    createdInvitations               Invitation[]               @relation("InvitationCreatedBy")
+    updatedInvitations               Invitation[]               @relation("InvitationUpdatedBy")
+    createdGymClients                GymClient[]                @relation("GymClientCreatedBy")
+    updatedGymClients                GymClient[]                @relation("GymClientUpdatedBy")
+    createdGymMembershipPlans        GymMembershipPlan[]        @relation("GymMembershipPlanCreatedBy")
+    updatedGymMembershipPlans        GymMembershipPlan[]        @relation("GymMembershipPlanUpdatedBy")
+    createdContracts                 Contract[]                 @relation("ContractCreatedBy")
+    updatedContracts                 Contract[]                 @relation("ContractUpdatedBy")
+    approvedContracts                Contract[]                 @relation("ContractApprovedBy")
+    cancelledContracts               Contract[]                 @relation("ContractCancelledBy")
+    uploadedAssets                   Asset[]                    @relation("AssetUploadedBy")
+    createdAssets                    Asset[]                    @relation("AssetCreatedBy")
+    updatedAssets                    Asset[]                    @relation("AssetUpdatedBy")
+    files                            File[]                     @relation("UserFiles")
+    registeredCheckIns               CheckIn[]                  @relation("CheckInRegisteredBy")
+    createdCheckIns                  CheckIn[]                  @relation("CheckInCreatedBy")
+    updatedCheckIns                  CheckIn[]                  @relation("CheckInUpdatedBy")
+    createdEvaluations               Evaluation[]               @relation("EvaluationCreatedBy")
+    updatedEvaluations               Evaluation[]               @relation("EvaluationUpdatedBy")
+    completedEvaluations             Evaluation[]               @relation("EvaluationCompletedBy")
+    createdEvaluationComments        EvaluationComment[]        @relation("EvaluationCommentCreatedBy")
+    updatedEvaluationComments        EvaluationComment[]        @relation("EvaluationCommentUpdatedBy")
+    assignedLeads                    Lead[]                     @relation("LeadAssignedTo")
+    createdLeads                     Lead[]                     @relation("LeadCreatedBy")
+    updatedLeads                     Lead[]                     @relation("LeadUpdatedBy")
+    createdProductCategories         ProductCategory[]          @relation("ProductCategoryCreatedBy")
+    updatedProductCategories         ProductCategory[]          @relation("ProductCategoryUpdatedBy")
+    createdProducts                  Product[]                  @relation("ProductCreatedBy")
+    updatedProducts                  Product[]                  @relation("ProductUpdatedBy")
+    createdSuppliers                 Supplier[]                 @relation("SupplierCreatedBy")
+    updatedSuppliers                 Supplier[]                 @relation("SupplierUpdatedBy")
+    createdSales                     Sale[]                     @relation("SaleCreatedBy")
+    updatedSales                     Sale[]                     @relation("SaleUpdatedBy")
+    createdSaleItems                 SaleItem[]                 @relation("SaleItemCreatedBy")
+    updatedSaleItems                 SaleItem[]                 @relation("SaleItemUpdatedBy")
+    createdStockMovements            StockMovement[]            @relation("StockMovementCreatedBy")
+    createdPaymentMethods            PaymentMethod[]            @relation("PaymentMethodCreatedBy")
+    updatedPaymentMethods            PaymentMethod[]            @relation("PaymentMethodUpdatedBy")
 
     @@map("users")
 }
@@ -279,42 +286,43 @@ model Organization {
     deletedAt        DateTime? @map("deleted_at")
 
     // Relations
-    owner                     User                        @relation(fields: [ownerUserId], references: [id])
-    createdBy                 User                        @relation("OrganizationCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy                 User?                       @relation("OrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
+    owner                     User                       @relation(fields: [ownerUserId], references: [id])
+    createdBy                 User                       @relation("OrganizationCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy                 User?                      @relation("OrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
     gyms                      Gym[]
     subscriptionOrganizations SubscriptionOrganization[]
+    paymentMethods            PaymentMethod[]
 
     @@map("organizations")
 }
 
 model Gym {
-    id                  String  @id @default(uuid())
-    organizationId      String  @map("organization_id")
-    name                String
-    slug                String  @unique
-    address             String? @db.Text
-    city                String?
-    state               String?
-    postalCode          String? @map("postal_code")
-    latitude            Float?
-    longitude           Float?
-    description         String? @db.Text
-    phone               String?
-    email               String?
-    openingTime         String? @map("opening_time")
-    closingTime         String? @map("closing_time")
-    capacity            Int?
-    amenities           Json?
-    settings            Json?
-    isActive            Boolean @default(true) @map("is_active")
-    gymCode             String  @unique @map("gym_code")
-    
+    id             String  @id @default(uuid())
+    organizationId String  @map("organization_id")
+    name           String
+    slug           String  @unique
+    address        String? @db.Text
+    city           String?
+    state          String?
+    postalCode     String? @map("postal_code")
+    latitude       Float?
+    longitude      Float?
+    description    String? @db.Text
+    phone          String?
+    email          String?
+    openingTime    String? @map("opening_time")
+    closingTime    String? @map("closing_time")
+    capacity       Int?
+    amenities      Json?
+    settings       Json?
+    isActive       Boolean @default(true) @map("is_active")
+    gymCode        String  @unique @map("gym_code")
+
     // Asset fields as simple text IDs
-    profilePhotoId      String? @map("profile_photo_id")
-    coverPhotoId        String? @map("cover_photo_id")
-    
-    evaluationStructure Json?   @map("evaluation_structure")
+    profilePhotoId String? @map("profile_photo_id")
+    coverPhotoId   String? @map("cover_photo_id")
+
+    evaluationStructure Json? @map("evaluation_structure")
 
     // Public catalog fields
     catalogVisibility  Boolean @default(false) @map("catalog_visibility")
@@ -335,22 +343,47 @@ model Gym {
     createdBy    User         @relation("GymCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy    User?        @relation("GymUpdatedBy", fields: [updatedByUserId], references: [id])
 
-    collaborators   Collaborator[]
-    invitations     Invitation[]
-    gymClients      GymClient[]
-    membershipPlans GymMembershipPlan[]
-    checkIns        CheckIn[]
-    evaluations     Evaluation[]
-    contracts       Contract[]
-    leads           Lead[]
-    assets          Asset[]
+    collaborators     Collaborator[]
+    invitations       Invitation[]
+    gymClients        GymClient[]
+    membershipPlans   GymMembershipPlan[]
+    checkIns          CheckIn[]
+    evaluations       Evaluation[]
+    contracts         Contract[]
+    leads             Lead[]
+    assets            Asset[]
     productCategories ProductCategory[]
-    products        Product[]
-    suppliers       Supplier[]
-    sales           Sale[]
-    stockMovements  StockMovement[]
+    products          Product[]
+    suppliers         Supplier[]
+    sales             Sale[]
+    stockMovements    StockMovement[]
 
     @@map("gyms")
+}
+
+model PaymentMethod {
+    id              String    @id @default(uuid())
+    organizationId  String    @map("organization_id")
+    name            String
+    description     String?   @db.Text
+    code            String
+    enabled         Boolean   @default(true)
+    metadata        Json?
+    createdByUserId String    @map("created_by_user_id")
+    updatedByUserId String?   @map("updated_by_user_id")
+    createdAt       DateTime  @default(now()) @map("created_at")
+    updatedAt       DateTime  @updatedAt @map("updated_at")
+    deletedAt       DateTime? @map("deleted_at")
+
+    // Relations
+    organization Organization @relation(fields: [organizationId], references: [id])
+    createdBy    User         @relation("PaymentMethodCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy    User?        @relation("PaymentMethodUpdatedBy", fields: [updatedByUserId], references: [id])
+    sales        Sale[]
+    contracts    Contract[]
+
+    @@unique([code, organizationId])
+    @@map("payment_methods")
 }
 
 model Role {
@@ -375,33 +408,33 @@ model Role {
 }
 
 model Collaborator {
-    id              String             @id @default(uuid())
-    userId          String             @map("user_id")
-    gymId           String             @map("gym_id")
-    roleId          String             @map("role_id")
-    status          CollaboratorStatus
-    hiredDate       DateTime?          @map("hired_date")
-    invitationId    String?            @map("invitation_id")
-    
+    id           String             @id @default(uuid())
+    userId       String             @map("user_id")
+    gymId        String             @map("gym_id")
+    roleId       String             @map("role_id")
+    status       CollaboratorStatus
+    hiredDate    DateTime?          @map("hired_date")
+    invitationId String?            @map("invitation_id")
+
     // Asset fields as simple text IDs
-    profilePhotoId  String?            @map("profile_photo_id")
-    coverPhotoId    String?            @map("cover_photo_id")
-    
-    description     String?            @db.Text
+    profilePhotoId String? @map("profile_photo_id")
+    coverPhotoId   String? @map("cover_photo_id")
+
+    description     String?   @db.Text
     specialties     Json?
-    createdByUserId String             @map("created_by_user_id")
-    updatedByUserId String?            @map("updated_by_user_id")
-    createdAt       DateTime           @default(now()) @map("created_at")
-    updatedAt       DateTime           @updatedAt @map("updated_at")
-    deletedAt       DateTime?          @map("deleted_at")
+    createdByUserId String    @map("created_by_user_id")
+    updatedByUserId String?   @map("updated_by_user_id")
+    createdAt       DateTime  @default(now()) @map("created_at")
+    updatedAt       DateTime  @updatedAt @map("updated_at")
+    deletedAt       DateTime? @map("deleted_at")
 
     // Relations
-    user         User        @relation(fields: [userId], references: [id])
-    gym          Gym         @relation(fields: [gymId], references: [id])
-    role         Role        @relation(fields: [roleId], references: [id])
-    invitation   Invitation? @relation(fields: [invitationId], references: [id])
-    createdBy    User        @relation("CollaboratorCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy    User?       @relation("CollaboratorUpdatedBy", fields: [updatedByUserId], references: [id])
+    user       User        @relation(fields: [userId], references: [id])
+    gym        Gym         @relation(fields: [gymId], references: [id])
+    role       Role        @relation(fields: [roleId], references: [id])
+    invitation Invitation? @relation(fields: [invitationId], references: [id])
+    createdBy  User        @relation("CollaboratorCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy  User?       @relation("CollaboratorUpdatedBy", fields: [updatedByUserId], references: [id])
 
     advisedEvaluations Evaluation[]
 
@@ -438,36 +471,36 @@ model Invitation {
 }
 
 model GymClient {
-    id                    String       @id @default(uuid())
-    gymId                 String       @map("gym_id")
-    clientNumber          String       @map("client_number")
-    name                  String
-    birthDate             DateTime?    @map("birth_date")
-    documentValue         String?      @map("document_value")
-    documentType          String?      @map("document_type")
-    phone                 String?
-    email                 String?
-    status                ClientStatus
-    
+    id            String       @id @default(uuid())
+    gymId         String       @map("gym_id")
+    clientNumber  String       @map("client_number")
+    name          String
+    birthDate     DateTime?    @map("birth_date")
+    documentValue String?      @map("document_value")
+    documentType  String?      @map("document_type")
+    phone         String?
+    email         String?
+    status        ClientStatus
+
     // Asset fields as simple text IDs
-    profilePhotoId        String?      @map("profile_photo_id")
-    documentFrontPhotoId  String?      @map("document_front_photo_id")
-    documentBackPhotoId   String?      @map("document_back_photo_id")
-    
-    emergencyContactName  String?      @map("emergency_contact_name")
-    emergencyContactPhone String?      @map("emergency_contact_phone")
-    medicalConditions     String?      @map("medical_conditions") @db.Text
-    notes                 String?      @db.Text
-    createdByUserId       String       @map("created_by_user_id")
-    updatedByUserId       String?      @map("updated_by_user_id")
-    createdAt             DateTime     @default(now()) @map("created_at")
-    updatedAt             DateTime     @updatedAt @map("updated_at")
-    deletedAt             DateTime?    @map("deleted_at")
+    profilePhotoId       String? @map("profile_photo_id")
+    documentFrontPhotoId String? @map("document_front_photo_id")
+    documentBackPhotoId  String? @map("document_back_photo_id")
+
+    emergencyContactName  String?   @map("emergency_contact_name")
+    emergencyContactPhone String?   @map("emergency_contact_phone")
+    medicalConditions     String?   @map("medical_conditions") @db.Text
+    notes                 String?   @db.Text
+    createdByUserId       String    @map("created_by_user_id")
+    updatedByUserId       String?   @map("updated_by_user_id")
+    createdAt             DateTime  @default(now()) @map("created_at")
+    updatedAt             DateTime  @updatedAt @map("updated_at")
+    deletedAt             DateTime? @map("deleted_at")
 
     // Relations
-    gym          Gym    @relation(fields: [gymId], references: [id])
-    createdBy    User   @relation("GymClientCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy    User?  @relation("GymClientUpdatedBy", fields: [updatedByUserId], references: [id])
+    gym       Gym   @relation(fields: [gymId], references: [id])
+    createdBy User  @relation("GymClientCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy User? @relation("GymClientUpdatedBy", fields: [updatedByUserId], references: [id])
 
     contracts      Contract[]
     checkIns       CheckIn[]
@@ -515,6 +548,8 @@ model Contract {
     id                  String           @id @default(uuid())
     gymClientId         String           @map("gym_client_id")
     gymMembershipPlanId String           @map("gym_membership_plan_id")
+    paymentMethodId     String           @map("payment_method_id")
+    parentId            String?          @map("parent_id") // Reference to parent contract for renewals
     startDate           DateTime         @map("start_date")
     endDate             DateTime         @map("end_date")
     basePrice           Decimal          @map("base_price") @db.Decimal(10, 2)
@@ -527,32 +562,39 @@ model Contract {
     paymentFrequency    PaymentFrequency @map("payment_frequency")
     notes               String?          @db.Text
     termsAndConditions  String?          @map("terms_and_conditions") @db.Text
-    
+
+    // freezeStartDate
+    freezeStartDate DateTime? @map("freeze_start_date")
+    freezeEndDate   DateTime? @map("freeze_end_date")
+
     // Asset fields as simple text IDs
-    contractDocumentId  String?          @map("contract_document_id")
-    paymentReceiptIds   Json?            @map("payment_receipt_ids") // Array of asset IDs
-    receiptIds          String[]         @default([]) @map("receipt_ids")
-    
-    createdByUserId     String           @map("created_by_user_id")
-    updatedByUserId     String?          @map("updated_by_user_id")
-    approvedByUserId    String?          @map("approved_by_user_id")
-    approvedAt          DateTime?        @map("approved_at")
-    cancelledByUserId   String?          @map("cancelled_by_user_id")
-    cancelledAt         DateTime?        @map("cancelled_at")
-    createdAt           DateTime         @default(now()) @map("created_at")
-    updatedAt           DateTime         @updatedAt @map("updated_at")
-    deletedAt           DateTime?        @map("deleted_at")
+    contractDocumentId String?  @map("contract_document_id")
+    paymentReceiptIds  Json?    @map("payment_receipt_ids") // Array of asset IDs
+    receiptIds         String[] @default([]) @map("receipt_ids")
+
+    createdByUserId   String    @map("created_by_user_id")
+    updatedByUserId   String?   @map("updated_by_user_id")
+    approvedByUserId  String?   @map("approved_by_user_id")
+    approvedAt        DateTime? @map("approved_at")
+    cancelledByUserId String?   @map("cancelled_by_user_id")
+    cancelledAt       DateTime? @map("cancelled_at")
+    createdAt         DateTime  @default(now()) @map("created_at")
+    updatedAt         DateTime  @updatedAt @map("updated_at")
+    deletedAt         DateTime? @map("deleted_at")
 
     // Relations
     gymClient         GymClient         @relation(fields: [gymClientId], references: [id])
     gymMembershipPlan GymMembershipPlan @relation(fields: [gymMembershipPlanId], references: [id])
+    paymentMethod     PaymentMethod     @relation(fields: [paymentMethodId], references: [id])
+    parent            Contract?         @relation("ContractRenewal", fields: [parentId], references: [id])
+    renewals          Contract[]        @relation("ContractRenewal")
     createdBy         User              @relation("ContractCreatedBy", fields: [createdByUserId], references: [id])
     updatedBy         User?             @relation("ContractUpdatedBy", fields: [updatedByUserId], references: [id])
     approvedBy        User?             @relation("ContractApprovedBy", fields: [approvedByUserId], references: [id])
     cancelledBy       User?             @relation("ContractCancelledBy", fields: [cancelledByUserId], references: [id])
 
-    Gym            Gym?            @relation(fields: [gymId], references: [id])
-    gymId          String?
+    Gym   Gym?    @relation(fields: [gymId], references: [id])
+    gymId String?
 
     @@map("contracts")
 }
@@ -587,23 +629,23 @@ model Asset {
 }
 
 model File {
-    id               String    @id @default(uuid())
-    filename         String
-    originalName     String    @map("original_name")
-    filePath         String    @map("file_path")
-    fileSize         Int       @map("file_size")
-    mimeType         String    @map("mime_type")
-    userId           String    @map("user_id")
-    metadata         Json?
-    status           String    @default("active")
-    description      String?   @db.Text
-    createdAt        DateTime  @default(now()) @map("created_at")
-    updatedAt        DateTime  @updatedAt @map("updated_at")
-    deletedAt        DateTime? @map("deleted_at")
-    
+    id           String    @id @default(uuid())
+    filename     String
+    originalName String    @map("original_name")
+    filePath     String    @map("file_path")
+    fileSize     Int       @map("file_size")
+    mimeType     String    @map("mime_type")
+    userId       String    @map("user_id")
+    metadata     Json?
+    status       String    @default("active")
+    description  String?   @db.Text
+    createdAt    DateTime  @default(now()) @map("created_at")
+    updatedAt    DateTime  @updatedAt @map("updated_at")
+    deletedAt    DateTime? @map("deleted_at")
+
     // Relations
     user User @relation("UserFiles", fields: [userId], references: [id])
-    
+
     @@map("files")
 }
 
@@ -644,19 +686,19 @@ model Evaluation {
     progressPercentage Decimal?         @map("progress_percentage") @db.Decimal(5, 2)
     goals              String?          @db.Text
     resultsSummary     String?          @map("results_summary") @db.Text
-    
+
     // Asset fields as simple text IDs
-    initialPhotoIds    Json?            @map("initial_photo_ids") // Array of asset IDs
-    progressPhotoIds   Json?            @map("progress_photo_ids") // Array of asset IDs
-    finalPhotoIds      Json?            @map("final_photo_ids") // Array of asset IDs
-    documentIds        Json?            @map("document_ids") // Array of asset IDs
-    
-    createdByUserId    String           @map("created_by_user_id")
-    updatedByUserId    String?          @map("updated_by_user_id")
-    completedByUserId  String?          @map("completed_by_user_id")
-    createdAt          DateTime         @default(now()) @map("created_at")
-    updatedAt          DateTime         @updatedAt @map("updated_at")
-    deletedAt          DateTime?        @map("deleted_at")
+    initialPhotoIds  Json? @map("initial_photo_ids") // Array of asset IDs
+    progressPhotoIds Json? @map("progress_photo_ids") // Array of asset IDs
+    finalPhotoIds    Json? @map("final_photo_ids") // Array of asset IDs
+    documentIds      Json? @map("document_ids") // Array of asset IDs
+
+    createdByUserId   String    @map("created_by_user_id")
+    updatedByUserId   String?   @map("updated_by_user_id")
+    completedByUserId String?   @map("completed_by_user_id")
+    createdAt         DateTime  @default(now()) @map("created_at")
+    updatedAt         DateTime  @updatedAt @map("updated_at")
+    deletedAt         DateTime? @map("deleted_at")
 
     // Relations
     gymClient   GymClient     @relation(fields: [gymClientId], references: [id])
@@ -673,25 +715,25 @@ model Evaluation {
 }
 
 model EvaluationComment {
-    id              String      @id @default(uuid())
-    evaluationId    String      @map("evaluation_id")
-    commentType     CommentType @map("comment_type")
-    comment         String      @db.Text
-    isPrivate       Boolean     @default(false) @map("is_private")
-    
+    id           String      @id @default(uuid())
+    evaluationId String      @map("evaluation_id")
+    commentType  CommentType @map("comment_type")
+    comment      String      @db.Text
+    isPrivate    Boolean     @default(false) @map("is_private")
+
     // Asset fields as simple text IDs
-    attachmentIds   Json?       @map("attachment_ids") // Array of asset IDs
-    
-    createdByUserId String      @map("created_by_user_id")
-    updatedByUserId String?     @map("updated_by_user_id")
-    createdAt       DateTime    @default(now()) @map("created_at")
-    updatedAt       DateTime    @updatedAt @map("updated_at")
-    deletedAt       DateTime?   @map("deleted_at")
+    attachmentIds Json? @map("attachment_ids") // Array of asset IDs
+
+    createdByUserId String    @map("created_by_user_id")
+    updatedByUserId String?   @map("updated_by_user_id")
+    createdAt       DateTime  @default(now()) @map("created_at")
+    updatedAt       DateTime  @updatedAt @map("updated_at")
+    deletedAt       DateTime? @map("deleted_at")
 
     // Relations
-    evaluation    Evaluation     @relation(fields: [evaluationId], references: [id])
-    createdBy     User           @relation("EvaluationCommentCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy     User?          @relation("EvaluationCommentUpdatedBy", fields: [updatedByUserId], references: [id])
+    evaluation Evaluation @relation(fields: [evaluationId], references: [id])
+    createdBy  User       @relation("EvaluationCommentCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy  User?      @relation("EvaluationCommentUpdatedBy", fields: [updatedByUserId], references: [id])
 
     @@map("evaluation_comments")
 }
@@ -752,24 +794,24 @@ model ProductCategory {
 }
 
 model Product {
-    id              String        @id @default(uuid())
-    gymId           String        @map("gym_id")
-    categoryId      String?       @map("category_id")
+    id              String         @id @default(uuid())
+    gymId           String         @map("gym_id")
+    categoryId      String?        @map("category_id")
     name            String
-    description     String?       @db.Text
-    price           Decimal       @db.Decimal(10, 2)
-    stock           Int?          @map("stock") // Made optional for services
-    minStock        Int?          @map("min_stock") // Optional minimum stock level
-    maxStock        Int?          @map("max_stock") // Optional maximum stock level
-    imageId         String?       @map("image_id") // Asset ID
-    status          ProductStatus @default(active)
-    type            ProductType   @default(Product) @map("type")
+    description     String?        @db.Text
+    price           Decimal        @db.Decimal(10, 2)
+    stock           Int?           @map("stock") // Made optional for services
+    minStock        Int?           @map("min_stock") // Optional minimum stock level
+    maxStock        Int?           @map("max_stock") // Optional maximum stock level
+    imageId         String?        @map("image_id") // Asset ID
+    status          ProductStatus  @default(active)
+    type            ProductType    @default(Product) @map("type")
     trackInventory  TrackInventory @default(simple) @map("track_inventory")
-    createdByUserId String        @map("created_by_user_id")
-    updatedByUserId String?       @map("updated_by_user_id")
-    createdAt       DateTime      @default(now()) @map("created_at")
-    updatedAt       DateTime      @updatedAt @map("updated_at")
-    deletedAt       DateTime?     @map("deleted_at")
+    createdByUserId String         @map("created_by_user_id")
+    updatedByUserId String?        @map("updated_by_user_id")
+    createdAt       DateTime       @default(now()) @map("created_at")
+    updatedAt       DateTime       @updatedAt @map("updated_at")
+    deletedAt       DateTime?      @map("deleted_at")
 
     // Relations
     gym       Gym              @relation(fields: [gymId], references: [id])
@@ -779,6 +821,7 @@ model Product {
     saleItems SaleItem[]
 
     stockMovements StockMovement[]
+
     @@map("products")
 }
 
@@ -796,10 +839,11 @@ model StockMovement {
     createdByUserId String            @map("created_by_user_id")
     createdAt       DateTime          @default(now()) @map("created_at")
     // Relations
-    product   Product   @relation(fields: [productId], references: [id])
-    gym       Gym       @relation(fields: [gymId], references: [id])
-    supplier  Supplier? @relation(fields: [supplierId], references: [id])
-    createdBy User      @relation("StockMovementCreatedBy", fields: [createdByUserId], references: [id])
+    product         Product           @relation(fields: [productId], references: [id])
+    gym             Gym               @relation(fields: [gymId], references: [id])
+    supplier        Supplier?         @relation(fields: [supplierId], references: [id])
+    createdBy       User              @relation("StockMovementCreatedBy", fields: [createdByUserId], references: [id])
+
     @@map("stock_movements")
 }
 
@@ -833,6 +877,7 @@ model Sale {
     saleNumber      String        @map("sale_number")
     total           Decimal       @db.Decimal(10, 2)
     paymentStatus   PaymentStatus @default(unpaid) @map("payment_status")
+    paymentMethodId String?       @map("payment_method_id")
     saleDate        DateTime      @default(now()) @map("sale_date")
     customerName    String?       @map("customer_name")
     notes           String?       @db.Text
@@ -844,11 +889,12 @@ model Sale {
     deletedAt       DateTime?     @map("deleted_at")
 
     // Relations
-    gym       Gym        @relation(fields: [gymId], references: [id])
-    customer  GymClient? @relation(fields: [customerId], references: [id])
-    createdBy User       @relation("SaleCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User?      @relation("SaleUpdatedBy", fields: [updatedByUserId], references: [id])
-    saleItems SaleItem[]
+    gym           Gym            @relation(fields: [gymId], references: [id])
+    createdBy     User           @relation("SaleCreatedBy", fields: [createdByUserId], references: [id])
+    updatedBy     User?          @relation("SaleUpdatedBy", fields: [updatedByUserId], references: [id])
+    paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+    customer      GymClient?     @relation(fields: [customerId], references: [id])
+    saleItems     SaleItem[]
 
     @@unique([gymId, saleNumber])
     @@map("sales")

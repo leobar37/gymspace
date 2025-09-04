@@ -1,17 +1,22 @@
 import { ContractStatus, IRequestContext } from '@gymspace/shared';
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
 import { Contract, Prisma } from '@prisma/client';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { RequestContext } from '../../common/services/request-context.service';
+import { PaginationService } from '../../common/services/pagination.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { ClientsService } from '../clients/clients.service';
 import { GymsService } from '../gyms/gyms.service';
-import { CreateContractDto, FreezeContractDto, RenewContractDto } from './dto';
-import {
-  CONTRACT_EXPIRATION_CONSTANTS,
-  CONTRACT_STATUS_TRANSITIONS,
-} from './constants/contract-expiration.constants';
+import { GymMembershipPlansService } from '../membership-plans/membership-plans.service';
+import { CreateContractDto, FreezeContractDto, RenewContractDto, GetContractsDto } from './dto';
+import { ContractStatusHelper } from './helpers/contract-status.helper';
+import { ContractBaseService } from './helpers/contract.base';
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import ms from 'ms';
+
+// Extend dayjs with plugins
+dayjs.extend(isSameOrAfter);
 
 @Injectable()
 export class ContractsService {
@@ -21,6 +26,10 @@ export class ContractsService {
     private prismaService: PrismaService,
     private gymsService: GymsService,
     private clientsService: ClientsService,
+    private gymMembershipPlansService: GymMembershipPlansService,
+    private paginationService: PaginationService,
+    private contractStatusHelper: ContractStatusHelper,
+    private contractBaseService: ContractBaseService,
   ) {}
 
   /**
@@ -41,71 +50,18 @@ export class ContractsService {
     }
 
     // Verify client belongs to this gym
-    const client = await this.prismaService.gymClient.findFirst({
-      where: {
-        id: dto.gymClientId,
-        gymId,
-      },
-    });
-
-    if (!client) {
-      throw new ResourceNotFoundException('Cliente', dto.gymClientId);
-    }
+    await this.clientsService.validateClientBelongsToGym(context, dto.gymClientId);
 
     // Check if client has active contract
-    // Consider both status and dates, including expiring_soon
-    const now = new Date();
-    const existingContracts = await this.prismaService.contract.findMany({
-      where: {
-        gymClientId: dto.gymClientId,
-        deletedAt: null, // Explicitly check for non-deleted contracts
-        OR: [
-          // Active contracts (including expiring_soon)
-          { status: 'active' },
-          { status: 'expiring_soon' },
-          // Pending contracts that haven't started yet
-          {
-            status: 'pending',
-            startDate: { gte: now },
-          },
-        ],
-      },
-    });
-
-    if (existingContracts.length > 0) {
-      const activeContract = existingContracts[0];
-
-      // Provide more specific error message
-      if (activeContract.status === 'active') {
-        throw new BusinessException('El cliente ya tiene un contrato activo');
-      } else if (activeContract.status === 'expiring_soon') {
-        throw new BusinessException(
-          'El cliente tiene un contrato activo que está por vencer. Considere renovarlo en lugar de crear uno nuevo',
-        );
-      } else if (activeContract.status === 'pending') {
-        throw new BusinessException(
-          'El cliente tiene un contrato pendiente que aún no ha iniciado',
-        );
-      }
-    }
+    await this.clientsService.checkActiveContract(context, dto.gymClientId);
 
     // Run intelligent contract status update to ensure accurate status
-    // This ensures expired contracts are properly marked before creating new ones
-    await this.updateExpiringSoonContracts();
-    await this.updateExpiredContracts();
 
     // Verify membership plan belongs to this gym and is active
-    const plan = await this.prismaService.gymMembershipPlan.findFirst({
-      where: {
-        id: dto.gymMembershipPlanId,
-        gymId,
-        status: 'active',
-      },
-    });
-
-    if (!plan) {
-      throw new ResourceNotFoundException('Plan de membresía', dto.gymMembershipPlanId);
-    }
+    const plan = await this.gymMembershipPlansService.validatePlanForContract(
+      context,
+      dto.gymMembershipPlanId,
+    );
 
     // Calculate price
     let finalPrice = dto.customPrice || Number(plan.basePrice);
@@ -115,21 +71,14 @@ export class ContractsService {
 
     // Calculate end date based on plan duration
     const startDate = new Date(dto.startDate);
-    const endDate = new Date(startDate);
-    if (plan.durationMonths) {
-      endDate.setMonth(endDate.getMonth() + plan.durationMonths);
-    } else if (plan.durationDays) {
-      endDate.setDate(endDate.getDate() + plan.durationDays);
-    } else {
-      // Default to 1 month if no duration specified
-      endDate.setMonth(endDate.getMonth() + 1);
-    }
+    const endDate = this.gymMembershipPlansService.calculateEndDate(startDate, plan);
 
     // Create contract
     const contract = await this.prismaService.contract.create({
       data: {
         gymClientId: dto.gymClientId,
         gymMembershipPlanId: dto.gymMembershipPlanId,
+        paymentMethodId: dto.paymentMethodId,
         startDate,
         endDate,
         basePrice: plan.basePrice,
@@ -188,6 +137,11 @@ export class ContractsService {
       },
       include: {
         gymMembershipPlan: true,
+        renewals: {
+          where: {
+            status: 'for_renew'
+          }
+        },
         gymClient: {
           include: {
             gym: {
@@ -213,19 +167,17 @@ export class ContractsService {
       throw new BusinessException('No se puede renovar un contrato cancelado');
     }
 
-    // Set existing contract as completed
-    await this.prismaService.contract.update({
-      where: { id: contractId },
-      data: {
-        status: 'expired',
-        updatedByUserId: userId,
-      },
-    });
+    // Check if there's already a renewal in progress
+    if (existingContract.renewals && existingContract.renewals.length > 0) {
+      throw new BusinessException('Ya existe una renovación en curso para este contrato');
+    }
 
     // Calculate new dates
     const startDate = dto.startDate
       ? new Date(dto.startDate)
-      : new Date(existingContract.endDate || new Date());
+      : dto.applyAtEndOfContract
+      ? new Date(existingContract.endDate || new Date())
+      : new Date(); // Start immediately if not specified
 
     const endDate = new Date(startDate);
     if (existingContract.gymMembershipPlan.durationMonths) {
@@ -239,15 +191,20 @@ export class ContractsService {
 
     // Calculate price
     let finalPrice = dto.customPrice || Number(existingContract.gymMembershipPlan.basePrice);
+    let discountAmount = null;
+    
     if (dto.discountPercentage) {
-      finalPrice = Number(finalPrice) * (1 - dto.discountPercentage / 100);
+      discountAmount = Number(finalPrice) * (dto.discountPercentage / 100);
+      finalPrice = Number(finalPrice) - discountAmount;
     }
 
-    // Create new contract
+    // Create new contract with for_renew status and parent reference
     const newContract = await this.prismaService.contract.create({
       data: {
         gymClientId: existingContract.gymClientId,
         gymMembershipPlanId: existingContract.gymMembershipPlanId,
+        paymentMethodId: dto.paymentMethodId || existingContract.paymentMethodId,
+        parentId: contractId, // Reference to parent contract
         startDate,
         endDate,
         basePrice: existingContract.gymMembershipPlan.basePrice,
@@ -255,10 +212,14 @@ export class ContractsService {
         finalAmount: finalPrice,
         currency: existingContract.gymClient.gym.organization.currency,
         discountPercentage: dto.discountPercentage || null,
-        status: ContractStatus.ACTIVE,
+        discountAmount: discountAmount || null,
+        status: 'for_renew', // New status for renewal contracts
         paymentFrequency: existingContract.paymentFrequency,
-        notes: dto.metadata?.notes || existingContract.notes,
+        notes: dto.notes || null,
+        contractDocumentId: dto.contractDocumentId || null,
+        receiptIds: dto.receiptIds || [],
         createdByUserId: userId,
+        gymId: existingContract.gymId,
       },
       include: {
         gymClient: {
@@ -283,6 +244,7 @@ export class ContractsService {
 
   /**
    * Freeze contract (CU-014)
+   * Handles freezing for both regular contracts and their renewals
    */
   async freezeContract(
     context: IRequestContext,
@@ -290,21 +252,25 @@ export class ContractsService {
     dto: FreezeContractDto,
   ): Promise<Contract> {
     const userId = context.getUserId();
+    const gymId = context.getGymId();
+
+    // Find contract with renewals directly using Prisma
     const contract = await this.prismaService.contract.findFirst({
       where: {
         id: contractId,
-        status: 'active',
         gymClient: {
-          gym: {
-            OR: [
-              { organization: { ownerUserId: userId } },
-              { collaborators: { some: { userId, status: 'active' } } },
-            ],
-          },
+          gymId,
+          deletedAt: null,
         },
+        deletedAt: null,
       },
       include: {
         gymMembershipPlan: true,
+        renewals: {
+          where: {
+            status: 'for_renew',
+          },
+        },
       },
     });
 
@@ -312,40 +278,99 @@ export class ContractsService {
       throw new ResourceNotFoundException('Contrato', contractId);
     }
 
-    // Validate freeze dates
-    const freezeStart = new Date(dto.freezeStartDate);
-    const freezeEnd = new Date(dto.freezeEndDate);
+    // Contract must be active to freeze
+    if (contract.status !== 'active') {
+      throw new BusinessException('Solo se pueden congelar contratos activos');
+    }
 
-    if (freezeStart >= freezeEnd) {
+    // Validate freeze dates using dayjs
+    const freezeStart = dayjs(dto.freezeStartDate);
+    const freezeEnd = dayjs(dto.freezeEndDate);
+    const now = dayjs();
+
+    if (!freezeStart.isValid() || !freezeEnd.isValid()) {
+      throw new BusinessException('Las fechas de congelamiento no son válidas');
+    }
+
+    if (freezeStart.isSameOrAfter(freezeEnd)) {
       throw new BusinessException(
         'La fecha de fin del congelamiento debe ser posterior a la fecha de inicio',
       );
     }
 
-    // Check if freeze period is within allowed limits
-    const freezeDays = Math.ceil(
-      (freezeEnd.getTime() - freezeStart.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    const maxFreezeDays = 30; // Default max freeze days
+    // Calculate freeze duration in milliseconds
+    const freezeDurationMs = freezeEnd.diff(freezeStart);
+    const freezeDays = Math.ceil(freezeDurationMs / ms('1d'));
 
-    if (freezeDays > maxFreezeDays) {
+    // TODO: add this to gym configurations
+    const maxFreezeDurationMs = ms('30d'); // Default max freeze period
+    const maxFreezeDays = 30;
+
+    if (freezeDurationMs > maxFreezeDurationMs) {
       throw new BusinessException(
         `El período de congelamiento no puede exceder ${maxFreezeDays} días`,
       );
     }
 
     // Extend contract end date by freeze duration
-    const newEndDate = new Date(contract.endDate!);
-    newEndDate.setDate(newEndDate.getDate() + freezeDays);
+    const currentEndDate = dayjs(contract.endDate);
+    const newEndDate = currentEndDate.add(freezeDurationMs, 'milliseconds');
 
-    // Update contract
+    // Create freeze history record
+    const freezeHistory = [
+      'Freeze History:',
+      `- Start: ${freezeStart.format('YYYY-MM-DD HH:mm:ss')}`,
+      `- End: ${freezeEnd.format('YYYY-MM-DD HH:mm:ss')}`,
+      `- Duration: ${freezeDays} days`,
+      `- Reason: ${dto.reason || 'N/A'}`,
+      `- Frozen at: ${now.format('YYYY-MM-DD HH:mm:ss')}`,
+      `- Extended end date from: ${currentEndDate.format('YYYY-MM-DD')} to: ${newEndDate.format('YYYY-MM-DD')}`,
+    ].join('\n');
+
+    // Check if there are renewals that need to be adjusted
+    const hasRenewals = contract.renewals && contract.renewals.length > 0;
+    
+    if (hasRenewals) {
+      // If there are renewals, we need to adjust their start dates
+      const renewal = contract.renewals[0];
+      
+      // Only adjust if renewal is set to start at contract end
+      const renewalStartDate = dayjs(renewal.startDate);
+      const contractEndDate = dayjs(contract.endDate);
+      
+      // Check if renewal starts at or near contract end (within 1 day tolerance)
+      const startsAtContractEnd = Math.abs(renewalStartDate.diff(contractEndDate, 'days')) <= 1;
+      
+      if (startsAtContractEnd) {
+        // Update renewal start date to match new contract end date
+        const newRenewalStartDate = newEndDate.toDate();
+        const renewalDuration = dayjs(renewal.endDate).diff(renewalStartDate, 'milliseconds');
+        const newRenewalEndDate = newEndDate.add(renewalDuration, 'milliseconds').toDate();
+        
+        await this.prismaService.contract.update({
+          where: { id: renewal.id },
+          data: {
+            startDate: newRenewalStartDate,
+            endDate: newRenewalEndDate,
+            notes: renewal.notes 
+              ? `${renewal.notes}\n\nAdjusted due to parent contract freeze:\n- New start: ${dayjs(newRenewalStartDate).format('YYYY-MM-DD')}\n- New end: ${dayjs(newRenewalEndDate).format('YYYY-MM-DD')}`
+              : `Adjusted due to parent contract freeze:\n- New start: ${dayjs(newRenewalStartDate).format('YYYY-MM-DD')}\n- New end: ${dayjs(newRenewalEndDate).format('YYYY-MM-DD')}`,
+            updatedByUserId: userId,
+          },
+        });
+        
+        this.logger.log(
+          `Renewal contract ${renewal.id} adjusted: start date moved from ${renewalStartDate.format()} to ${dayjs(newRenewalStartDate).format()}`,
+        );
+      }
+    }
+
+    // Update main contract
     const updated = await this.prismaService.contract.update({
       where: { id: contractId },
       data: {
-        endDate: newEndDate,
-        notes:
-          (contract.notes || '') +
-          `\n\nFreeze History:\n- Start: ${freezeStart.toISOString()}\n- End: ${freezeEnd.toISOString()}\n- Reason: ${dto.reason || 'N/A'}\n- Frozen at: ${new Date().toISOString()}`,
+        endDate: newEndDate.toDate(),
+        notes: contract.notes ? `${contract.notes}\n\n${freezeHistory}` : freezeHistory,
         updatedByUserId: userId,
       },
       include: {
@@ -362,14 +387,30 @@ export class ContractsService {
             name: true,
           },
         },
+        renewals: {
+          where: {
+            status: 'for_renew',
+          },
+          select: {
+            id: true,
+            startDate: true,
+            endDate: true,
+            status: true,
+          },
+        },
       },
     });
+
+    this.logger.log(
+      `Contract ${contractId} frozen from ${freezeStart.format()} to ${freezeEnd.format()}, extending end date by ${freezeDays} days${hasRenewals ? ' (renewal adjusted)' : ''}`,
+    );
 
     return updated;
   }
 
   /**
    * Cancel contract
+   * Also cancels any pending renewals
    */
   async cancelContract(
     context: IRequestContext,
@@ -377,15 +418,22 @@ export class ContractsService {
     reason: string,
   ): Promise<Contract> {
     const userId = context.getUserId();
+    const gymId = context.getGymId();
+    
+    // Find contract with renewals
     const contract = await this.prismaService.contract.findFirst({
       where: {
         id: contractId,
         gymClient: {
-          gym: {
-            OR: [
-              { organization: { ownerUserId: userId } },
-              { collaborators: { some: { userId, status: 'active' } } },
-            ],
+          gymId,
+          deletedAt: null,
+        },
+        deletedAt: null,
+      },
+      include: {
+        renewals: {
+          where: {
+            status: 'for_renew',
           },
         },
       },
@@ -399,6 +447,27 @@ export class ContractsService {
       throw new BusinessException('El contrato ya está cancelado');
     }
 
+    // Cancel any pending renewals
+    if (contract.renewals && contract.renewals.length > 0) {
+      for (const renewal of contract.renewals) {
+        await this.prismaService.contract.update({
+          where: { id: renewal.id },
+          data: {
+            status: 'cancelled',
+            notes: renewal.notes 
+              ? `${renewal.notes}\n\nCancelled due to parent contract cancellation`
+              : 'Cancelled due to parent contract cancellation',
+            cancelledByUserId: userId,
+            cancelledAt: new Date(),
+            updatedByUserId: userId,
+          },
+        });
+        
+        this.logger.log(`Renewal contract ${renewal.id} cancelled due to parent contract cancellation`);
+      }
+    }
+
+    // Update main contract
     const updated = await this.prismaService.contract.update({
       where: { id: contractId },
       data: {
@@ -406,10 +475,29 @@ export class ContractsService {
         endDate: new Date(),
         notes:
           (contract.notes || '') +
-          `\n\nCancellation:\n- Reason: ${reason}\n- Cancelled at: ${new Date().toISOString()}`,
+          `\n\nCancellation:\n- Reason: ${reason}\n- Cancelled at: ${new Date().toISOString()}${
+            contract.renewals && contract.renewals.length > 0 
+              ? `\n- Renewals cancelled: ${contract.renewals.length}` 
+              : ''
+          }`,
         cancelledByUserId: userId,
         cancelledAt: new Date(),
         updatedByUserId: userId,
+      },
+      include: {
+        gymClient: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        gymMembershipPlan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -449,6 +537,19 @@ export class ContractsService {
           },
         },
         gymMembershipPlan: true,
+        paymentMethod: true,
+        renewals: {
+          where: {
+            status: 'for_renew'
+          },
+          include: {
+            gymMembershipPlan: true,
+            paymentMethod: true,
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        },
         createdBy: {
           select: {
             id: true,
@@ -468,7 +569,7 @@ export class ContractsService {
   /**
    * Get contracts for a gym with intelligent status updates
    */
-  async getGymContracts(context: IRequestContext, status?: ContractStatus, limit = 20, offset = 0) {
+  async getGymContracts(context: IRequestContext, query: GetContractsDto) {
     const gymId = context.getGymId();
     const userId = context.getUserId();
 
@@ -484,58 +585,108 @@ export class ContractsService {
       }
     }
 
-    // Run intelligent status updates before querying to ensure accuracy
-    await this.updateExpiringSoonContracts();
-    await this.updateExpiredContracts();
-
-    // Build where clause more efficiently
+    // Build where clause
     const where: Prisma.ContractWhereInput = {
       gymClient: {
         gymId,
-        deletedAt: null, // Ensure we only get non-deleted clients
+        deletedAt: null,
       },
-      deletedAt: null, // Ensure we only get non-deleted contracts
+      deletedAt: null,
+      // Exclude contracts that are for renewal
+      status: {
+        not: 'for_renew',
+      },
     };
 
-    if (status) {
-      where.status = status;
+    // Apply status filter (override the NOT filter if a specific status is requested)
+    if (query.status) {
+      where.status = query.status;
     }
+
+    // Apply client name filter
+    if (query.clientName) {
+      where.gymClient = {
+        ...(where.gymClient as any),
+        name: {
+          contains: query.clientName,
+          mode: 'insensitive' as const,
+        },
+      };
+    }
+
+    // Apply client ID filter
+    if (query.clientId) {
+      where.gymClientId = query.clientId;
+    }
+
+    // Apply date range filters for contract start date
+    if (query.startDateFrom || query.startDateTo) {
+      where.startDate = {};
+      if (query.startDateFrom) {
+        where.startDate.gte = new Date(query.startDateFrom);
+      }
+      if (query.startDateTo) {
+        where.startDate.lte = new Date(query.startDateTo);
+      }
+    }
+
+    // Apply date range filters for contract end date
+    if (query.endDateFrom || query.endDateTo) {
+      where.endDate = {};
+      if (query.endDateFrom) {
+        where.endDate.gte = new Date(query.endDateFrom);
+      }
+      if (query.endDateTo) {
+        where.endDate.lte = new Date(query.endDateTo);
+      }
+    }
+
+    // Build order by
+    const orderBy: any = query.sortBy
+      ? { [query.sortBy]: query.sortOrder || 'desc' }
+      : { createdAt: 'desc' as const };
+
+    // Build include
+    const include = {
+      gymClient: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      gymMembershipPlan: {
+        select: {
+          id: true,
+          name: true,
+          basePrice: true,
+        },
+      },
+    };
+
+    // Create pagination params
+    const paginationParams = this.paginationService.createPaginationParams({
+      page: query.page,
+      limit: query.limit,
+    });
 
     // Execute queries
     const [contracts, total] = await Promise.all([
       this.prismaService.contract.findMany({
         where,
-        include: {
-          gymClient: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-          gymMembershipPlan: {
-            select: {
-              id: true,
-              name: true,
-              basePrice: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: offset,
-        take: limit,
+        include,
+        orderBy,
+        skip: paginationParams.skip,
+        take: paginationParams.take,
       }),
       this.prismaService.contract.count({ where }),
     ]);
 
-    return {
-      data: contracts,
-      pagination: {
-        total,
-        limit,
-        offset,
-      },
-    };
+    // Use pagination service to format response
+    return this.paginationService.paginate(contracts, total, {
+      page: query.page || 1,
+      limit: query.limit || 20,
+    });
   }
 
   /**
@@ -578,279 +729,37 @@ export class ContractsService {
   }
 
   /**
-   * Get contracts that need status updates for a specific gym
-   * Useful for monitoring and debugging
+   * Delegate to helper - Get contracts that need status update
    */
   async getContractsNeedingStatusUpdate(gymId?: string) {
-    const now = new Date();
-    const warningDate = new Date();
-    warningDate.setDate(now.getDate() + CONTRACT_EXPIRATION_CONSTANTS.EXPIRING_SOON_DAYS);
-
-    const baseWhere: Prisma.ContractWhereInput = {
-      deletedAt: null,
-    };
-
-    if (gymId) {
-      baseWhere.gymClient = {
-        gymId,
-      };
-    }
-
-    const [needingExpiringSoon, needingExpired] = await Promise.all([
-      // Contracts that should be marked as expiring_soon
-      this.prismaService.contract.findMany({
-        where: {
-          ...baseWhere,
-          status: 'active',
-          endDate: {
-            lte: warningDate,
-            gt: now,
-          },
-        },
-        include: {
-          gymClient: {
-            select: { name: true, gymId: true },
-          },
-        },
-      }),
-      // Contracts that should be marked as expired
-      this.prismaService.contract.findMany({
-        where: {
-          ...baseWhere,
-          OR: [{ status: 'active' }, { status: 'expiring_soon' }],
-          endDate: { lte: now },
-        },
-        include: {
-          gymClient: {
-            select: { name: true, gymId: true },
-          },
-        },
-      }),
-    ]);
-
-    return {
-      needingExpiringSoon,
-      needingExpired,
-      summary: {
-        expiringSoonCount: needingExpiringSoon.length,
-        expiredCount: needingExpired.length,
-        totalNeedingUpdate: needingExpiringSoon.length + needingExpired.length,
-      },
-    };
+    return this.contractStatusHelper.getContractsNeedingStatusUpdate(gymId);
   }
 
   /**
-   * Check if a contract should be in expiring_soon status
+   * Delegate to helper - Check if a contract is expiring soon
    */
   isContractExpiringSoon(contract: { status: string; endDate: Date | null }): boolean {
-    if (!contract.endDate || contract.status !== 'active') {
-      return false;
-    }
-
-    const now = new Date();
-    const warningDate = new Date();
-    warningDate.setDate(now.getDate() + CONTRACT_EXPIRATION_CONSTANTS.EXPIRING_SOON_DAYS);
-
-    return contract.endDate <= warningDate && contract.endDate > now;
+    return this.contractStatusHelper.isContractExpiringSoon(contract);
   }
 
   /**
-   * Check if a contract should be expired
+   * Delegate to helper - Check if a contract is expired
    */
   isContractExpired(contract: { status: string; endDate: Date | null }): boolean {
-    if (!contract.endDate) {
-      return false;
-    }
-
-    const now = new Date();
-    const expirationThreshold = new Date(now);
-
-    if (CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS > 0) {
-      expirationThreshold.setDate(now.getDate() - CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS);
-    }
-
-    return (
-      (contract.status === 'active' || contract.status === 'expiring_soon') &&
-      contract.endDate <= expirationThreshold
-    );
+    return this.contractStatusHelper.isContractExpired(contract);
   }
 
   /**
-   * Update contracts to expiring_soon status
-   * Called by the intelligent cron job
+   * Delegate to helper - Get contract status statistics
    */
-  private async updateExpiringSoonContracts(): Promise<number> {
-    const now = new Date();
-    const warningDate = new Date();
-    warningDate.setDate(now.getDate() + CONTRACT_EXPIRATION_CONSTANTS.EXPIRING_SOON_DAYS);
-
-    const updated = await this.prismaService.contract.updateMany({
-      where: {
-        status: 'active',
-        endDate: {
-          lte: warningDate,
-          gt: now, // Contract hasn't expired yet
-        },
-        deletedAt: null,
-      },
-      data: {
-        status: ContractStatus.EXPIRING_SOON,
-      },
-    });
-
-    if (updated.count > 0) {
-      this.logger.log(`Updated ${updated.count} contracts to 'expiring_soon' status`);
-    }
-
-    return updated.count;
+  async getContractStatusStats(gymId?: string) {
+    return this.contractStatusHelper.getContractStatusStats(gymId);
   }
 
   /**
-   * Update contracts to expired status
-   * Called by the intelligent cron job
+   * Delegate to helper - Manual trigger for status update
    */
-  private async updateExpiredContracts(): Promise<number> {
-    const now = new Date();
-
-    // Add grace period if configured
-    const expirationThreshold = new Date(now);
-    if (CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS > 0) {
-      expirationThreshold.setDate(now.getDate() - CONTRACT_EXPIRATION_CONSTANTS.GRACE_PERIOD_DAYS);
-    }
-
-    // Update contracts from both 'active' and 'expiring_soon' to 'expired'
-    const expired = await this.prismaService.contract.updateMany({
-      where: {
-        OR: [{ status: 'active' }, { status: 'expiring_soon' }],
-        endDate: { lte: expirationThreshold },
-        deletedAt: null,
-      },
-      data: {
-        status: 'expired',
-      },
-    });
-
-    if (expired.count > 0) {
-      this.logger.log(`Updated ${expired.count} contracts to 'expired' status`);
-    }
-
-    return expired.count;
-  }
-
-  /**
-   * Get contract status statistics for monitoring
-   */
-  async getContractStatusStats() {
-    const now = new Date();
-    const warningDate = new Date();
-    warningDate.setDate(now.getDate() + CONTRACT_EXPIRATION_CONSTANTS.EXPIRING_SOON_DAYS);
-
-    const stats = await this.prismaService.contract.groupBy({
-      by: ['status'],
-      _count: {
-        id: true,
-      },
-      where: {
-        deletedAt: null,
-      },
-    });
-
-    // Get additional stats for monitoring
-    const expiringSoon = await this.prismaService.contract.count({
-      where: {
-        status: 'active',
-        endDate: {
-          lte: warningDate,
-          gt: now,
-        },
-        deletedAt: null,
-      },
-    });
-
-    const overdue = await this.prismaService.contract.count({
-      where: {
-        OR: [{ status: 'active' }, { status: 'expiring_soon' }],
-        endDate: { lte: now },
-        deletedAt: null,
-      },
-    });
-
-    return {
-      statusBreakdown: stats.reduce(
-        (acc, stat) => {
-          acc[stat.status] = stat._count.id;
-          return acc;
-        },
-        {} as Record<ContractStatus, number>,
-      ),
-      pendingUpdates: {
-        expiringSoon,
-        overdue,
-      },
-    };
-  }
-
-  /**
-   * Intelligent contract status update cron job
-   * Runs every 6 hours to maintain accurate contract statuses
-   */
-  @Cron(CONTRACT_EXPIRATION_CONSTANTS.CRON_SCHEDULE)
-  async updateContractStatuses() {
-    const startTime = new Date();
-    this.logger.log('Starting intelligent contract status update');
-
-    try {
-      // Step 1: Update contracts to expiring_soon
-      const expiringSoonCount = await this.updateExpiringSoonContracts();
-
-      // Step 2: Update contracts to expired
-      const expiredCount = await this.updateExpiredContracts();
-
-      // Step 3: Log summary
-      const endTime = new Date();
-      const duration = endTime.getTime() - startTime.getTime();
-
-      this.logger.log(
-        `Contract status update completed in ${duration}ms. ` +
-          `Updated ${expiringSoonCount} to expiring_soon, ${expiredCount} to expired.`,
-      );
-
-      // Step 4: Get stats for monitoring (optional)
-      // if (this.logger.isLevelEnabled('debug')) {
-      //   const stats = await this.getContractStatusStats();
-      //   this.logger.debug('Current contract status stats:', stats);
-      // }
-    } catch (error) {
-      this.logger.error('Error updating contract statuses', error.stack);
-      throw error;
-    }
-  }
-
-  /**
-   * Manual trigger for contract status updates
-   * Can be called by administrators or other services
-   */
-  async triggerContractStatusUpdate(): Promise<{
-    expiringSoonCount: number;
-    expiredCount: number;
-    executionTime: number;
-  }> {
-    const startTime = Date.now();
-
-    const expiringSoonCount = await this.updateExpiringSoonContracts();
-    const expiredCount = await this.updateExpiredContracts();
-
-    const executionTime = Date.now() - startTime;
-
-    this.logger.log(
-      `Manual contract status update completed. ` +
-        `Updated ${expiringSoonCount} to expiring_soon, ${expiredCount} to expired.`,
-    );
-
-    return {
-      expiringSoonCount,
-      expiredCount,
-      executionTime,
-    };
+  async triggerContractStatusUpdate() {
+    return this.contractStatusHelper.triggerContractStatusUpdate();
   }
 }

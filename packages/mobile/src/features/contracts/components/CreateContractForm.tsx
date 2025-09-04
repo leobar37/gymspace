@@ -8,22 +8,25 @@ import { z } from 'zod';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormDatePicker } from '@/components/forms/FormDatePicker';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
+import { Card } from '@/components/ui/card';
+import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
-import { ClientSelector } from '@/features/clients/components/ClientSelector';
-import { PlanListSelector } from '@/features/plans/components/PlanListSelector';
-import { FileSelector } from '@/features/files/components/FileSelector';
-import { ContractFormData, useContractsController } from '../controllers/contracts.controller';
 import { useFormatPrice } from '@/config/ConfigContext';
+import { ClientSelector } from '@/features/clients/components/ClientSelector';
+import { PlanSelector } from '@/features/plans/components/PlanSelector';
+import { FileSelector } from '@/features/files/components/FileSelector';
+import { PaymentMethodSelectorField } from '@/features/payment-methods/components/PaymentMethodSelectorField';
+import { ContractFormData, useContractsController } from '../controllers/contracts.controller';
+import { ScreenForm } from '@/shared/components/ScreenForm';
+import { Button, ButtonText } from '@/components/ui/button';
 
 // Form validation schema
 const createContractSchema = z.object({
   gymClientId: z.string().min(1, 'El cliente es requerido'),
   gymMembershipPlanId: z.string().min(1, 'El plan es requerido'),
+  paymentMethodId: z.string().min(1, 'El método de pago es requerido'),
   startDate: z.date({
     required_error: 'La fecha de inicio es requerida',
     invalid_type_error: 'Fecha inválida',
@@ -57,9 +60,9 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   const formatPrice = useFormatPrice();
   const { createContract } = useContractsController();
   const { execute } = useLoadingScreen();
-
+  
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
-    // Parse initial date if provided as string
+  // Parse initial date if provided as string
   const parseInitialDate = (dateStr?: string) => {
     if (!dateStr) return new Date();
     try {
@@ -75,6 +78,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
     defaultValues: {
       gymClientId: clientId || initialData?.gymClientId || '',
       gymMembershipPlanId: initialData?.gymMembershipPlanId || '',
+      paymentMethodId: initialData?.paymentMethodId || '',
       startDate: parseInitialDate(initialData?.startDate),
       discountPercentage: String(initialData?.discountPercentage || 0),
       customPrice: initialData?.customPrice ? String(initialData.customPrice) : '',
@@ -88,8 +92,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
     watch,
     formState: { isValid },
   } = methods;
-
-  // Watch for plan changes to update pricing
+  
   const watchedDiscount = watch('discountPercentage');
   const watchedCustomPrice = watch('customPrice');
 
@@ -113,6 +116,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
     const contractData: ContractFormData = {
       gymClientId: data.gymClientId,
       gymMembershipPlanId: data.gymMembershipPlanId,
+      paymentMethodId: data.paymentMethodId,
       startDate: format(data.startDate, 'yyyy-MM-dd'),
       discountPercentage: Number(data.discountPercentage) || 0,
       customPrice: data.customPrice ? Number(data.customPrice) : undefined,
@@ -170,125 +174,133 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
 
   return (
     <FormProvider {...methods}>
-      <VStack className="gap-4">
-        <Card>
-          <View className="p-4">
-            <Heading size="md" className="mb-4">
-              Información del contrato
-            </Heading>
-            {/* Client Selection */}
-            <View className="mb-4">
-              <ClientSelector
-                control={control}
-                name="gymClientId"
-                label="Cliente *"
-                placeholder="Seleccionar cliente"
-                description="Selecciona el cliente para este contrato"
-                allowClear={false}
-              />
-            </View>
+      <ScreenForm
+        title="Nuevo contrato"
+        showBackButton={true}
+        showFixedFooter
+        footerContent={
+          <View className="bg-white border-t border-gray-200">
+            {/* Price Summary */}
+            {selectedPlan && (
+              <Card className="mx-4 mt-3 mb-2">
+                <View className="p-3">
+                  <Heading size="sm" className="mb-2">
+                    Resumen de precios
+                  </Heading>
+                  <VStack className="gap-2">
+                    <HStack className="justify-between">
+                      <Text className="text-gray-600">Precio del plan:</Text>
+                      <Text className="font-medium">{formatPrice(selectedPlan.basePrice || 0)}</Text>
+                    </HStack>
 
-            {/* Plan Selection */}
-            <View className="mb-4">
-              <PlanListSelector
-                control={control}
-                name="gymMembershipPlanId"
-                label="Plan de membresía *"
-                placeholder="Seleccionar plan"
-                description="Selecciona el plan de membresía para este contrato"
-                allowClear={false}
-                activeOnly={true}
-                onPlanSelect={(plan) => setSelectedPlan(plan)}
-              />
-            </View>
+                    {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
+                      <HStack className="justify-between">
+                        <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
+                        <Text className="font-medium text-green-600">
+                          -{formatPrice(((selectedPlan.basePrice || 0) * Number(watchedDiscount)) / 100)}
+                        </Text>
+                      </HStack>
+                    )}
 
-            {/* Start Date */}
-            <View className="mb-4">
-              <FormDatePicker
-                control={control}
-                name="startDate"
-                label="Fecha de inicio"
-                placeholder="Seleccionar fecha de inicio"
-                minimumDate={new Date()}
-              />
-            </View>
+                    {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
+                      <HStack className="justify-between">
+                        <Text className="text-gray-600">Precio personalizado:</Text>
+                        <Text className="font-medium text-blue-600">
+                          {formatPrice(Number(watchedCustomPrice))}
+                        </Text>
+                      </HStack>
+                    )}
 
-            {/* Discount */}
-            <View className="mb-4">
-              <FormInput
-                control={control}
-                name="discountPercentage"
-                label="Descuento (%)"
-                placeholder="0"
-                keyboardType="numeric"
-              />
-            </View>
-
-            {/* Custom Price */}
-            <View className="mb-4">
-              <FormInput
-                control={control}
-                name="customPrice"
-                label="Precio personalizado (opcional)"
-                placeholder="0.00"
-                keyboardType="numeric"
-                description="Si se especifica, este precio reemplazará el precio del plan"
-              />
-            </View>
-
-            {/* Attachments */}
-            <View className="mb-4">
-              <FileSelector name="receiptIds" multi={true} label="Recibos adjuntos (opcional)" />
+                    <HStack className="justify-between pt-2 border-t border-gray-200">
+                      <Text className="font-semibold">Precio final:</Text>
+                      <Text className="font-bold text-lg">{formatPrice(calculateFinalPrice())}</Text>
+                    </HStack>
+                  </VStack>
+                </View>
+              </Card>
+            )}
+            
+            {/* Submit Button */}
+            <View className="px-4 pb-3">
+              <Button onPress={handleSubmit(onSubmit)} isDisabled={!isValid} variant="solid">
+                <ButtonText>Crear contrato</ButtonText>
+              </Button>
             </View>
           </View>
-        </Card>
+        }
+      >
+        <View className="py-1 px-3 pb-40">
+          <Heading size="md" className="mb-3">
+            Información del contrato
+          </Heading>
+          {/* Client Selection */}
+          <View className="mb-3">
+            <ClientSelector
+              control={control}
+              name="gymClientId"
+              label="Cliente *"
+              placeholder="Seleccionar cliente"
+              description="Selecciona el cliente para este contrato"
+              allowClear={false}
+            />
+          </View>
 
-        {/* Price Summary */}
-        {selectedPlan && (
-          <Card>
-            <View className="p-4">
-              <Heading size="sm" className="mb-3">
-                Resumen de precios
-              </Heading>
-              <VStack className="gap-2">
-                <HStack className="justify-between">
-                  <Text className="text-gray-600">Precio del plan:</Text>
-                  <Text className="font-medium">{formatPrice(selectedPlan.basePrice || 0)}</Text>
-                </HStack>
+          {/* Plan Selection */}
+          <View className="mb-3">
+            <PlanSelector
+              name="gymMembershipPlanId"
+              label="Plan de membresía *"
+              activeOnly={true}
+              onPlanSelect={setSelectedPlan}
+            />
+          </View>
 
-                {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
-                  <HStack className="justify-between">
-                    <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
-                    <Text className="font-medium text-green-600">
-                      -
-                      {formatPrice(((selectedPlan.basePrice || 0) * Number(watchedDiscount)) / 100)}
-                    </Text>
-                  </HStack>
-                )}
+          {/* Payment Method Selection */}
+          <View className="mb-3">
+            <PaymentMethodSelectorField name="paymentMethodId" label="Método de pago *" />
+          </View>
 
-                {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
-                  <HStack className="justify-between">
-                    <Text className="text-gray-600">Precio personalizado:</Text>
-                    <Text className="font-medium text-blue-600">
-                      {formatPrice(Number(watchedCustomPrice))}
-                    </Text>
-                  </HStack>
-                )}
+          {/* Start Date */}
+          <View className="mb-3">
+            <FormDatePicker
+              control={control}
+              name="startDate"
+              label="Fecha de inicio"
+              placeholder="Seleccionar fecha de inicio"
+              minimumDate={new Date()}
+            />
+          </View>
 
-                <HStack className="justify-between pt-2 border-t border-gray-200">
-                  <Text className="font-semibold">Precio final:</Text>
-                  <Text className="font-bold text-lg">{formatPrice(calculateFinalPrice())}</Text>
-                </HStack>
-              </VStack>
-            </View>
-          </Card>
-        )}
+          {/* Discount */}
+          <View className="mb-3">
+            <FormInput
+              control={control}
+              name="discountPercentage"
+              label="Descuento (%)"
+              placeholder="0"
+              keyboardType="numeric"
+            />
+          </View>
 
-        {/* Submit button */}
-        <Button onPress={handleSubmit(onSubmit)} isDisabled={!isValid} className="mt-4">
-          <ButtonText>Crear contrato</ButtonText>
-        </Button>
-      </VStack>
+          {/* Custom Price */}
+          <View className="mb-3">
+            <FormInput
+              control={control}
+              name="customPrice"
+              label="Precio personalizado (opcional)"
+              placeholder="0.00"
+              keyboardType="numeric"
+              description="Si se especifica, este precio reemplazará el precio del plan"
+            />
+          </View>
+
+          {/* Attachments */}
+          <View className="mb-3">
+            <FileSelector name="receiptIds" multi={true} label="Recibos adjuntos (opcional)" />
+          </View>
+        </View>
+
+      </ScreenForm>
     </FormProvider>
   );
 };

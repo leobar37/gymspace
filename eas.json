@@ -9,7 +9,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "API_URL": "http://192.168.100.18:5200/api/v1"
+        "API_URL": "http://192.168.100.19:5200/api/v1"
       },
       "ios": {
         "simulator": true

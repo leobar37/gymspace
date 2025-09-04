@@ -70,6 +70,7 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
       status: initialData?.status,
       assetsIds: [],
     },
+    mode: 'onChange',
   });
 
   const { control, handleSubmit } = form;
@@ -327,7 +328,7 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
         <VStack className="gap-3 mt-6">
           <Button
             onPress={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
+            isDisabled={isSubmitting || !form.formState.isValid}
             size="lg"
             className="w-full"
           >
@@ -342,7 +343,7 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
           <Button
             variant="outline"
             onPress={() => router.back()}
-            disabled={isSubmitting}
+            isDisabled={isSubmitting || !form.formState.isValid}
             size="md"
             className="w-full"
           >

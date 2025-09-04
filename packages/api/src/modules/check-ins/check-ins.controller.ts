@@ -26,7 +26,7 @@ export class CheckInsController {
   @ApiResponse({ status: 201, description: 'Check-in created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createCheckIn(@Body() dto: CreateCheckInDto, @AppCtxt() ctx: RequestContext) {
-    return await this.checkInsService.createCheckIn(ctx.getGymId()!, dto, ctx.getUserId());
+    return await this.checkInsService.createCheckIn(ctx, dto);
   }
 
   @Get(':id')
@@ -35,7 +35,7 @@ export class CheckInsController {
   @ApiResponse({ status: 200, description: 'Check-in details' })
   @ApiResponse({ status: 404, description: 'Check-in not found' })
   async getCheckIn(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    return await this.checkInsService.getCheckIn(id, ctx.getUserId());
+    return await this.checkInsService.getCheckIn(ctx, id);
   }
 
   @Get()
@@ -43,7 +43,7 @@ export class CheckInsController {
   @ApiOperation({ summary: 'Search check-ins' })
   @ApiResponse({ status: 200, description: 'List of check-ins' })
   async searchCheckIns(@Query() dto: SearchCheckInsDto, @AppCtxt() ctx: RequestContext) {
-    return await this.checkInsService.searchCheckIns(ctx.getGymId()!, dto, ctx.getUserId());
+    return await this.checkInsService.searchCheckIns(ctx, dto);
   }
 
   @Get('current')
@@ -51,7 +51,7 @@ export class CheckInsController {
   @ApiOperation({ summary: 'Get clients currently in the gym' })
   @ApiResponse({ status: 200, description: 'List of clients currently in gym' })
   async getCurrentlyInGym(@AppCtxt() ctx: RequestContext) {
-    return await this.checkInsService.getCurrentlyInGym(ctx.getGymId()!, ctx.getUserId());
+    return await this.checkInsService.getCurrentlyInGym(ctx);
   }
 
   @Get('stats/:period')
@@ -63,7 +63,7 @@ export class CheckInsController {
     @Param('period') period: 'day' | 'week' | 'month',
     @AppCtxt() ctx: RequestContext,
   ) {
-    return await this.checkInsService.getGymCheckInStats(ctx.getGymId()!, ctx.getUserId(), period);
+    return await this.checkInsService.getGymCheckInStats(ctx, period);
   }
 
   @Get('client/:clientId/history')
@@ -77,8 +77,8 @@ export class CheckInsController {
     @AppCtxt() ctx: RequestContext,
   ) {
     return await this.checkInsService.getClientCheckInHistory(
+      ctx,
       clientId,
-      ctx.getUserId(),
       limit ? parseInt(limit) : undefined,
     );
   }
@@ -90,7 +90,7 @@ export class CheckInsController {
   @ApiResponse({ status: 404, description: 'Check-in not found' })
   @ApiResponse({ status: 400, description: "Can only delete today's check-ins" })
   async deleteCheckIn(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
-    await this.checkInsService.deleteCheckIn(id, ctx.getUserId());
+    await this.checkInsService.deleteCheckIn(ctx, id);
     return { message: 'Check-in deleted successfully' };
   }
 }

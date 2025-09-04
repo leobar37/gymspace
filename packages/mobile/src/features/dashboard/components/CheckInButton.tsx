@@ -1,95 +1,120 @@
-import React, { useState, useMemo } from 'react';
-import { Pressable, View, Modal, ScrollView } from 'react-native';
-import { Text } from '@/components/ui/text';
-import { Icon } from '@/components/ui/icon';
 import { Button, ButtonText } from '@/components/ui/button';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
 import { Card } from '@/components/ui/card';
-import { Input, InputField } from '@/components/ui/input';
 import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Input, InputField } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { CheckCircleIcon, XIcon, SearchIcon, UserIcon } from 'lucide-react-native';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useCheckInForm } from '@/controllers/check-ins.controller';
-import { useClientsController } from '@/features/clients/controllers/clients.controller';
-import { ErrorView } from '@/shared/components/ErrorView';
+import { useCheckInClientSearch } from '@/controllers/client-search.controller';
+import { useLoadingScreen, useLoadingScreenStore } from '@/shared/loading-screen';
+import type { Client } from '@gymspace/sdk';
+import { CheckCircleIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react-native';
+import React, { useRef, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
+import ActionSheet from 'react-native-actions-sheet';
+import { ActionSheetRef } from 'react-native-actions-sheet';
 
 export const CheckInButton: React.FC = () => {
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [selectedClientName, setSelectedClientName] = useState<string>('');
+  const actionSheetRef = useRef<ActionSheetRef>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [notes, setNotes] = useState('');
-  const [error, setError] = useState<Error | null>(null);
 
-  const { handleCheckIn, isLoading: isCheckingIn } = useCheckInForm();
-  const { useClientsList } = useClientsController();
+  const { handleCheckIn } = useCheckInForm();
+  const { execute } = useLoadingScreen();
 
-  // Only search when query is long enough
-  const shouldSearch = useMemo(() => searchQuery.length > 2, [searchQuery]);
+  // Use the specialized check-in search controller
+  const {
+    searchQuery,
+    updateSearchQuery,
+    clearSearch,
+    useClientSearchForCheckIn,
+    canClientCheckIn,
+  } = useCheckInClientSearch();
 
-  // Search clients when typing
-  const { data: searchResults, isLoading: isSearching } = useClientsList(
-    shouldSearch ? {
-      search: searchQuery,
-      limit: 10,
-    } : {
-      limit: 0, // Return no results when not searching
-    }
-  );
+  // Use the search hook with check-in specific settings
+  const { data: searchResults, isLoading: isSearching } = useClientSearchForCheckIn({
+    limit: 10,
+    page: 0,
+  });
 
   const handleCreateCheckIn = async () => {
-    if (!selectedClientId) return;
+    if (!selectedClient) return;
 
-    try {
-      setError(null);
-      await handleCheckIn(selectedClientId, notes.trim() || undefined);
-      // Reset form and close modal on success
-      setSelectedClientId(null);
-      setSelectedClientName('');
-      setSearchQuery('');
-      setNotes('');
-      setIsModalVisible(false);
-    } catch (err) {
-      // Capture the error to show error screen
-      setError(err instanceof Error ? err : new Error('Error al registrar check-in'));
+    await execute(
+      handleCheckIn(selectedClient.id, notes.trim() || undefined),
+      {
+        action: 'Registrando check-in...',
+        successMessage: `Check-in registrado exitosamente para ${selectedClient.name}`,
+        errorFormatter: (error) => {
+          if (error instanceof Error) {
+            return error.message;
+          }
+          return 'Error al registrar check-in';
+        },
+        successActions: [
+          {
+            label: 'Nuevo Check-in',
+            onPress: () => {
+              resetForm();
+            },
+            variant: 'solid',
+          },
+        ],
+        hideOnSuccess: false,
+      }
+    );
+
+    // Result handling is done by LoadingScreen
+    // The success actions will handle navigation and form reset
+  };
+
+  const resetForm = () => {
+    setSelectedClient(null);
+    clearSearch();
+    setNotes('');
+  };
+
+  const openSheet = () => {
+    resetForm();
+    actionSheetRef.current?.show();
+  };
+
+  const closeSheet = () => {
+    actionSheetRef.current?.hide();
+    resetForm();
+  };
+
+  const handleSelectClient = (client: Client) => {
+    const checkInStatus = canClientCheckIn(client);
+
+    if (!checkInStatus.canCheckIn) {
+      // Show error using LoadingScreen store
+      const { show, hide } = useLoadingScreenStore.getState();
+      show('error', checkInStatus.reason || 'El cliente no puede hacer check-in', [
+        {
+          label: 'Entendido',
+          onPress: () => {
+            hide();
+          },
+          variant: 'solid',
+        },
+      ]);
+      return;
     }
-  };
 
-  const openModal = () => {
-    setError(null);
-    setIsModalVisible(true);
+    setSelectedClient(client);
+    const fullName = client.name;
+    updateSearchQuery(fullName);
   };
-  
-  const closeModal = () => {
-    setIsModalVisible(false);
-    setSelectedClientId(null);
-    setSelectedClientName('');
-    setSearchQuery('');
-    setNotes('');
-    setError(null);
-  };
-
-  const handleRetry = () => {
-    setError(null);
-  };
-
-  const handleBackFromError = () => {
-    setError(null);
-    setSelectedClientId(null);
-    setSelectedClientName('');
-    setSearchQuery('');
-    setNotes('');
-  };
-
-  console.log("error", error);
-  
 
   return (
     <>
       {/* Floating Action Button */}
       <Pressable
-        onPress={openModal}
+        onPress={openSheet}
         className="absolute bottom-6 right-6 w-14 h-14 bg-green-600 rounded-full items-center justify-center shadow-lg"
         style={{
           elevation: 8,
@@ -102,52 +127,59 @@ export const CheckInButton: React.FC = () => {
         <Icon as={CheckCircleIcon} className="w-7 h-7 text-white" />
       </Pressable>
 
-      {/* Check-in Modal */}
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeModal}
+      {/* Check-in ActionSheet */}
+      <ActionSheet
+        ref={actionSheetRef}
+        containerStyle={{
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          paddingBottom: 20,
+        }}
+        indicatorStyle={{
+          width: 40,
+          backgroundColor: '#E5E7EB',
+          marginTop: 8,
+        }}
+        gestureEnabled={true}
+        closeOnPressBack={true}
+        closeOnTouchBackdrop={true}
       >
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl min-h-[70%]">
-            {/* Modal Header */}
-            <VStack className="p-6 border-b border-gray-200">
-              <HStack className="justify-between items-center">
-                <Heading className="text-xl font-bold text-gray-900">
-                  Registrar Check-in
-                </Heading>
-                <Pressable onPress={closeModal} className="p-2">
-                  <Icon as={XIcon} className="w-6 h-6 text-gray-600" />
-                </Pressable>
-              </HStack>
-            </VStack>
+        <View className="min-h-[70vh] max-h-[90vh]">
+          {/* Sheet Header */}
+          <VStack className="p-6 border-b border-gray-200">
+            <HStack className="justify-between items-center">
+              <Heading className="text-xl font-bold text-gray-900">Registrar Check-in</Heading>
+              <Pressable onPress={closeSheet} className="p-2">
+                <Icon as={XIcon} className="w-6 h-6 text-gray-600" />
+              </Pressable>
+            </HStack>
+          </VStack>
 
-            {/* Modal Content */}
-            {error ? (
-              <ErrorView
-                title="Error al registrar Check-in"
-                error={error}
-                onRetry={handleRetry}
-                onBack={handleBackFromError}
-                retryText="Intentar de nuevo"
-                backText="Volver al inicio"
-              />
-            ) : (
-            <ScrollView className="flex-1 p-6" showsVerticalScrollIndicator={false}>
+          {/* Sheet Content */}
+          <ScrollView
+            className="flex-1 p-6"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
               <VStack className="gap-6">
                 {/* Search Input */}
                 <VStack className="gap-2">
-                  <Text className="text-sm font-medium text-gray-700">
-                    Buscar Cliente
-                  </Text>
+                  <Text className="text-sm font-medium text-gray-700">Buscar Cliente</Text>
                   <View className="relative">
                     <Input variant="outline" size="md">
-                      <Icon as={SearchIcon} className="absolute left-3 top-3 w-5 h-5 text-gray-400 z-10" />
+                      <Icon
+                        as={SearchIcon}
+                        className="absolute left-3 top-3 w-5 h-5 text-gray-400 z-10"
+                      />
                       <InputField
                         placeholder="Buscar por nombre o email..."
                         value={searchQuery}
-                        onChangeText={setSearchQuery}
+                        onChangeText={(text) => {
+                          updateSearchQuery(text);
+                          if (selectedClient && text !== selectedClient.name) {
+                            setSelectedClient(null);
+                          }
+                        }}
                         className="pl-10"
                       />
                     </Input>
@@ -164,38 +196,54 @@ export const CheckInButton: React.FC = () => {
                       </HStack>
                     ) : searchResults?.data && searchResults.data.length > 0 ? (
                       <VStack className="gap-2">
-                        {searchResults.data.map((client: any) => (
-                          <Pressable
-                            key={client.id}
-                            onPress={() => {
-                              setSelectedClientId(client.id);
-                              const fullName = `${client.firstName || client.name || ''} ${client.lastName || ''}`.trim();
-                              setSelectedClientName(fullName);
-                              setSearchQuery(fullName);
-                            }}
-                          >
-                            <Card className={`p-3 ${selectedClientId === client.id ? 'bg-green-50 border-green-500' : 'bg-white'}`}>
-                              <HStack className="items-center gap-3">
-                                <View className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center">
-                                  <Icon as={UserIcon} className="w-5 h-5 text-gray-600" />
-                                </View>
-                                <VStack className="flex-1">
-                                  <Text className="font-medium text-gray-900">
-                                    {client.firstName || client.name || ''} {client.lastName || ''}
-                                  </Text>
-                                  {client.email && (
-                                    <Text className="text-xs text-gray-500">
-                                      {client.email}
-                                    </Text>
+                        {searchResults.data.map((client) => {
+                          const isSelected = selectedClient?.id === client.id;
+                          const fullName = client.name || 'Sin nombre';
+                          const checkInStatus = canClientCheckIn(client);
+
+                          return (
+                            <Pressable
+                              key={client.id}
+                              onPress={() => handleSelectClient(client)}
+                              disabled={!checkInStatus.canCheckIn}
+                            >
+                              <Card
+                                className={`p-3 ${
+                                  isSelected
+                                    ? 'bg-green-50 border-green-500'
+                                    : checkInStatus.canCheckIn
+                                      ? 'bg-white'
+                                      : 'bg-gray-50 opacity-60'
+                                }`}
+                              >
+                                <HStack className="items-center gap-3">
+                                  <View className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center">
+                                    <Icon as={UserIcon} className="w-5 h-5 text-gray-600" />
+                                  </View>
+                                  <VStack className="flex-1">
+                                    <Text className="font-medium text-gray-900">{fullName}</Text>
+                                    {client.email && (
+                                      <Text className="text-xs text-gray-500">{client.email}</Text>
+                                    )}
+                                    {client.clientNumber && (
+                                      <Text className="text-xs text-gray-400">
+                                        #{client.clientNumber}
+                                      </Text>
+                                    )}
+                                    {!checkInStatus.canCheckIn && (
+                                      <Text className="text-xs text-red-600 mt-1">
+                                        {checkInStatus.reason}
+                                      </Text>
+                                    )}
+                                  </VStack>
+                                  {isSelected && (
+                                    <Icon as={CheckCircleIcon} className="w-5 h-5 text-green-600" />
                                   )}
-                                </VStack>
-                                {selectedClientId === client.id && (
-                                  <Icon as={CheckCircleIcon} className="w-5 h-5 text-green-600" />
-                                )}
-                              </HStack>
-                            </Card>
-                          </Pressable>
-                        ))}
+                                </HStack>
+                              </Card>
+                            </Pressable>
+                          );
+                        })}
                       </VStack>
                     ) : (
                       <Text className="text-center text-gray-500 py-4">
@@ -206,11 +254,9 @@ export const CheckInButton: React.FC = () => {
                 )}
 
                 {/* Notes Input */}
-                {selectedClientId && (
+                {selectedClient && (
                   <VStack className="gap-2">
-                    <Text className="text-sm font-medium text-gray-700">
-                      Notas (opcional)
-                    </Text>
+                    <Text className="text-sm font-medium text-gray-700">Notas (opcional)</Text>
                     <Input variant="outline" size="md">
                       <InputField
                         placeholder="Agregar una nota..."
@@ -226,36 +272,23 @@ export const CheckInButton: React.FC = () => {
 
                 {/* Action Buttons */}
                 <HStack className="gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    size="md"
-                    className="flex-1"
-                    onPress={closeModal}
-                  >
+                  <Button variant="outline" size="md" className="flex-1" onPress={closeSheet}>
                     <ButtonText>Cancelar</ButtonText>
                   </Button>
                   <Button
                     variant="solid"
                     size="md"
-                    className='flex-1'
+                    className="flex-1"
                     onPress={handleCreateCheckIn}
-                    disabled={!selectedClientId || isCheckingIn}
+                    isDisabled={!selectedClient}
                   >
-                    {isCheckingIn ? (
-                      <Spinner className="text-white" />
-                    ) : (
-                      <ButtonText className="text-white">
-                        Check-in
-                      </ButtonText>
-                    )}
+                    <ButtonText className="text-white">Check-in</ButtonText>
                   </Button>
                 </HStack>
               </VStack>
             </ScrollView>
-            )}
-          </View>
         </View>
-      </Modal>
+      </ActionSheet>
     </>
   );
 };

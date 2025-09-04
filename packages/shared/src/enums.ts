@@ -40,6 +40,7 @@ export enum ContractStatus {
   EXPIRING_SOON = 'expiring_soon',
   EXPIRED = 'expired',
   CANCELLED = 'cancelled',
+  FOR_RENEW = 'for_renew',
 }
 
 export enum PaymentFrequency {

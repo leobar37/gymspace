@@ -200,9 +200,9 @@ export class FilesController {
   async render(@Param('id', ParseUUIDPipe) id: string, @Res() res: FastifyReply) {
     try {
       // Create a minimal context for public rendering
-      const context = { 
+      const context = {
         getUserId: () => 'public',
-        getGymId: () => null 
+        getGymId: () => null,
       } as IRequestContext;
 
       const { stream, filename, mimeType, fileSize } = await this.filesService.serve(context, id);
@@ -221,13 +221,13 @@ export class FilesController {
       return res.send(stream);
     } catch (error) {
       console.error('[FilesController] Error in render method:', error);
-      
+
       // Send appropriate error response
       if (error instanceof NotFoundException) {
         res.status(404);
         return res.send({ statusCode: 404, message: 'File not found' });
       }
-      
+
       res.status(500);
       return res.send({ statusCode: 500, message: 'Internal server error' });
     }

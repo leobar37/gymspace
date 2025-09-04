@@ -1,20 +1,26 @@
-import React from 'react';
-import { View, Text, ActivityIndicator, Modal } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { Button, ButtonText } from '@/components/ui/button';
 import { useLoadingScreenStore } from './store';
 import { CheckCircle, XCircle } from 'lucide-react-native';
+import ActionSheet, { ActionSheetRef } from 'react-native-actions-sheet';
 
 export const LoadingScreen: React.FC = () => {
   const { state, message, actions, hide } = useLoadingScreenStore();
+  const actionSheetRef = useRef<ActionSheetRef>(null);
 
-  if (state === 'idle') {
-    return null;
-  }
-  
-  const handleActionPress = (action: typeof actions[0]) => {
-    // First hide the modal
-    hide();
-    // Then execute the action after a small delay to ensure modal is closed
+  useEffect(() => {
+    if (state !== 'idle') {
+      actionSheetRef.current?.show();
+    } else {
+      actionSheetRef.current?.hide();
+    }
+  }, [state]);
+
+  const handleActionPress = (action: (typeof actions)[0]) => {
+    // First hide the sheet
+    actionSheetRef.current?.hide();
+    // Then execute the action after a small delay to ensure sheet is closed
     setTimeout(() => {
       action.onPress();
     }, 100);
@@ -37,11 +43,7 @@ export const LoadingScreen: React.FC = () => {
         return (
           <>
             <ActivityIndicator size="large" color="#6366f1" />
-            {message && (
-              <Text className="text-gray-700 text-base text-center mt-4">
-                {message}
-              </Text>
-            )}
+            {message && <Text className="text-gray-700 text-base text-center mt-4">{message}</Text>}
           </>
         );
 
@@ -58,9 +60,7 @@ export const LoadingScreen: React.FC = () => {
               {state === 'success' ? '¡Éxito!' : 'Error'}
             </Text>
             {message && (
-              <Text className="text-gray-700 text-base text-center mt-2 px-4">
-                {message}
-              </Text>
+              <Text className="text-gray-700 text-base text-center mt-2 px-4">{message}</Text>
             )}
             {actions.length > 0 && (
               <View className="mt-6 w-full px-6">
@@ -84,18 +84,39 @@ export const LoadingScreen: React.FC = () => {
     }
   };
 
+  // Handle closing the sheet when hide is called
+  const handleClose = () => {
+    hide();
+  };
+
   return (
-    <Modal
-      visible={state !== 'idle'}
-      transparent
-      animationType="fade"
+    <ActionSheet
+      id={'action'}
+      ref={actionSheetRef}
+      containerStyle={{
+        backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 32,
+        minWidth: 280,
+        maxWidth: '90%',
+        alignSelf: 'center',
+      }}
+      backgroundInteractionEnabled={false}
+      overdrawEnabled={false}
+      defaultOverlayOpacity={0.5}
+      gestureEnabled={false}
+      closeOnPressBack={false}
+      closeOnTouchBackdrop={false}
+      indicatorStyle={{
+        width: 0,
+        height: 0,
+      }}
+      isModal={true}
       statusBarTranslucent
+      drawUnderStatusBar
+      onClose={handleClose}
     >
-      <View className="flex-1 bg-black/50 justify-center items-center">
-        <View className="bg-white rounded-2xl p-8 m-6 min-w-[280px] max-w-[90%] items-center shadow-xl">
-          {renderContent()}
-        </View>
-      </View>
-    </Modal>
+      <View className="items-center">{renderContent()}</View>
+    </ActionSheet>
   );
 };

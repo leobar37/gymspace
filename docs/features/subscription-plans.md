@@ -104,23 +104,11 @@ Perfecto para conocer la plataforma y evaluar si se ajusta a tus necesidades.
 
 ## Precios por País
 
-### 🇺🇸 Estados Unidos / 🇪🇨 Ecuador
+### 🇪🇨 Ecuador
 - **Gratuito**: $0 USD (30 días)
 - **Básico**: $29.99 USD/mes
 - **Premium**: $79.99 USD/mes
 - **Enterprise**: $199.99 USD/mes
-
-### 🇨🇴 Colombia
-- **Gratuito**: $0 COP (30 días)
-- **Básico**: $129,900 COP/mes
-- **Premium**: $349,900 COP/mes
-- **Enterprise**: $879,900 COP/mes
-
-### 🇲🇽 México
-- **Gratuito**: $0 MXN (30 días)
-- **Básico**: $549 MXN/mes
-- **Premium**: $1,449 MXN/mes
-- **Enterprise**: $3,599 MXN/mes
 
 ### 🇵🇪 Perú
 - **Gratuito**: S/0 PEN (30 días)

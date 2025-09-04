@@ -36,6 +36,7 @@ export interface CreateSaleDto {
   notes?: string;
   fileIds?: string[];
   paymentStatus?: 'paid' | 'unpaid';
+  paymentMethodId?: string;
 }
 
 export interface UpdateSaleDto {
@@ -44,6 +45,7 @@ export interface UpdateSaleDto {
   notes?: string;
   fileIds?: string[];
   paymentStatus?: 'paid' | 'unpaid';
+  paymentMethodId?: string;
 }
 
 export interface UpdatePaymentStatusDto {
@@ -57,6 +59,7 @@ export interface Sale {
   saleNumber: string;
   total: number;
   paymentStatus: 'paid' | 'unpaid';
+  paymentMethodId?: string;
   saleDate: string;
   customerName?: string;
   notes?: string;
@@ -70,6 +73,12 @@ export interface Sale {
     name: string;
     phone?: string;
     email?: string;
+  };
+  paymentMethod?: {
+    id: string;
+    name: string;
+    code: string;
+    description?: string;
   };
   createdBy?: {
     id: string;

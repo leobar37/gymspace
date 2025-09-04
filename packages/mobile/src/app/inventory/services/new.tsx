@@ -11,7 +11,7 @@ import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
 import { ScreenForm } from '@/shared/components/ScreenForm';
 import { useProductsController } from '@/features/products/controllers/products.controller';
-import { useProductCategories } from '@/hooks/useProducts';
+import { useProductCategories } from '@/features/products/hooks/useProducts';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import { useCountryConfig } from '@/config/ConfigContext';
 

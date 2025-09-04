@@ -68,7 +68,11 @@ export type Permission =
   | 'SUPPLIERS_CREATE'
   | 'SUPPLIERS_READ'
   | 'SUPPLIERS_UPDATE'
-  | 'SUPPLIERS_DELETE';
+  | 'SUPPLIERS_DELETE'
+  | 'PAYMENT_METHODS_CREATE'
+  | 'PAYMENT_METHODS_READ'
+  | 'PAYMENT_METHODS_UPDATE'
+  | 'PAYMENT_METHODS_DELETE';
 
 export interface AuditFields {
   createdByUserId: UUID;

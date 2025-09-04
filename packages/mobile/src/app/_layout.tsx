@@ -7,13 +7,15 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../../global.css';
+import '../sheets';
+import { SheetProvider } from 'react-native-actions-sheet';
 
 function RootLayout() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView className="flex-1">
         <AppProviders>
-          <>
+          <SheetProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(onboarding)" />
               <Stack.Screen name="(app)" />
@@ -21,7 +23,7 @@ function RootLayout() {
             </Stack>
             <GlobalModals />
             <LoadingScreen />
-          </>
+          </SheetProvider>
         </AppProviders>
       </GestureHandlerRootView>
     </SafeAreaProvider>

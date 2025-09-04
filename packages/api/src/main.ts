@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import fastifyHelmet from '@fastify/helmet';
@@ -10,6 +10,7 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { networkInterfaces } from 'os';
 import { LoggerService } from './core/logger/logger.service';
+import { setupIngestHandlers } from './setup/ingest-setup';
 
 async function bootstrap() {
   // Create app with custom logger configuration
@@ -162,6 +163,9 @@ async function bootstrap() {
       console.error('⚠️  Failed to generate OpenAPI files:', error.message);
     }
   }
+
+  // Initialize Inngest handlers
+  await setupIngestHandlers(app, logger);
 
   await app.listen(port, '0.0.0.0');
 

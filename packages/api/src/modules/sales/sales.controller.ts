@@ -21,6 +21,7 @@ export class SalesController {
   @ApiResponse({ status: 409, description: 'Insufficient stock or invalid product' })
   async createSale(@Body() dto: CreateSaleDto, @AppCtxt() ctx: RequestContext) {
     return await this.salesService.createSale(ctx, dto);
+    return await this.salesService.createSale(ctx, dto);
   }
 
   @Get()
@@ -28,6 +29,7 @@ export class SalesController {
   @ApiOperation({ summary: 'Search sales with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Paginated list of sales' })
   async searchSales(@Query() dto: SearchSalesDto, @AppCtxt() ctx: RequestContext) {
+    return await this.salesService.searchSales(ctx, dto);
     return await this.salesService.searchSales(ctx, dto);
   }
 

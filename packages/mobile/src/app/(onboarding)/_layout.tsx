@@ -1,14 +1,10 @@
 import { useCurrentSession } from '@/hooks/useCurrentSession';
-import { useGymSdk } from '@/providers/GymSdkProvider';
 import { Redirect, Stack } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 export default function OnboardingLayout() {
-  const { isAuthenticated } = useGymSdk();
-  const { session, isLoading } = useCurrentSession({
-    enabled: isAuthenticated,
-  });
+  const { session, isLoading, isAuthenticated } = useCurrentSession();
 
   // While checking authentication status, show loading
   if (isAuthenticated && isLoading) {

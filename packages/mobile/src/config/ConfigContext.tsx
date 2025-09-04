@@ -17,7 +17,7 @@ interface ConfigContextValue {
     documentValue: string
   ) => { isValid: boolean; error?: string };
   getCountryCode: () => string | undefined;
-  formatPrice: (amount: number) => string;
+  formatPrice: (amount: number, fractionDigits?: number) => string;
 }
 
 const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
@@ -44,7 +44,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
       validateDocument: (documentType: string, documentValue: string) =>
         validateDocument(documentType, documentValue, countryCode),
       getCountryCode: () => countryCode,
-      formatPrice: (amount: number) => formatPriceBase(amount, countryCode),
+      formatPrice: (amount: number, fractionDigits?: number) => formatPriceBase(amount, countryCode, fractionDigits),
     }),
     [countryCode]
   );

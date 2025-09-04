@@ -151,9 +151,10 @@ export class ProductsController {
 
   @Patch(':id/stock')
   @Allow(PERMISSIONS.PRODUCTS_UPDATE)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Update product stock quantity',
-    description: 'Updates stock and creates movement record if product has inventory tracking enabled'
+    description:
+      'Updates stock and creates movement record if product has inventory tracking enabled',
   })
   @ApiResponse({ status: 200, description: 'Stock updated successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
@@ -163,5 +164,17 @@ export class ProductsController {
     @AppCtxt() ctx: RequestContext,
   ) {
     return await this.productsService.updateStock(ctx, id, dto);
+  }
+
+  @Get(':id/stock-movements')
+  @Allow(PERMISSIONS.PRODUCTS_READ)
+  @ApiOperation({
+    summary: 'Get product stock movements',
+    description: 'Retrieve stock movement history for a specific product',
+  })
+  @ApiResponse({ status: 200, description: 'List of stock movements' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  async getProductStockMovements(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
+    return await this.productsService.getProductStockMovements(ctx, id);
   }
 }

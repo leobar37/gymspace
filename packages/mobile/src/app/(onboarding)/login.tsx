@@ -21,7 +21,7 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
-  View
+  View,
 } from 'react-native';
 import { z } from 'zod';
 
@@ -140,13 +140,15 @@ export default function LoginScreen() {
         email: data.email,
         password: data.password,
       });
-
+      console.log('response', response);
       // Store tokens
       const success = await storeTokens({
         accessToken: response.access_token,
         refreshToken: response.refresh_token,
         expiresAt: Date.now() + 24 * 60 * 60 * 1000,
       });
+
+      router.replace('/(app)');
 
       if (!success) {
         throw new Error('Error al guardar la sesión. Por favor, inténtalo de nuevo.');
@@ -178,7 +180,6 @@ export default function LoginScreen() {
         },
       ],
       onSuccess: () => {
-        // Navigate after successful login
         setTimeout(() => {
           router.replace('/(app)');
         }, 1200);

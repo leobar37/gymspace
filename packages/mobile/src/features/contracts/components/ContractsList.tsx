@@ -1,65 +1,79 @@
 import React, { useState, useCallback } from 'react';
-import { FlatList, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { format } from 'date-fns';
-import { da, es } from 'date-fns/locale';
+import { es } from 'date-fns/locale';
+import { SheetManager } from 'react-native-actions-sheet';
 
-import { Box } from '@/components/ui/box';
+import { View } from '@/components/ui/view';
 import { Text } from '@/components/ui/text';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
 import { Pressable } from '@/components/ui/pressable';
-import { Heading } from '@/components/ui/heading';
 import { Badge, BadgeText } from '@/components/ui/badge';
-import { Divider } from '@/components/ui/divider';
 import { Spinner } from '@/components/ui/spinner';
 import { Button, ButtonText } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { View } from 'react-native';
-import { Fab, FabIcon } from '@/components/ui/fab';
-import { PlusIcon } from 'lucide-react-native';
-import { ContractStatus } from '@gymspace/sdk';
-import { useContractsController, SearchFilters } from '../controllers/contracts.controller';
+import { Icon } from '@/components/ui/icon';
+import { Input, InputField } from '@/components/ui/input';
+import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
+
+import {
+  ChevronLeftIcon,
+  FileTextIcon,
+  SearchIcon,
+  FilterIcon,
+  ListIcon,
+  InfinityIcon,
+  PlusIcon,
+  InfoIcon,
+} from 'lucide-react-native';
+
+import { ContractStatus, type GetContractsParams } from '@gymspace/sdk';
 import { useFormatPrice } from '@/config/ConfigContext';
+import { useGymSdk } from '@/providers/GymSdkProvider';
+import { useInfiniteScroll, InfiniteScrollList, PaginationControls } from '@/shared/pagination';
 
-interface ContractsListProps {
-  filters?: SearchFilters;
-  onContractPress?: (contractId: string) => void;
-  hideAddButton?: boolean;
-  availableStatuses?: { value: ContractStatus | undefined; label: string }[];
-}
-
-export const ContractsList: React.FC<ContractsListProps> = ({
-  filters = {},
-  onContractPress,
-  hideAddButton = false,
-  availableStatuses
-}) => {
-  const router = useRouter();
+export default function ContractsList() {
   const formatPrice = useFormatPrice();
-  const { useContractsList } = useContractsController();
-  const [refreshing, setRefreshing] = useState(false);
-  const [searchFilters, setSearchFilters] = useState<SearchFilters>(filters);
+  const { sdk } = useGymSdk();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<GetContractsParams>({ page: 1, limit: 20 });
+  const [paginationMode, setPaginationMode] = useState<'infinite' | 'standard'>('infinite');
 
-  const { data, isLoading, refetch } = useContractsList(searchFilters);
+  // Use pagination hook
+  const pagination = useInfiniteScroll({
+    queryKey: ['contracts', 'list', filters, searchTerm] as const,
+    queryFn: async (params) => {
+      // Get contracts from SDK with search parameters
+      const response = await sdk.contracts.getGymContracts({
+        ...filters,
+        ...params,
+        clientName: searchTerm || undefined,
+      });
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  }, [refetch]);
+      // The response from SDK already has the correct structure with data and meta
+      // No need to transform it
+      return response;
+    },
+    limit: 20,
+    enabled: true,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    prefetchNextPage: true,
+  });
 
-  const handleContractPress = useCallback((contractId: string) => {
-    if (onContractPress) {
-      onContractPress(contractId);
-    } else {
-      router.push(`/contracts/${contractId}`);
-    }
-  }, [onContractPress, router]);
-
-  const handleAddPress = useCallback(() => {
-    router.push('/contracts/create');
-  }, [router]);
+  const {
+    allItems: contracts = [],
+    state,
+    isLoading,
+    error,
+    isFetching,
+    refresh,
+    nextPage,
+    previousPage,
+    goToPage,
+    pageNumbers,
+  } = pagination;
 
   const getStatusBadge = (status: ContractStatus) => {
     switch (status) {
@@ -82,173 +96,353 @@ export const ContractsList: React.FC<ContractsListProps> = ({
     return format(new Date(date), 'dd MMM yyyy', { locale: es });
   };
 
-
-  const renderContractItem = useCallback(({ item }: { item: any }) => {
-    const statusInfo = getStatusBadge(item.status);
-    const isFrozen = item.freezeStartDate && item.freezeEndDate;
-
-    console.log("contract item", JSON.stringify(item, null, 2));
-
-    return (
-      <Pressable
-        onPress={() => handleContractPress(item.id)}
-        className="mb-3"
-      >
-        <Card>
-          <View className="p-4">
-            <HStack className="justify-between items-start mb-2">
-              <VStack className="flex-1">
-                <Text className="text-sm text-gray-500 mb-1">
-                  Contrato #{item.contractNumber}
-                </Text>
-                <Heading size="sm" className="mb-1">
-                  {item.gymClient?.name || 'Cliente'}
-                </Heading>
-                <Text className="text-sm text-gray-600">
-                  {item.gymMembershipPlan?.name || 'Plan'}
-                </Text>
-              </VStack>
-              <VStack className="items-end">
-                <Badge action={statusInfo.variant} className="mb-2">
-                  <BadgeText>{statusInfo.text}</BadgeText>
-                </Badge>
-                {isFrozen && (
-                  <Badge action="info" size="sm">
-                    <BadgeText>Congelado</BadgeText>
-                  </Badge>
-                )}
-              </VStack>
-            </HStack>
-
-            <Divider className="my-3" />
-
-            <VStack className="gap-2">
-              <HStack className="justify-between">
-                <Text className="text-sm text-gray-500">Vigencia:</Text>
-                <Text className="text-sm font-medium">
-                  {formatDate(item.startDate)} - {formatDate(item.endDate)}
-                </Text>
-              </HStack>
-
-              <HStack className="justify-between">
-                <Text className="text-sm text-gray-500">Precio final:</Text>
-                <Text className="text-sm font-medium">
-                  {formatPrice(item.finalAmount)}
-                </Text>
-              </HStack>
-
-              {item.discountPercentage > 0 && (
-                <HStack className="justify-between">
-                  <Text className="text-sm text-gray-500">Descuento:</Text>
-                  <Text className="text-sm font-medium text-green-600">
-                    {item.discountPercentage}%
-                  </Text>
-                </HStack>
-              )}
-
-              {isFrozen && (
-                <HStack className="justify-between">
-                  <Text className="text-sm text-gray-500">Congelado:</Text>
-                  <Text className="text-sm font-medium">
-                    {formatDate(item.freezeStartDate)} - {formatDate(item.freezeEndDate)}
-                  </Text>
-                </HStack>
-              )}
-            </VStack>
-          </View>
-        </Card>
-      </Pressable>
-    );
-  }, [handleContractPress]);
-
-  const renderEmpty = () => (
-    <Box className="flex-1 justify-center items-center p-8">
-      <Text className="text-gray-500 text-center mb-4">
-        No hay contratos registrados
-      </Text>
-      {!hideAddButton && (
-        <Button onPress={handleAddPress}>
-          <ButtonText>Crear primer contrato</ButtonText>
-        </Button>
-      )}
-    </Box>
+  const handleFiltersChange = useCallback(
+    (newFilters: GetContractsParams) => {
+      setFilters((prev: GetContractsParams) => ({ ...prev, ...newFilters }));
+      pagination.reset();
+    },
+    [pagination],
   );
 
-  const renderStatusFilter = () => {
-    const statuses = availableStatuses || [
-      { value: undefined, label: 'Todos' },
-      { value: ContractStatus.ACTIVE, label: 'Activos' },
-      { value: ContractStatus.PENDING, label: 'Pendientes' },
-      { value: ContractStatus.EXPIRING_SOON, label: 'Por vencer' },
-      { value: ContractStatus.EXPIRED, label: 'Vencidos' },
-      { value: ContractStatus.CANCELLED, label: 'Cancelados' },
-    ];
+  const handleSearch = useCallback(() => {
+    pagination.reset();
+  }, [pagination]);
 
-    return (
-      <Box className="px-4 py-3">
-        <HStack className="gap-2">
-          {statuses.map((status) => {
-            const isActive = searchFilters.status === status.value ||
-              (!searchFilters.status && !status.value);
-            return (
-              <Pressable
-                key={status.label}
-                onPress={() => setSearchFilters({ ...searchFilters, status: status.value })}
-              >
-                <Badge
-                  action={isActive ? 'info' : 'muted'}
-                  variant={isActive ? 'solid' : 'outline'}
-                >
-                  <BadgeText>{status.label}</BadgeText>
+  const handleOpenFilters = useCallback(() => {
+    SheetManager.show('contracts-filters', {
+      payload: {
+        currentFilters: filters,
+        onApplyFilters: handleFiltersChange,
+      },
+    });
+  }, [filters, handleFiltersChange]);
+
+  const handleContractPress = useCallback((contractId: string) => {
+    router.push(`/contracts/${contractId}`);
+  }, []);
+
+  const getActiveFiltersCount = useCallback(() => {
+    let count = 0;
+    if (filters.status) count++;
+    if (filters.startDateFrom || filters.endDateFrom) count++;
+    if (searchTerm) count++;
+    return count;
+  }, [filters, searchTerm]);
+
+  const renderContractItem = useCallback(
+    ({ item }: { item: any }) => {
+      const statusInfo = getStatusBadge(item.status);
+      const isFrozen = item.freezeStartDate && item.freezeEndDate;
+
+      return (
+        <Pressable
+          onPress={() => handleContractPress(item.id)}
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-3"
+        >
+          <HStack className="justify-between items-start mb-2">
+            <VStack className="flex-1">
+              <Text className="text-sm text-gray-500 mb-1">Contrato #{item.contractNumber}</Text>
+              <Text className="text-base font-semibold text-gray-900 mb-1">
+                {item.gymClient?.name || 'Cliente'}
+              </Text>
+              <Text className="text-sm text-gray-600">
+                {item.gymMembershipPlan?.name || 'Plan'}
+              </Text>
+            </VStack>
+            <VStack className="items-end">
+              <Badge action={statusInfo.variant} className="mb-2">
+                <BadgeText>{statusInfo.text}</BadgeText>
+              </Badge>
+              {isFrozen && (
+                <Badge action="info" size="sm">
+                  <BadgeText>Congelado</BadgeText>
                 </Badge>
-              </Pressable>
-            );
-          })}
-        </HStack>
-      </Box>
-    );
-  };
+              )}
+            </VStack>
+          </HStack>
 
-  if (isLoading) {
+          <View className="h-px bg-gray-200 my-3" />
+
+          <VStack space="sm">
+            <HStack className="justify-between">
+              <Text className="text-sm text-gray-500">Vigencia:</Text>
+              <Text className="text-sm font-medium">
+                {formatDate(item.startDate)} - {formatDate(item.endDate)}
+              </Text>
+            </HStack>
+
+            <HStack className="justify-between">
+              <Text className="text-sm text-gray-500">Precio final:</Text>
+              <Text className="text-sm font-medium">{formatPrice(item.finalAmount)}</Text>
+            </HStack>
+
+            {item.discountPercentage > 0 && (
+              <HStack className="justify-between">
+                <Text className="text-sm text-gray-500">Descuento:</Text>
+                <Text className="text-sm font-medium text-green-600">
+                  {item.discountPercentage}%
+                </Text>
+              </HStack>
+            )}
+
+            {isFrozen && (
+              <HStack className="justify-between">
+                <Text className="text-sm text-gray-500">Congelado:</Text>
+                <Text className="text-sm font-medium">
+                  {formatDate(item.freezeStartDate)} - {formatDate(item.freezeEndDate)}
+                </Text>
+              </HStack>
+            )}
+          </VStack>
+        </Pressable>
+      );
+    },
+    [handleContractPress, formatPrice],
+  );
+
+  const renderListHeader = useCallback(
+    () => (
+      <VStack space="md" className="pb-4">
+        {/* Pagination Mode Toggle */}
+        <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <HStack className="items-center justify-between">
+            <VStack space="xs">
+              <Text className="text-base font-semibold text-gray-900">Modo de visualización</Text>
+              <Text className="text-sm text-gray-500">
+                {state?.total > 0 ? `${state.total} contratos encontrados` : 'Sin resultados'}
+              </Text>
+            </VStack>
+
+            <Pressable
+              onPress={() =>
+                setPaginationMode((prev) => (prev === 'infinite' ? 'standard' : 'infinite'))
+              }
+              className="flex-row items-center px-4 py-2.5 bg-blue-50 rounded-lg border border-blue-200"
+            >
+              <Icon
+                as={paginationMode === 'infinite' ? InfinityIcon : ListIcon}
+                className="w-5 h-5 text-blue-600 mr-2"
+              />
+              <Text className="text-sm font-semibold text-blue-700">
+                {paginationMode === 'infinite' ? 'Scroll infinito' : 'Páginas'}
+              </Text>
+            </Pressable>
+          </HStack>
+        </View>
+
+        {/* Standard Pagination Controls (if enabled) */}
+        {paginationMode === 'standard' && state?.totalPages > 1 && (
+          <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <PaginationControls
+              state={state}
+              onNextPage={nextPage}
+              onPreviousPage={previousPage}
+              onGoToPage={goToPage}
+              pageNumbers={pageNumbers}
+              isFetching={isFetching}
+              variant="full"
+              showInfo={true}
+            />
+          </View>
+        )}
+      </VStack>
+    ),
+    [paginationMode, state, nextPage, previousPage, goToPage, pageNumbers, isFetching],
+  );
+
+  const renderEmptyState = useCallback(() => {
+    const hasFilters = getActiveFiltersCount() > 0;
+
+    // Don't show empty state while fetching
+    if (isFetching && contracts.length === 0) {
+      return null;
+    }
+
     return (
-      <Box className="flex-1 justify-center items-center">
-        <Spinner size="large" />
-        <Text className="text-gray-500 mt-4">Cargando contratos...</Text>
-      </Box>
+      <View className="flex-1 items-center justify-center py-12 px-8">
+        <VStack space="lg" className="items-center">
+          <View className="w-24 h-24 bg-gray-100 rounded-full items-center justify-center">
+            <Icon as={FileTextIcon} className="w-12 h-12 text-gray-400" />
+          </View>
+
+          <VStack space="sm" className="items-center">
+            <Text className="text-xl font-semibold text-gray-900 text-center">
+              {hasFilters ? 'No se encontraron contratos' : 'No hay contratos registrados'}
+            </Text>
+            <Text className="text-base text-gray-600 text-center px-4">
+              {hasFilters
+                ? 'Intenta ajustar los filtros de búsqueda'
+                : 'Los contratos aparecerán aquí una vez que crees el primer contrato'}
+            </Text>
+          </VStack>
+
+          {!hasFilters && (
+            <Button
+              variant="solid"
+              size="lg"
+              onPress={() => router.push('/contracts/create')}
+              className="mt-4"
+            >
+              <Icon as={FileTextIcon} className="w-5 h-5 mr-2" />
+              <ButtonText className="text-base">Crear Contrato</ButtonText>
+            </Button>
+          )}
+        </VStack>
+      </View>
+    );
+  }, [getActiveFiltersCount, isFetching, contracts.length]);
+
+  const renderLoadingState = useCallback(
+    () => (
+      <View className="flex-1 items-center justify-center py-12">
+        <VStack space="lg" className="items-center">
+          <Spinner size="large" />
+          <Text className="text-lg text-gray-600">Cargando contratos...</Text>
+        </VStack>
+      </View>
+    ),
+    [],
+  );
+
+  const renderErrorState = useCallback(
+    () => (
+      <View className="flex-1 items-center justify-center px-8">
+        <VStack space="lg" className="items-center">
+          <Alert action="error" variant="solid" className="max-w-sm">
+            <AlertIcon as={InfoIcon} size="lg" />
+            <AlertText className="text-base">
+              Error al cargar los contratos: {error?.message || 'Error desconocido'}
+            </AlertText>
+          </Alert>
+          <Button variant="outline" size="lg" onPress={refresh}>
+            <ButtonText className="text-base">Reintentar</ButtonText>
+          </Button>
+        </VStack>
+      </View>
+    ),
+    [error, refresh],
+  );
+
+  // Show loading screen only on very first load
+  if (isLoading && contracts.length === 0 && !state?.page) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <VStack className="flex-1 p-4">
+          <HStack className="items-center mb-6">
+            <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-lg">
+              <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
+            </Pressable>
+            <Text className="text-2xl font-bold text-gray-900 ml-2">Contratos</Text>
+          </HStack>
+          <View className="flex-1 items-center justify-center">
+            <VStack space="lg" className="items-center">
+              <Spinner size="large" />
+              <Text className="text-lg text-gray-600">Cargando contratos...</Text>
+            </VStack>
+          </View>
+        </VStack>
+      </SafeAreaView>
     );
   }
 
-  console.log("data", JSON.stringify(data, null, 2));
-  
   return (
-    <Box className="flex-1 bg-gray-50">
-      {renderStatusFilter()}
-      <FlatList
-        data={data?.data || []}
-        renderItem={renderContractItem}
-        keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingTop: 8,
-          paddingBottom: 100,
-          flexGrow: 1,
-        }}
-        ListEmptyComponent={renderEmpty}
-        showsVerticalScrollIndicator={false}
-      />
+    <SafeAreaView edges={['bottom']} className="flex-1 bg-gray-50">
+      <VStack className="flex-1">
+        {/* Fixed Header with Search */}
+        <View className="bg-white shadow-sm border-b border-gray-100">
+          <VStack className="p-4" space="lg">
+            {/* Search Bar and Filters */}
+            <HStack space="md" className="items-center">
+              <View className="flex-1">
+                <Input size="lg" className="bg-gray-50 border-gray-200">
+                  <InputField
+                    placeholder="Buscar por cliente..."
+                    value={searchTerm}
+                    onChangeText={setSearchTerm}
+                    onSubmitEditing={handleSearch}
+                    returnKeyType="search"
+                    className="text-base"
+                  />
+                </Input>
+              </View>
 
-      {!hideAddButton && data?.data && data.data.length > 0 && (
-        <Fab
-          onPress={handleAddPress}
-          placement="bottom right"
-          size="md"
-        >
-          <FabIcon as={PlusIcon} />
-        </Fab>
-      )}
-    </Box>
+              <Button
+                variant="outline"
+                size="md"
+                onPress={handleSearch}
+                className="border-gray-300 px-4"
+              >
+                <Icon as={SearchIcon} className="w-5 h-5 text-gray-600" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="md"
+                onPress={handleOpenFilters}
+                className={`border-gray-300 px-4 ${getActiveFiltersCount() > 0 ? 'bg-blue-50 border-blue-300' : ''}`}
+              >
+                <HStack space="xs" className="items-center">
+                  <Icon
+                    as={FilterIcon}
+                    className={`w-5 h-5 ${getActiveFiltersCount() > 0 ? 'text-blue-600' : 'text-gray-600'}`}
+                  />
+                  {getActiveFiltersCount() > 0 && (
+                    <View className="bg-blue-600 rounded-full px-1.5 py-0.5 min-w-[20px]">
+                      <Text className="text-xs text-white font-bold text-center">
+                        {getActiveFiltersCount()}
+                      </Text>
+                    </View>
+                  )}
+                </HStack>
+              </Button>
+            </HStack>
+          </VStack>
+        </View>
+
+        {/* Contracts List with Infinite Scroll */}
+        <InfiniteScrollList
+          pagination={pagination}
+          renderItem={renderContractItem}
+          ListHeaderComponent={renderListHeader}
+          loadingComponent={renderLoadingState()}
+          emptyComponent={renderEmptyState()}
+          errorComponent={renderErrorState()}
+          enableRefresh={true}
+          onEndReachedThreshold={0.3}
+          performanceConfig={{
+            maxToRenderPerBatch: 10,
+            windowSize: 10,
+            initialNumToRender: 8,
+            removeClippedSubviews: true,
+          }}
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: 20,
+          }}
+          ItemSeparatorComponent={() => <View className="h-3" />}
+        />
+
+        {/* Floating Action Button for New Contract */}
+        <View className="absolute bottom-6 right-4">
+          <Pressable
+            onPress={() => router.push('/contracts/create')}
+            className="bg-blue-600 rounded-full shadow-2xl active:bg-blue-700"
+          >
+            {contracts.length > 0 ? (
+              // Compact FAB when there are contracts
+              <View className="w-14 h-14 items-center justify-center">
+                <Icon as={PlusIcon} className="text-white w-7 h-7" />
+              </View>
+            ) : (
+              // Extended FAB when empty
+              <HStack className="items-center px-5 py-4" space="sm">
+                <Icon as={PlusIcon} className="text-white w-6 h-6" />
+                <Text className="text-white font-semibold text-base pr-1">Nuevo Contrato</Text>
+              </HStack>
+            )}
+          </Pressable>
+        </View>
+      </VStack>
+    </SafeAreaView>
   );
-};
+}

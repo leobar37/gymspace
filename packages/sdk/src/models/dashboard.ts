@@ -5,21 +5,49 @@ export interface DashboardStats {
   activeClients: number;
   totalContracts: number;
   activeContracts: number;
-  monthlyRevenue: number;
+  monthlyRevenue: number; // Deprecated, use getContractsRevenue instead
   todayCheckIns: number;
   expiringContractsCount: number;
   newClientsThisMonth: number;
 }
 
-export type ActivityType = 'check_in' | 'new_client' | 'new_contract' | 'contract_expired';
+export interface ContractsRevenue {
+  totalRevenue: number;
+  contractCount: number;
+  averageRevenue: number;
+  startDate: string;
+  endDate: string;
+}
 
-export interface RecentActivity {
-  id: string;
-  type: ActivityType;
-  description: string;
-  timestamp: string;
-  clientName?: string;
-  clientId?: string;
+export interface SalesRevenue {
+  totalRevenue: number;
+  salesCount: number;
+  averageRevenue: number;
+  startDate: string;
+  endDate: string;
+}
+
+export interface Debts {
+  totalDebt: number;
+  clientsWithDebt: number;
+  averageDebt: number;
+  startDate: string;
+  endDate: string;
+}
+
+export interface CheckIns {
+  totalCheckIns: number;
+  uniqueClients: number;
+  averagePerDay: number;
+  startDate: string;
+  endDate: string;
+}
+
+export interface NewClients {
+  totalNewClients: number;
+  averagePerDay: number;
+  startDate: string;
+  endDate: string;
 }
 
 export interface ExpiringContract {
@@ -29,4 +57,9 @@ export interface ExpiringContract {
   planName: string;
   endDate: string;
   daysRemaining: number;
+}
+
+export interface DateRangeParams {
+  startDate?: string;
+  endDate?: string;
 }

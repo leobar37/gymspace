@@ -3,10 +3,10 @@ import { useRouter } from 'expo-router';
 import { VStack } from '@/components/ui/vstack';
 import { Button, ButtonText } from '@/components/ui/button';
 import { ContractStatus } from '@gymspace/sdk';
-import type { ContractResponseDto } from '@gymspace/sdk';
+import type { Contract } from '@gymspace/sdk';
 
 interface ContractActionsCardProps {
-  contract: ContractResponseDto;
+  contract: Contract;
   onFreezePress: () => void;
   onCancelPress: () => void;
 }

@@ -1,58 +1,36 @@
+import { IRequestContext } from '@gymspace/shared';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../core/database/prisma.service';
-import { GymsService } from '../gyms/gyms.service';
-import { CreateCheckInDto, SearchCheckInsDto } from './dto';
-import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { CheckIn, Prisma } from '@prisma/client';
+import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
+import { PrismaService } from '../../core/database/prisma.service';
+import { ClientsService } from '../clients/clients.service';
+import { CreateCheckInDto, SearchCheckInsDto } from './dto';
 
 @Injectable()
 export class CheckInsService {
   constructor(
     private prismaService: PrismaService,
-    private gymsService: GymsService,
+    private clientsService: ClientsService,
   ) {}
 
   /**
    * Create a check-in (CU-009)
    */
-  async createCheckIn(gymId: string, dto: CreateCheckInDto, userId: string): Promise<CheckIn> {
-    console.log({
-      gymId,
-      dto,
-      userId,
-    });
+  async createCheckIn(context: IRequestContext, dto: CreateCheckInDto): Promise<CheckIn> {
+    const gymId = context.getGymId()!;
+    const userId = context.getUserId()!;
 
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
-    if (!hasAccess) {
-      throw new ResourceNotFoundException('Gym', gymId);
-    }
-
-    // Verify client belongs to this gym and has active contract
-    const client = await this.prismaService.gymClient.findFirst({
-      where: {
-        id: dto.gymClientId,
-        gymId,
-        status: 'active', // Check client is active
-      },
-      include: {
-        contracts: {
-          where: {
-            status: 'active',
-            startDate: { lte: new Date() },
-            endDate: { gte: new Date() },
-          },
-        },
-      },
-    });
-
-    if (!client) {
-      throw new ResourceNotFoundException('Client', dto.gymClientId);
-    }
+    // Use ClientsService to validate client and get active contract
+    const client = await this.clientsService.validateClientBelongsToGym(context, dto.gymClientId);
+    
     if (client.status !== 'active') {
       throw new BusinessException('El cliente no está activo');
     }
 
-    if (client.contracts.length === 0) {
+    // Check if client has active contract using ClientsService
+    const activeContract = await this.clientsService.getActiveContract(context, dto.gymClientId);
+    
+    if (!activeContract) {
       throw new BusinessException(
         'El cliente no tiene un contrato activo o el contrato ha expirado',
       );
@@ -76,7 +54,7 @@ export class CheckInsService {
     });
 
     if (existingCheckIn) {
-      throw new BusinessException('Client has already checked in today');
+      throw new BusinessException('El cliente ya se registró hoy');
     }
 
     // Create check-in
@@ -113,7 +91,8 @@ export class CheckInsService {
   /**
    * Get check-in by ID
    */
-  async getCheckIn(checkInId: string, userId: string): Promise<CheckIn> {
+  async getCheckIn(context: IRequestContext, checkInId: string): Promise<CheckIn> {
+    const userId = context.getUserId()!;
     const checkIn = await this.prismaService.checkIn.findFirst({
       where: {
         id: checkInId,
@@ -151,12 +130,8 @@ export class CheckInsService {
   /**
    * Search check-ins
    */
-  async searchCheckIns(gymId: string, dto: SearchCheckInsDto, userId: string) {
-    // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
-    if (!hasAccess) {
-      throw new ResourceNotFoundException('Gym', gymId);
-    }
+  async searchCheckIns(context: IRequestContext, dto: SearchCheckInsDto) {
+    const gymId = context.getGymId()!;
 
     const where: Prisma.CheckInWhereInput = { gymId };
 
@@ -219,15 +194,10 @@ export class CheckInsService {
    * Get check-in statistics for a gym
    */
   async getGymCheckInStats(
-    gymId: string,
-    userId: string,
+    context: IRequestContext,
     period: 'day' | 'week' | 'month' = 'month',
   ) {
-    // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
-    if (!hasAccess) {
-      throw new ResourceNotFoundException('Gym', gymId);
-    }
+    const gymId = context.getGymId()!;
 
     const now = new Date();
     const startDate = new Date();
@@ -313,23 +283,9 @@ export class CheckInsService {
   /**
    * Get client check-in history
    */
-  async getClientCheckInHistory(clientId: string, userId: string, limit = 30) {
-    // Verify access through client's gym
-    const client = await this.prismaService.gymClient.findFirst({
-      where: {
-        id: clientId,
-        gym: {
-          OR: [
-            { organization: { ownerUserId: userId } },
-            { collaborators: { some: { userId, status: 'active' } } },
-          ],
-        },
-      },
-    });
-
-    if (!client) {
-      throw new ResourceNotFoundException('Client', clientId);
-    }
+  async getClientCheckInHistory(context: IRequestContext, clientId: string, limit = 30) {
+    // Use ClientsService to validate client belongs to gym
+    const client = await this.clientsService.validateClientBelongsToGym(context, clientId);
 
     const checkIns = await this.prismaService.checkIn.findMany({
       where: { gymClientId: clientId },
@@ -365,12 +321,8 @@ export class CheckInsService {
   /**
    * Get clients currently in the gym (checked in today)
    */
-  async getCurrentlyInGym(gymId: string, userId: string) {
-    // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
-    if (!hasAccess) {
-      throw new ResourceNotFoundException('Gym', gymId);
-    }
+  async getCurrentlyInGym(context: IRequestContext) {
+    const gymId = context.getGymId()!;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -423,7 +375,8 @@ export class CheckInsService {
   /**
    * Delete check-in (for correction purposes)
    */
-  async deleteCheckIn(checkInId: string, userId: string): Promise<void> {
+  async deleteCheckIn(context: IRequestContext, checkInId: string): Promise<void> {
+    const userId = context.getUserId()!;
     const checkIn = await this.prismaService.checkIn.findFirst({
       where: {
         id: checkInId,

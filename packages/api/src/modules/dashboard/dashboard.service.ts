@@ -2,8 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CacheService } from '../../core/cache/cache.service';
 import { RequestContext } from '../../common/services/request-context.service';
-import { DashboardStatsDto, RecentActivityDto, ExpiringContractDto, ActivityType } from './dto';
-import { startOfMonth, endOfMonth, startOfDay, endOfDay, addDays } from 'date-fns';
+import {
+  DashboardStatsDto,
+  ExpiringContractDto,
+  ContractsRevenueDto,
+  SalesRevenueDto,
+  DebtsDto,
+  CheckInsDto,
+  NewClientsDto,
+} from './dto';
+import { startOfMonth, endOfMonth, startOfDay, endOfDay, addDays, differenceInDays } from 'date-fns';
 import { BusinessException } from '../../common/exceptions/business.exception';
 import { CACHE_TTL, ContractStatus } from '@gymspace/shared';
 
@@ -30,7 +38,6 @@ export class DashboardService {
         const endOfCurrentMonth = endOfMonth(now);
         const startOfToday = startOfDay(now);
         const endOfToday = endOfDay(now);
-        const thirtyDaysFromNow = addDays(now, 30);
 
         // Execute all queries within a transaction for consistency
         return await this.prisma.$transaction(async (tx) => {
@@ -39,7 +46,6 @@ export class DashboardService {
             activeClientsCount,
             totalContracts,
             activeContractsCount,
-            monthlyRevenue,
             todayCheckInsCount,
             expiringContractsCount,
             newClientsThisMonth,
@@ -87,25 +93,6 @@ export class DashboardService {
               },
             }),
 
-            // Monthly revenue (sum of active contracts' final prices)
-            tx.contract
-              .aggregate({
-                _sum: {
-                  finalAmount: true,
-                },
-                where: {
-                  gymClient: {
-                    gymId,
-                  },
-                  status: 'active',
-                  startDate: {
-                    gte: startOfCurrentMonth,
-                    lte: endOfCurrentMonth,
-                  },
-                  deletedAt: null,
-                },
-              })
-              .then((result) => result._sum.finalAmount || 0),
 
             // Today's check-ins
             tx.checkIn.count({
@@ -150,7 +137,7 @@ export class DashboardService {
             activeClients: activeClientsCount,
             totalContracts,
             activeContracts: activeContractsCount,
-            monthlyRevenue: Number(monthlyRevenue),
+            monthlyRevenue: 0, // Removed from stats, use contracts-revenue endpoint instead
             todayCheckIns: todayCheckInsCount,
             expiringContractsCount,
             newClientsThisMonth,
@@ -161,151 +148,269 @@ export class DashboardService {
     );
   }
 
-  async getRecentActivity(ctx: RequestContext, limit: number = 10): Promise<RecentActivityDto[]> {
+  async getContractsRevenue(
+    ctx: RequestContext,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<ContractsRevenueDto> {
     const gymId = ctx.getGymId();
     if (!gymId) {
       throw new BusinessException('Gym context is required');
     }
 
-    const cacheKey = `gym:${gymId}:dashboard:recent-activity:${limit}`;
+    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
+    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+
+    const cacheKey = `gym:${gymId}:dashboard:contracts-revenue:${start.toISOString()}:${end.toISOString()}`;
 
     return await this.cacheService.getOrSet(
       cacheKey,
       async () => {
-        // Fetch recent activities from different sources in parallel
-        const [recentCheckIns, recentClients, recentContracts, expiredContracts] =
-          await Promise.all([
-            // Recent check-ins
-            this.prisma.checkIn.findMany({
-              where: {
-                gymClient: {
-                  gymId,
-                },
-                deletedAt: null,
-              },
-              orderBy: {
-                timestamp: 'desc',
-              },
-              take: limit,
-              include: {
-                gymClient: true,
-              },
-            }),
-
-            // Recent new clients
-            this.prisma.gymClient.findMany({
-              where: {
-                gymId,
-                deletedAt: null,
-              },
-              orderBy: {
-                createdAt: 'desc',
-              },
-              take: limit,
-            }),
-
-            // Recent new contracts
-            this.prisma.contract.findMany({
-              where: {
-                gymClient: {
-                  gymId,
-                },
-                deletedAt: null,
-              },
-              orderBy: {
-                createdAt: 'desc',
-              },
-              take: limit,
-              include: {
-                gymClient: true,
-              },
-            }),
-
-            // Recently expired contracts
-            this.prisma.contract.findMany({
-              where: {
-                gymClient: {
-                  gymId,
-                },
-                status: 'expired',
-                deletedAt: null,
-                updatedAt: {
-                  gte: addDays(new Date(), -7), // Last 7 days
-                },
-              },
-              orderBy: {
-                updatedAt: 'desc',
-              },
-              take: limit,
-              include: {
-                gymClient: true,
-              },
-            }),
-          ]);
-
-        // Convert to activity DTOs
-        const activities: RecentActivityDto[] = [];
-
-        // Add check-ins
-        recentCheckIns.forEach((checkIn) => {
-          activities.push({
-            id: checkIn.id,
-            type: ActivityType.CHECK_IN,
-            description: 'Check-in registrado',
-            timestamp: checkIn.timestamp.toISOString(),
-            clientName: (checkIn as any).gymClient.name,
-            clientId: checkIn.gymClientId,
-          });
+        const result = await this.prisma.contract.aggregate({
+          _sum: {
+            finalAmount: true,
+          },
+          _count: {
+            id: true,
+          },
+          where: {
+            gymClient: {
+              gymId,
+            },
+            startDate: {
+              gte: start,
+              lte: end,
+            },
+            deletedAt: null,
+          },
         });
 
-        // Add new clients
-        recentClients.forEach((gymClient) => {
-          activities.push({
-            id: gymClient.id,
-            type: ActivityType.NEW_CLIENT,
-            description: 'Nuevo cliente registrado',
-            timestamp: gymClient.createdAt.toISOString(),
-            clientName: gymClient.name,
-            clientId: gymClient.id,
-          });
-        });
+        const totalRevenue = Number(result._sum.finalAmount || 0);
+        const contractCount = result._count.id;
+        const averageRevenue = contractCount > 0 ? totalRevenue / contractCount : 0;
 
-        // Add new contracts
-        recentContracts.forEach((contract) => {
-          activities.push({
-            id: contract.id,
-            type: ActivityType.NEW_CONTRACT,
-            description: 'Nuevo contrato creado',
-            timestamp: contract.createdAt.toISOString(),
-            clientName: (contract as any).gymClient.name,
-            clientId: (contract as any).gymClient.id,
-          });
-        });
-
-        // Add expired contracts
-        expiredContracts.forEach((contract) => {
-          activities.push({
-            id: contract.id,
-            type: ActivityType.CONTRACT_EXPIRED,
-            description: 'Contrato expirado',
-            timestamp: contract.updatedAt.toISOString(),
-            clientName: (contract as any).gymClient.name,
-            clientId: (contract as any).gymClient.id,
-          });
-        });
-
-        // Sort by timestamp and return the most recent
-        return activities
-          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-          .slice(0, limit);
+        return {
+          totalRevenue,
+          contractCount,
+          averageRevenue: Math.round(averageRevenue * 100) / 100,
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        };
       },
-      CACHE_TTL.DASHBOARD, // Cache for 3 minutes
+      CACHE_TTL.DASHBOARD,
+    );
+  }
+
+  async getSalesRevenue(
+    ctx: RequestContext,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<SalesRevenueDto> {
+    const gymId = ctx.getGymId();
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+
+    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
+    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+
+    const cacheKey = `gym:${gymId}:dashboard:sales-revenue:${start.toISOString()}:${end.toISOString()}`;
+
+    return await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const result = await this.prisma.sale.aggregate({
+          _sum: {
+            total: true,
+          },
+          _count: {
+            id: true,
+          },
+          where: {
+            gymId,
+            saleDate: {
+              gte: start,
+              lte: end,
+            },
+            deletedAt: null,
+          },
+        });
+
+        const totalRevenue = Number(result._sum.total || 0);
+        const salesCount = result._count.id;
+        const averageRevenue = salesCount > 0 ? totalRevenue / salesCount : 0;
+
+        return {
+          totalRevenue,
+          salesCount,
+          averageRevenue: Math.round(averageRevenue * 100) / 100,
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        };
+      },
+      CACHE_TTL.DASHBOARD,
+    );
+  }
+
+  async getDebts(
+    ctx: RequestContext,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<DebtsDto> {
+    const gymId = ctx.getGymId();
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+
+    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
+    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+
+    const cacheKey = `gym:${gymId}:dashboard:debts:${start.toISOString()}:${end.toISOString()}`;
+
+    return await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        // Get unpaid sales within the date range
+        const unpaidSales = await this.prisma.sale.findMany({
+          where: {
+            gymId,
+            saleDate: {
+              gte: start,
+              lte: end,
+            },
+            paymentStatus: 'unpaid',
+            deletedAt: null,
+          },
+          select: {
+            total: true,
+            customerId: true,
+          },
+        });
+
+        const totalDebt = unpaidSales.reduce(
+          (sum, sale) => sum + Number(sale.total),
+          0,
+        );
+        
+        // Count unique customers with debts (excluding null customerIds)
+        const customerIds = unpaidSales
+          .filter(sale => sale.customerId !== null)
+          .map(sale => sale.customerId);
+        const uniqueClients = new Set(customerIds).size;
+        
+        const averageDebt = uniqueClients > 0 ? totalDebt / uniqueClients : 0;
+
+        return {
+          totalDebt,
+          clientsWithDebt: uniqueClients,
+          averageDebt: Math.round(averageDebt * 100) / 100,
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        };
+      },
+      CACHE_TTL.DASHBOARD,
+    );
+  }
+
+  async getCheckIns(
+    ctx: RequestContext,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<CheckInsDto> {
+    const gymId = ctx.getGymId();
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+
+    const start = startDate ? new Date(startDate) : startOfDay(new Date());
+    const end = endDate ? new Date(endDate) : endOfDay(new Date());
+
+    const cacheKey = `gym:${gymId}:dashboard:check-ins:${start.toISOString()}:${end.toISOString()}`;
+
+    return await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const checkIns = await this.prisma.checkIn.findMany({
+          where: {
+            gymClient: {
+              gymId,
+            },
+            timestamp: {
+              gte: start,
+              lte: end,
+            },
+            deletedAt: null,
+          },
+          select: {
+            gymClientId: true,
+          },
+        });
+
+        const totalCheckIns = checkIns.length;
+        const uniqueClients = new Set(checkIns.map((c) => c.gymClientId)).size;
+        const daysDiff = Math.max(1, differenceInDays(end, start) + 1);
+        const averagePerDay = totalCheckIns / daysDiff;
+
+        return {
+          totalCheckIns,
+          uniqueClients,
+          averagePerDay: Math.round(averagePerDay * 100) / 100,
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        };
+      },
+      CACHE_TTL.DASHBOARD,
+    );
+  }
+
+  async getNewClients(
+    ctx: RequestContext,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<NewClientsDto> {
+    const gymId = ctx.getGymId();
+    if (!gymId) {
+      throw new BusinessException('Gym context is required');
+    }
+
+    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
+    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+
+    const cacheKey = `gym:${gymId}:dashboard:new-clients:${start.toISOString()}:${end.toISOString()}`;
+
+    return await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const newClientsCount = await this.prisma.gymClient.count({
+          where: {
+            gymId,
+            createdAt: {
+              gte: start,
+              lte: end,
+            },
+            deletedAt: null,
+          },
+        });
+
+        const daysDiff = Math.max(1, differenceInDays(end, start) + 1);
+        const averagePerDay = newClientsCount / daysDiff;
+
+        return {
+          totalNewClients: newClientsCount,
+          averagePerDay: Math.round(averagePerDay * 100) / 100,
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        };
+      },
+      CACHE_TTL.DASHBOARD,
     );
   }
 
   async getExpiringContracts(
     ctx: RequestContext,
     limit: number = 10,
+    startDate?: string,
+    endDate?: string,
   ): Promise<ExpiringContractDto[]> {
     const gymId = ctx.getGymId();
     if (!gymId) {
@@ -314,8 +419,11 @@ export class DashboardService {
 
     const now = new Date();
 
+    const start = startDate ? new Date(startDate) : now;
+    const end = endDate ? new Date(endDate) : addDays(now, 30);
+
     // Use caching for expiring contracts to reduce database load
-    const cacheKey = `gym:${gymId}:dashboard:expiring-contracts:${limit}`;
+    const cacheKey = `gym:${gymId}:dashboard:expiring-contracts:${limit}:${start.toISOString()}:${end.toISOString()}`;
 
     return await this.cacheService.getOrSet(
       cacheKey,
@@ -326,7 +434,10 @@ export class DashboardService {
             gymClient: {
               gymId,
             },
-            status: ContractStatus.EXPIRING_SOON,
+            endDate: {
+              gte: start,
+              lte: end,
+            },
             deletedAt: null,
           },
           orderBy: {

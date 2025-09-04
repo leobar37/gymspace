@@ -5,10 +5,10 @@ import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { ContractStatus } from '@gymspace/sdk';
-import type { ContractResponseDto } from '@gymspace/sdk';
+import type { Contract } from '@gymspace/sdk';
 
 interface ContractStatusCardProps {
-  contract: ContractResponseDto;
+  contract: Contract;
 }
 
 export const ContractStatusCard: React.FC<ContractStatusCardProps> = ({ contract }) => {
@@ -24,6 +24,8 @@ export const ContractStatusCard: React.FC<ContractStatusCardProps> = ({ contract
         return { variant: 'error' as const, text: 'Vencido' };
       case ContractStatus.CANCELLED:
         return { variant: 'muted' as const, text: 'Cancelado' };
+      case ContractStatus.FOR_RENEW:
+        return { variant: 'info' as const, text: 'Renovación pendiente' };
       default:
         return { variant: 'muted' as const, text: status };
     }
@@ -31,22 +33,36 @@ export const ContractStatusCard: React.FC<ContractStatusCardProps> = ({ contract
 
   const statusInfo = getStatusBadge(contract.status);
   const isFrozen = contract.freezeStartDate && contract.freezeEndDate;
+  const hasRenewals = contract.renewals && contract.renewals.length > 0;
 
   return (
     <Card className="p-4">
-      <HStack className="justify-between items-center">
-        <VStack>
-          <Text className="text-sm text-gray-500 mb-1">Estado del contrato</Text>
-          <Badge action={statusInfo.variant} size="lg">
-            <BadgeText>{statusInfo.text}</BadgeText>
-          </Badge>
-        </VStack>
-        {isFrozen && (
-          <Badge action="info">
-            <BadgeText>Congelado</BadgeText>
-          </Badge>
+      <VStack className="gap-3">
+        <HStack className="justify-between items-center">
+          <VStack>
+            <Text className="text-sm text-gray-500 mb-1">Estado del contrato</Text>
+            <Badge action={statusInfo.variant} size="lg">
+              <BadgeText>{statusInfo.text}</BadgeText>
+            </Badge>
+          </VStack>
+          {isFrozen && (
+            <Badge action="info">
+              <BadgeText>Congelado</BadgeText>
+            </Badge>
+          )}
+        </HStack>
+        
+        {hasRenewals && (
+          <VStack className="pt-3 border-t border-gray-100">
+            <Text className="text-sm font-medium text-gray-700 mb-1">
+              ✓ Renovación programada
+            </Text>
+            <Text className="text-xs text-gray-500">
+              Se activará el {new Date(contract.renewals[0].startDate).toLocaleDateString()}
+            </Text>
+          </VStack>
         )}
-      </HStack>
+      </VStack>
     </Card>
   );
 };

@@ -1,4 +1,12 @@
-import { IGym, IOrganization, IRequestContext, ISubscription, IUser, Permission, UUID } from '@gymspace/shared';
+import {
+  IGym,
+  IOrganization,
+  IRequestContext,
+  ISubscription,
+  IUser,
+  Permission,
+  UUID,
+} from '@gymspace/shared';
 import { FastifyRequest } from 'fastify';
 
 export class RequestContext implements IRequestContext {

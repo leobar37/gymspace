@@ -7,10 +7,10 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Heading } from '@/components/ui/heading';
 import { Divider } from '@/components/ui/divider';
-import type { ContractResponseDto } from '@gymspace/sdk';
+import type { Contract } from '@gymspace/sdk';
 
 interface ContractInfoCardProps {
-  contract: ContractResponseDto;
+  contract: Contract;
 }
 
 export const ContractInfoCard: React.FC<ContractInfoCardProps> = ({ contract }) => {
@@ -47,7 +47,7 @@ export const ContractInfoCard: React.FC<ContractInfoCardProps> = ({ contract }) 
               <Text className="text-gray-600">Congelado desde:</Text>
               <Text className="font-medium">{formatDate(contract.freezeStartDate!)}</Text>
             </HStack>
-            <HStack className="justify-between">
+            <HStack className="justify-between">aa
               <Text className="text-gray-600">Congelado hasta:</Text>
               <Text className="font-medium">{formatDate(contract.freezeEndDate!)}</Text>
             </HStack>

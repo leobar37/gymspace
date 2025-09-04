@@ -30,10 +30,10 @@ export class CreateSaleDto {
   @Type(() => SaleItemDto)
   items: SaleItemDto[];
 
-  @ApiProperty({ 
-    example: 'uuid-client-id', 
-    description: 'Customer ID from gym clients', 
-    required: false 
+  @ApiProperty({
+    example: 'uuid-client-id',
+    description: 'Customer ID from gym clients',
+    required: false,
   })
   @IsOptional()
   @IsUUID()
@@ -73,4 +73,13 @@ export class CreateSaleDto {
   @IsOptional()
   @IsEnum(PaymentStatus)
   paymentStatus?: PaymentStatus;
+
+  @ApiProperty({
+    example: 'uuid-payment-method-id',
+    description: 'Payment method ID',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  paymentMethodId?: string;
 }

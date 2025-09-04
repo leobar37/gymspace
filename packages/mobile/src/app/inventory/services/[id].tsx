@@ -18,7 +18,7 @@ import {
 } from 'lucide-react-native';
 import { Spinner } from '@/components/ui/spinner';
 import { useFormatPrice } from '@/config/ConfigContext';
-import { useProduct } from '@/hooks/useProducts';
+import { useProduct } from '@/features/products/hooks/useProducts';
 import { useProductsController } from '@/features/products/controllers/products.controller';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import { 

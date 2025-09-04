@@ -80,14 +80,42 @@ export interface Client {
   };
 }
 
+export interface ClientStat {
+  key: string;
+  name: string;
+  description: string;
+  category: 'activity' | 'contracts' | 'general';
+  value: any;
+}
+
 export interface ClientStats {
-  totalContracts: number;
-  activeContracts: number;
-  totalCheckIns: number;
-  checkInsThisMonth: number;
-  lastCheckIn?: string;
-  totalEvaluations: number;
-  lastEvaluation?: string;
+  client: {
+    id: string;
+    name: string;
+    email: string | null;
+    status: string;
+    registrationDate: string;
+  };
+  activity: {
+    totalCheckIns: number;
+    monthlyCheckIns: number;
+    lastCheckIn: string | null;
+  };
+  contracts: {
+    active: number;
+    totalSpent: number;
+  };
+  membershipHistory: Array<{
+    id: string;
+    status: string;
+    startDate: string;
+    endDate: string | null;
+    gymMembershipPlan: {
+      id: string;
+      name: string;
+      basePrice: number;
+    };
+  }>;
 }
 
 export interface SearchClientsParams extends PaginationQueryDto {

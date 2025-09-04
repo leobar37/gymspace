@@ -46,6 +46,27 @@ export class SalesService {
     return `${datePrefix}${sequenceNumber.toString().padStart(4, '0')}`;
   }
 
+  private async validatePaymentMethod(organizationId: string, paymentMethodId?: string) {
+    if (!paymentMethodId) {
+      return null; // Payment method is optional
+    }
+
+    const paymentMethod = await this.prisma.paymentMethod.findFirst({
+      where: {
+        id: paymentMethodId,
+        organizationId,
+        enabled: true,
+        deletedAt: null,
+      },
+    });
+
+    if (!paymentMethod) {
+      throw new BusinessException('Payment method not found or not enabled for this organization');
+    }
+
+    return paymentMethod;
+  }
+
   private async validateSaleItems(context: RequestContext, items: SaleItemDto[]) {
     const gymId = context.getGymId()!;
     const productIds = items.map((item) => item.productId);
@@ -104,7 +125,11 @@ export class SalesService {
 
   async createSale(context: RequestContext, dto: CreateSaleDto) {
     const gymId = context.getGymId()!;
+    const organizationId = context.getOrganizationId()!;
     const userId = context.getUserId();
+
+    // Validate payment method if provided
+    await this.validatePaymentMethod(organizationId, dto.paymentMethodId);
 
     // Validate all products and stock
     const products = await this.validateSaleItems(context, dto.items);
@@ -128,9 +153,18 @@ export class SalesService {
           notes: dto.notes,
           fileIds: dto.fileIds || [],
           paymentStatus: dto.paymentStatus ?? PaymentStatus.unpaid,
+          paymentMethodId: dto.paymentMethodId,
           createdByUserId: userId,
         },
         include: {
+          paymentMethod: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+              enabled: true,
+            },
+          },
           saleItems: {
             include: {
               product: {
@@ -196,6 +230,14 @@ export class SalesService {
       return await tx.sale.findUnique({
         where: { id: sale.id },
         include: {
+          paymentMethod: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+              enabled: true,
+            },
+          },
           saleItems: {
             include: {
               product: {
@@ -224,8 +266,8 @@ export class SalesService {
 
   async updateSale(context: RequestContext, saleId: string, dto: UpdateSaleDto) {
     const gymId = context.getGymId()!;
+    const organizationId = context.getOrganizationId()!;
     const userId = context.getUserId();
-
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
@@ -238,6 +280,11 @@ export class SalesService {
       throw new ResourceNotFoundException('Sale not found');
     }
 
+    // Validate payment method if provided
+    if (dto.paymentMethodId) {
+      await this.validatePaymentMethod(organizationId, dto.paymentMethodId);
+    }
+
     return this.prisma.sale.update({
       where: { id: saleId },
       data: {
@@ -245,6 +292,14 @@ export class SalesService {
         updatedByUserId: userId,
       },
       include: {
+        paymentMethod: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            enabled: true,
+          },
+        },
         saleItems: {
           include: {
             product: {
@@ -284,7 +339,6 @@ export class SalesService {
 
   async getSale(context: RequestContext, saleId: string) {
     const gymId = context.getGymId()!;
-
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
@@ -292,6 +346,14 @@ export class SalesService {
         deletedAt: null,
       },
       include: {
+        paymentMethod: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            enabled: true,
+          },
+        },
         saleItems: {
           include: {
             product: {
@@ -423,7 +485,6 @@ export class SalesService {
   async updatePaymentStatus(context: RequestContext, saleId: string, dto: UpdatePaymentStatusDto) {
     const gymId = context.getGymId()!;
     const userId = context.getUserId();
-
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
@@ -443,6 +504,14 @@ export class SalesService {
         updatedByUserId: userId,
       },
       include: {
+        paymentMethod: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            enabled: true,
+          },
+        },
         saleItems: {
           include: {
             product: {
@@ -468,7 +537,6 @@ export class SalesService {
   async deleteSale(context: RequestContext, saleId: string) {
     const gymId = context.getGymId()!;
     const userId = context.getUserId();
-
     const sale = await this.prisma.sale.findFirst({
       where: {
         id: saleId,
@@ -560,7 +628,12 @@ export class SalesService {
     };
   }
 
-  async getTopSellingProducts(context: RequestContext, limit: number = 10, startDate?: Date, endDate?: Date) {
+  async getTopSellingProducts(
+    context: RequestContext,
+    limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
+  ) {
     const gymId = context.getGymId()!;
     const where: Prisma.SaleWhereInput = {
       gymId,
@@ -667,24 +740,27 @@ export class SalesService {
     });
 
     // Group sales by customer
-    const customerSalesMap = new Map<string, {
-      customer: {
-        id: string | null;
-        clientNumber?: string;
-        name: string;
-        phone?: string;
-        email?: string;
-      };
-      totalSales: number;
-      totalRevenue: number;
-      sales: Array<{
-        id: string;
-        total: number;
-        saleDate: Date;
-      }>;
-    }>();
+    const customerSalesMap = new Map<
+      string,
+      {
+        customer: {
+          id: string | null;
+          clientNumber?: string;
+          name: string;
+          phone?: string;
+          email?: string;
+        };
+        totalSales: number;
+        totalRevenue: number;
+        sales: Array<{
+          id: string;
+          total: number;
+          saleDate: Date;
+        }>;
+      }
+    >();
 
-    sales.forEach(sale => {
+    sales.forEach((sale) => {
       const customerKey = sale.customerId || `walk-in-${sale.customerName}`;
       const customerData = {
         id: sale.customerId,
@@ -714,8 +790,9 @@ export class SalesService {
     });
 
     // Convert map to array and sort by total revenue
-    const result = Array.from(customerSalesMap.values())
-      .sort((a, b) => b.totalRevenue - a.totalRevenue);
+    const result = Array.from(customerSalesMap.values()).sort(
+      (a, b) => b.totalRevenue - a.totalRevenue,
+    );
 
     return {
       summary: {

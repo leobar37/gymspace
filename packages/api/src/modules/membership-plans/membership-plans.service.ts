@@ -473,4 +473,50 @@ export class GymMembershipPlansService {
 
     return Math.round(totalDays / contracts.length);
   }
+
+  /**
+   * Validate plan belongs to gym and is active
+   */
+  async validatePlanForContract(context: IRequestContext, planId: string): Promise<any> {
+    const gymId = context.getGymId();
+
+    if (!gymId) {
+      throw new BusinessException('El contexto del gimnasio es requerido');
+    }
+
+    const plan = await this.prismaService.gymMembershipPlan.findFirst({
+      where: {
+        id: planId,
+        gymId,
+        status: 'active',
+      },
+    });
+
+    if (!plan) {
+      throw new ResourceNotFoundException('Plan de membresía', planId);
+    }
+
+    return plan;
+  }
+
+  /**
+   * Calculate contract end date based on plan duration
+   */
+  calculateEndDate(
+    startDate: Date,
+    plan: { durationMonths?: number | null; durationDays?: number | null },
+  ): Date {
+    const endDate = new Date(startDate);
+
+    if (plan.durationMonths) {
+      endDate.setMonth(endDate.getMonth() + plan.durationMonths);
+    } else if (plan.durationDays) {
+      endDate.setDate(endDate.getDate() + plan.durationDays);
+    } else {
+      // Default to 1 month if no duration specified
+      endDate.setMonth(endDate.getMonth() + 1);
+    }
+
+    return endDate;
+  }
 }

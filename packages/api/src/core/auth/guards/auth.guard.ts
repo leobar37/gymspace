@@ -1,4 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthService } from '../services/auth.service';
 import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator';
@@ -8,6 +14,7 @@ import { CacheService } from '../../cache/cache.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  private readonly logger = new Logger(AuthGuard.name);
   private readonly TOKEN_CACHE_TTL = 300000; // 5 minutes in milliseconds for token validation cache
   private readonly GYM_CONTEXT_CACHE_TTL = 600000; // 10 minutes in milliseconds for gym context
   private readonly DEFAULT_GYM_CACHE_TTL = 1800000; // 30 minutes in milliseconds for default gym
@@ -17,6 +24,55 @@ export class AuthGuard implements CanActivate {
     private authService: AuthService,
     private cacheService: CacheService,
   ) {}
+
+  /**
+   * Validate token and attempt refresh if expired
+   */
+  private async validateOrRefreshToken(token: string, refreshToken?: string): Promise<any> {
+    try {
+      // Check if token is blacklisted first
+      const isBlacklisted = await this.cacheService.isTokenBlacklisted(token);
+      if (isBlacklisted) {
+        throw new UnauthorizedException('Token has been revoked');
+      }
+
+      let user: any;
+
+      try {
+        // Always validate token with auth service (no cache)
+        user = await this.authService.validateToken(token);
+      } catch (tokenError) {
+        // If token validation fails and we have a refresh token, try to refresh
+        if (refreshToken) {
+          this.logger.debug('Access token expired, attempting refresh');
+
+          try {
+            const refreshedTokens = await this.authService.refreshToken(refreshToken);
+            // Validate the new token
+            const newUser = await this.authService.validateToken(refreshedTokens.access_token);
+            // Return new user with updated token info
+            return {
+              user: newUser,
+              newTokens: refreshedTokens,
+            };
+          } catch (refreshError) {
+            this.logger.warn('Token refresh failed:', refreshError.message);
+            throw new UnauthorizedException('Token expired and refresh failed');
+          }
+        }
+
+        // No refresh token available or refresh failed
+        throw tokenError;
+      }
+
+      return { user };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Invalid authentication token');
+    }
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Check if route is public
@@ -37,26 +93,20 @@ export class AuthGuard implements CanActivate {
     }
 
     const token = authorization.replace('Bearer ', '');
+    const refreshToken = request.headers['x-refresh-token'] as string;
 
     try {
-      // Check if token is blacklisted (for logout functionality)
-      const isBlacklisted = await this.cacheService.isTokenBlacklisted(token);
-      if (isBlacklisted) {
-        throw new UnauthorizedException('Token has been revoked');
+      // Validate token and potentially refresh if expired
+      const tokenValidation = await this.validateOrRefreshToken(token, refreshToken);
+
+      request.user = tokenValidation.user;
+
+      // If token was refreshed, add new tokens to response headers
+      if (tokenValidation.newTokens) {
+        const response = context.switchToHttp().getResponse();
+        response.setHeader('X-New-Access-Token', tokenValidation.newTokens.access_token);
+        response.setHeader('X-New-Refresh-Token', tokenValidation.newTokens.refresh_token);
       }
-
-      // Try to get cached token validation first
-      let user = await this.cacheService.getTokenValidation(token);
-
-      if (!user) {
-        // If not cached, validate token with auth service
-        user = await this.authService.validateToken(token);
-
-        // Cache the validated token for future requests
-        await this.cacheService.cacheTokenValidation(token, user, this.TOKEN_CACHE_TTL);
-      }
-
-      request.user = user;
 
       // Get gym context if gym ID is provided, or get first active gym from user's organization
       const gymId = request.headers['x-gym-id'] as string;
@@ -64,17 +114,17 @@ export class AuthGuard implements CanActivate {
 
       if (gymId) {
         // Try to get cached gym context
-        gym = await this.cacheService.getGymContext(gymId, user.id);
+        gym = await this.cacheService.getGymContext(gymId, tokenValidation.user.id);
 
         if (!gym) {
           // If not cached, fetch from auth service
-          gym = await this.authService.getGymContext(gymId, user.id);
+          gym = await this.authService.getGymContext(gymId, tokenValidation.user.id);
 
           // Cache the gym context if found
           if (gym) {
             await this.cacheService.cacheGymContext(
               gymId,
-              user.id,
+              tokenValidation.user.id,
               gym,
               this.GYM_CONTEXT_CACHE_TTL,
             );
@@ -85,25 +135,29 @@ export class AuthGuard implements CanActivate {
       // If no gym context found with gymId, try to get default gym
       if (!gym) {
         // Try to get cached default gym
-        gym = await this.cacheService.getDefaultGym(user.id);
+        gym = await this.cacheService.getDefaultGym(tokenValidation.user.id);
 
         if (!gym) {
           // If not cached, fetch from auth service
-          gym = await this.authService.getDefaultGymForUser(user.id);
+          gym = await this.authService.getDefaultGymForUser(tokenValidation.user.id);
 
           // Cache the default gym if found
           if (gym) {
-            await this.cacheService.cacheDefaultGym(user.id, gym, this.DEFAULT_GYM_CACHE_TTL);
+            await this.cacheService.cacheDefaultGym(
+              tokenValidation.user.id,
+              gym,
+              this.DEFAULT_GYM_CACHE_TTL,
+            );
           }
         }
       }
 
       let subscription: ISubscription | undefined;
-      
+
       if (gym) {
         request.gym = gym;
         request.organization = gym.organization;
-        
+
         // Load organization's active subscription if organization exists
         if (gym.organization?.id) {
           subscription = await this.authService.getOrganizationSubscription(gym.organization.id);
@@ -115,7 +169,10 @@ export class AuthGuard implements CanActivate {
 
       // Get user permissions for the selected gym context
       // Note: getUserPermissions already uses caching internally through CacheService
-      const permissions = await this.authService.getUserPermissions(user.id, gym?.id);
+      const permissions = await this.authService.getUserPermissions(
+        tokenValidation.user.id,
+        gym?.id,
+      );
       request.permissions = permissions;
 
       // Create and initialize RequestContext for this request
@@ -124,6 +181,8 @@ export class AuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
+      console.log('err', error?.message);
+
       // If it's already an UnauthorizedException with a specific message, preserve it
       if (error instanceof UnauthorizedException) {
         throw error;

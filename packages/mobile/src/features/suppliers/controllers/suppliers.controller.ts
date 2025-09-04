@@ -3,11 +3,9 @@ import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useSuppliersStore } from '../stores/suppliers.store';
 import { router } from 'expo-router';
 import { Alert } from 'react-native';
+import { SearchSuppliersParams } from '@gymspace/sdk';
 
-export const useSuppliers = (options?: {
-  search?: string;
-  status?: string;
-}) => {
+export const useSuppliers = (options?: { search?: string; status?: string }) => {
   const { sdk } = useGymSdk();
   const searchQuery = useSuppliersStore((state) => state.searchQuery);
   const filters = useSuppliersStore((state) => state.filters);
@@ -15,19 +13,15 @@ export const useSuppliers = (options?: {
   return useQuery({
     queryKey: ['suppliers', searchQuery || options?.search, filters, options?.status],
     queryFn: async () => {
-      const params: any = {
+      const params: Partial<SearchSuppliersParams> = {
         limit: 50,
+        page: 1,
       };
-
       if (searchQuery || options?.search) {
         params.search = searchQuery || options?.search;
       }
 
-      if (filters.status !== 'all' || options?.status) {
-        params.status = options?.status || filters.status;
-      }
-
-      return await sdk.suppliers.searchSuppliers(params);
+      return await sdk.suppliers.searchSuppliers(params as any);
     },
   });
 };
@@ -59,10 +53,7 @@ export const useCreateSupplier = () => {
       Alert.alert('Éxito', 'Proveedor creado correctamente');
     },
     onError: (error: any) => {
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'No se pudo crear el proveedor'
-      );
+      Alert.alert('Error', error.response?.data?.message || 'No se pudo crear el proveedor');
     },
   });
 };
@@ -83,10 +74,7 @@ export const useUpdateSupplier = () => {
       Alert.alert('Éxito', 'Proveedor actualizado correctamente');
     },
     onError: (error: any) => {
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'No se pudo actualizar el proveedor'
-      );
+      Alert.alert('Error', error.response?.data?.message || 'No se pudo actualizar el proveedor');
     },
   });
 };
@@ -104,10 +92,7 @@ export const useDeleteSupplier = () => {
       Alert.alert('Éxito', 'Proveedor eliminado correctamente');
     },
     onError: (error: any) => {
-      Alert.alert(
-        'Error',
-        error.response?.data?.message || 'No se pudo eliminar el proveedor'
-      );
+      Alert.alert('Error', error.response?.data?.message || 'No se pudo eliminar el proveedor');
     },
   });
 };

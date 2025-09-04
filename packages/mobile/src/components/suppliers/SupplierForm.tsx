@@ -49,11 +49,12 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
       address: initialData?.address || '',
       contactInfo: initialData?.contactInfo || '',
     },
+    mode: 'onChange',
   });
 
   const {
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isValid },
   } = methods;
 
   const onSubmit = async (data: SupplierFormData) => {
@@ -152,7 +153,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
             <Button
               variant="solid"
               onPress={handleSubmit(onSubmit)}
-              disabled={isSubmitting}
+              isDisabled={isSubmitting || !isValid}
               className="flex-1"
             >
               <ButtonText>

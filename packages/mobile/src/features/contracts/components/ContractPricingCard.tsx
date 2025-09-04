@@ -5,10 +5,10 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Heading } from '@/components/ui/heading';
 import { Divider } from '@/components/ui/divider';
-import type { ContractResponseDto } from '@gymspace/sdk';
+import type { Contract } from '@gymspace/sdk';
 
 interface ContractPricingCardProps {
-  contract: ContractResponseDto;
+  contract: Contract;
   formatPrice: (price: number) => string;
 }
 

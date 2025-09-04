@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
+import { dashboardKeys } from '@/features/dashboard/controllers/dashboard.controller';
+import { clientsKeys } from '@/features/clients/controllers/clients.controller';
 import { 
   CreateCheckInDto, 
   SearchCheckInsParams,
@@ -46,6 +48,13 @@ export const useCheckInsController = () => {
       queryClient.invalidateQueries({ 
         queryKey: [QUERY_KEYS.clientHistory, data.gymClientId] 
       });
+      
+      // Invalidate dashboard stats (check-in counts, recent activity)
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.recentActivity() });
+      
+      // Invalidate client stats to refresh the client's check-in data
+      queryClient.invalidateQueries({ queryKey: clientsKeys.stats(data.gymClientId) });
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || 'Failed to register check-in';

@@ -1,16 +1,9 @@
+import { Stack } from 'expo-router';
 import React, { Fragment } from 'react';
-import { Stack, useRouter } from 'expo-router';
 
 import { CreateContractForm } from '@/features/contracts/components/CreateContractForm';
-import { ScreenForm } from '@/shared/components/ScreenForm';
 
 export default function CreateContractScreen() {
-  const router = useRouter();
-
-  const handleBack = () => {
-    router.back();
-  };
-
   return (
     <Fragment>
       <Stack.Screen
@@ -18,13 +11,7 @@ export default function CreateContractScreen() {
           headerShown: false,
         }}
       />
-      <ScreenForm
-        title="Nuevo Contrato"
-        showBackButton={true}
-        onBackPress={handleBack}
-      >
-        <CreateContractForm />
-      </ScreenForm>
+      <CreateContractForm />
     </Fragment>
   );
 }

@@ -1,17 +1,16 @@
-import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
+import { PERMISSIONS } from '@gymspace/shared';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import {
-  ApiTags,
+  ApiBearerAuth,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
   ApiSecurity,
-  ApiQuery,
+  ApiTags
 } from '@nestjs/swagger';
-import { ContractsService } from './contracts.service';
-import { CreateContractDto, RenewContractDto, FreezeContractDto, CancelContractDto } from './dto';
 import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';
-import { PERMISSIONS, ContractStatus } from '@gymspace/shared';
+import { ContractsService } from './contracts.service';
+import { CancelContractDto, CreateContractDto, FreezeContractDto, GetContractsDto, RenewContractDto } from './dto';
 
 @ApiTags('Contracts')
 @Controller('contracts')
@@ -80,22 +79,12 @@ export class ContractsController {
   @Get()
   @Allow(PERMISSIONS.CONTRACTS_READ)
   @ApiOperation({ summary: 'Get contracts for gym' })
-  @ApiQuery({ name: 'status', enum: ContractStatus, required: false })
-  @ApiQuery({ name: 'limit', type: Number, required: false })
-  @ApiQuery({ name: 'offset', type: Number, required: false })
   @ApiResponse({ status: 200, description: 'List of contracts' })
   async getGymContracts(
     @AppCtxt() ctx: RequestContext,
-    @Query('status') status: ContractStatus,
-    @Query('limit') limit: string,
-    @Query('offset') offset: string,
+    @Query() query: GetContractsDto,
   ) {
-    return await this.contractsService.getGymContracts(
-      ctx,
-      status,
-      limit ? parseInt(limit) : undefined,
-      offset ? parseInt(offset) : undefined,
-    );
+    return await this.contractsService.getGymContracts(ctx, query);
   }
 
   @Get('client/:clientId')

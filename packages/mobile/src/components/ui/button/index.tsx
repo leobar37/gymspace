@@ -56,6 +56,7 @@ const buttonStyle = tva({
       outline:
         'bg-transparent border border-outline-200 data-[hover=true]:border-outline-300 data-[active=true]:bg-transparent',
       solid: 'border border-transparent',
+      ghost: 'bg-transparent data-[hover=true]:bg-background-100 data-[active=true]:bg-background-200',
     },
 
     size: {
@@ -136,6 +137,7 @@ const buttonTextStyle = tva({
       outline: '',
       solid:
         'text-typography-0 data-[hover=true]:text-typography-0 data-[active=true]:text-typography-0',
+      ghost: 'text-typography-600 data-[hover=true]:text-typography-700 data-[active=true]:text-typography-800',
     },
     size: {
       xs: 'text-xs',
@@ -205,6 +207,7 @@ const buttonIconStyle = tva({
       outline: '',
       solid:
         'text-typography-0 data-[hover=true]:text-typography-0 data-[active=true]:text-typography-0',
+      ghost: 'text-typography-600 data-[hover=true]:text-typography-700 data-[active=true]:text-typography-800',
     },
     size: {
       xs: 'h-3.5 w-3.5',

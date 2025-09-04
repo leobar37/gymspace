@@ -55,13 +55,11 @@ export class FilesService {
           userId: userId,
         },
       });
-      
+
       const result = this.mapToDto(fileRecord);
- 
 
       return result;
     } catch (error) {
-
       // Clean up storage if database save fails
       try {
         console.log(`[FilesService] Attempting to cleanup file from storage: ${filePath}`);
@@ -155,7 +153,7 @@ export class FilesService {
    */
   async serve(context: IRequestContext, id: string) {
     const isPublicAccess = context.getUserId() === 'public';
-    
+
     // Build where clause based on access type
     const whereClause: any = {
       id,

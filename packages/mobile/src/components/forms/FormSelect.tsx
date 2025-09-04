@@ -58,26 +58,26 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
     <FormControl isInvalid={!!fieldState.error} isDisabled={isDisabled}>
       <VStack className="gap-1">
         {label && <Text className="font-medium text-typography-900">{label}</Text>}
-        
+
         {description && (
           <FormControlHelper>
             <FormControlHelperText>{description}</FormControlHelperText>
           </FormControlHelper>
         )}
-        
+
         <Select 
           selectedValue={field.value}
           onValueChange={(value) => field.onChange(value)}
           isDisabled={isDisabled}
         >
-          <SelectTrigger variant={variant} size={size}>
+          <SelectTrigger variant={"outline"} >
             <SelectInput 
+             className='h-16'
               placeholder={placeholder}
               value={field.value ? options.find(opt => opt.value === field.value)?.label : ''}
             />
             <SelectIcon as={ChevronDownIcon} />
-          </SelectTrigger>
-          
+          </SelectTrigger> 
           <SelectPortal>
             <SelectBackdrop />
             <SelectContent>
@@ -91,7 +91,7 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
             </SelectContent>
           </SelectPortal>
         </Select>
-        
+    
         {fieldState.error && (
           <FormControlError>
             <FormControlErrorText>{fieldState.error.message}</FormControlErrorText>

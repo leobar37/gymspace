@@ -1,10 +1,13 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import { useFormatPrice } from '@/config/ConfigContext';
+import { BackButton } from '@/shared/components/BackButton';
 import { Card } from '@/components/ui/card';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Check, X, Users, Building2, UserCheck, Clock } from 'lucide-react-native';
@@ -511,30 +514,39 @@ export default function SubscriptionPlansScreen() {
   if (errorState) return errorState;
 
   return (
-    <ScrollView className="flex-1 bg-background">
-      <View className="p-4">
-        {/* Current Subscription Info */}
-        <CurrentSubscriptionCard
-          subscription={subscription}
-          formatPrice={formatPlanPrice}
-          formatDate={formatDate}
-          gymLimits={gymLimits}
-          clientLimits={clientLimits}
-          userLimits={userLimits}
-        />
-
-        {/* Available Plans */}
-        <View className="space-y-4">
-          <Text className="text-xl font-semibold mb-2">Planes Disponibles</Text>
-          
-          <AvailablePlansList
-            plans={plans || []}
-            isCurrentPlan={isCurrentPlan}
-            formatPrice={formatPlanPrice}
-            onSelectPlan={handleSelectPlan}
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView className="flex-1">
+        <View className="p-4">
+          {/* Back Button */}
+          <BackButton 
+            onPress={() => router.push('/(app)/(tabs)/more')}
+            label="Volver"
+            style={{ marginBottom: 16 }}
           />
+
+          {/* Current Subscription Info */}
+          <CurrentSubscriptionCard
+            subscription={subscription}
+            formatPrice={formatPlanPrice}
+            formatDate={formatDate}
+            gymLimits={gymLimits}
+            clientLimits={clientLimits}
+            userLimits={userLimits}
+          />
+
+          {/* Available Plans */}
+          <View className="space-y-4">
+            <Text className="text-xl font-semibold mb-2">Planes Disponibles</Text>
+            
+            <AvailablePlansList
+              plans={plans || []}
+              isCurrentPlan={isCurrentPlan}
+              formatPrice={formatPlanPrice}
+              onSelectPlan={handleSelectPlan}
+            />
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

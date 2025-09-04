@@ -7,6 +7,7 @@ interface FilesStore {
   
   // Full-screen viewer state
   viewerFile: FileResponseDto | null;
+  viewerFileId: string | null;
   isViewerOpen: boolean;
   
   // Actions
@@ -15,12 +16,14 @@ interface FilesStore {
   
   // Viewer actions
   openFileViewer: (file: FileResponseDto) => void;
+  openFileViewerById: (fileId: string) => void;
   closeFileViewer: () => void;
 }
 
 export const useFilesStore = create<FilesStore>((set, get) => ({
   recentlyUploadedFiles: [],
   viewerFile: null,
+  viewerFileId: null,
   isViewerOpen: false,
   
   addRecentlyUploaded: (fileId: string) => {
@@ -36,6 +39,15 @@ export const useFilesStore = create<FilesStore>((set, get) => ({
   openFileViewer: (file: FileResponseDto) => {
     set({ 
       viewerFile: file, 
+      viewerFileId: null,
+      isViewerOpen: true 
+    });
+  },
+  
+  openFileViewerById: (fileId: string) => {
+    set({ 
+      viewerFile: null,
+      viewerFileId: fileId, 
       isViewerOpen: true 
     });
   },
@@ -43,6 +55,7 @@ export const useFilesStore = create<FilesStore>((set, get) => ({
   closeFileViewer: () => {
     set({ 
       viewerFile: null, 
+      viewerFileId: null,
       isViewerOpen: false 
     });
   },

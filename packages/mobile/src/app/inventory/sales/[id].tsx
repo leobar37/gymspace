@@ -6,7 +6,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Alert as UIAlert, AlertIcon, AlertText } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { useSale } from '@/hooks/useSales';
+import { useSale } from '@/features/inventory/hooks/useSales';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { ScreenForm } from '@/shared/components/ScreenForm';
 import { SaleInfoCard, PaymentStatusCard, FilesSection, ProductsList } from '@/features/inventory/components/sales';

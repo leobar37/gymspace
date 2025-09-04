@@ -1,25 +1,3 @@
-import React, { useState } from 'react';
-import { FlatList, RefreshControl, View, Pressable } from 'react-native';
-import { useClientsController } from '../controllers/clients.controller';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { Card } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
-import { Badge, BadgeText } from '@/components/ui/badge';
-import { Spinner } from '@/components/ui/spinner';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
-import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogCloseButton,
-  AlertDialogFooter,
-  AlertDialogBody,
-} from '@/components/ui/alert-dialog';
 import {
   Actionsheet,
   ActionsheetBackdrop,
@@ -30,15 +8,37 @@ import {
   ActionsheetItemText,
 } from '@/components/ui/actionsheet';
 import {
-  SearchIcon,
-  UserPlusIcon,
-  PhoneIcon,
-  MoreHorizontalIcon,
-  EditIcon,
-  TrashIcon,
-} from 'lucide-react-native';
-import { router } from 'expo-router';
+  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogBody,
+  AlertDialogCloseButton,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+} from '@/components/ui/alert-dialog';
+import { Avatar } from '@/components/ui/avatar';
+import { Badge, BadgeText } from '@/components/ui/badge';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
+import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useDebounce } from '@/hooks/useDebounce';
+import { router } from 'expo-router';
+import {
+  EditIcon,
+  MoreHorizontalIcon,
+  PhoneIcon,
+  SearchIcon,
+  TrashIcon,
+  UserPlusIcon,
+} from 'lucide-react-native';
+import React, { useState } from 'react';
+import { FlatList, Pressable, RefreshControl, View } from 'react-native';
+import { useClientsController } from '../controllers/clients.controller';
 
 interface ClientCardProps {
   client: any;
@@ -106,9 +106,13 @@ export const ClientsList: React.FC = () => {
   const debouncedSearch = useDebounce(searchText, 300);
 
   const { useClientsList, toggleStatus, isTogglingStatus } = useClientsController();
+
   const { data, isLoading, refetch, isRefetching } = useClientsList({
     search: debouncedSearch,
     activeOnly: false,
+    page: 0,
+    limit: 50,
+    sortBy: 'createdAt',
   });
 
   const handleClientPress = (clientId: string) => {

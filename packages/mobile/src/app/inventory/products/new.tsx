@@ -1,6 +1,6 @@
 import { ProductForm } from '@/components/inventory/ProductForm';
 import { VStack } from '@/components/ui/vstack';
-import { useCreateProduct } from '@/hooks/useProducts';
+import { useCreateProduct } from '@/features/products/hooks/useProducts';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import type { CreateProductDto } from '@gymspace/sdk';
 import { router } from 'expo-router';

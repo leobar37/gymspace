@@ -10,6 +10,10 @@ export class CreateContractDto {
   @IsUUID()
   gymMembershipPlanId: string;
 
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174002' })
+  @IsUUID()
+  paymentMethodId: string;
+
   @ApiProperty({ example: '2024-01-01', description: 'Contract start date' })
   @IsDateString()
   startDate: string;

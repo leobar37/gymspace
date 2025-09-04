@@ -76,7 +76,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
     control,
     handleSubmit,
     watch,
-    formState: { errors, isDirty }
+    formState: { errors, isDirty, isValid }
   } = methods;
 
   const handleFormSubmit = handleSubmit(async (data) => {
@@ -122,7 +122,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
       </Button>
       <Button
         onPress={handleFormSubmit}
-        disabled={product ? (isFormLoading || !isDirty) : isFormLoading}
+        isDisabled={product ? (isFormLoading || !isDirty || !isValid) : (isFormLoading || !isValid)}
         className="flex-1"
       >
         {isFormLoading ? (

@@ -276,6 +276,10 @@ All entities include audit fields and soft delete support.
 
 ## Preferences
 - Make the code in english but the code in english.
+- ALWAYS pass the complete IRequestContext as the first parameter in all service methods
+- NEVER pass just gymId or userId individually - always use the full context
+- Service methods pattern: async methodName(context: IRequestContext, ...otherParams)
+
 ## API Documentation
 
 - Swagger UI available at `/api/v1/docs`

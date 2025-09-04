@@ -7,6 +7,8 @@ import { CreateClientDto, UpdateClientDto, SearchClientsDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Prisma } from '@prisma/client';
 import { RequestContext } from '../../common/services/request-context.service';
+import { IRequestContext } from '@gymspace/shared';
+import { ClientStatsService } from './helpers/client-stats.service';
 
 @Injectable()
 export class ClientsService {
@@ -15,6 +17,7 @@ export class ClientsService {
     private organizationsService: OrganizationsService,
     private gymsService: GymsService,
     private paginationService: PaginationService,
+    private clientStatsService: ClientStatsService,
   ) {}
 
   /**
@@ -390,156 +393,116 @@ export class ClientsService {
    * Get client statistics
    */
   async getClientStats(ctx: RequestContext, clientId: string) {
-    // Use a single transaction for ALL database operations
-    const result = await this.prismaService.$transaction(async (tx) => {
-      // Get client with related data
-      const client = await tx.gymClient.findUnique({
-        where: {
-          id: clientId,
-          gymId: ctx.gym.id,
-          deletedAt: null,
-        },
-        include: {
-          checkIns: {
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-          },
-          evaluations: {
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-          },
-        },
-      });
-
-      if (!client) {
-        throw new ResourceNotFoundException('Client not found');
-      }
-
-      // Perform all counts and queries in parallel within the transaction
-      const [
-        totalCheckIns,
-        monthlyCheckIns,
-        totalEvaluations,
-        activeContracts,
-        membershipHistory,
-        totalSpentData,
-      ] = await Promise.all([
-        // Total check-ins
-        tx.checkIn.count({
-          where: { gymClientId: clientId },
-        }),
-        // Monthly check-ins (current month)
-        tx.checkIn.count({
-          where: {
-            gymClientId: clientId,
-            createdAt: {
-              gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-            },
-          },
-        }),
-        // Total evaluations
-        tx.evaluation.count({
-          where: { gymClientId: clientId },
-        }),
-        // Active contracts
-        tx.contract.count({
-          where: { gymClientId: clientId, status: 'active' },
-        }),
-        // Membership history
-        tx.contract.findMany({
-          where: { gymClientId: clientId },
-          include: {
-            gymMembershipPlan: {
-              select: {
-                id: true,
-                name: true,
-                basePrice: true,
-              },
-            },
-          },
-          orderBy: { startDate: 'desc' },
-          take: 5,
-        }),
-        // Total spent - aggregate sum
-        tx.contract.aggregate({
-          where: { gymClientId: clientId },
-          _sum: {
-            finalAmount: true,
-          },
-        }),
-      ]);
-
-      const totalSpent = totalSpentData._sum.finalAmount || 0;
-
-      return {
-        client,
-        totalCheckIns,
-        monthlyCheckIns,
-        totalEvaluations,
-        activeContracts,
-        membershipHistory,
-        totalSpent,
-      };
-    });
-
-    const {
-      client,
-      totalCheckIns,
-      monthlyCheckIns,
-      totalEvaluations,
-      activeContracts,
-      membershipHistory,
-      totalSpent,
-    } = result;
-
-    return {
-      client: {
-        id: client.id,
-        name: client.name,
-        email: client.email,
-        status: client.status,
-        registrationDate: client.createdAt,
-      },
-      activity: {
-        totalCheckIns,
-        monthlyCheckIns,
-        lastCheckIn: client.checkIns[0]?.createdAt || null,
-      },
-      evaluations: {
-        total: totalEvaluations,
-        lastEvaluation: client.evaluations[0]?.createdAt || null,
-      },
-      contracts: {
-        active: activeContracts,
-        totalSpent,
-      },
-      membershipHistory,
-    };
+    return this.clientStatsService.getClientStats(ctx, clientId);
   }
 
   /**
-   * Calculate total amount spent by client
+   * Get individual client statistic
    */
-  private async _calculateTotalSpent(clientId: string): Promise<number> {
-    const contracts = await this.prismaService.contract.findMany({
-      where: { gymClientId: clientId },
+  async getClientStat(ctx: RequestContext, clientId: string, statKey: string) {
+    return this.clientStatsService.getStat(ctx, clientId, statKey);
+  }
+
+  /**
+   * Get client statistics by category
+   */
+  async getClientStatsByCategory(ctx: RequestContext, clientId: string, category: string) {
+    return this.clientStatsService.getStatsByCategory(ctx, clientId, category);
+  }
+
+  /**
+   * Get available statistics definitions
+   */
+  async getAvailableStats() {
+    return this.clientStatsService.getAvailableStats();
+  }
+
+  /**
+   * Validate if client belongs to gym
+   */
+  async validateClientBelongsToGym(context: IRequestContext, clientId: string): Promise<any> {
+    const gymId = context.getGymId();
+
+    if (!gymId) {
+      throw new BusinessException('El contexto del gimnasio es requerido');
+    }
+
+    const client = await this.prismaService.gymClient.findFirst({
+      where: {
+        id: clientId,
+        gymId,
+      },
+    });
+
+    if (!client) {
+      throw new ResourceNotFoundException('Cliente', clientId);
+    }
+
+    return client;
+  }
+
+  /**
+   * Get client's active contract
+   */
+  async getActiveContract(context: IRequestContext, clientId: string): Promise<any | null> {
+    const activeContract = await this.prismaService.contract.findFirst({
+      where: {
+        gymClientId: clientId,
+        deletedAt: null,
+        OR: [{ status: 'active' }, { status: 'expiring_soon' }],
+      },
       include: {
-        gymMembershipPlan: true,
+        gymMembershipPlan: {
+          select: {
+            id: true,
+            name: true,
+            basePrice: true,
+            durationMonths: true,
+          },
+        },
+      },
+      orderBy: {
+        endDate: 'desc',
       },
     });
 
-    return contracts.reduce((total, contract) => {
-      const months = this.getMonthsBetweenDates(contract.startDate, contract.endDate || new Date());
-      return total + Number(contract.gymMembershipPlan.basePrice) * months;
-    }, 0);
+    return activeContract;
   }
 
   /**
-   * Get number of months between two dates
+   * Check if client has active contract
    */
-  private getMonthsBetweenDates(start: Date, end: Date): number {
-    const months =
-      (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-    return Math.max(1, months);
+  async checkActiveContract(context: IRequestContext, clientId: string): Promise<void> {
+    const now = new Date();
+    const existingContracts = await this.prismaService.contract.findMany({
+      where: {
+        gymClientId: clientId,
+        deletedAt: null,
+        OR: [
+          { status: 'active' },
+          { status: 'expiring_soon' },
+          {
+            status: 'pending',
+            startDate: { gte: now },
+          },
+        ],
+      },
+    });
+
+    if (existingContracts.length > 0) {
+      const activeContract = existingContracts[0];
+
+      if (activeContract.status === 'active') {
+        throw new BusinessException('El cliente ya tiene un contrato activo');
+      } else if (activeContract.status === 'expiring_soon') {
+        throw new BusinessException(
+          'El cliente tiene un contrato activo que está por vencer. Considere renovarlo en lugar de crear uno nuevo',
+        );
+      } else if (activeContract.status === 'pending') {
+        throw new BusinessException(
+          'El cliente tiene un contrato pendiente que aún no ha iniciado',
+        );
+      }
+    }
   }
 }

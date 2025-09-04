@@ -13,7 +13,7 @@ import {
   XIcon
 } from 'lucide-react-native';
 import type { SearchProductsParams } from '@gymspace/sdk';
-import { useProductCategories } from '@/hooks/useProducts';
+import { useProductCategories } from '@/features/products/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface ProductFiltersProps {

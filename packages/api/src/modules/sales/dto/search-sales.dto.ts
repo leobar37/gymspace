@@ -9,10 +9,10 @@ export class SearchSalesDto {
   @IsString()
   customerName?: string;
 
-  @ApiProperty({ 
-    example: 'uuid-client-id', 
-    description: 'Filter by customer ID', 
-    required: false 
+  @ApiProperty({
+    example: 'uuid-client-id',
+    description: 'Filter by customer ID',
+    required: false,
   })
   @IsOptional()
   @IsUUID()

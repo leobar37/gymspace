@@ -35,12 +35,12 @@ export function AssetPreview({
   resizeMode = 'cover',
 }: AssetPreviewProps) {
   // Construct the render URL directly without using hooks
-  const renderUrl = getAssetRenderUrl(assetId || asset?.id);  
+  const renderUrl = getAssetRenderUrl(assetId || asset?.id);
   const assetData = asset;
   // Determine dimensions based on size prop or explicit width/height
   let imageWidth = width;
   let imageHeight = height;
-  
+
   if (size && !width && !height) {
     switch (size) {
       case 'small':
@@ -63,29 +63,30 @@ export function AssetPreview({
         imageHeight = 200;
     }
   }
-  
+
   // Default dimensions if still not provided
   imageWidth = imageWidth || 200;
   imageHeight = imageHeight || 200;
 
   if (!renderUrl && !assetData?.previewUrl) {
     return (
-      <View 
-        className={`bg-gray-200 items-center justify-center ${className}`} 
+      <View
+        className={`bg-gray-200 items-center justify-center ${className}`}
         style={{ width: imageWidth, height: imageHeight }}
       >
-        {showLoading && (
-          <ActivityIndicator size="small" color="#666" />
-        )}
+        {showLoading && <ActivityIndicator size="small" color="#666" />}
       </View>
     );
   }
 
+  // http://192.168.100.19:5200/api/v1
+
   const url = renderUrl || assetData?.previewUrl || '';
 
-  const imageStyle = size === 'full' && !width && !height 
-    ? { flex: 1 }
-    : { width: imageWidth, height: imageHeight };
+  console.log('this the url', url);
+
+  const imageStyle =
+    size === 'full' && !width && !height ? { flex: 1 } : { width: imageWidth, height: imageHeight };
 
   return (
     <Image

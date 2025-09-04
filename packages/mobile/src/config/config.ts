@@ -90,45 +90,6 @@ export const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     currencySymbol: '$',
     currencyLocale: 'es-EC',
   },
-  MX: {
-    code: 'MX',
-    name: 'Mexico',
-    documentTypes: [
-      {
-        value: 'CURP',
-        label: 'CURP',
-        placeholder: 'ABCD123456HDFGHI01',
-        maxLength: 18,
-        pattern: '^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z]{2}$',
-      },
-      {
-        value: 'RFC',
-        label: 'RFC',
-        placeholder: 'ABCD123456ABC',
-        maxLength: 13,
-        pattern: '^[A-Z]{4}[0-9]{6}[A-Z0-9]{3}$',
-      },
-      {
-        value: 'INE',
-        label: 'INE/IFE',
-        placeholder: '1234567890123',
-        maxLength: 13,
-        pattern: '^[0-9]{13}$',
-      },
-      {
-        value: 'PASSPORT',
-        label: 'Pasaporte',
-        placeholder: 'ABC123456',
-        maxLength: 20,
-      },
-    ],
-    dateFormat: 'DD/MM/YYYY',
-    phoneFormat: '55 1234 5678',
-    phonePrefix: '+52',
-    currency: 'MXN',
-    currencySymbol: '$',
-    currencyLocale: 'es-MX',
-  },
   // Default configuration for other countries
   DEFAULT: {
     code: 'DEFAULT',
@@ -205,21 +166,25 @@ export function validateDocument(
   return { isValid: true };
 }
 
-export function formatPrice(amount: number, countryCode?: string): string {
+export function formatPrice(
+  amount: number, 
+  countryCode?: string,
+  fractionDigits: number = 2
+): string {
   const config = getCountryConfig(countryCode);
   
   try {
     return new Intl.NumberFormat(config.currencyLocale, {
       style: 'currency',
       currency: config.currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
     }).format(amount);
   } catch (error) {
     // Fallback to currency symbol + formatted number
     const formattedNumber = new Intl.NumberFormat(config.currencyLocale, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
     }).format(amount);
     return `${config.currencySymbol}${formattedNumber}`;
   }

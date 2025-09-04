@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { View } from '@/components/ui/view';
 import { VStack } from '@/components/ui/vstack';
-import { useProducts } from '@/hooks/useProducts';
+import { useProducts } from '@/features/products/hooks/useProducts';
 import { PRODUCT_TYPES } from '@/shared/constants';
 import type { Product } from '@gymspace/sdk';
 import { router } from 'expo-router';

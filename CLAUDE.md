@@ -4,6 +4,19 @@
 
 ## Development Paths
 
+### Type Management (CRITICAL for Mobile App)
+- **ALWAYS** use SDK types directly in controllers, don't duplicate type definitions
+- **NEVER** create local types that mirror SDK DTOs
+- Pattern for controllers:
+  ```typescript
+  import { CreateContractDto, RenewContractDto } from '@gymspace/sdk';
+  export type ContractFormData = CreateContractDto;
+  ```
+- This ensures all fields from SDK are properly included in requests
+- Prevents issues like missing paymentMethodId or other required fields
+
+## Development Paths
+
 ### SDK Access Pattern (CRITICAL for Mobile App)
 - **NEVER** import gymspaceClient directly from lib/api-client
 - **ALWAYS** use useGymSdk hook from @/providers/GymSdkProvider
@@ -42,8 +55,13 @@
 - Pattern for country config: `const config = useCountryConfig();`
 - Pattern for price formatting: `const formatPrice = useFormatPrice();`
 
-### Service Architecture
-- Add the context as first parameter in the services, and pass the complete RequestContext, instead of 
+### Service Architecture (CRITICAL for Backend)
+- **ALWAYS** pass the complete RequestContext/IRequestContext as the first parameter in ALL service methods
+- **NEVER** pass just gymId, userId, or any other individual parameter instead of context
+- Pattern: `async methodName(context: IRequestContext, ...otherParams): Promise<ReturnType>`
+- The context contains gymId, userId, permissions, organization, and other critical information
+- Example: `validateClientBelongsToGym(context: IRequestContext, clientId: string)` ✅
+- Wrong: `validateClientBelongsToGym(gymId: string, clientId: string)` ❌ 
 
 ## State Management
 - Use zustand for complex state management that needs to be shared across components
@@ -178,3 +196,6 @@
 - not add README.md after do something
 - the primary color is the default of the library
 - never run commands unless i ask for it
+- not run lints commands
+- user serena when it is available
+- use serena tools to work better

@@ -186,6 +186,11 @@ export class OnboardingService {
           },
         });
 
+        // Create default payment methods for Peru organizations
+        if (dto.country === 'PE') {
+          await this.createDefaultPaymentMethods(tx, organization.id, user.id);
+        }
+
         return { user, organization, gym, session: supabaseAuth.session };
       });
 
@@ -391,16 +396,6 @@ export class OnboardingService {
 
     const settings = gym.settings as any;
 
-    // Verify all steps are completed
-    if (!settings?.gymSettingsCompleted || !settings?.featuresConfigured) {
-      throw new ValidationException([
-        {
-          field: 'onboarding',
-          message: 'Please complete all onboarding steps before finishing setup',
-        },
-      ]);
-    }
-
     // Mark onboarding as completed
     await this.prismaService.$transaction(async (tx) => {
       // Update gym
@@ -604,6 +599,63 @@ export class OnboardingService {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 5).toUpperCase();
     return `GYM-${timestamp}-${random}`;
+  }
+
+  /**
+   * Create default payment methods for Peru organizations
+   */
+  private async createDefaultPaymentMethods(tx: any, organizationId: string, userId: string) {
+    const defaultPaymentMethods = [
+      {
+        name: 'Yape',
+        code: 'yape',
+        description: 'Pago móvil con Yape',
+        enabled: true,
+        metadata: {
+          type: 'mobile_payment',
+          country: 'PE',
+        },
+      },
+      {
+        name: 'Plin',
+        code: 'plin',
+        description: 'Pago móvil con Plin',
+        enabled: true,
+        metadata: {
+          type: 'mobile_payment',
+          country: 'PE',
+        },
+      },
+      {
+        name: 'Tarjeta',
+        code: 'card',
+        description: 'Pago con tarjeta de crédito o débito',
+        enabled: true,
+        metadata: {
+          type: 'card_payment',
+          country: 'PE',
+        },
+      },
+    ];
+
+    try {
+      for (const paymentMethod of defaultPaymentMethods) {
+        await tx.paymentMethod.create({
+          data: {
+            organizationId,
+            name: paymentMethod.name,
+            code: paymentMethod.code,
+            description: paymentMethod.description,
+            enabled: paymentMethod.enabled,
+            metadata: paymentMethod.metadata,
+            createdByUserId: userId,
+          },
+        });
+      }
+    } catch (error) {
+      // Log error but don't fail the onboarding process
+      console.error('Failed to create default payment methods:', error);
+    }
   }
 
   /**

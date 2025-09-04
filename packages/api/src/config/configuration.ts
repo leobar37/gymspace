@@ -1,30 +1,3 @@
-// Function to parse Redis URL
-function parseRedisUrl(redisUrl?: string) {
-  if (!redisUrl) {
-    return {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD || undefined,
-    };
-  }
-
-  try {
-    const url = new URL(redisUrl);
-    return {
-      host: url.hostname,
-      port: parseInt(url.port || '6379', 10),
-      password: url.password || undefined,
-    };
-  } catch (error) {
-    console.error('Invalid REDIS_URL format, falling back to individual values', error);
-    return {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD || undefined,
-    };
-  }
-}
-
 export default () => ({
   // Application
   app: {
@@ -47,7 +20,9 @@ export default () => ({
   },
 
   // Redis
-  redis: parseRedisUrl(process.env.REDIS_URL),
+  redis: {
+    url: process.env.REDIS_URL || 'redis://localhost:6376',
+  },
 
   // Supabase
   supabase: {
@@ -87,10 +62,5 @@ export default () => ({
   rateLimit: {
     ttl: parseInt(process.env.RATE_LIMIT_TTL || '60', 10),
     max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
-  },
-
-  // MercadoPago
-  mercadopago: {
-    accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
   },
 });

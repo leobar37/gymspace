@@ -1,8 +1,15 @@
-import React from 'react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useAuthToken } from '@/hooks/useAuthToken';
 import type { CurrentSessionResponse } from '@gymspace/sdk';
+import { 
+  sessionAtom, 
+  isAuthenticatedAtom, 
+  clearAuthAtom,
+  setCurrentGymIdAtom 
+} from '@/store/auth.atoms';
 
 // Query key factory
 export const sessionKeys = {
@@ -19,102 +26,81 @@ export interface UseCurrentSessionOptions {
 }
 
 export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
-  const { sdk, isAuthenticated, authToken, currentGymId, setCurrentGymId } = useGymSdk();
-  const { hasValidToken, refreshToken, clearStoredTokens } = useAuthToken();
+  const { sdk, authToken, currentGymId } = useGymSdk();
+  const [session, setSession] = useAtom(sessionAtom) as [any, any];
+  const isAuthenticated = useAtomValue(isAuthenticatedAtom);
+  const clearAuth = useSetAtom(clearAuthAtom);
+  const setCurrentGymId = useSetAtom(setCurrentGymIdAtom);
   const queryClient = useQueryClient();
-
-  // Track refresh attempts to avoid infinite loops
-  const refreshAttemptsRef = React.useRef(0);
-  const MAX_REFRESH_ATTEMPTS = 2;
+  const router = useRouter();
 
   const {
     enabled = true,
     refetchOnMount = true,
     refetchOnWindowFocus = false,
-    staleTime = 5 * 60 * 1000, // 5 minutes - session data doesn't change frequently
-    gcTime = 30 * 60 * 1000, // 30 minutes - keep in cache longer
+    staleTime = 5 * 60 * 1000, // 5 minutes
+    gcTime = 30 * 60 * 1000, // 30 minutes
   } = options;
 
   const sessionQuery = useQuery({
     queryKey: sessionKeys.current(),
     queryFn: async (): Promise<CurrentSessionResponse | null> => {
-      const tokenValid = await hasValidToken();
-
-      if (!tokenValid) {
-        // Try to refresh token if we haven't exceeded attempts
-        if (refreshAttemptsRef.current < MAX_REFRESH_ATTEMPTS) {
-          refreshAttemptsRef.current++;
-          const refreshedToken = await refreshToken();
-          if (!refreshedToken) {
-            // Clear token after max attempts
-            await clearStoredTokens();
-            refreshAttemptsRef.current = 0;
-            return null;
-          }
-        } else {
-          // Max attempts reached, clear token
-          await clearStoredTokens();
-          refreshAttemptsRef.current = 0;
-          return null;
-        }
-      }
       try {
         const response = await sdk.auth.getCurrentSession();
-        console.log('ask for response', JSON.stringify(response));
-        // Reset refresh attempts on successful request
-        refreshAttemptsRef.current = 0;
-
+        console.log('Session fetched successfully:', response);
+        
+        // Store in Jotai atom
+        setSession(response);
+        
         // If we get a gym in the response but don't have a current gym ID stored,
         // store it automatically (this handles the onboarding case)
         if (response?.gym?.id && !currentGymId) {
-          await setCurrentGymId(response.gym.id);
+          setCurrentGymId(response.gym.id);
         }
 
         return response;
       } catch (error: any) {
-        // Handle 401 errors by attempting token refresh
-        if (error.status === 401) {
-          if (refreshAttemptsRef.current < MAX_REFRESH_ATTEMPTS) {
-            refreshAttemptsRef.current++;
-            const refreshedToken = await refreshToken();
-            if (refreshedToken) {
-              // Retry the request with new token
-              const response = await sdk.auth.getCurrentSession();
-
-              // If we get a gym in the response but don't have a current gym ID stored,
-              // store it automatically (this handles the onboarding case)
-              if (response?.gym?.id && !currentGymId) {
-                await setCurrentGymId(response.gym.id);
-              }
-
-              // Reset counter on successful refresh
-              refreshAttemptsRef.current = 0;
-              return response;
-            }
-          }
-
-          // Clear token after max attempts
-          await clearStoredTokens();
-          refreshAttemptsRef.current = 0;
+        console.error('Session fetch error:', error);
+        // Handle 401 errors by clearing tokens and redirecting
+        if (error.status === 401 || error.message?.includes('Unauthorized')) {
+          console.log('Auth error, clearing tokens and redirecting');
+          clearAuth();
+          setTimeout(() => router.replace('/(onboarding)'), 100);
+          return null;
         }
         throw error;
       }
     },
-    enabled: enabled && isAuthenticated && !!authToken,
+    enabled: enabled && isAuthenticated && Boolean(authToken),
     staleTime,
     gcTime,
     refetchOnMount,
     refetchOnWindowFocus,
     retry: (failureCount, error: any) => {
-      // Don't retry on auth errors after token refresh attempt
-      if (error?.status === 401) {
+      // Don't retry on auth errors
+      if (error?.status === 401 || error?.message?.includes('Unauthorized')) {
         return false;
       }
-      // Retry network errors up to 2 times
-      return failureCount < 2;
+      // Don't retry if we don't have valid tokens
+      if (!authToken) {
+        return false;
+      }
+      // Retry network errors up to 1 time
+      return failureCount < 1;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
+
+  // Handle authentication errors
+  useEffect(() => {
+    if (sessionQuery.isError && sessionQuery.error) {
+      const error = sessionQuery.error as any;
+      if (error?.status === 401 || error?.message?.includes('Unauthorized')) {
+        clearAuth();
+        router.replace('/(onboarding)');
+      }
+    }
+  }, [sessionQuery.isError, sessionQuery.error, clearAuth, router]);
 
   // Utility functions
   const refetchSession = () => {
@@ -123,22 +109,31 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
 
   const clearSessionCache = () => {
     queryClient.removeQueries({ queryKey: sessionKeys.all });
+    setSession(null);
   };
 
   const updateSessionCache = (
     updater: (old: CurrentSessionResponse | null | undefined) => CurrentSessionResponse | null,
   ) => {
     queryClient.setQueryData(sessionKeys.current(), updater);
+    const newData = queryClient.getQueryData(sessionKeys.current()) as CurrentSessionResponse | null;
+    if (newData) {
+      setSession(newData);
+    }
   };
+
+  // Use session from Jotai atom for immediate updates
+  const currentSession = session || sessionQuery.data;
 
   return {
     // Session data
-    session: sessionQuery.data,
-    user: sessionQuery.data?.user || null,
-    gym: sessionQuery.data?.gym || null,
-    organization: sessionQuery.data?.organization || null,
-    subscription: sessionQuery.data?.subscription || null,
-    permissions: sessionQuery.data?.permissions || [],
+    session: currentSession,
+    user: currentSession?.user || null,
+    gym: currentSession?.gym || null,
+    organization: currentSession?.organization || null,
+    subscription: currentSession?.subscription || null,
+    permissions: currentSession?.permissions || [],
+    authToken,
 
     // Query states
     isLoading: sessionQuery.isLoading,
@@ -153,11 +148,11 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
     updateSessionCache,
 
     // Computed values
-    isAuthenticated: sessionQuery.isSuccess && !!sessionQuery.data?.isAuthenticated,
+    isAuthenticated: sessionQuery.isSuccess && !!currentSession?.isAuthenticated,
     hasPermission: (permission: string) => {
-      return sessionQuery.data?.permissions?.includes(permission) || false;
+      return currentSession?.permissions?.includes(permission) || false;
     },
-    isOwner: sessionQuery.data?.user?.userType === 'owner',
-    isCollaborator: sessionQuery.data?.user?.userType === 'collaborator',
+    isOwner: currentSession?.user?.userType === 'owner',
+    isCollaborator: currentSession?.user?.userType === 'collaborator',
   };
 }

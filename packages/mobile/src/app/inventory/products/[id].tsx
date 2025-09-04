@@ -11,7 +11,11 @@ import { Alert as UIAlert, AlertIcon, AlertText } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react-native';
 
 // Hooks
-import { useProduct, useUpdateProduct, useDeleteProduct, useUpdateStock } from '@/hooks/useProducts';
+import {
+  useProduct,
+  useUpdateProduct,
+  useDeleteProduct,
+} from '@/features/products/hooks/useProducts';
 import { useProductDetailStore } from '@/features/inventory/stores/product-detail.store';
 
 // Components
@@ -21,38 +25,27 @@ import { ProductImage } from '@/features/inventory/components/ProductImage';
 import { ProductInfo } from '@/features/inventory/components/ProductInfo';
 import { ProductStats } from '@/features/inventory/components/ProductStats';
 import { StockAdjustment } from '@/features/inventory/components/StockAdjustment';
+import { StockMovementsSection } from '@/features/inventory/components/StockMovementsSection';
 
 import type { UpdateProductDto } from '@gymspace/sdk';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const {
-    isEditing,
-    setIsEditing,
-    reset
-  } = useProductDetailStore();
+  const { isEditing, setIsEditing } = useProductDetailStore();
 
   // Queries and Mutations
   const { data: product, isLoading, isError, error, refetch } = useProduct(id!);
   const updateProductMutation = useUpdateProduct();
   const deleteProductMutation = useDeleteProduct();
-  const updateStockMutation = useUpdateStock();
-
-  // Reset store on unmount
-  useEffect(() => {
-    return () => {
-      reset();
-    };
-  }, [reset]);
 
   // Handlers
   const handleUpdate = async (data: UpdateProductDto) => {
     try {
       await updateProductMutation.mutateAsync({
         id: id!,
-        data
+        data,
       });
-      refetch()
+      refetch();
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating product:', error);
@@ -60,35 +53,21 @@ export default function ProductDetailScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      'Confirmar Eliminación',
-      '¿Estás seguro de que deseas eliminar este producto?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteProductMutation.mutateAsync(id!);
-              router.back();
-            } catch (error) {
-              console.error('Error deleting product:', error);
-            }
+    Alert.alert('Confirmar Eliminación', '¿Estás seguro de que deseas eliminar este producto?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteProductMutation.mutateAsync(id!);
+            router.back();
+          } catch (error) {
+            console.error('Error deleting product:', error);
           }
-        }
-      ]
-    );
-  };
-
-  const handleStockAdjustment = async (adjustment: number) => {
-    if (!product) return;
-
-    const newStock = product.stock + adjustment;
-    await updateStockMutation.mutateAsync({
-      id: id!,
-      quantity: newStock
-    });
+        },
+      },
+    ]);
   };
 
   // Loading state
@@ -108,11 +87,7 @@ export default function ProductDetailScreen() {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
         <VStack space="md" className="p-4">
-          <Button
-            size="sm"
-            onPress={() => router.back()}
-            className="self-start mb-4 bg-gray-600"
-          >
+          <Button size="sm" onPress={() => router.back()} className="self-start mb-4 bg-gray-600">
             <ButtonText className="text-white">Volver</ButtonText>
           </Button>
 
@@ -123,10 +98,7 @@ export default function ProductDetailScreen() {
                 Error al cargar el producto: {error?.message || 'Producto no encontrado'}
               </AlertText>
             </UIAlert>
-            <Button
-              onPress={() => refetch()}
-              className="mt-4 bg-blue-600"
-            >
+            <Button onPress={() => refetch()} className="mt-4 bg-blue-600">
               <ButtonText className="text-white">Reintentar</ButtonText>
             </Button>
           </View>
@@ -138,7 +110,7 @@ export default function ProductDetailScreen() {
   // Calculate product status
   const isInactive = product.status === 'inactive';
   const isOutOfStock = product.stock === 0;
-  const isLowStock = product.stock > 0 && product.stock <= 10;
+  const isLowStock = product.minStock ? product.stock > 0 && product.stock <= product.minStock : product.stock > 0 && product.stock <= 10;
 
   // Edit mode
   if (isEditing) {
@@ -158,20 +130,14 @@ export default function ProductDetailScreen() {
 
   // View mode
   return (
-    <SafeAreaView className="flex-1" >
+    <SafeAreaView className="flex-1">
       <ScrollView showsVerticalScrollIndicator={false}>
         <VStack space="md" className="p-4">
           {/* Header with actions */}
-          <ProductHeader
-            onEdit={() => setIsEditing(true)}
-            onDelete={handleDelete}
-          />
+          <ProductHeader onEdit={() => setIsEditing(true)} onDelete={handleDelete} />
 
           {/* Product Image */}
-          <ProductImage
-            imageId={product.imageId}
-            productName={product.name}
-          />
+          <ProductImage imageId={product.imageId} productName={product.name} />
 
           {/* Product Info with embedded image */}
           <View className="bg-white rounded-lg shadow-sm -mt-4">
@@ -187,12 +153,10 @@ export default function ProductDetailScreen() {
           <ProductStats product={product} />
 
           {/* Stock Management */}
-          <StockAdjustment
-            product={product}
-            isLowStock={isLowStock}
-            onApplyAdjustment={handleStockAdjustment}
-            isUpdating={updateStockMutation.isPending}
-          />
+          <StockAdjustment product={product} isLowStock={isLowStock} />
+          
+          {/* Stock Movements */}
+          <StockMovementsSection product={product} />
         </VStack>
       </ScrollView>
     </SafeAreaView>

@@ -1,0 +1,980 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table subscription_plans {
+  id String [pk]
+  name String [not null]
+  price Json [not null]
+  billingFrequency String [not null]
+  duration Int
+  durationPeriod DurationPeriod
+  maxGyms Int [not null]
+  maxClientsPerGym Int [not null]
+  maxUsersPerGym Int [not null]
+  features Json [not null]
+  description String
+  isActive Boolean [not null, default: true]
+  createdByUserId String
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  createdBy users
+  updatedBy users
+  subscriptionOrganizations subscription_organizations [not null]
+}
+
+Table subscription_organizations {
+  id String [pk]
+  organizationId String [not null]
+  subscriptionPlanId String [not null]
+  status SubscriptionStatus [not null]
+  startDate DateTime [not null]
+  endDate DateTime [not null]
+  isActive Boolean [not null, default: true]
+  metadata Json
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  organization organizations [not null]
+  subscriptionPlan subscription_plans [not null]
+  createdBy users [not null]
+  updatedBy users
+
+  indexes {
+    (organizationId, isActive) [unique]
+  }
+}
+
+Table users {
+  id String [pk]
+  email String [unique, not null]
+  password String
+  name String [not null]
+  phone String
+  birthDate DateTime
+  userType UserType [not null]
+  emailVerifiedAt DateTime
+  verificationCode String
+  verificationCodeExpiresAt DateTime
+  createdByUserId String
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  createdBy users
+  updatedBy users
+  createdUsers users [not null]
+  updatedUsers users [not null]
+  ownedOrganizations organizations [not null]
+  collaborators collaborators [not null]
+  invitationsSent invitations [not null]
+  invitationsAccepted invitations [not null]
+  createdSubscriptionPlans subscription_plans [not null]
+  updatedSubscriptionPlans subscription_plans [not null]
+  createdSubscriptionOrganizations subscription_organizations [not null]
+  updatedSubscriptionOrganizations subscription_organizations [not null]
+  createdOrganizations organizations [not null]
+  updatedOrganizations organizations [not null]
+  createdGyms gyms [not null]
+  updatedGyms gyms [not null]
+  createdRoles roles [not null]
+  updatedRoles roles [not null]
+  createdCollaborators collaborators [not null]
+  updatedCollaborators collaborators [not null]
+  createdInvitations invitations [not null]
+  updatedInvitations invitations [not null]
+  createdGymClients gym_clients [not null]
+  updatedGymClients gym_clients [not null]
+  createdGymMembershipPlans gym_membership_plans [not null]
+  updatedGymMembershipPlans gym_membership_plans [not null]
+  createdContracts contracts [not null]
+  updatedContracts contracts [not null]
+  approvedContracts contracts [not null]
+  cancelledContracts contracts [not null]
+  uploadedAssets assets [not null]
+  createdAssets assets [not null]
+  updatedAssets assets [not null]
+  files files [not null]
+  registeredCheckIns check_ins [not null]
+  createdCheckIns check_ins [not null]
+  updatedCheckIns check_ins [not null]
+  createdEvaluations evaluations [not null]
+  updatedEvaluations evaluations [not null]
+  completedEvaluations evaluations [not null]
+  createdEvaluationComments evaluation_comments [not null]
+  updatedEvaluationComments evaluation_comments [not null]
+  assignedLeads leads [not null]
+  createdLeads leads [not null]
+  updatedLeads leads [not null]
+  createdProductCategories product_categories [not null]
+  updatedProductCategories product_categories [not null]
+  createdProducts products [not null]
+  updatedProducts products [not null]
+  createdSuppliers suppliers [not null]
+  updatedSuppliers suppliers [not null]
+  createdSales sales [not null]
+  updatedSales sales [not null]
+  createdSaleItems sale_items [not null]
+  updatedSaleItems sale_items [not null]
+  createdStockMovements stock_movements [not null]
+  createdPaymentMethods payment_methods [not null]
+  updatedPaymentMethods payment_methods [not null]
+}
+
+Table organizations {
+  id String [pk]
+  ownerUserId String [not null]
+  name String [not null]
+  organizationCode String [unique, not null]
+  hasUsedFreeTrial Boolean [not null, default: false]
+  country String [not null]
+  currency String [not null]
+  timezone String [not null]
+  settings Json
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  owner users [not null]
+  createdBy users [not null]
+  updatedBy users
+  gyms gyms [not null]
+  subscriptionOrganizations subscription_organizations [not null]
+  paymentMethods payment_methods [not null]
+}
+
+Table gyms {
+  id String [pk]
+  organizationId String [not null]
+  name String [not null]
+  slug String [unique, not null]
+  address String
+  city String
+  state String
+  postalCode String
+  latitude Float
+  longitude Float
+  description String
+  phone String
+  email String
+  openingTime String
+  closingTime String
+  capacity Int
+  amenities Json
+  settings Json
+  isActive Boolean [not null, default: true]
+  gymCode String [unique, not null]
+  profilePhotoId String
+  coverPhotoId String
+  evaluationStructure Json
+  catalogVisibility Boolean [not null, default: false]
+  catalogDescription String
+  catalogImages Json
+  catalogFeatured Boolean [not null, default: false]
+  catalogPriority Int [not null, default: 0]
+  socialMedia Json
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  organization organizations [not null]
+  createdBy users [not null]
+  updatedBy users
+  collaborators collaborators [not null]
+  invitations invitations [not null]
+  gymClients gym_clients [not null]
+  membershipPlans gym_membership_plans [not null]
+  checkIns check_ins [not null]
+  evaluations evaluations [not null]
+  contracts contracts [not null]
+  leads leads [not null]
+  assets assets [not null]
+  productCategories product_categories [not null]
+  products products [not null]
+  suppliers suppliers [not null]
+  sales sales [not null]
+  stockMovements stock_movements [not null]
+}
+
+Table payment_methods {
+  id String [pk]
+  organizationId String [not null]
+  name String [not null]
+  description String
+  code String [not null]
+  enabled Boolean [not null, default: true]
+  metadata Json
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  organization organizations [not null]
+  createdBy users [not null]
+  updatedBy users
+  sales sales [not null]
+  contracts contracts [not null]
+
+  indexes {
+    (code, organizationId) [unique]
+  }
+}
+
+Table roles {
+  id String [pk]
+  name String [not null]
+  permissions Json [not null]
+  description String
+  canManageEvaluations Boolean [not null, default: false]
+  createdByUserId String
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  createdBy users
+  updatedBy users
+  collaborators collaborators [not null]
+  invitations invitations [not null]
+}
+
+Table collaborators {
+  id String [pk]
+  userId String [not null]
+  gymId String [not null]
+  roleId String [not null]
+  status CollaboratorStatus [not null]
+  hiredDate DateTime
+  invitationId String
+  profilePhotoId String
+  coverPhotoId String
+  description String
+  specialties Json
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  user users [not null]
+  gym gyms [not null]
+  role roles [not null]
+  invitation invitations
+  createdBy users [not null]
+  updatedBy users
+  advisedEvaluations evaluations [not null]
+}
+
+Table invitations {
+  id String [pk]
+  gymId String [not null]
+  email String [not null]
+  roleId String [not null]
+  token String [unique, not null]
+  status InvitationStatus [not null]
+  invitedByUserId String [not null]
+  expiresAt DateTime [not null]
+  acceptedByUserId String
+  acceptedAt DateTime
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gym gyms [not null]
+  role roles [not null]
+  invitedBy users [not null]
+  acceptedBy users
+  createdBy users [not null]
+  updatedBy users
+  collaborators collaborators [not null]
+}
+
+Table gym_clients {
+  id String [pk]
+  gymId String [not null]
+  clientNumber String [not null]
+  name String [not null]
+  birthDate DateTime
+  documentValue String
+  documentType String
+  phone String
+  email String
+  status ClientStatus [not null]
+  profilePhotoId String
+  documentFrontPhotoId String
+  documentBackPhotoId String
+  emergencyContactName String
+  emergencyContactPhone String
+  medicalConditions String
+  notes String
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gym gyms [not null]
+  createdBy users [not null]
+  updatedBy users
+  contracts contracts [not null]
+  checkIns check_ins [not null]
+  evaluations evaluations [not null]
+  convertedLeads leads [not null]
+  sales sales [not null]
+
+  indexes {
+    (gymId, clientNumber) [unique]
+    (gymId, documentValue) [unique]
+  }
+}
+
+Table gym_membership_plans {
+  id String [pk]
+  gymId String [not null]
+  name String [not null]
+  basePrice Decimal [not null]
+  durationMonths Int
+  durationDays Int
+  description String
+  features Json
+  termsAndConditions String
+  allowsCustomPricing Boolean [not null, default: false]
+  maxEvaluations Int [not null, default: 0]
+  includesAdvisor Boolean [not null, default: false]
+  showInCatalog Boolean [not null, default: false]
+  assetsIds String[] [not null]
+  status PlanStatus [not null]
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gym gyms [not null]
+  createdBy users [not null]
+  updatedBy users
+  contracts contracts [not null]
+}
+
+Table contracts {
+  id String [pk]
+  gymClientId String [not null]
+  gymMembershipPlanId String [not null]
+  paymentMethodId String [not null]
+  parentId String
+  startDate DateTime [not null]
+  endDate DateTime [not null]
+  basePrice Decimal [not null]
+  customPrice Decimal
+  finalAmount Decimal [not null]
+  currency String [not null]
+  discountPercentage Decimal
+  discountAmount Decimal
+  status ContractStatus [not null]
+  paymentFrequency PaymentFrequency [not null]
+  notes String
+  termsAndConditions String
+  freezeStartDate DateTime
+  freezeEndDate DateTime
+  contractDocumentId String
+  paymentReceiptIds Json
+  receiptIds String[] [not null]
+  createdByUserId String [not null]
+  updatedByUserId String
+  approvedByUserId String
+  approvedAt DateTime
+  cancelledByUserId String
+  cancelledAt DateTime
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gymClient gym_clients [not null]
+  gymMembershipPlan gym_membership_plans [not null]
+  paymentMethod payment_methods [not null]
+  parent contracts
+  renewals contracts [not null]
+  createdBy users [not null]
+  updatedBy users
+  approvedBy users
+  cancelledBy users
+  Gym gyms
+  gymId String
+}
+
+Table assets {
+  id String [pk]
+  filename String [not null]
+  originalName String [not null]
+  filePath String [not null]
+  fileSize Int [not null]
+  mimeType String [not null]
+  gymId String [not null]
+  uploadedByUserId String [not null]
+  metadata Json
+  status AssetStatus [not null]
+  description String
+  isHide Boolean [not null, default: false]
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gym gyms [not null]
+  uploadedBy users [not null]
+  createdBy users [not null]
+  updatedBy users
+}
+
+Table files {
+  id String [pk]
+  filename String [not null]
+  originalName String [not null]
+  filePath String [not null]
+  fileSize Int [not null]
+  mimeType String [not null]
+  userId String [not null]
+  metadata Json
+  status String [not null, default: 'active']
+  description String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  user users [not null]
+}
+
+Table check_ins {
+  id String [pk]
+  gymClientId String [not null]
+  gymId String [not null]
+  timestamp DateTime [default: `now()`, not null]
+  registeredByUserId String [not null]
+  notes String
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gymClient gym_clients [not null]
+  gym gyms [not null]
+  registeredBy users [not null]
+  createdBy users [not null]
+  updatedBy users
+}
+
+Table evaluations {
+  id String [pk]
+  gymClientId String [not null]
+  advisorId String
+  evaluationType EvaluationType [not null]
+  status EvaluationStatus [not null]
+  durationDays Int [not null]
+  plannedEndDate DateTime [not null]
+  actualEndDate DateTime
+  initialData Json
+  finalData Json
+  progressPercentage Decimal
+  goals String
+  resultsSummary String
+  initialPhotoIds Json
+  progressPhotoIds Json
+  finalPhotoIds Json
+  documentIds Json
+  createdByUserId String [not null]
+  updatedByUserId String
+  completedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gymClient gym_clients [not null]
+  advisor collaborators
+  createdBy users [not null]
+  updatedBy users
+  completedBy users
+  evaluationComments evaluation_comments [not null]
+  Gym gyms
+  gymId String
+}
+
+Table evaluation_comments {
+  id String [pk]
+  evaluationId String [not null]
+  commentType CommentType [not null]
+  comment String [not null]
+  isPrivate Boolean [not null, default: false]
+  attachmentIds Json
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  evaluation evaluations [not null]
+  createdBy users [not null]
+  updatedBy users
+}
+
+Table leads {
+  id String [pk]
+  gymId String [not null]
+  name String [not null]
+  email String [not null]
+  phone String [not null]
+  message String
+  source String
+  status LeadStatus [not null, default: 'NEW']
+  metadata Json
+  assignedToUserId String
+  notes String
+  assetId String
+  assetIds String[] [not null]
+  convertedToClientId String
+  convertedAt DateTime
+  createdByUserId String
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gym gyms [not null]
+  assignedTo users
+  convertedToClient gym_clients
+  createdBy users
+  updatedBy users
+}
+
+Table product_categories {
+  id String [pk]
+  gymId String [not null]
+  name String [not null]
+  description String
+  color String
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gym gyms [not null]
+  createdBy users [not null]
+  updatedBy users
+  products products [not null]
+}
+
+Table products {
+  id String [pk]
+  gymId String [not null]
+  categoryId String
+  name String [not null]
+  description String
+  price Decimal [not null]
+  stock Int
+  minStock Int
+  maxStock Int
+  imageId String
+  status ProductStatus [not null, default: 'active']
+  type ProductType [not null, default: 'Product']
+  trackInventory TrackInventory [not null, default: 'simple']
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gym gyms [not null]
+  category product_categories
+  createdBy users [not null]
+  updatedBy users
+  saleItems sale_items [not null]
+  stockMovements stock_movements [not null]
+}
+
+Table stock_movements {
+  id String [pk]
+  productId String [not null]
+  gymId String [not null]
+  type StockMovementType [not null]
+  quantity Int [not null]
+  previousStock Int
+  newStock Int
+  notes String
+  supplierId String
+  fileId String
+  createdByUserId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  product products [not null]
+  gym gyms [not null]
+  supplier suppliers
+  createdBy users [not null]
+}
+
+Table suppliers {
+  id String [pk]
+  gymId String [not null]
+  name String [not null]
+  contactInfo String
+  phone String
+  email String
+  address String
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gym gyms [not null]
+  createdBy users [not null]
+  updatedBy users
+  stockMovements stock_movements [not null]
+}
+
+Table sales {
+  id String [pk]
+  gymId String [not null]
+  customerId String
+  saleNumber String [not null]
+  total Decimal [not null]
+  paymentStatus PaymentStatus [not null, default: 'unpaid']
+  paymentMethodId String
+  saleDate DateTime [default: `now()`, not null]
+  customerName String
+  notes String
+  fileIds String[] [not null]
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  gym gyms [not null]
+  createdBy users [not null]
+  updatedBy users
+  paymentMethod payment_methods
+  customer gym_clients
+  saleItems sale_items [not null]
+
+  indexes {
+    (gymId, saleNumber) [unique]
+  }
+}
+
+Table sale_items {
+  id String [pk]
+  saleId String [not null]
+  productId String [not null]
+  quantity Int [not null]
+  unitPrice Decimal [not null]
+  total Decimal [not null]
+  createdByUserId String [not null]
+  updatedByUserId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  sale sales [not null]
+  product products [not null]
+  createdBy users [not null]
+  updatedBy users
+}
+
+Enum UserType {
+  owner
+  collaborator
+}
+
+Enum SubscriptionStatus {
+  active
+  inactive
+  expired
+  paused
+  pending_upgrade
+}
+
+Enum CollaboratorStatus {
+  pending
+  active
+  inactive
+}
+
+Enum InvitationStatus {
+  pending
+  accepted
+  expired
+}
+
+Enum ClientStatus {
+  active
+  inactive
+}
+
+Enum PlanStatus {
+  active
+  inactive
+  archived
+}
+
+Enum ContractStatus {
+  pending
+  active
+  expiring_soon
+  expired
+  frozen
+  cancelled
+  for_renew
+}
+
+Enum PaymentFrequency {
+  monthly
+  quarterly
+  annual
+}
+
+Enum AssetStatus {
+  active
+  deleted
+}
+
+Enum EvaluationType {
+  initial
+  progress
+  final
+}
+
+Enum EvaluationStatus {
+  open
+  in_progress
+  completed
+  cancelled
+}
+
+Enum CommentType {
+  progress_note
+  phone_call
+  meeting
+  reminder
+  other
+}
+
+Enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  CONVERTED
+  LOST
+}
+
+Enum ProductStatus {
+  active
+  inactive
+}
+
+Enum PaymentStatus {
+  paid
+  unpaid
+}
+
+Enum DurationPeriod {
+  DAY
+  MONTH
+}
+
+Enum ProductType {
+  Product
+  Service
+}
+
+Enum TrackInventory {
+  none
+  simple
+  advanced
+  capacity
+}
+
+Enum StockMovementType {
+  manual_entry
+  sale
+  return
+  adjustment
+  initial_stock
+}
+
+Ref: subscription_plans.createdByUserId > users.id
+
+Ref: subscription_plans.updatedByUserId > users.id
+
+Ref: subscription_organizations.organizationId > organizations.id
+
+Ref: subscription_organizations.subscriptionPlanId > subscription_plans.id
+
+Ref: subscription_organizations.createdByUserId > users.id
+
+Ref: subscription_organizations.updatedByUserId > users.id
+
+Ref: users.createdByUserId - users.id
+
+Ref: users.updatedByUserId - users.id
+
+Ref: organizations.ownerUserId > users.id
+
+Ref: organizations.createdByUserId > users.id
+
+Ref: organizations.updatedByUserId > users.id
+
+Ref: gyms.organizationId > organizations.id
+
+Ref: gyms.createdByUserId > users.id
+
+Ref: gyms.updatedByUserId > users.id
+
+Ref: payment_methods.organizationId > organizations.id
+
+Ref: payment_methods.createdByUserId > users.id
+
+Ref: payment_methods.updatedByUserId > users.id
+
+Ref: roles.createdByUserId > users.id
+
+Ref: roles.updatedByUserId > users.id
+
+Ref: collaborators.userId > users.id
+
+Ref: collaborators.gymId > gyms.id
+
+Ref: collaborators.roleId > roles.id
+
+Ref: collaborators.invitationId > invitations.id
+
+Ref: collaborators.createdByUserId > users.id
+
+Ref: collaborators.updatedByUserId > users.id
+
+Ref: invitations.gymId > gyms.id
+
+Ref: invitations.roleId > roles.id
+
+Ref: invitations.invitedByUserId > users.id
+
+Ref: invitations.acceptedByUserId > users.id
+
+Ref: invitations.createdByUserId > users.id
+
+Ref: invitations.updatedByUserId > users.id
+
+Ref: gym_clients.gymId > gyms.id
+
+Ref: gym_clients.createdByUserId > users.id
+
+Ref: gym_clients.updatedByUserId > users.id
+
+Ref: gym_membership_plans.gymId > gyms.id
+
+Ref: gym_membership_plans.createdByUserId > users.id
+
+Ref: gym_membership_plans.updatedByUserId > users.id
+
+Ref: contracts.gymClientId > gym_clients.id
+
+Ref: contracts.gymMembershipPlanId > gym_membership_plans.id
+
+Ref: contracts.paymentMethodId > payment_methods.id
+
+Ref: contracts.parentId - contracts.id
+
+Ref: contracts.createdByUserId > users.id
+
+Ref: contracts.updatedByUserId > users.id
+
+Ref: contracts.approvedByUserId > users.id
+
+Ref: contracts.cancelledByUserId > users.id
+
+Ref: contracts.gymId > gyms.id
+
+Ref: assets.gymId > gyms.id
+
+Ref: assets.uploadedByUserId > users.id
+
+Ref: assets.createdByUserId > users.id
+
+Ref: assets.updatedByUserId > users.id
+
+Ref: files.userId > users.id
+
+Ref: check_ins.gymClientId > gym_clients.id
+
+Ref: check_ins.gymId > gyms.id
+
+Ref: check_ins.registeredByUserId > users.id
+
+Ref: check_ins.createdByUserId > users.id
+
+Ref: check_ins.updatedByUserId > users.id
+
+Ref: evaluations.gymClientId > gym_clients.id
+
+Ref: evaluations.advisorId > collaborators.id
+
+Ref: evaluations.createdByUserId > users.id
+
+Ref: evaluations.updatedByUserId > users.id
+
+Ref: evaluations.completedByUserId > users.id
+
+Ref: evaluations.gymId > gyms.id
+
+Ref: evaluation_comments.evaluationId > evaluations.id
+
+Ref: evaluation_comments.createdByUserId > users.id
+
+Ref: evaluation_comments.updatedByUserId > users.id
+
+Ref: leads.gymId > gyms.id
+
+Ref: leads.assignedToUserId > users.id
+
+Ref: leads.convertedToClientId > gym_clients.id
+
+Ref: leads.createdByUserId > users.id
+
+Ref: leads.updatedByUserId > users.id
+
+Ref: product_categories.gymId > gyms.id
+
+Ref: product_categories.createdByUserId > users.id
+
+Ref: product_categories.updatedByUserId > users.id
+
+Ref: products.gymId > gyms.id
+
+Ref: products.categoryId > product_categories.id
+
+Ref: products.createdByUserId > users.id
+
+Ref: products.updatedByUserId > users.id
+
+Ref: stock_movements.productId > products.id
+
+Ref: stock_movements.gymId > gyms.id
+
+Ref: stock_movements.supplierId > suppliers.id
+
+Ref: stock_movements.createdByUserId > users.id
+
+Ref: suppliers.gymId > gyms.id
+
+Ref: suppliers.createdByUserId > users.id
+
+Ref: suppliers.updatedByUserId > users.id
+
+Ref: sales.gymId > gyms.id
+
+Ref: sales.createdByUserId > users.id
+
+Ref: sales.updatedByUserId > users.id
+
+Ref: sales.paymentMethodId > payment_methods.id
+
+Ref: sales.customerId > gym_clients.id
+
+Ref: sale_items.saleId > sales.id
+
+Ref: sale_items.productId > products.id
+
+Ref: sale_items.createdByUserId > users.id
+
+Ref: sale_items.updatedByUserId > users.id

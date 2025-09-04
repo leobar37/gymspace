@@ -62,6 +62,14 @@ export class ClientsController {
     return await this.clientsService.toggleClientStatus(ctx, id);
   }
 
+  @Get('stats/available')
+  @Allow(PERMISSIONS.CLIENTS_READ)
+  @ApiOperation({ summary: 'Get available statistics definitions' })
+  @ApiResponse({ status: 200, description: 'Available statistics definitions' })
+  async getAvailableStats(@AppCtxt() ctx: RequestContext) {
+    return await this.clientsService.getAvailableStats();
+  }
+
   @Get(':id/stats')
   @Allow(PERMISSIONS.CLIENTS_READ)
   @ApiOperation({ summary: 'Get client statistics' })
@@ -69,6 +77,32 @@ export class ClientsController {
   @ApiResponse({ status: 404, description: 'Client not found' })
   async getClientStats(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.clientsService.getClientStats(ctx, id);
+  }
+
+  @Get(':id/stats/:statKey')
+  @Allow(PERMISSIONS.CLIENTS_READ)
+  @ApiOperation({ summary: 'Get individual client statistic' })
+  @ApiResponse({ status: 200, description: 'Client statistic' })
+  @ApiResponse({ status: 404, description: 'Client or statistic not found' })
+  async getClientStat(
+    @Param('id') id: string,
+    @Param('statKey') statKey: string,
+    @AppCtxt() ctx: RequestContext,
+  ) {
+    return await this.clientsService.getClientStat(ctx, id, statKey);
+  }
+
+  @Get(':id/stats/category/:category')
+  @Allow(PERMISSIONS.CLIENTS_READ)
+  @ApiOperation({ summary: 'Get client statistics by category' })
+  @ApiResponse({ status: 200, description: 'Client statistics by category' })
+  @ApiResponse({ status: 404, description: 'Client not found' })
+  async getClientStatsByCategory(
+    @Param('id') id: string,
+    @Param('category') category: string,
+    @AppCtxt() ctx: RequestContext,
+  ) {
+    return await this.clientsService.getClientStatsByCategory(ctx, id, category);
   }
 
   @Get('search/check-in')
