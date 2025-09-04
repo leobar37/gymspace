@@ -11,11 +11,19 @@ docker build -t gymspace-api-test -f packages/api/Dockerfile .
 
 echo "🧪 Testing Docker image with Doppler token..."
 
+# Check if DOPPLER_TOKEN is set
+if [ -z "$DOPPLER_TOKEN" ]; then
+    echo "❌ DOPPLER_TOKEN environment variable is not set"
+    echo "   Please set it before running this script:"
+    echo "   export DOPPLER_TOKEN=your_token_here"
+    exit 1
+fi
+
 # Run the container with Doppler token to test
 docker run -d \
   --name gymspace-api-test \
   -p 5200:5200 \
-  -e DOPPLER_TOKEN="dp.st.stg.ND5UlLAuMM6dhTh8yl0sfOPZFduFAv7C83sn7qIQCMp" \
+  -e DOPPLER_TOKEN="$DOPPLER_TOKEN" \
   gymspace-api-test
 
 # Wait a bit for startup
