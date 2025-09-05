@@ -433,13 +433,7 @@ export default function ContractsList() {
               <View className="w-14 h-14 items-center justify-center">
                 <Icon as={PlusIcon} className="text-white w-7 h-7" />
               </View>
-            ) : (
-              // Extended FAB when empty
-              <HStack className="items-center px-5 py-4" space="sm">
-                <Icon as={PlusIcon} className="text-white w-6 h-6" />
-                <Text className="text-white font-semibold text-base pr-1">Nuevo Contrato</Text>
-              </HStack>
-            )}
+            ) : null}
           </Pressable>
         </View>
       </VStack>

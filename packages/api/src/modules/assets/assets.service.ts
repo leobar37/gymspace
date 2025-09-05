@@ -157,14 +157,25 @@ export class AssetsService {
   async download(context: IRequestContext, id: string) {
     const asset = await this.findOne(context, id);
 
-    const stream = await this.storageService.download(asset.filePath);
+    try {
+      const stream = await this.storageService.download(asset.filePath);
 
-    return {
-      stream,
-      filename: asset.originalName,
-      mimeType: asset.mimeType,
-      fileSize: asset.fileSize,
-    };
+      return {
+        stream,
+        filename: asset.originalName,
+        mimeType: asset.mimeType,
+        fileSize: asset.fileSize,
+      };
+    } catch (error: any) {
+      console.error(`Failed to download asset ${id}:`, {
+        assetId: id,
+        filePath: asset.filePath,
+        error: error.message,
+      });
+      
+      // Re-throw with context
+      throw new Error(`Failed to download asset: ${error.message}`);
+    }
   }
 
   /**

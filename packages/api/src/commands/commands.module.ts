@@ -4,6 +4,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 // Commands
 import { SetupDefaultUserCommand } from './setup-default-user.command';
 import { TestCommand } from './test.command';
+import { SeedContractsTestCommand } from './seed-contracts-test.command';
 
 // Core modules
 import { AuthModule } from '../core/auth/auth.module';
@@ -68,6 +69,6 @@ import validationSchema from '../config/validation.schema';
     DashboardModule,
     ProductsModule,
   ],
-  providers: [SetupDefaultUserCommand, TestCommand],
+  providers: [SetupDefaultUserCommand, TestCommand, SeedContractsTestCommand],
 })
 export class CommandsModule {}

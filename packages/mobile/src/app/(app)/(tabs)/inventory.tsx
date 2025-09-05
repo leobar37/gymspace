@@ -50,7 +50,7 @@ export default function InventoryScreen() {
   const handleServices = () => {
     router.push('/inventory/services');
   };
-  
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -65,26 +65,7 @@ export default function InventoryScreen() {
               </VStack>
             </Pressable>
           </Card>
-
-          {/* Quick Stats Cards */}
-          <HStack space="sm" className="flex-1">
-            <Card className="flex-1 bg-green-50 border-green-200">
-              <VStack space="xs" className="p-4 items-center">
-                <Icon as={TrendingUpIcon} className="w-8 h-8 text-green-600" />
-                <Text className="text-green-800 text-lg font-bold">{formatPrice(2450)}</Text>
-                <Text className="text-green-600 text-xs text-center">Ventas del día</Text>
-              </VStack>
-            </Card>
-
-            <Card className="flex-1 bg-orange-50 border-orange-200">
-              <VStack space="xs" className="p-4 items-center">
-                <Icon as={AlertTriangleIcon} className="w-8 h-8 text-orange-600" />
-                <Text className="text-orange-800 text-lg font-bold">5</Text>
-                <Text className="text-orange-600 text-xs text-center">Stock bajo</Text>
-              </VStack>
-            </Card>
-          </HStack>
-
+          
           {/* Main Actions Grid */}
           <VStack space="sm">
             <Text className="text-gray-800 text-lg font-semibold">Gestión de Inventario</Text>

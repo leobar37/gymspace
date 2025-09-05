@@ -36,6 +36,8 @@ export class AuthService {
    * Validate JWT token and return user
    */
   async validateToken(token: string): Promise<any> {
+
+    
     try {
       // Verify token with Supabase
       const supabaseUser = await this.supabaseService.verifyToken(token);

@@ -23,17 +23,20 @@ import type { Product, CreateProductDto, UpdateProductDto } from '@gymspace/sdk'
 
 // Zod validation schema
 const productFormSchema = z.object({
-  name: z.string()
+  name: z
+    .string()
     .min(1, 'El nombre es requerido')
     .min(3, 'El nombre debe tener al menos 3 caracteres'),
   description: z.string().optional(),
-  price: z.string()
+  price: z
+    .string()
     .min(1, 'El precio es requerido')
     .refine((val) => {
       const price = parseFloat(val);
       return !isNaN(price) && price >= 0;
     }, 'El precio debe ser un número válido mayor o igual a 0'),
-  stock: z.string()
+  stock: z
+    .string()
     .min(1, 'El stock es requerido')
     .refine((val) => {
       const stock = parseInt(val);
@@ -41,7 +44,7 @@ const productFormSchema = z.object({
     }, 'El stock debe ser un número entero mayor o igual a 0'),
   categoryId: z.string().min(1, 'La categoría es requerida'),
   isActive: z.boolean(),
-  imageId: z.string().nullable().optional()
+  imageId: z.string().nullable().optional(),
 });
 
 type FormData = z.infer<typeof productFormSchema>;
@@ -76,7 +79,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
     control,
     handleSubmit,
     watch,
-    formState: { errors, isDirty, isValid }
+    formState: { errors, isDirty, isValid },
   } = methods;
 
   const handleFormSubmit = handleSubmit(async (data) => {
@@ -96,10 +99,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
       await onSubmit(submitData);
     } catch (error) {
       console.error('Error submitting product form:', error);
-      Alert.alert(
-        'Error',
-        'No se pudo guardar el producto. Por favor intenta nuevamente.'
-      );
+      Alert.alert('Error', 'No se pudo guardar el producto. Por favor intenta nuevamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -111,18 +111,13 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
 
   const actions = (
     <HStack space="md">
-      <Button
-        variant="outline"
-        onPress={onCancel}
-        disabled={isFormLoading}
-        className="flex-1"
-      >
+      <Button variant="outline" onPress={onCancel} disabled={isFormLoading} className="flex-1">
         <Icon as={XIcon} className="w-4 h-4 text-gray-600 mr-2" />
         <ButtonText className="text-gray-600">Cancelar</ButtonText>
       </Button>
       <Button
         onPress={handleFormSubmit}
-        isDisabled={product ? (isFormLoading || !isDirty || !isValid) : (isFormLoading || !isValid)}
+        isDisabled={product ? isFormLoading || !isDirty || !isValid : isFormLoading || !isValid}
         className="flex-1"
       >
         {isFormLoading ? (
@@ -144,14 +139,17 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
 
   return (
     <FormProvider {...methods}>
-      <ScreenForm showFixedFooter={true} footerContent={actions}>
+      <ScreenForm
+        showFixedFooter={true}
+        showBackButton={false}
+        useSafeArea={false}
+        footerContent={actions}
+      >
         <VStack space="lg">
           {/* Basic Information */}
           <Card className="bg-white border border-gray-200">
             <VStack space="md" className="p-4">
-              <Text className="text-lg font-semibold text-gray-900">
-                Información Básica
-              </Text>
+              <Text className="text-lg font-semibold text-gray-900">Información Básica</Text>
 
               {/* Product Name */}
               <FormInput
@@ -184,9 +182,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
           {/* Pricing and Stock */}
           <Card className="bg-white border border-gray-200">
             <VStack space="md" className="p-4">
-              <Text className="text-lg font-semibold text-gray-900">
-                Precio e Inventario
-              </Text>
+              <Text className="text-lg font-semibold text-gray-900">Precio e Inventario</Text>
 
               <HStack space="md">
                 {/* Price */}
@@ -205,7 +201,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
                   <FormInput
                     name="stock"
                     control={control}
-                    label="Stock *"
+                    label="Stock inicial*"
                     placeholder="0"
                     keyboardType="number-pad"
                   />
@@ -216,9 +212,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
               {priceValue && !errors.price && (
                 <Card className="bg-blue-50 border-blue-200">
                   <HStack className="p-3 justify-between items-center">
-                    <Text className="text-sm text-blue-700">
-                      Precio formateado:
-                    </Text>
+                    <Text className="text-sm text-blue-700">Precio formateado:</Text>
                     <Text className="text-lg font-bold text-blue-900">
                       {formatPrice(parseFloat(priceValue))}
                     </Text>
@@ -231,18 +225,18 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
           {/* Additional Settings */}
           <Card className="bg-white border border-gray-200">
             <VStack space="md" className="p-4">
-              <Text className="text-lg font-semibold text-gray-900">
-                Configuración Adicional
-              </Text>
+              <Text className="text-lg font-semibold text-gray-900">Configuración Adicional</Text>
 
               {/* Status */}
               <FormSwitch
                 name="isActive"
                 control={control}
                 label="Estado del Producto"
-                description={isActiveValue
-                  ? 'El producto está disponible para la venta'
-                  : 'El producto no está disponible para la venta'}
+                description={
+                  isActiveValue
+                    ? 'El producto está disponible para la venta'
+                    : 'El producto no está disponible para la venta'
+                }
               />
 
               {/* Image Selector */}

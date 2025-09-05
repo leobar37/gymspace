@@ -55,7 +55,11 @@ export class ContractStatusHelper {
       ? { gymClient: { gymId }, deletedAt: null }
       : { deletedAt: null };
 
-    // Find contracts that should be expired
+    let expiredCount = 0;
+    let renewalsActivated = 0;
+    const errors: Array<{ contractId: string; error: string }> = [];
+
+    // Step 1: Find and expire contracts that should be expired
     const contractsToExpire = await this.prismaService.contract.findMany({
       where: {
         ...baseWhere,
@@ -70,8 +74,48 @@ export class ContractStatusHelper {
         id: true,
         status: true,
         endDate: true,
+      },
+    });
+
+    // Expire these contracts
+    for (const contract of contractsToExpire) {
+      try {
+        await this.prismaService.contract.update({
+          where: { id: contract.id },
+          data: {
+            status: ContractStatus.expired,
+            updatedAt: today,
+          },
+        });
+        expiredCount++;
+        this.logger.log(`Contract ${contract.id} marked as expired`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        errors.push({
+          contractId: contract.id,
+          error: errorMessage,
+        });
+        this.logger.error(`Failed to expire contract ${contract.id}: ${errorMessage}`);
+      }
+    }
+
+    // Step 2: Find all expired contracts with pending renewals and activate them
+    const expiredContractsWithRenewals = await this.prismaService.contract.findMany({
+      where: {
+        ...baseWhere,
+        status: ContractStatus.expired,
+        renewals: {
+          some: {
+            status: ContractStatus.pending,
+            deletedAt: null,
+          },
+        },
+      },
+      select: {
+        id: true,
         renewals: {
           where: {
+            status: ContractStatus.pending,
             deletedAt: null,
           },
           orderBy: {
@@ -87,56 +131,37 @@ export class ContractStatusHelper {
       },
     });
 
-    let expiredCount = 0;
-    let renewalsActivated = 0;
-    const errors: Array<{ contractId: string; error: string }> = [];
-
-    // Process each contract individually
-    for (const contract of contractsToExpire) {
+    // Process renewals for expired contracts
+    for (const contract of expiredContractsWithRenewals) {
       try {
-        await this.prismaService.$transaction(async (prisma) => {
-          // Update contract to expired
-          await prisma.contract.update({
-            where: { id: contract.id },
+        const renewal = contract.renewals[0];
+        if (renewal && renewal.finalAmount && Number(renewal.finalAmount) > 0) {
+          // Activate the renewal (it already has its dates set)
+          await this.prismaService.contract.update({
+            where: { id: renewal.id },
             data: {
-              status: ContractStatus.expired,
+              status: ContractStatus.active,
               updatedAt: today,
             },
           });
-          expiredCount++;
-
-          // Check if there's a renewal to activate
-          const renewal = contract.renewals[0];
-          if (renewal && renewal.finalAmount && Number(renewal.finalAmount) > 0) {
-            // Activate the renewal (it already has its dates set)
-            await prisma.contract.update({
-              where: { id: renewal.id },
-              data: {
-                status: ContractStatus.active,
-                updatedAt: today,
-              },
-            });
-            renewalsActivated++;
-            
-            this.logger.log(
-              `Contract ${contract.id} expired and renewal ${renewal.id} activated`
-            );
-          } else if (renewal) {
-            this.logger.log(
-              `Contract ${contract.id} expired but renewal ${renewal.id} not activated (no payment)`
-            );
-          } else {
-            this.logger.log(`Contract ${contract.id} expired without renewal`);
-          }
-        });
+          renewalsActivated++;
+          
+          this.logger.log(
+            `Renewal ${renewal.id} activated for expired contract ${contract.id}`
+          );
+        } else if (renewal) {
+          this.logger.log(
+            `Renewal ${renewal.id} for contract ${contract.id} not activated (no payment)`
+          );
+        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         errors.push({
           contractId: contract.id,
-          error: errorMessage,
+          error: `Failed to activate renewal: ${errorMessage}`,
         });
         this.logger.error(
-          `Failed to process contract ${contract.id}: ${errorMessage}`
+          `Failed to process renewal for contract ${contract.id}: ${errorMessage}`
         );
       }
     }

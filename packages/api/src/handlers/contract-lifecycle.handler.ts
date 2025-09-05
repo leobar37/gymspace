@@ -8,6 +8,44 @@ import type { EventPayload } from 'inngest';
  * 1. Updates contracts approaching expiration to expiring_soon status
  * 2. Processes expired contracts and activates their renewals
  * 3. Reactivates frozen contracts when freeze period ends
+ * 
+ * Expected Output Structure:
+ * {
+ *   "success": true,
+ *   "timestamp": "2025-09-04T17:59:46.602Z",
+ *   "expiringSoon": {
+ *     "processed": true,
+ *     "count": 1  // Contracts marked as expiring_soon
+ *   },
+ *   "expired": {
+ *     "processed": true,
+ *     "expiredCount": 2,  // Contracts marked as expired
+ *     "renewalsActivated": 1,  // Renewals activated (with payment)
+ *     "errors": []
+ *   },
+ *   "frozen": {
+ *     "processed": true,
+ *     "reactivatedCount": 1,  // Frozen contracts reactivated
+ *     "stillFrozenCount": 1,  // Frozen contracts still frozen
+ *     "errors": []
+ *   },
+ *   "finalStats": {
+ *     "active": 5,
+ *     "expiringSoon": 1,
+ *     "expired": 3,
+ *     "needsUpdate": {
+ *       "expiringSoon": 0,
+ *       "expired": 0,
+ *       "total": 0
+ *     },
+ *     "total": 10
+ *   }
+ * }
+ * 
+ * To test this handler:
+ * 1. Run: pnpm run cli seed:contracts:test (creates test scenarios)
+ * 2. Run: pnpm run cli trigger:contract:lifecycle (execute handler manually)
+ * 3. Verify the output matches expected results
  */
 export const contractLifecycleHandler = createCronHandler(
   {

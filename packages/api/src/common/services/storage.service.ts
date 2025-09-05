@@ -123,25 +123,43 @@ export class StorageService implements OnModuleInit {
   }
 
   async download(key: string): Promise<Readable> {
-    const params: GetObjectCommandInput = {
-      Bucket: this.bucket,
-      Key: key,
-    };
+    try {
+      const params: GetObjectCommandInput = {
+        Bucket: this.bucket,
+        Key: key,
+      };
 
-    const command = new GetObjectCommand(params);
-    const response = await this.s3Client.send(command);
+      const command = new GetObjectCommand(params);
+      const response = await this.s3Client.send(command);
 
-    // The Body in SDK v3 is already a readable stream
-    if (response.Body instanceof Readable) {
-      return response.Body;
+      // The Body in SDK v3 is already a readable stream
+      if (response.Body instanceof Readable) {
+        return response.Body;
+      }
+
+      // For environments where Body might be a web stream or buffer
+      const chunks: Uint8Array[] = [];
+      for await (const chunk of response.Body as any) {
+        chunks.push(chunk);
+      }
+      return Readable.from(Buffer.concat(chunks));
+    } catch (error: any) {
+      console.error('Error downloading from S3:', {
+        bucket: this.bucket,
+        key,
+        error: error.message,
+        name: error.name,
+        code: error.Code,
+        statusCode: error.$metadata?.httpStatusCode,
+      });
+      
+      // Re-throw with more context
+      if (error.name === 'NoSuchKey' || error.Code === 'NoSuchKey') {
+        throw new Error(`File not found in storage: ${key}`);
+      }
+      
+      throw error;
     }
-
-    // For environments where Body might be a web stream or buffer
-    const chunks: Uint8Array[] = [];
-    for await (const chunk of response.Body as any) {
-      chunks.push(chunk);
-    }
-    return Readable.from(Buffer.concat(chunks));
   }
 
   async delete(key: string): Promise<void> {

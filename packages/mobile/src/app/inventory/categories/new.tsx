@@ -1,45 +1,38 @@
 import React from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
-import { useToast } from '@/components/ui/toast';
 import { router } from 'expo-router';
 import { CategoryForm } from '@/features/categories/components/CategoryForm';
 import { useCategoriesController } from '@/features/categories/controllers/categories.controller';
 import { CategoryFormData } from '@/features/categories/controllers/categories.controller';
+import { useLoadingScreen } from '@/shared/loading-screen';
 
 export default function NewCategoryScreen() {
-  const toast = useToast();
+  const { execute } = useLoadingScreen();
   const { createCategory, isCreating } = useCategoriesController();
 
   const handleSubmit = async (data: CategoryFormData) => {
-    try {
-      await createCategory(data);
-      toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <View className="bg-green-500 px-4 py-3 rounded-lg">
-            <Text className="text-white font-medium">
-              Categoría creada exitosamente
-            </Text>
-          </View>
-        ),
-      });
-      router.back();
-    } catch (error: any) {
-      toast.show({
-        placement: "top",
-        render: ({ id }) => (
-          <View className="bg-red-500 px-4 py-3 rounded-lg">
-            <Text className="text-white font-medium">
-              {error?.message || 'Error al crear la categoría'}
-            </Text>
-          </View>
-        ),
-      });
-    }
+    await execute(
+      createCategory(data),
+      {
+        action: 'Creando categoría...',
+        successMessage: 'Categoría creada exitosamente',
+        successActions: [
+          {
+            label: 'Ver categorías',
+            onPress: () => router.back(),
+            variant: 'solid',
+          },
+        ],
+        errorFormatter: (error: any) => error?.message || 'Error al crear la categoría',
+        onSuccess: () => {
+          router.back();
+        },
+      }
+    );
   };
 
   return (
