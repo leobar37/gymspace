@@ -1,75 +1,65 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  S3Client,
-  HeadBucketCommand,
-  CreateBucketCommand,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-  HeadObjectCommand,
-  PutObjectCommandInput,
-  GetObjectCommandInput,
-  DeleteObjectCommandInput,
-  HeadObjectCommandInput,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Readable } from 'stream';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
-  private s3Client: S3Client;
-  private bucket: string = 'assets'; // Fixed bucket name for assets
+  private supabase: SupabaseClient;
+  private bucket: string = 'gymspace-assets'; // Fixed bucket name for assets
 
   constructor(private readonly configService: ConfigService) {
-    this.s3Client = new S3Client({
-      endpoint: this.configService.get('s3.endpoint'),
-      region: this.configService.get('s3.region') || 'us-east-1',
-      credentials: {
-        accessKeyId: this.configService.get('s3.accessKey'),
-        secretAccessKey: this.configService.get('s3.secretKey'),
+    const supabaseUrl = this.configService.get('supabase.url');
+    const supabaseKey = this.configService.get('supabase.serviceKey');
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(
+        'Supabase configuration is missing. Please check SUPABASE_URL and SUPABASE_SERVICE_KEY environment variables.',
+      );
+    }
+
+    this.supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
-      forcePathStyle: true, // Required for MinIO
     });
   }
 
   async onModuleInit() {
-    // Ensure the assets bucket exists
+    // Ensure the storage bucket exists
     await this.ensureBucketExists();
   }
 
   private async ensureBucketExists(): Promise<void> {
     try {
-      const command = new HeadBucketCommand({ Bucket: this.bucket });
-      await this.s3Client.send(command);
-      console.log(`Bucket "${this.bucket}" already exists`);
-    } catch (error: any) {
-      if (
-        error.name === 'NotFound' ||
-        error.name === 'NoSuchBucket' ||
-        error.$metadata?.httpStatusCode === 404
-      ) {
-        try {
-          console.log(`Creating bucket "${this.bucket}"...`);
-          const createCommand = new CreateBucketCommand({ Bucket: this.bucket });
-          await this.s3Client.send(createCommand);
-          console.log(`Bucket "${this.bucket}" created successfully`);
-        } catch (createError: any) {
-          // Bucket might already exist (race condition) or creation failed
-          if (
-            createError.name === 'BucketAlreadyExists' ||
-            createError.name === 'BucketAlreadyOwnedByYou'
-          ) {
-            console.log(`Bucket "${this.bucket}" already exists (race condition)`);
-          } else {
-            console.error(`Error creating bucket "${this.bucket}":`, createError);
-            throw createError;
-          }
+      // Check if bucket exists by trying to list objects (limited to 1)
+      const { error } = await this.supabase.storage
+        .from(this.bucket)
+        .list('', { limit: 1 });
+
+      if (error && error.message.includes('not found')) {
+        console.log(`Creating bucket "${this.bucket}"...`);
+        const { error: createError } = await this.supabase.storage.createBucket(this.bucket, {
+          public: false,
+          allowedMimeTypes: ['*/*'],
+        });
+
+        if (createError && !createError.message.includes('already exists')) {
+          console.error(`Error creating bucket "${this.bucket}":`, createError);
+          throw createError;
         }
-      } else {
+        
+        console.log(`Bucket "${this.bucket}" created successfully`);
+      } else if (error) {
         console.error(`Error checking bucket "${this.bucket}":`, error);
         throw error;
+      } else {
+        console.log(`Bucket "${this.bucket}" already exists`);
       }
+    } catch (error: any) {
+      console.error(`Unexpected error with bucket "${this.bucket}":`, error);
+      throw error;
     }
   }
 
@@ -91,22 +81,33 @@ export class StorageService implements OnModuleInit {
         });
       }
 
-      const params: PutObjectCommandInput = {
-        Bucket: this.bucket,
-        Key: key,
-        Body: data,
-        ContentType: options?.contentType || 'application/octet-stream',
-        Metadata: sanitizedMetadata,
-      };
+      const { data: uploadData, error } = await this.supabase.storage
+        .from(this.bucket)
+        .upload(key, data, {
+          contentType: options?.contentType || 'application/octet-stream',
+          metadata: sanitizedMetadata,
+          upsert: true, // Allow overwriting existing files
+        });
 
-      const command = new PutObjectCommand(params);
-      const result = await this.s3Client.send(command);
+      if (error) {
+        console.error('Upload failed:', {
+          key,
+          bucket: this.bucket,
+          error: error.message,
+          errorName: error.name,
+        });
+        throw error;
+      }
 
-      // Return a response similar to the old SDK for compatibility
-      const endpoint = this.configService.get('s3.endpoint');
+      // Get the public URL or signed URL for the uploaded file
+      const { data: urlData } = this.supabase.storage
+        .from(this.bucket)
+        .getPublicUrl(key);
+
+      // Return a response similar to S3 SDK for compatibility
       return {
-        Location: `${endpoint}/${this.bucket}/${key}`,
-        ETag: result.ETag || '',
+        Location: urlData.publicUrl,
+        ETag: uploadData.id || '', // Use the ID as ETag equivalent
         Key: key,
         Bucket: this.bucket,
       };
@@ -115,8 +116,6 @@ export class StorageService implements OnModuleInit {
         key,
         bucket: this.bucket,
         error: error.message,
-        errorName: error.name,
-        metadata: error.$metadata,
       });
       throw error;
     }
@@ -124,39 +123,39 @@ export class StorageService implements OnModuleInit {
 
   async download(key: string): Promise<Readable> {
     try {
-      const params: GetObjectCommandInput = {
-        Bucket: this.bucket,
-        Key: key,
-      };
+      const { data, error } = await this.supabase.storage
+        .from(this.bucket)
+        .download(key);
 
-      const command = new GetObjectCommand(params);
-      const response = await this.s3Client.send(command);
-
-      // The Body in SDK v3 is already a readable stream
-      if (response.Body instanceof Readable) {
-        return response.Body;
+      if (error) {
+        console.error('Error downloading from Supabase Storage:', {
+          bucket: this.bucket,
+          key,
+          error: error.message,
+          name: error.name,
+        });
+        
+        // Re-throw with more context
+        if (error.message.includes('not found') || error.message.includes('does not exist')) {
+          throw new Error(`File not found in storage: ${key}`);
+        }
+        
+        throw error;
       }
 
-      // For environments where Body might be a web stream or buffer
-      const chunks: Uint8Array[] = [];
-      for await (const chunk of response.Body as any) {
-        chunks.push(chunk);
+      if (!data) {
+        throw new Error(`File not found in storage: ${key}`);
       }
-      return Readable.from(Buffer.concat(chunks));
+
+      // Convert Blob to Buffer and then to Readable stream
+      const buffer = Buffer.from(await data.arrayBuffer());
+      return Readable.from(buffer);
     } catch (error: any) {
-      console.error('Error downloading from S3:', {
+      console.error('Error downloading from Supabase Storage:', {
         bucket: this.bucket,
         key,
         error: error.message,
-        name: error.name,
-        code: error.Code,
-        statusCode: error.$metadata?.httpStatusCode,
       });
-      
-      // Re-throw with more context
-      if (error.name === 'NoSuchKey' || error.Code === 'NoSuchKey') {
-        throw new Error(`File not found in storage: ${key}`);
-      }
       
       throw error;
     }
@@ -164,52 +163,111 @@ export class StorageService implements OnModuleInit {
 
   async delete(key: string): Promise<void> {
     try {
-      const params: DeleteObjectCommandInput = {
-        Bucket: this.bucket,
-        Key: key,
-      };
+      const { error } = await this.supabase.storage
+        .from(this.bucket)
+        .remove([key]);
 
-      const command = new DeleteObjectCommand(params);
-      await this.s3Client.send(command);
-    } catch (error: any) {
-      // S3/MinIO doesn't return an error when deleting a non-existent object in some configurations,
-      // but we'll handle it gracefully if it does
-      if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
-        // Object doesn't exist, which is fine for delete operations
-        console.log(`Object ${key} not found, considering it already deleted`);
-        return;
+      if (error) {
+        // Supabase doesn't return an error when deleting a non-existent object,
+        // but we'll handle it gracefully if it does
+        if (error.message.includes('not found') || error.message.includes('does not exist')) {
+          console.log(`Object ${key} not found, considering it already deleted`);
+          return;
+        }
+        throw error;
       }
+    } catch (error: any) {
+      console.error('Error deleting from Supabase Storage:', {
+        bucket: this.bucket,
+        key,
+        error: error.message,
+      });
       throw error;
     }
   }
 
   async getSignedUrl(key: string, operation: 'download' | 'upload'): Promise<string> {
-    const params = {
-      Bucket: this.bucket,
-      Key: key,
-    };
+    try {
+      if (operation === 'download') {
+        // Generate signed URL for download with 1 hour expiration
+        const { data, error } = await this.supabase.storage
+          .from(this.bucket)
+          .createSignedUrl(key, 3600); // 1 hour in seconds
 
-    const command =
-      operation === 'download' ? new GetObjectCommand(params) : new PutObjectCommand(params);
+        if (error) {
+          throw error;
+        }
 
-    // Generate presigned URL with 1 hour expiration
-    return getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
+        return data.signedUrl;
+      } else {
+        // For upload operations, return a signed upload URL
+        const { data, error } = await this.supabase.storage
+          .from(this.bucket)
+          .createSignedUploadUrl(key);
+
+        if (error) {
+          throw error;
+        }
+
+        return data.signedUrl;
+      }
+    } catch (error: any) {
+      console.error('Error creating signed URL:', {
+        bucket: this.bucket,
+        key,
+        operation,
+        error: error.message,
+      });
+      throw error;
+    }
   }
 
   async exists(key: string): Promise<boolean> {
     try {
-      const params: HeadObjectCommandInput = {
-        Bucket: this.bucket,
-        Key: key,
-      };
-      const command = new HeadObjectCommand(params);
-      await this.s3Client.send(command);
-      return true;
-    } catch (error: any) {
-      if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
-        return false;
+      // Parse the path to get directory and filename
+      const pathParts = key.split('/');
+      const fileName = pathParts.pop(); // Get the filename
+      const prefix = pathParts.length > 0 ? pathParts.join('/') + '/' : ''; // Get directory prefix
+      
+      // List files in the specific directory
+      const { data, error } = await this.supabase.storage
+        .from(this.bucket)
+        .list(prefix || undefined, {
+          limit: 1000,
+          search: fileName,
+        });
+
+      if (error) {
+        if (error.message.includes('not found') || error.message.includes('does not exist')) {
+          return false;
+        }
+        throw error;
       }
-      throw error;
+
+      // Check if the exact filename exists in the results
+      return data.some(file => file.name === fileName);
+    } catch (error: any) {
+      // Fallback: try to download a small portion to check existence
+      try {
+        const { error: downloadError } = await this.supabase.storage
+          .from(this.bucket)
+          .download(key, {
+            transform: {
+              width: 1,
+              height: 1,
+            },
+          });
+        
+        return !downloadError;
+      } catch (fallbackError: any) {
+        console.error('Error checking file existence:', {
+          bucket: this.bucket,
+          key,
+          error: error.message,
+          fallbackError: fallbackError.message,
+        });
+        return false; // Assume file doesn't exist if we can't check
+      }
     }
   }
 }

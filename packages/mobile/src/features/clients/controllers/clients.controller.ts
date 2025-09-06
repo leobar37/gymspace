@@ -162,7 +162,7 @@ export const useClientsController = () => {
     updateClient: updateClientMutation.mutate,
     isUpdatingClient: updateClientMutation.isPending,
 
-    toggleStatus: toggleStatusMutation.mutate,
+    toggleStatus: toggleStatusMutation.mutateAsync,
     isTogglingStatus: toggleStatusMutation.isPending,
 
     // deleteClient: deleteClientMutation.mutate,

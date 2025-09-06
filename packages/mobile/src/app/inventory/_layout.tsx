@@ -99,14 +99,32 @@ export default function InventoryLayout() {
         }}
       />
       <Stack.Screen
+        name="services/[id]"
+        options={{
+          headerShown: true,
+          title: '',
+          headerBackTitle: '',
+          animation: 'fade_from_bottom',
+          headerLeft: () => (
+            <BackButton label="" onPress={() => router.push('/inventory/services')} />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="services/[id]/edit"
+        options={{
+          headerShown: true,
+          title: '',
+          headerBackTitle: '',
+        }}
+      />
+      <Stack.Screen
         name="services"
         options={{
           headerShown: true,
           title: 'Servicios',
-          headerBackTitle: 'Volver',
-          headerLeft: () => (
-            <BackButton onPress={() => router.push('/inventory')} />
-          ),
+          headerBackTitle: '',
+          headerLeft: () => <BackButton label="" onPress={() => router.push('/inventory')} />,
         }}
       />
     </Stack>

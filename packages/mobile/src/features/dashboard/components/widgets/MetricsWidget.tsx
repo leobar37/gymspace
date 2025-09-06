@@ -46,10 +46,10 @@ export const DebtsWidget: React.FC = () => {
         </View>
       </View>
       <Text className="text-2xl font-bold text-gray-900">
-        {formatPrice(data?.total || 0)}
+        {formatPrice(data?.totalDebt || 0)}
       </Text>
       <Text className="text-xs text-gray-500 mt-1">
-        {data?.count || 0} clientes con deuda
+        {data?.clientsWithDebt || 0} clientes con deuda
       </Text>
     </Card>
   );
@@ -58,6 +58,8 @@ export const DebtsWidget: React.FC = () => {
 export const CheckInsWidget: React.FC = () => {
   const { data, isLoading, error } = useCheckInsWidget();
 
+  console.log("data", data);
+  
   if (isLoading) {
     return (
       <Card className="bg-white">
@@ -89,10 +91,10 @@ export const CheckInsWidget: React.FC = () => {
         </View>
       </View>
       <Text className="text-2xl font-bold text-gray-900">
-        {data?.total || 0}
+        {data?.totalCheckIns || 0}
       </Text>
       <Text className="text-xs text-gray-500 mt-1">
-        {data?.today || 0} hoy
+        {data?.uniqueClients || 0} hoy
       </Text>
     </Card>
   );
@@ -132,7 +134,7 @@ export const NewClientsWidget: React.FC = () => {
         </View>
       </View>
       <Text className="text-2xl font-bold text-gray-900">
-        {data?.count || 0}
+        {data?.totalNewClients || 0}
       </Text>
       <Text className="text-xs text-gray-500 mt-1">
         en el período seleccionado

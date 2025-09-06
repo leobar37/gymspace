@@ -45,7 +45,7 @@ export const ProductInfo: React.FC<ProductInfoProps> = ({
 
         <VStack space="xs" className="items-end">
           <Badge
-            className={isInactive ? 'bg-gray-500' : 'bg-green-100 border-green-200'}
+            className={isInactive ? 'bg-gray-500' : 'bg-green-100'}
           >
             <BadgeText className={isInactive ? 'text-white' : 'text-green-700'}>
               {isInactive ? 'Inactivo' : 'Activo'}

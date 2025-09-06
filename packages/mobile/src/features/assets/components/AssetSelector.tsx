@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { Icon } from '@/components/ui/icon';
 import { ImageIcon } from 'lucide-react-native';
-import { useAssetsStore } from '../stores/assets.store';
+import { SheetManager } from 'react-native-actions-sheet';
 import { useAssetsByIds } from '../controllers/assets.controller';
 import { AssetPreview } from './AssetPreview';
 
@@ -23,7 +23,6 @@ export function AssetSelector({
   required = false,
 }: AssetSelectorProps) {
   const { control, watch } = useFormContext();
-  const { openModal } = useAssetsStore();
   
   // Watch the form value
   const formValue = watch(name);
@@ -44,17 +43,19 @@ export function AssetSelector({
   // Fetch asset data
   const { data: assets, isLoading } = useAssetsByIds(assetIds);
   
-  const handleOpenSelector = (onChange: (value: any) => void) => {
-    openModal({
-      isMulti: multi,
-      selectedAssets: assetIds,
-      onSelect: (selectedIds) => {
-        // Pass the value directly based on multi mode
-        const newValue = multi
-          ? selectedIds
-          : selectedIds[0] || null;
-        
-        onChange(newValue);
+  const handleOpenSelector = async (onChange: (value: any) => void) => {
+    await SheetManager.show('asset-selector', {
+      payload: {
+        isMulti: multi,
+        selectedAssets: assetIds,
+        onSelect: (selectedIds: string[]) => {
+          // Pass the value directly based on multi mode
+          const newValue = multi
+            ? selectedIds
+            : selectedIds[0] || null;
+          
+          onChange(newValue);
+        },
       },
     });
   };

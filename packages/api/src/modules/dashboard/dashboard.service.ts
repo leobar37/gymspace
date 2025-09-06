@@ -11,7 +11,14 @@ import {
   CheckInsDto,
   NewClientsDto,
 } from './dto';
-import { startOfMonth, endOfMonth, startOfDay, endOfDay, addDays, differenceInDays } from 'date-fns';
+import {
+  startOfMonth,
+  endOfMonth,
+  startOfDay,
+  endOfDay,
+  addDays,
+  differenceInDays,
+} from 'date-fns';
 import { BusinessException } from '../../common/exceptions/business.exception';
 import { CACHE_TTL, ContractStatus } from '@gymspace/shared';
 
@@ -21,6 +28,25 @@ export class DashboardService {
     private readonly prisma: PrismaService,
     private readonly cacheService: CacheService,
   ) {}
+
+  /**
+   * Helper method to get date range for queries
+   * @param startDate - Optional start date string
+   * @param endDate - Optional end date string
+   * @param defaultStartFn - Function to get default start date
+   * @param defaultEndFn - Function to get default end date
+   * @returns Object with start and end Date objects
+   */
+  private getDateRange(
+    startDate?: string,
+    endDate?: string,
+    defaultStartFn: () => Date = () => startOfMonth(new Date()),
+    defaultEndFn: () => Date = () => endOfMonth(new Date()),
+  ): { start: Date; end: Date } {
+    const start = startDate ? new Date(startDate) : defaultStartFn();
+    const end = endDate ? new Date(endDate) : defaultEndFn();
+    return { start, end };
+  }
 
   async getDashboardStats(ctx: RequestContext): Promise<DashboardStatsDto> {
     const gymId = ctx.getGymId();
@@ -93,7 +119,6 @@ export class DashboardService {
               },
             }),
 
-
             // Today's check-ins
             tx.checkIn.count({
               where: {
@@ -158,8 +183,7 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
-    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+    const { start, end } = this.getDateRange(startDate, endDate);
 
     const cacheKey = `gym:${gymId}:dashboard:contracts-revenue:${start.toISOString()}:${end.toISOString()}`;
 
@@ -211,8 +235,7 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
-    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+    const { start, end } = this.getDateRange(startDate, endDate);
 
     const cacheKey = `gym:${gymId}:dashboard:sales-revenue:${start.toISOString()}:${end.toISOString()}`;
 
@@ -252,18 +275,13 @@ export class DashboardService {
     );
   }
 
-  async getDebts(
-    ctx: RequestContext,
-    startDate?: string,
-    endDate?: string,
-  ): Promise<DebtsDto> {
+  async getDebts(ctx: RequestContext, startDate?: string, endDate?: string): Promise<DebtsDto> {
     const gymId = ctx.getGymId();
     if (!gymId) {
       throw new BusinessException('Gym context is required');
     }
 
-    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
-    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+    const { start, end } = this.getDateRange(startDate, endDate);
 
     const cacheKey = `gym:${gymId}:dashboard:debts:${start.toISOString()}:${end.toISOString()}`;
 
@@ -287,17 +305,14 @@ export class DashboardService {
           },
         });
 
-        const totalDebt = unpaidSales.reduce(
-          (sum, sale) => sum + Number(sale.total),
-          0,
-        );
-        
+        const totalDebt = unpaidSales.reduce((sum, sale) => sum + Number(sale.total), 0);
+
         // Count unique customers with debts (excluding null customerIds)
         const customerIds = unpaidSales
-          .filter(sale => sale.customerId !== null)
-          .map(sale => sale.customerId);
+          .filter((sale) => sale.customerId !== null)
+          .map((sale) => sale.customerId);
         const uniqueClients = new Set(customerIds).size;
-        
+
         const averageDebt = uniqueClients > 0 ? totalDebt / uniqueClients : 0;
 
         return {
@@ -322,8 +337,12 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const start = startDate ? new Date(startDate) : startOfDay(new Date());
-    const end = endDate ? new Date(endDate) : endOfDay(new Date());
+    const { start, end } = this.getDateRange(
+      startDate,
+      endDate,
+      () => startOfDay(new Date()),
+      () => endOfDay(new Date()),
+    );
 
     const cacheKey = `gym:${gymId}:dashboard:check-ins:${start.toISOString()}:${end.toISOString()}`;
 
@@ -332,8 +351,8 @@ export class DashboardService {
       async () => {
         const checkIns = await this.prisma.checkIn.findMany({
           where: {
-            gymClient: {
-              gymId,
+            gymId: {
+              equals: gymId,
             },
             timestamp: {
               gte: start,
@@ -348,9 +367,11 @@ export class DashboardService {
 
         const totalCheckIns = checkIns.length;
         const uniqueClients = new Set(checkIns.map((c) => c.gymClientId)).size;
+
         const daysDiff = Math.max(1, differenceInDays(end, start) + 1);
         const averagePerDay = totalCheckIns / daysDiff;
 
+    
         return {
           totalCheckIns,
           uniqueClients,
@@ -359,7 +380,7 @@ export class DashboardService {
           endDate: end.toISOString(),
         };
       },
-      CACHE_TTL.DASHBOARD,
+      0,
     );
   }
 
@@ -373,8 +394,7 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const start = startDate ? new Date(startDate) : startOfMonth(new Date());
-    const end = endDate ? new Date(endDate) : endOfMonth(new Date());
+    const { start, end } = this.getDateRange(startDate, endDate);
 
     const cacheKey = `gym:${gymId}:dashboard:new-clients:${start.toISOString()}:${end.toISOString()}`;
 
@@ -419,8 +439,12 @@ export class DashboardService {
 
     const now = new Date();
 
-    const start = startDate ? new Date(startDate) : now;
-    const end = endDate ? new Date(endDate) : addDays(now, 30);
+    const { start, end } = this.getDateRange(
+      startDate,
+      endDate,
+      () => now,
+      () => addDays(now, 30),
+    );
 
     // Use caching for expiring contracts to reduce database load
     const cacheKey = `gym:${gymId}:dashboard:expiring-contracts:${limit}:${start.toISOString()}:${end.toISOString()}`;

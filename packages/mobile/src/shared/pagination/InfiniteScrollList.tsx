@@ -1,17 +1,15 @@
+import { HStack } from '@/components/ui/hstack';
+import { Spinner } from '@/components/ui/spinner';
+import { Text as UIText } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import React, { useCallback, useMemo } from 'react';
 import {
   FlatList,
   FlatListProps,
-  ActivityIndicator,
-  RefreshControl,
-  View,
-  Text,
   ListRenderItem,
+  RefreshControl,
+  View
 } from 'react-native';
-import { HStack } from '@/components/ui/hstack';
-import { VStack } from '@/components/ui/vstack';
-import { Spinner } from '@/components/ui/spinner';
-import { Text as UIText } from '@/components/ui/text';
 import type { UsePaginationResult } from './usePagination';
 
 /**
@@ -22,47 +20,47 @@ export interface InfiniteScrollListProps<T> extends Omit<FlatListProps<T>, 'data
    * Pagination result from usePagination hook
    */
   pagination: UsePaginationResult<T>;
-  
+
   /**
    * Function to render each item
    */
   renderItem: ListRenderItem<T>;
-  
+
   /**
    * Custom loading component for initial load
    */
   loadingComponent?: React.ReactNode;
-  
+
   /**
    * Custom empty state component
    */
   emptyComponent?: React.ReactNode;
-  
+
   /**
    * Custom error component
    */
   errorComponent?: React.ReactNode;
-  
+
   /**
    * Custom footer loading component
    */
   footerLoadingComponent?: React.ReactNode;
-  
+
   /**
    * Threshold for triggering load more (0-1, default 0.3)
    */
   onEndReachedThreshold?: number;
-  
+
   /**
    * Whether to show refresh control
    */
   enableRefresh?: boolean;
-  
+
   /**
    * Custom refresh control tint color
    */
   refreshTintColor?: string;
-  
+
   /**
    * Performance optimizations
    */
@@ -93,24 +91,18 @@ export function InfiniteScrollList<T>({
   contentContainerStyle,
   ...flatListProps
 }: InfiniteScrollListProps<T>) {
-  const {
-    allItems,
-    state,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-    loadMore,
-    refresh,
-  } = pagination;
+  const { allItems, state, isLoading, isFetching, isError, error, loadMore, refresh } = pagination;
 
   // Default performance settings
-  const performanceSettings = useMemo(() => ({
-    maxToRenderPerBatch: performanceConfig.maxToRenderPerBatch || 10,
-    windowSize: performanceConfig.windowSize || 10,
-    initialNumToRender: performanceConfig.initialNumToRender || 10,
-    removeClippedSubviews: performanceConfig.removeClippedSubviews ?? true,
-  }), [performanceConfig]);
+  const performanceSettings = useMemo(
+    () => ({
+      maxToRenderPerBatch: performanceConfig.maxToRenderPerBatch || 10,
+      windowSize: performanceConfig.windowSize || 10,
+      initialNumToRender: performanceConfig.initialNumToRender || 10,
+      removeClippedSubviews: performanceConfig.removeClippedSubviews ?? true,
+    }),
+    [performanceConfig],
+  );
 
   // Handle end reached for infinite scroll
   const handleEndReached = useCallback(() => {
@@ -160,13 +152,23 @@ export function InfiniteScrollList<T>({
     }
 
     return emptyComponent || <DefaultEmptyComponent />;
-  }, [isLoading, isFetching, allItems.length, isError, error, loadingComponent, errorComponent, emptyComponent, refresh]);
+  }, [
+    isLoading,
+    isFetching,
+    allItems.length,
+    isError,
+    error,
+    loadingComponent,
+    errorComponent,
+    emptyComponent,
+    refresh,
+  ]);
 
   // Content container style with defaults
-  const containerStyle = useMemo(() => [
-    { flexGrow: allItems.length === 0 ? 1 : undefined },
-    contentContainerStyle,
-  ], [allItems.length, contentContainerStyle]);
+  const containerStyle = useMemo(
+    () => [{ flexGrow: allItems.length === 0 ? 1 : undefined }, contentContainerStyle],
+    [allItems.length, contentContainerStyle],
+  );
 
   return (
     <FlatList<T>
@@ -235,9 +237,7 @@ function DefaultEmptyComponent() {
   return (
     <View className="flex-1 items-center justify-center py-12">
       <VStack space="sm" className="items-center">
-        <UIText className="text-lg font-medium text-gray-900">
-          No hay elementos
-        </UIText>
+        <UIText className="text-lg font-medium text-gray-900">No hay elementos</UIText>
         <UIText className="text-gray-600 text-center">
           No se encontraron elementos para mostrar
         </UIText>
@@ -250,16 +250,11 @@ function DefaultErrorComponent({ error, onRetry }: { error: Error | null; onRetr
   return (
     <View className="flex-1 items-center justify-center py-12">
       <VStack space="md" className="items-center px-8">
-        <UIText className="text-lg font-medium text-red-600">
-          Error al cargar
-        </UIText>
+        <UIText className="text-lg font-medium text-red-600">Error al cargar</UIText>
         <UIText className="text-gray-600 text-center">
           {error?.message || 'Ocurrió un error al cargar los datos'}
         </UIText>
-        <Pressable
-          onPress={onRetry}
-          className="px-4 py-2 bg-blue-500 rounded-lg"
-        >
+        <Pressable onPress={onRetry} className="px-4 py-2 bg-blue-500 rounded-lg">
           <UIText className="text-white font-medium">Reintentar</UIText>
         </Pressable>
       </VStack>

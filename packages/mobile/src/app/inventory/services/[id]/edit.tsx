@@ -3,13 +3,16 @@ import { FormTextarea } from '@/components/forms/FormTextarea';
 import { Button, ButtonText } from '@/components/ui/button';
 import { SafeAreaView } from '@/components/ui/safe-area-view';
 import { View } from '@/components/ui/view';
+import { Text } from '@/components/ui/text';
+import { Spinner } from '@/components/ui/spinner';
 import { useCountryConfig } from '@/config/ConfigContext';
 import { AssetSelector } from '@/features/assets/components/AssetSelector';
 import { useProductsController } from '@/features/products/controllers/products.controller';
+import { useProduct } from '@/features/products/hooks/useProducts';
 import { ScreenForm } from '@/shared/components/ScreenForm';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -18,18 +21,22 @@ const serviceSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().optional(),
   price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: 'El precio debe ser un número válido',
+    message: 'El precio debe ser un número válido mayor a 0',
   }),
   categoryId: z.string().optional(),
-  imageId: z.string().optional(),
+  imageId: z.string().optional().nullable(),
 });
 
 type ServiceFormData = z.infer<typeof serviceSchema>;
 
-export default function NewServiceScreen() {
+export default function EditServiceScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { execute } = useLoadingScreen();
-  const { createService } = useProductsController();
+  const { updateProduct } = useProductsController();
   const config = useCountryConfig();
+
+  // Fetch existing service data
+  const { data: service, isLoading } = useProduct(id);
 
   const methods = useForm<ServiceFormData>({
     resolver: zodResolver(serviceSchema),
@@ -43,50 +50,99 @@ export default function NewServiceScreen() {
     mode: 'onChange',
   });
 
+  // Update form values when service data is loaded
+  React.useEffect(() => {
+    if (service && !isLoading) {
+      methods.reset({
+        name: service.name || '',
+        description: service.description || '',
+        price: service.price?.toString() || '',
+        categoryId: service.categoryId || '',
+        imageId: service.imageId || '',
+      });
+    }
+  }, [service, isLoading, methods]);
+
   const {
-    formState: { isValid },
+    formState: { isValid, isDirty },
   } = methods;
 
-  const isButtonDisabled = !isValid || createService.isPending;
+  // Button is disabled if form is not valid, not dirty, or request is pending
+  const isButtonDisabled = !isValid || !isDirty || updateProduct.isPending;
 
   const handleSubmit = async (data: ServiceFormData) => {
+    if (!id) return;
+
     await execute(
-      createService.mutateAsync({
-        name: data.name,
-        description: data.description,
-        price: parseFloat(data.price),
-        categoryId: data.categoryId || undefined,
-        imageId: data.imageId || undefined,
+      updateProduct.mutateAsync({
+        id,
+        data: {
+          name: data.name,
+          description: data.description || undefined,
+          price: parseFloat(data.price),
+          categoryId: data.categoryId || undefined,
+          imageId: data.imageId || undefined,
+        },
       }),
       {
-        action: 'Creando servicio...',
-        successMessage: 'Servicio creado exitosamente',
+        action: 'Actualizando servicio...',
+        successMessage: 'Servicio actualizado exitosamente',
         successActions: [
           {
-            label: 'Ver servicios',
+            label: 'Ver servicio',
             onPress: () => {
-              router.replace('/inventory/services');
+              router.replace(`/inventory/services/${id}`);
             },
             variant: 'solid',
           },
           {
-            label: 'Crear otro',
+            label: 'Ver lista',
             onPress: () => {
-              methods.reset();
+              router.replace('/inventory/services');
             },
             variant: 'outline',
           },
         ],
         errorFormatter: (error) => {
           if (error instanceof Error) {
-            return `Error al crear servicio: ${error.message}`;
+            return `Error al actualizar servicio: ${error.message}`;
           }
-          return 'No se pudo crear el servicio. Por favor intente nuevamente.';
+          return 'No se pudo actualizar el servicio. Por favor intente nuevamente.';
         },
         hideOnSuccess: false,
       },
     );
   };
+
+  // Show loading spinner while fetching service data
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 items-center justify-center">
+          <Spinner size="large" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error if service not found
+  if (!service && !isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 items-center justify-center p-4">
+          <View className="items-center">
+            <Text className="text-lg font-semibold text-gray-900 mb-2">Servicio no encontrado</Text>
+            <Text className="text-sm text-gray-600 text-center">
+              El servicio que buscas no existe o ha sido eliminado.
+            </Text>
+            <Button onPress={() => router.back()} variant="outline" className="mt-4">
+              <ButtonText>Volver</ButtonText>
+            </Button>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -102,7 +158,7 @@ export default function NewServiceScreen() {
               variant="solid"
               className="w-full"
             >
-              <ButtonText>Crear Servicio</ButtonText>
+              <ButtonText>Guardar Cambios</ButtonText>
             </Button>
           }
         >

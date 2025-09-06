@@ -10,8 +10,7 @@ import { Alert } from 'react-native';
 import { SheetProvider } from 'react-native-actions-sheet';
 import { GymSdkProvider } from './GymSdkProvider';
 import { LoadingScreen } from '@/shared/loading-screen/LoadingScreen';
-import { AssetPreviewGlobal } from '@/features/assets';
-import '@/sheets'; // Import sheet registrations
+import '@/sheets'; 
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -119,7 +118,6 @@ export function AppProviders({ children }: AppProvidersProps) {
                 <SheetProvider>
                   {children}
                   <LoadingScreen />
-                  <AssetPreviewGlobal />
                 </SheetProvider>
               </CartProvider>
             </ConfigProvider>

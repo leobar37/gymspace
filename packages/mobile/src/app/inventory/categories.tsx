@@ -1,12 +1,11 @@
 import React from 'react';
-import { ScrollView, View, ActivityIndicator } from 'react-native';
+import { ScrollView, View, ActivityIndicator, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Pressable } from '@/components/ui/pressable';
 import { Icon } from '@/components/ui/icon';
 import { 
   PlusIcon, 
@@ -154,18 +153,6 @@ export default function CategoriesScreen() {
             </Text>
           </HStack>
 
-          {/* Add Button */}
-          <HStack className="justify-end items-center mb-2">
-            <Button 
-              size="sm" 
-              variant="solid"
-              onPress={handleAddCategory}
-            >
-              <ButtonIcon as={PlusIcon} className="mr-2" />
-              <ButtonText>Nueva</ButtonText>
-            </Button>
-          </HStack>
-
           {categoriesList.length === 0 ? (
             <Card className="p-8">
               <VStack space="md" className="items-center">
@@ -234,6 +221,21 @@ export default function CategoriesScreen() {
           )}
         </VStack>
       </ScrollView>
+
+      {/* Floating Action Button */}
+      <Pressable
+        onPress={handleAddCategory}
+        className="absolute bottom-6 right-6 bg-blue-600 rounded-full p-4 active:bg-blue-700"
+        style={{
+          elevation: 5,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 4,
+        }}
+      >
+        <Icon as={PlusIcon} className="w-6 h-6 text-white" />
+      </Pressable>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -115,7 +115,7 @@ export default function ProductDetailScreen() {
   // Edit mode
   if (isEditing) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50">
+      <SafeAreaView className="flex-1 bg-white">
         <VStack className="flex-1">
           <ProductForm
             product={product}
@@ -130,17 +130,19 @@ export default function ProductDetailScreen() {
 
   // View mode
   return (
-    <SafeAreaView className="flex-1">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <VStack space="md" className="p-4">
+    <SafeAreaView className="flex-1 bg-white">
+      <ScrollView showsVerticalScrollIndicator={false} className="bg-white">
+        <VStack className="px-3 py-4">
           {/* Header with actions */}
           <ProductHeader onEdit={() => setIsEditing(true)} onDelete={handleDelete} />
 
           {/* Product Image */}
-          <ProductImage imageId={product.imageId} productName={product.name} />
+          <View className="mt-4">
+            <ProductImage imageId={product.imageId} productName={product.name} />
+          </View>
 
-          {/* Product Info with embedded image */}
-          <View className="bg-white rounded-lg shadow-sm -mt-4">
+          {/* Product Info */}
+          <View className="-mt-4 mb-6">
             <ProductInfo
               product={product}
               isInactive={isInactive}
@@ -149,14 +151,30 @@ export default function ProductDetailScreen() {
             />
           </View>
 
+          {/* Separator */}
+          <View className="h-px bg-gray-200 mx-2 mb-6" />
+
           {/* Product Stats */}
-          <ProductStats product={product} />
+          <View className="mb-6">
+            <ProductStats product={product} />
+          </View>
+
+          {/* Separator */}
+          <View className="h-px bg-gray-200 mx-2 mb-6" />
 
           {/* Stock Management */}
-          <StockAdjustment product={product} isLowStock={isLowStock} />
+          <View className="mb-6">
+            <StockAdjustment product={product} isLowStock={isLowStock} />
+          </View>
           
+          {/* Separator */}
+          <View className="h-px bg-gray-200 mx-2 mb-6" />
+
           {/* Stock Movements */}
           <StockMovementsSection product={product} />
+          
+          {/* Bottom padding */}
+          <View className="h-8" />
         </VStack>
       </ScrollView>
     </SafeAreaView>

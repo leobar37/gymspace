@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
@@ -44,20 +43,19 @@ export const ProductStats: React.FC<ProductStatsProps> = ({ product }) => {
   ];
 
   return (
-    <Card className="bg-white border border-gray-200">
-      <VStack space="md" className="p-4">
-        <Text className="font-semibold text-gray-900">Información del Producto</Text>
+    <VStack space="lg">
+        <Text className="text-lg font-semibold text-gray-900">Información del Producto</Text>
         
-        <VStack space="sm">
+        <VStack space="md">
           {stats.map((stat, index) => (
             <HStack key={index} className="justify-between items-center">
-              <HStack space="sm" className="items-center flex-1">
+              <HStack space="md" className="items-center flex-1">
                 <View className={`p-2 rounded-lg ${stat.bgColor}`}>
                   <Icon as={stat.icon} className={`w-4 h-4 ${stat.color}`} />
                 </View>
-                <Text className="text-gray-600 text-sm">{stat.label}</Text>
+                <Text className="text-gray-600">{stat.label}</Text>
               </HStack>
-              <Text className="font-semibold text-gray-900">
+              <Text className="text-lg font-semibold text-gray-900">
                 {stat.value}
               </Text>
             </HStack>
@@ -66,7 +64,7 @@ export const ProductStats: React.FC<ProductStatsProps> = ({ product }) => {
 
         {/* Profit Margin */}
         {product.costPrice && product.price > 0 && (
-          <VStack space="xs" className="pt-3 border-t border-gray-100">
+          <VStack space="xs" className="pt-3">
             <HStack className="justify-between items-center">
               <Text className="text-sm text-gray-600">Margen de Ganancia</Text>
               <Text className="font-semibold text-green-600">
@@ -81,8 +79,7 @@ export const ProductStats: React.FC<ProductStatsProps> = ({ product }) => {
             </HStack>
           </VStack>
         )}
-      </VStack>
-    </Card>
+    </VStack>
   );
 };
 

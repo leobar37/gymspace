@@ -9,7 +9,7 @@ import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Building2Icon } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, SafeAreaView, View } from 'react-native';
+import { SafeAreaView, View } from 'react-native';
 
 export default function UserTypeSelectionScreen() {
   const router = useRouter();
@@ -42,7 +42,7 @@ export default function UserTypeSelectionScreen() {
               <View className="w-20 bg-gray-600 h-20 rounded-2xl items-center justify-center shadow-md">
                 <Icon as={Building2Icon} className="w-10 h-10" />
               </View>
-              
+
               <VStack className="gap-2 items-center">
                 <Text className="font-bold text-xl text-gray-900 text-center">
                   Soy Dueño de Gimnasio
@@ -53,12 +53,12 @@ export default function UserTypeSelectionScreen() {
               </VStack>
 
               {/* Call-to-Action Button */}
-              <Button 
-                variant="solid" 
-                size="lg" 
+              <Button
+                variant="solid"
+                size="lg"
                 className="w-full mt-3"
                 onPress={() => {
-                  console.log("hello world");
+                  console.log('hello world');
                   router.push('owner/step-1-personal');
                 }}
               >
@@ -70,9 +70,7 @@ export default function UserTypeSelectionScreen() {
 
         {/* Bottom Login Section */}
         <VStack className="pb-10 pt-6 gap-3 items-center">
-          <Text className="text-gray-500 text-sm">
-            ¿Ya tienes una cuenta?
-          </Text>
+          <Text className="text-gray-500 text-sm">¿Ya tienes una cuenta?</Text>
           <Link href="/login" asChild>
             <Button variant="outline" size="md">
               <ButtonText>Iniciar Sesión</ButtonText>

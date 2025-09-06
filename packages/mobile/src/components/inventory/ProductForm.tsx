@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert } from 'react-native';
+import { Alert, View } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,7 +7,6 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
 import { SaveIcon, XIcon } from 'lucide-react-native';
@@ -60,9 +59,21 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
   const formatPrice = useFormatPrice();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  // Determine if we're in edit mode
+  const isEditMode = !!product;
+
+  // Adjust schema for edit mode (stock not required when editing)
+  const validationSchema = React.useMemo(() => {
+    if (isEditMode) {
+      // Remove stock validation for edit mode
+      return productFormSchema.omit({ stock: true });
+    }
+    return productFormSchema;
+  }, [isEditMode]);
+
   // Initialize react-hook-form with Zod resolver
   const methods = useForm<FormData>({
-    resolver: zodResolver(productFormSchema),
+    resolver: zodResolver(validationSchema),
     defaultValues: {
       name: product?.name || '',
       description: product?.description || '',
@@ -90,11 +101,15 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
         name: data.name.trim(),
         description: data.description?.trim() || undefined,
         price: parseFloat(data.price),
-        stock: parseInt(data.stock),
         categoryId: data.categoryId,
         status: data.isActive ? 'active' : 'inactive',
         imageId: data.imageId || undefined,
       };
+
+      // Only include stock when creating a new product, not when editing
+      if (!isEditMode) {
+        (submitData as CreateProductDto).stock = parseInt(data.stock);
+      }
 
       await onSubmit(submitData);
     } catch (error) {
@@ -108,6 +123,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
   const isFormLoading = isLoading || isSubmitting;
   const priceValue = watch('price');
   const isActiveValue = watch('isActive');
+  const imageIdValue = watch('imageId'); // Watch imageId changes to properly detect form changes
 
   const actions = (
     <HStack space="md">
@@ -144,46 +160,65 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
         showBackButton={false}
         useSafeArea={false}
         footerContent={actions}
+        className="bg-white"
       >
-        <VStack space="lg">
+        <VStack space="lg" className="px-3 py-4">
           {/* Basic Information */}
-          <Card className="bg-white border border-gray-200">
-            <VStack space="md" className="p-4">
-              <Text className="text-lg font-semibold text-gray-900">Información Básica</Text>
+          <VStack space="md">
+            <Text className="text-lg font-semibold text-gray-900">Información Básica</Text>
 
-              {/* Product Name */}
-              <FormInput
-                name="name"
-                control={control}
-                label="Nombre del Producto *"
-                placeholder="Ej: Mancuerna 10kg"
-              />
+            {/* Product Name */}
+            <FormInput
+              name="name"
+              control={control}
+              label="Nombre del Producto *"
+              placeholder="Ej: Mancuerna 10kg"
+            />
 
-              {/* Description */}
-              <FormTextarea
-                name="description"
-                control={control}
-                label="Descripción"
-                placeholder="Describe el producto (opcional)"
-                numberOfLines={3}
-              />
+            {/* Description */}
+            <FormTextarea
+              name="description"
+              control={control}
+              label="Descripción"
+              placeholder="Describe el producto (opcional)"
+              numberOfLines={3}
+            />
 
-              {/* Category */}
-              <CategorySelector
-                name="categoryId"
-                control={control}
-                label="Categoría *"
-                placeholder="Selecciona una categoría"
-                enabled={!isFormLoading}
-              />
-            </VStack>
-          </Card>
+            {/* Category */}
+            <CategorySelector
+              name="categoryId"
+              control={control}
+              label="Categoría *"
+              placeholder="Selecciona una categoría"
+              enabled={!isFormLoading}
+            />
+          </VStack>
 
           {/* Pricing and Stock */}
-          <Card className="bg-white border border-gray-200">
-            <VStack space="md" className="p-4">
-              <Text className="text-lg font-semibold text-gray-900">Precio e Inventario</Text>
+          <VStack space="md">
+            <Text className="text-lg font-semibold text-gray-900">
+              {isEditMode ? 'Precio' : 'Precio e Inventario'}
+            </Text>
 
+            {isEditMode ? (
+              <>
+                {/* In edit mode, only show price (stock is managed through stock adjustments) */}
+                <FormInput
+                  name="price"
+                  control={control}
+                  label="Precio *"
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                />
+                {/* Info message about stock management */}
+                <View className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <Text className="text-sm text-blue-700">
+                    El stock se administra desde la pantalla del producto usando los ajustes de inventario
+                  </Text>
+                </View>
+              </>
+            ) : (
+              // In create mode, show both price and stock
               <HStack space="md">
                 {/* Price */}
                 <VStack className="flex-1">
@@ -207,47 +242,45 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
                   />
                 </VStack>
               </HStack>
+            )}
 
-              {/* Price Preview */}
-              {priceValue && !errors.price && (
-                <Card className="bg-blue-50 border-blue-200">
-                  <HStack className="p-3 justify-between items-center">
-                    <Text className="text-sm text-blue-700">Precio formateado:</Text>
-                    <Text className="text-lg font-bold text-blue-900">
-                      {formatPrice(parseFloat(priceValue))}
-                    </Text>
-                  </HStack>
-                </Card>
-              )}
-            </VStack>
-          </Card>
+            {/* Price Preview */}
+            {priceValue && !errors.price && (
+              <View className="bg-blue-50 rounded-lg border border-blue-200">
+                <HStack className="p-3 justify-between items-center">
+                  <Text className="text-sm text-blue-700">Precio formateado:</Text>
+                  <Text className="text-lg font-bold text-blue-900">
+                    {formatPrice(parseFloat(priceValue))}
+                  </Text>
+                </HStack>
+              </View>
+            )}
+          </VStack>
 
           {/* Additional Settings */}
-          <Card className="bg-white border border-gray-200">
-            <VStack space="md" className="p-4">
-              <Text className="text-lg font-semibold text-gray-900">Configuración Adicional</Text>
+          <VStack space="md">
+            <Text className="text-lg font-semibold text-gray-900">Configuración Adicional</Text>
 
-              {/* Status */}
-              <FormSwitch
-                name="isActive"
-                control={control}
-                label="Estado del Producto"
-                description={
-                  isActiveValue
-                    ? 'El producto está disponible para la venta'
-                    : 'El producto no está disponible para la venta'
-                }
-              />
+            {/* Status */}
+            <FormSwitch
+              name="isActive"
+              control={control}
+              label="Estado del Producto"
+              description={
+                isActiveValue
+                  ? 'El producto está disponible para la venta'
+                  : 'El producto no está disponible para la venta'
+              }
+            />
 
-              {/* Image Selector */}
-              <AssetSelector
-                name="imageId"
-                label="Imagen del Producto"
-                multi={false}
-                required={false}
-              />
-            </VStack>
-          </Card>
+            {/* Image Selector */}
+            <AssetSelector
+              name="imageId"
+              label="Imagen del Producto"
+              multi={false}
+              required={false}
+            />
+          </VStack>
         </VStack>
       </ScreenForm>
     </FormProvider>

@@ -1,9 +1,8 @@
 // Components
-export { PhotoField } from './components/PhotoField';
 export { AssetSelector } from './components/AssetSelector';
 export { AssetPreview } from './components/AssetPreview';
-export { AssetModal } from './components/AssetModal';
-export { AssetPreviewGlobal } from './components/AssetPreviewGlobal';
+export { default as AssetSelectorSheet } from './components/AssetSelectorSheet';
+export { AssetPreviewSheet } from './components/AssetPreviewSheet';
 
 // Controllers
 export {
@@ -20,11 +19,11 @@ export {
 } from './controllers/assets.controller';
 
 // Stores
-export { useAssetsStore } from './stores/assets.store';
-export { useAssetPreviewStore } from './stores/asset-preview.store';
+// Removed useAssetsStore - now using SheetManager for asset selection
 
 // Hooks
 export { usePreviewAsset, AssetPreviewProvider } from './hooks/usePreviewAsset';
+export { useAssetPreviewSheet } from './hooks/useAssetPreviewSheet';
 
 // Types
 export type {

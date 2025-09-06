@@ -7,9 +7,9 @@ import { RefreshControl, ScrollView, View } from 'react-native';
 import { CheckInButton } from './CheckInButton';
 import { SalesButton } from './SalesButton';
 import { TimeRange } from '@/components/TimeRange';
-import { 
+import {
   useDashboardDateRangeManager,
-  useExpiringContractsWidget 
+  useExpiringContractsWidget
 } from '../hooks/useDashboardWidgets';
 import {
   ContractsRevenueWidget,
@@ -24,9 +24,9 @@ import {
 export const Dashboard: React.FC = () => {
   // Check authentication and redirect if not authenticated
   const { isAuthenticated, isLoadingSession } = useRequireAuth();
-  
+
   // Dashboard date range management
-  const { dateRange, setDateRange } = useDashboardDateRangeManager();
+  const { setDateRange } = useDashboardDateRangeManager();
 
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -66,11 +66,11 @@ export const Dashboard: React.FC = () => {
       >
         <VStack className="p-4 gap-4">
           {/* Date Range Selector */}
-          <TimeRange 
-            onRangeChange={handleRangeChange} 
+          <TimeRange
+            onRangeChange={handleRangeChange}
             hideLabel={true}
           />
-          
+
           {/* Metrics Section - Primary Stats */}
           <View className="flex-row gap-3">
             <View className="flex-1">
@@ -80,7 +80,7 @@ export const Dashboard: React.FC = () => {
               <NewClientsWidget />
             </View>
           </View>
-          
+
           {/* Revenue Section */}
           <View className="mt-2">
             <Text className="text-lg font-semibold text-gray-900 mb-3">Ingresos</Text>
@@ -93,14 +93,14 @@ export const Dashboard: React.FC = () => {
               </View>
             </View>
           </View>
-          
+
           {/* Debts Widget */}
           <View className="mt-2">
             <DebtsWidget />
           </View>
         </VStack>
       </ScrollView>
-      
+
       {/* Floating Action Buttons */}
       <CheckInButton />
       <SalesButton />

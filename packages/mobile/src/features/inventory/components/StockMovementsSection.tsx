@@ -1,7 +1,9 @@
 import React from 'react';
+import { Pressable } from 'react-native';
 import { View } from '@/components/ui/view';
 import { Text } from '@/components/ui/text';
-import { Button } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
 import { History, ChevronRight } from 'lucide-react-native';
 import { SheetManager } from 'react-native-actions-sheet';
 import { useProductStockMovements } from '../hooks';
@@ -21,26 +23,28 @@ export const StockMovementsSection = ({ product }: StockMovementsSectionProps) =
   };
 
   return (
-    <View className="bg-white rounded-lg p-4 shadow-sm">
-      <Button 
-        variant="outline" 
+    <View>
+      <Pressable 
         onPress={handleViewMovements}
-        className="flex-row justify-between items-center"
+        className="bg-gray-50 rounded-lg p-4"
       >
-        <View className="flex-row items-center gap-3">
-          <History size={20} className="text-gray-600" />
-          <Text className="text-base font-medium text-gray-700">
-            Ver movimientos de stock
-          </Text>
-        </View>
-        <ChevronRight size={16} className="text-gray-400" />
-      </Button>
-      
-      {stockMovements.length > 0 && (
-        <Text className="text-sm text-gray-500 mt-2 text-center">
-          {stockMovements.length} movimiento{stockMovements.length !== 1 ? 's' : ''} registrado{stockMovements.length !== 1 ? 's' : ''}
-        </Text>
-      )}
+        <HStack className="justify-between items-center">
+          <HStack space="md" className="items-center flex-1">
+            <Icon as={History} className="w-5 h-5 text-gray-600" />
+            <View className="flex-1">
+              <Text className="text-base font-medium text-gray-900">
+                Ver movimientos de stock
+              </Text>
+              {stockMovements.length > 0 && (
+                <Text className="text-sm text-gray-500 mt-1">
+                  {stockMovements.length} movimiento{stockMovements.length !== 1 ? 's' : ''} registrado{stockMovements.length !== 1 ? 's' : ''}
+                </Text>
+              )}
+            </View>
+          </HStack>
+          <Icon as={ChevronRight} className="w-5 h-5 text-gray-400" />
+        </HStack>
+      </Pressable>
     </View>
   );
 };

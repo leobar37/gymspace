@@ -15,6 +15,8 @@ import {
   FileTextIcon 
 } from 'lucide-react-native';
 import { useCheckInsController } from '@/controllers/check-ins.controller';
+import dayjs from 'dayjs';
+import 'dayjs/locale/es';
 
 interface ClientCheckInsSectionProps {
   clientId: string;
@@ -24,38 +26,34 @@ interface ClientCheckInsSectionProps {
 interface CheckInItemProps {
   checkIn: {
     id: string;
-    checkInTime: string;
+    timestamp: string;  // Changed from checkInTime to timestamp
     checkOutTime?: string;
-    notes?: string;
+    notes?: string | null;
   };
 }
 
+// Set dayjs locale to Spanish
+dayjs.locale('es');
+
 const CheckInItem: React.FC<CheckInItemProps> = ({ checkIn }) => {
+  console.log("check in", JSON.stringify(checkIn, null, 2));
+  
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    return dayjs(dateString).format('D MMM YYYY');
   };
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return dayjs(dateString).format('HH:mm');
   };
 
   const getDuration = (checkIn: string, checkOut?: string) => {
     if (!checkOut) return 'En progreso';
     
-    const start = new Date(checkIn);
-    const end = new Date(checkOut);
-    const diff = end.getTime() - start.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const start = dayjs(checkIn);
+    const end = dayjs(checkOut);
+    const diffInMinutes = end.diff(start, 'minute');
+    const hours = Math.floor(diffInMinutes / 60);
+    const minutes = diffInMinutes % 60;
     
     if (hours > 0) {
       return `${hours}h ${minutes}min`;
@@ -70,7 +68,7 @@ const CheckInItem: React.FC<CheckInItemProps> = ({ checkIn }) => {
           <HStack className="items-center gap-2">
             <Icon as={CalendarIcon} className="w-4 h-4 text-gray-500" />
             <Text className="font-medium text-gray-900">
-              {formatDate(checkIn.checkInTime)}
+              {formatDate(checkIn.timestamp)}
             </Text>
           </HStack>
           <Badge 
@@ -90,7 +88,7 @@ const CheckInItem: React.FC<CheckInItemProps> = ({ checkIn }) => {
               <Text className="text-sm text-gray-600">Entrada</Text>
             </HStack>
             <Text className="text-sm font-medium text-gray-900 ml-6">
-              {formatTime(checkIn.checkInTime)}
+              {formatTime(checkIn.timestamp)}
             </Text>
           </VStack>
 
@@ -109,7 +107,7 @@ const CheckInItem: React.FC<CheckInItemProps> = ({ checkIn }) => {
           <VStack className="gap-1">
             <Text className="text-sm text-gray-600">Duración</Text>
             <Text className="text-sm font-medium text-gray-900">
-              {getDuration(checkIn.checkInTime, checkIn.checkOutTime)}
+              {getDuration(checkIn.timestamp, checkIn.checkOutTime)}
             </Text>
           </VStack>
         </HStack>
@@ -191,10 +189,7 @@ export const ClientCheckInsSection: React.FC<ClientCheckInsSectionProps> = ({
                 <Divider orientation="vertical" className="h-12" />
                 <VStack className="items-center">
                   <Text className="text-sm font-medium text-gray-900">
-                    {new Date(lastCheckIn).toLocaleDateString('es-ES', {
-                      day: 'numeric',
-                      month: 'short'
-                    })}
+                    {dayjs(lastCheckIn).format('D MMM')}
                   </Text>
                   <Text className="text-xs text-gray-600">Última Visita</Text>
                 </VStack>
