@@ -44,7 +44,7 @@
     "@gluestack-ui/themed": "^1.1.73",
     "@gluestack-ui/toast": "1.0.9",
     "@gluestack-ui/tooltip": "^0.1.44",
-    "@gymspace/sdk": "workspace:*",
+    "@gymspace/sdk": "^1.0.1",
     "@hookform/resolvers": "^5.2.1",
     "@legendapp/motion": "^2.4.0",
     "@react-native-community/datetimepicker": "8.4.1",

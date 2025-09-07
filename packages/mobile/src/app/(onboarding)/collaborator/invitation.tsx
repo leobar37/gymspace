@@ -12,7 +12,14 @@ import { useOnboardingStore } from '@/store/onboarding';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { BuildingIcon, CalendarIcon, CheckIcon, ChevronLeftIcon, UserIcon, XCircleIcon } from 'lucide-react-native';
+import {
+  BuildingIcon,
+  CalendarIcon,
+  CheckIcon,
+  ChevronLeftIcon,
+  UserIcon,
+  XCircleIcon,
+} from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, View } from 'react-native';
 
@@ -22,7 +29,11 @@ export default function InvitationValidationScreen() {
   const [invitationToken, setLocalInvitationToken] = useState(token || '');
 
   // Validate invitation query
-  const { data: invitationInfo, isLoading, error } = useQuery({
+  const {
+    data: invitationInfo,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['invitation', invitationToken],
     queryFn: async () => {
       // TODO: Implement actual API call to validate invitation
@@ -40,7 +51,7 @@ export default function InvitationValidationScreen() {
           permissions: ['Gestión de clientes', 'Control de asistencia', 'Reportes'],
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
           email: 'nuevo@ejemplo.com',
-        }
+        },
       };
     },
     enabled: !!invitationToken && invitationToken.length > 0,
@@ -86,17 +97,12 @@ export default function InvitationValidationScreen() {
             <VStack className="gap-6">
               {/* TODO: Add token input field */}
               <Card className="p-6 border-2 border-gray-200">
-                <Text className="text-center text-gray-600">
-                  Campo de entrada de código aquí
-                </Text>
+                <Text className="text-center text-gray-600">Campo de entrada de código aquí</Text>
               </Card>
             </VStack>
 
             <Box className="mt-auto">
-              <GluestackButton
-                onPress={handleManualTokenEntry}
-                className="w-full py-3 px-6"
-              >
+              <GluestackButton onPress={handleManualTokenEntry} className="w-full py-3 px-6">
                 <ButtonText>Validar invitación</ButtonText>
               </GluestackButton>
             </Box>
@@ -126,16 +132,14 @@ export default function InvitationValidationScreen() {
           <Pressable onPress={() => router.back()} className="mb-8">
             <Icon as={ChevronLeftIcon} className="text-gray-700 w-8 h-8" />
           </Pressable>
-          
+
           <Center className="flex-1">
             <VStack className="items-center gap-6">
               <Center className="w-20 h-20 bg-red-100 rounded-full">
                 <Icon as={XCircleIcon} className="text-red-600 w-12 h-12" />
               </Center>
               <VStack className="items-center gap-2">
-                <Heading className="text-gray-900 text-xl font-bold">
-                  Invitación inválida
-                </Heading>
+                <Heading className="text-gray-900 text-xl font-bold">Invitación inválida</Heading>
                 <Text className="text-gray-600 text-center">
                   El código de invitación es inválido o ha expirado
                 </Text>
@@ -174,14 +178,10 @@ export default function InvitationValidationScreen() {
                   )}
                 </Avatar>
                 <VStack className="flex-1 gap-1">
-                  <Text className="font-semibold text-lg text-gray-900">
-                    {invitation.gymName}
-                  </Text>
+                  <Text className="font-semibold text-lg text-gray-900">{invitation.gymName}</Text>
                   <HStack className="items-center gap-1">
                     <Icon as={BuildingIcon} className="text-gray-500 w-3 h-3" />
-                    <Text className="text-gray-600 text-sm">
-                      {invitation.gymAddress}
-                    </Text>
+                    <Text className="text-gray-600 text-sm">{invitation.gymAddress}</Text>
                   </HStack>
                 </VStack>
               </HStack>
@@ -191,9 +191,7 @@ export default function InvitationValidationScreen() {
           {/* Invitation details */}
           <VStack className="gap-8">
             <VStack className="gap-4">
-              <Heading className="text-gray-900 text-xl font-bold">
-                Has sido invitado
-              </Heading>
+              <Heading className="text-gray-900 text-xl font-bold">Has sido invitado</Heading>
               <Text className="text-gray-600 text-lg">
                 {invitation.inviterName} te ha invitado a unirte como {invitation.role}
               </Text>
@@ -224,9 +222,7 @@ export default function InvitationValidationScreen() {
 
             {/* Permissions */}
             <VStack className="gap-4">
-              <Text className="font-medium text-gray-900">
-                Permisos asignados:
-              </Text>
+              <Text className="font-medium text-gray-900">Permisos asignados:</Text>
               <VStack className="gap-2">
                 {invitation.permissions.map((permission, index) => (
                   <HStack key={index} className="items-center gap-2">
@@ -241,10 +237,7 @@ export default function InvitationValidationScreen() {
           {/* Action buttons */}
           <Box className="mt-auto">
             <VStack className="gap-4">
-              <GluestackButton
-                onPress={handleAcceptInvitation}
-                className="w-full py-3 px-6"
-              >
+              <GluestackButton onPress={handleAcceptInvitation} className="w-full py-3 px-6">
                 <ButtonText>Aceptar invitación</ButtonText>
               </GluestackButton>
               <GluestackButton

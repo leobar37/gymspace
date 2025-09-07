@@ -2,6 +2,7 @@ packages:
   - 'packages/*'
   - 'tools/*'
   - "mcp"
+  - "cli"
 
 catalog:
   # Build tools

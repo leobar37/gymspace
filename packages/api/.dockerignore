@@ -1,116 +1,68 @@
 # Dependencies
-node_modules
-**/node_modules
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+node_modules/
+.pnpm-store/
 
 # Build outputs
-dist
-build
-.next
-.nuxt
+dist/
+build/
+*.tsbuildinfo
 
 # Environment files
-.env*
+.env
+.env.*
 !.env.example
 
-# IDE and editor files
-.vscode
-.idea
+# IDE
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
-
-# OS files
 .DS_Store
-Thumbs.db
-
-# Git
-.git
-.gitignore
-.gitattributes
 
 # Testing
-coverage
-.nyc_output
-*.lcov
+coverage/
+.nyc_output/
+test/
+tests/
+*.test.*
+*.spec.*
 
 # Logs
-logs
 *.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Cache directories
-.npm
-.eslintcache
-.cache
-.parcel-cache
-
-# Optional npm cache directory
-.npm
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.test
-.env.local
-.env.production
-.env.development
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Temporary folders
-tmp
-temp
+# Git
+.git/
+.gitignore
 
 # Documentation
-docs
 *.md
 !README.md
 
-# Docker files
-Dockerfile*
+# Docker
+Dockerfile
 .dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
 
 # Development files
-test
-tests
-*.test.*
-*.spec.*
+.eslintrc*
+.prettierrc*
 jest.config.*
-.eslintrc.*
-.prettierrc.*
-.prettierignore
+tsconfig.spec.json
 
-# Prisma development files
-prisma/migrations/*/migration.sql
+# Temporary files
+tmp/
+temp/
 
-# TypeScript
-*.tsbuildinfo
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Prisma migrations (keep schema)
+prisma/migrations/

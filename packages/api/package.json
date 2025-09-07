@@ -36,7 +36,7 @@
     "@fastify/multipart": "^8.0.0",
     "@fastify/static": "^6.12.0",
     "@google-cloud/logging-winston": "^6.0.1",
-    "@gymspace/shared": "^1.0.0",
+    "@gymspace/shared": "^1.0.1",
     "@nestjs/cache-manager": "^2.1.1",
     "@nestjs/common": "^10.2.10",
     "@nestjs/config": "^3.1.1",

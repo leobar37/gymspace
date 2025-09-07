@@ -1,9 +1,4 @@
-import {
-  FormInput,
-  FormProvider,
-  useForm,
-  zodResolver
-} from '@/components/forms';
+import { FormInput, FormProvider, useForm, zodResolver } from '@/components/forms';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -19,23 +14,33 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon, UserIcon } from 'lucide-react-native';
 import React from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  View,
+} from 'react-native';
 import { z } from 'zod';
 
 // Validation schema
-const collaboratorSchema = z.object({
-  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  phone: z.string().min(8, 'Número de teléfono inválido'),
-  password: z.string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
-    .regex(/[a-z]/, 'Debe contener al menos una minúscula')
-    .regex(/[0-9]/, 'Debe contener al menos un número'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ['confirmPassword'],
-});
+const collaboratorSchema = z
+  .object({
+    name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+    phone: z.string().min(8, 'Número de teléfono inválido'),
+    password: z
+      .string()
+      .min(8, 'La contraseña debe tener al menos 8 caracteres')
+      .regex(/[A-Z]/, 'Debe contener al menos una mayúscula')
+      .regex(/[a-z]/, 'Debe contener al menos una minúscula')
+      .regex(/[0-9]/, 'Debe contener al menos un número'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Las contraseñas no coinciden',
+    path: ['confirmPassword'],
+  });
 
 type CollaboratorForm = z.infer<typeof collaboratorSchema>;
 
@@ -57,7 +62,6 @@ export default function CompleteRegistrationScreen() {
   // Complete registration mutation
   const registerMutation = useMutation({
     mutationFn: async (data: CollaboratorForm) => {
-
       // Mock successful registration
       return {
         success: true,
@@ -92,10 +96,7 @@ export default function CompleteRegistrationScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-        >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View className="flex-1 px-6 py-4">
             {/* Header */}
             <Pressable onPress={() => router.back()} className="mb-8">
@@ -105,9 +106,7 @@ export default function CompleteRegistrationScreen() {
             <VStack className="flex-1 gap-8">
               {/* Title */}
               <VStack className="gap-3">
-                <Heading className="text-gray-900 text-3xl font-bold">
-                  Completa tu registro
-                </Heading>
+                <Heading className="text-gray-900 text-3xl font-bold">Completa tu registro</Heading>
                 <Text className="text-gray-600 text-lg">
                   Ingresa tu información para unirte a {invitationData?.gymName}
                 </Text>
@@ -119,9 +118,7 @@ export default function CompleteRegistrationScreen() {
                   <Icon as={UserIcon} className="text-gray-500 w-5 h-5" />
                   <VStack className="flex-1 gap-1">
                     <Text className="text-gray-500 text-sm">Correo electrónico</Text>
-                    <Text className="font-medium text-gray-900">
-                      {invitationData?.email}
-                    </Text>
+                    <Text className="font-medium text-gray-900">{invitationData?.email}</Text>
                   </VStack>
                 </HStack>
               </Card>
