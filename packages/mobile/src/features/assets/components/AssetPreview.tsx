@@ -83,8 +83,6 @@ export function AssetPreview({
 
   const url = renderUrl || assetData?.previewUrl || '';
 
-  console.log('this the url', url);
-
   const imageStyle =
     size === 'full' && !width && !height ? { flex: 1 } : { width: imageWidth, height: imageHeight };
 

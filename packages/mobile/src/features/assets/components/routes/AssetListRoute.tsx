@@ -8,7 +8,6 @@ import {
   RefreshControl,
 } from 'react-native';
 import { FlatList, ScrollView } from 'react-native-actions-sheet';
-import { useMultiScreenContext } from '@/components/ui/multi-screen';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -27,9 +26,10 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { useAllAssets, useDeleteAsset } from '../../controllers/assets.controller';
+import { useAllAssets, useDeleteAsset, useUploadAsset, assetsKeys } from '../../controllers/assets.controller';
 import { SheetManager } from 'react-native-actions-sheet';
 import * as ImagePicker from 'expo-image-picker';
+import { useQueryClient } from '@tanstack/react-query';
 import { AssetPreview } from '../AssetPreview';
 import type { AssetResponseDto } from '@gymspace/sdk';
 import type { AssetSelectorRouteContext } from '../AssetSelectorSheet';
@@ -131,11 +131,13 @@ const AssetItem: React.FC<AssetItemProps> = ({
 
 export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
   const context = route.params;
-  const { router } = useMultiScreenContext();
   const { data: assets, isLoading, refetch, isRefetching } = useAllAssets(true);
   const deleteAssetMutation = useDeleteAsset();
+  const uploadAssetMutation = useUploadAsset();
+  const queryClient = useQueryClient();
   const [isSelectionMode, setIsSelectionMode] = React.useState(false);
   const [showUploadOptions, setShowUploadOptions] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
 
   // Sort assets to show selected ones first
   const sortedAssets = React.useMemo(() => {
@@ -155,40 +157,74 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
 
   const handleImagePickerOption = async (type: 'camera' | 'gallery') => {
     setShowUploadOptions(false);
+    setIsUploading(true);
     
-    const options: ImagePicker.ImagePickerOptions = {
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.8,
-      allowsMultipleSelection: context.isMulti,
-    };
+    try {
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.8,
+        allowsMultipleSelection: type === 'gallery' ? context.isMulti : false,
+      };
 
-    let result;
-    if (type === 'camera') {
-      const permission = await ImagePicker.requestCameraPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('Error', 'Se necesitan permisos de cámara');
-        return;
-      }
-      result = await ImagePicker.launchCameraAsync(options);
-    } else {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('Error', 'Se necesitan permisos de galería');
-        return;
-      }
-      result = await ImagePicker.launchImageLibraryAsync(options);
-    }
-
-    if (!result.canceled && result.assets.length > 0) {
-      router.navigate('upload', {
-        props: {
-          routeContext: {
-            ...context,
-            uploadAssets: result.assets,
-          }
+      let result;
+      if (type === 'camera') {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert('Error', 'Se necesitan permisos de cámara');
+          setIsUploading(false);
+          return;
         }
-      });
+        result = await ImagePicker.launchCameraAsync(options);
+      } else {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert('Error', 'Se necesitan permisos de galería');
+          setIsUploading(false);
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync(options);
+      }
+
+      if (!result.canceled && result.assets.length > 0) {
+        const uploadedIds: string[] = [];
+        
+        for (const asset of result.assets) {
+          const file = {
+            uri: asset.uri,
+            type: asset.type === 'video' ? 'video/mp4' : 'image/jpeg',
+            name: asset.fileName || `asset_${Date.now()}.jpg`,
+          } as any;
+
+          const uploadedAsset = await uploadAssetMutation.mutateAsync({
+            file,
+            metadata: {
+              width: asset.width,
+              height: asset.height,
+              duration: (asset as any).duration,
+            },
+          });
+          
+          uploadedIds.push(uploadedAsset.id);
+        }
+
+        // Refresh the assets list
+        await queryClient.invalidateQueries({ queryKey: assetsKeys.all });
+        
+        // Add to selection if needed
+        if (context.isMulti) {
+          context.setSelectedAssets([...context.selectedAssets, ...uploadedIds]);
+        } else {
+          context.setSelectedAssets(uploadedIds);
+        }
+        
+        refetch();
+      }
+    } catch (error) {
+      console.error('Error handling image picker:', error);
+      Alert.alert('Error', 'No se pudo procesar la imagen');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -387,17 +423,21 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
 
       {/* Upload options modal */}
       {showUploadOptions && (
-        <Pressable
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          }}
-          onPress={() => setShowUploadOptions(false)}
-        >
+        <>
+          {/* Backdrop */}
+          <Pressable
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            }}
+            onPress={() => setShowUploadOptions(false)}
+          />
+          
+          {/* Options menu */}
           <Animated.View
             entering={FadeIn.duration(200)}
             style={{
@@ -413,6 +453,7 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
               elevation: 5,
               padding: 8,
             }}
+            pointerEvents="box-none"
           >
             <Pressable
               onPress={() => handleImagePickerOption('camera')}
@@ -440,7 +481,35 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
               <Text className="text-gray-700">Seleccionar de Galería</Text>
             </Pressable>
           </Animated.View>
-        </Pressable>
+        </>
+      )}
+
+      {/* Upload loading indicator */}
+      {isUploading && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: 'white',
+              borderRadius: 12,
+              padding: 20,
+              alignItems: 'center',
+            }}
+          >
+            <ActivityIndicator size="large" color="#6366f1" />
+            <Text className="text-gray-700 mt-3">Subiendo imagen...</Text>
+          </View>
+        </View>
       )}
     </View>
   );

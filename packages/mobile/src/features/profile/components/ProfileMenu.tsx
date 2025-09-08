@@ -23,7 +23,7 @@ import {
   SettingsIcon,
   TruckIcon,
   UserIcon,
-  WalletIcon
+  WalletIcon,
 } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -62,7 +62,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
 export const ProfileMenu: React.FC = () => {
   const { clearAuth } = useGymSdk();
   const { clearStoredTokens } = useAuthToken();
-  const { session, user, gym, clearSessionCache } = useCurrentSession();
+  const { user, gym, clearSessionCache } = useCurrentSession();
 
   const handleLogout = async () => {
     try {
@@ -182,10 +182,10 @@ export const ProfileMenu: React.FC = () => {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView  className="flex-1  bg-gray-50">
       <VStack className="pb-8">
         {/* Profile Header */}
-        <Card className="m-4 p-6">
+        <Card className="mb-4 p-6">
           <HStack className="items-center gap-4">
             <Avatar className="w-16 h-16 bg-blue-600">
               <Text className="text-white text-xl font-semibold">

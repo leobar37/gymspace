@@ -85,7 +85,10 @@ export function AssetSelector({
               <View className="w-full">
                 {assets.length === 1 ? (
                   // Single asset - show directly with click to change
-                  <Pressable onPress={() => handleOpenSelector(onChange)}>
+                  <Pressable 
+                    onPress={() => handleOpenSelector(onChange)}
+                    style={{ width: '100%' }}
+                  >
                     <View className="w-full h-48 bg-gray-100 rounded-lg overflow-hidden">
                       <AssetPreview
                         asset={assets[0]}
@@ -93,13 +96,17 @@ export function AssetSelector({
                         height={192}
                         resizeMode="contain"
                         className="w-full h-full"
+                        showLoading={false}
                       />
                     </View>
                   </Pressable>
                 ) : (
                   // Multiple assets - show 2x2 grid using FlatList
-                  <Pressable onPress={() => handleOpenSelector(onChange)}>
-                    <View className="w-full">
+                  <Pressable 
+                    onPress={() => handleOpenSelector(onChange)}
+                    style={{ width: '100%' }}
+                  >
+                    <View className="w-full" pointerEvents="box-only">
                       <FlatList
                         data={assets.slice(0, 4)}
                         renderItem={({ item, index }) => (

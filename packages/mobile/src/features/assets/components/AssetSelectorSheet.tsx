@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import ActionSheet, { SheetManager, SheetProps } from 'react-native-actions-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createMultiScreen, useMultiScreenContext } from '@/components/ui/multi-screen';
 import { Button } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -8,8 +9,6 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { ArrowLeft, X as CloseIcon } from 'lucide-react-native';
 import { AssetListRoute } from './routes/AssetListRoute';
-import { AssetSelectionRoute } from './routes/AssetSelectionRoute';
-import { AssetUploadRoute } from './routes/AssetUploadRoute';
 
 export interface AssetSelectorPayload {
   isMulti?: boolean;
@@ -89,11 +88,14 @@ const ListScreen: React.FC = () => {
     };
   }, []);
 
-  const safeSetSelectedAssets = React.useCallback((assets: string[] | ((prev: string[]) => string[])) => {
-    if (isMountedRef.current) {
-      setSelectedAssets(assets);
-    }
-  }, []);
+  const safeSetSelectedAssets = React.useCallback(
+    (assets: string[] | ((prev: string[]) => string[])) => {
+      if (isMountedRef.current) {
+        setSelectedAssets(assets);
+      }
+    },
+    [],
+  );
 
   const routeContext = React.useMemo<AssetSelectorRouteContext>(
     () => ({
@@ -102,7 +104,7 @@ const ListScreen: React.FC = () => {
       setSelectedAssets: safeSetSelectedAssets,
       toggleAssetSelection: (assetId: string) => {
         if (!isMountedRef.current) return;
-        
+
         if (payload?.isMulti) {
           safeSetSelectedAssets((prev) =>
             prev.includes(assetId) ? prev.filter((id) => id !== assetId) : [...prev, assetId],
@@ -117,32 +119,10 @@ const ListScreen: React.FC = () => {
         }
       },
       onConfirm: () => {
-        if (!payload?.isMulti && selectedAssets.length > 0) {
-          // For single selection, confirm immediately
+        if (selectedAssets.length > 0) {
+          // Confirm selection for both single and multi mode
           payload?.onSelect?.(selectedAssets);
           SheetManager.hide('asset-selector');
-        } else if (payload?.isMulti && selectedAssets.length > 0) {
-          // For multi selection, navigate to selection screen
-          router.navigate('selection', {
-            props: {
-              routeContext: {
-                isMulti: payload?.isMulti || false,
-                selectedAssets,
-                setSelectedAssets: safeSetSelectedAssets,
-                toggleAssetSelection: () => {},
-                onConfirm: () => {
-                  payload?.onSelect?.(selectedAssets);
-                  SheetManager.hide('asset-selector');
-                },
-                onCancel: () => {
-                  payload?.onCancel?.();
-                  SheetManager.hide('asset-selector');
-                },
-                onDelete: payload?.onDelete,
-                payload,
-              },
-            },
-          });
         }
       },
       onCancel: () => {
@@ -171,68 +151,42 @@ const ListScreen: React.FC = () => {
   );
 };
 
-const SelectionScreen: React.FC = () => {
-  const { router } = useMultiScreenContext();
-  const routeContext = router.props?.routeContext as AssetSelectorRouteContext;
-
-  if (!routeContext) {
-    return null;
-  }
-
-  return (
-    <>
-      <NavigationHeader title="Confirmación" onClose={routeContext.onCancel} />
-      <AssetSelectionRoute route={{ params: routeContext }} />
-    </>
-  );
-};
-
-const UploadScreen: React.FC = () => {
-  const { router } = useMultiScreenContext();
-  const routeContext = router.props?.routeContext as AssetSelectorRouteContext;
-
-  if (!routeContext) {
-    return null;
-  }
-
-  return (
-    <>
-      <NavigationHeader title="Subir Archivo" onClose={routeContext.onCancel} />
-      <AssetUploadRoute route={{ params: routeContext }} />
-    </>
-  );
-};
-
 // Create MultiScreen flow using builder
 const assetSelectorFlow = createMultiScreen()
   .addStep('list', ListScreen)
-  .addStep('selection', SelectionScreen)
-  .addStep('upload', UploadScreen)
   .build();
 
+const { Component } = assetSelectorFlow;
 // Main Sheet Component
 function AssetSelectorSheet(props: SheetProps<'asset-selector'>) {
   const { sheetId, payload } = props;
-  const { Component } = assetSelectorFlow;
+
+  const insets = useSafeAreaInsets();
 
   return (
     <ActionSheet
       id={sheetId}
       gestureEnabled
+      safeAreaInsets={insets}
+      drawUnderStatusBar
       indicatorStyle={{
         backgroundColor: '#D1D5DB',
-        width: 36,
+        width: 150,
         height: 4,
       }}
-      snapPoints={[80]}
       containerStyle={{
+        height: '100%',
         backgroundColor: 'white',
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
-        paddingBottom: 20,
       }}
     >
-      <View className="h-[800px]">
+      <View
+        style={{
+          height: '100%',
+          paddingBottom: insets.bottom || 20,
+        }}
+      >
         <PayloadContext.Provider value={payload}>
           <Component />
         </PayloadContext.Provider>

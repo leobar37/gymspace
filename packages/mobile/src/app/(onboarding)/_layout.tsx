@@ -1,13 +1,26 @@
-import { useCurrentSession } from '@/hooks/useCurrentSession';
+import { useGymSdk } from '@/providers/GymSdkProvider';
 import { Redirect, Stack } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { useCurrentSession } from '@/hooks/useCurrentSession';
 
 export default function OnboardingLayout() {
-  const { session, isLoading, isAuthenticated } = useCurrentSession();
+  const { isAuthenticated: isAuthFromProvider, isLoading: isProviderLoading } = useGymSdk();
+  const { session, isLoading: isSessionLoading, isAuthenticated } = useCurrentSession({
+    // Only fetch session if we have auth from provider
+    enabled: isAuthFromProvider,
+  });
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
-  // While checking authentication status, show loading
-  if (isAuthenticated && isLoading) {
+  // Mark that we've checked auth after provider loads
+  useEffect(() => {
+    if (!isProviderLoading) {
+      setHasCheckedAuth(true);
+    }
+  }, [isProviderLoading]);
+
+  // While checking authentication status initially, show loading
+  if (!hasCheckedAuth || (isAuthFromProvider && isSessionLoading)) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#2563eb" />

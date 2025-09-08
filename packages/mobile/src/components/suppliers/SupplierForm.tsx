@@ -8,7 +8,6 @@ import { FormTextarea } from '@/components/forms/FormTextarea';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
-import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
 import { useCreateSupplier, useUpdateSupplier } from '@/features/suppliers/controllers/suppliers.controller';
@@ -81,65 +80,60 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
 
   return (
     <FormProvider {...methods}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <VStack space="lg" className="p-4">
+      <ScrollView showsVerticalScrollIndicator={false} className="bg-white">
+        <VStack space="lg" className="p-3">
           {/* Basic Information */}
-          <Card className="bg-white border border-gray-200">
-            <VStack space="md" className="p-4">
-              <Heading size="md" className="text-gray-900">
-                Información General
-              </Heading>
-              
-              <FormInput
-                name="name"
-                label="Nombre del Proveedor *"
-                placeholder="Ej: Distribuidora ABC"
-              />
+          <VStack space="md">
+            <Heading size="md" className="text-gray-900">
+              Información General
+            </Heading>
+            
+            <FormInput
+              name="name"
+              label="Nombre del Proveedor *"
+              placeholder="Ej: Distribuidora ABC"
+            />
 
+            <FormInput
+              name="phone"
+              label="Teléfono"
+              placeholder="Ej: 555-123-4567"
+              keyboardType="phone-pad"
+            />
 
-              <FormInput
-                name="phone"
-                label="Teléfono"
-                placeholder="Ej: 555-123-4567"
-                keyboardType="phone-pad"
-              />
+            <FormInput
+              name="email"
+              label="Email"
+              placeholder="Ej: contacto@proveedor.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-              <FormInput
-                name="email"
-                label="Email"
-                placeholder="Ej: contacto@proveedor.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-
-              <FormTextarea
-                name="address"
-                label="Dirección"
-                placeholder="Calle, número, colonia, ciudad"
-                numberOfLines={3}
-              />
-            </VStack>
-          </Card>
+            <FormTextarea
+              name="address"
+              label="Dirección"
+              placeholder="Calle, número, colonia, ciudad"
+              numberOfLines={3}
+            />
+          </VStack>
 
           {/* Contact Information */}
-          <Card className="bg-white border border-gray-200">
-            <VStack space="md" className="p-4">
-              <Heading size="md" className="text-gray-900">
-                Información de Contacto
-              </Heading>
+          <VStack space="md">
+            <Heading size="md" className="text-gray-900">
+              Información de Contacto
+            </Heading>
 
-              <FormTextarea
-                name="contactInfo"
-                label="Información de Contacto"
-                placeholder="Persona de contacto, notas adicionales, etc."
-                numberOfLines={4}
-              />
-            </VStack>
-          </Card>
+            <FormTextarea
+              name="contactInfo"
+              label="Información de Contacto"
+              placeholder="Persona de contacto, notas adicionales, etc."
+              numberOfLines={4}
+            />
+          </VStack>
 
 
           {/* Action Buttons */}
-          <HStack space="sm" className="pb-4">
+          <HStack space="sm" className="pb-2">
             {onCancel && (
               <Button
                 variant="outline"

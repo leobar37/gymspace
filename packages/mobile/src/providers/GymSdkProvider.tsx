@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useMemo, useEffect, useRef } from 'react';
 import { GymSpaceSdk } from '@gymspace/sdk';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
+import { useRouter, useSegments } from 'expo-router';
 import { 
   authAtom, 
   setAuthTokensAtom, 
@@ -47,6 +48,9 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
   const isAuthenticatedLoadable = useAtomValue(loadableIsAuthenticatedAtom);
   const authTokenLoadable = useAtomValue(loadableAccessTokenAtom);
   const currentGymIdLoadable = useAtomValue(loadableCurrentGymIdAtom);
+  const router = useRouter();
+  const segments = useSegments();
+  const hasHandledAuthError = useRef(false);
   
   // Extract values from loadables with defaults
   const isAuthenticated = isAuthenticatedLoadable.state === 'hasData' ? isAuthenticatedLoadable.data : false;
@@ -59,23 +63,6 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
       baseURL: API_BASE_URL,
       timeout: 30000,
     });
-    // Setup automatic token refresh callbacks
-    // sdkInstance.getClient().onTokensUpdated = (accessToken: string, refreshToken: string) => {
-    //   console.log('SDK: Tokens updated automatically');
-    //   setTokens({ 
-    //     accessToken, 
-    //     refreshToken,
-    //     expiresAt: Date.now() + 60 * 60 * 1000 // 1 hour default
-    //   });
-    // };
-
-    // sdkInstance.getClient().onAuthError = (error: any) => {
-    //   console.error('SDK: Auth error occurred:', error);
-    //   // Clear tokens
-    //   clearAuthState();
-    //   // Also clear SDK tokens
-    //   sdkInstance.clearAuth();
-    // };
     return sdkInstance;
   }, []);
 
@@ -102,6 +89,25 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
       setIsLoading(true);
     }
   }, [authStateLoadable, sdk, setIsLoading]);
+  
+  // Monitor auth state and handle errors
+  useEffect(() => {
+    // Check if we lost authentication
+    if (!isLoading && !isAuthenticated && authStateLoadable.state === 'hasData') {
+      // Check if we're not already on onboarding pages
+      const isOnOnboarding = segments[0] === '(onboarding)' || segments.length === 0;
+      
+      // Only redirect if we're not on onboarding and haven't handled this error
+      if (!isOnOnboarding && !hasHandledAuthError.current) {
+        console.log('Auth lost, redirecting to onboarding');
+        hasHandledAuthError.current = true;
+        router.replace('/(onboarding)');
+      }
+    } else if (isAuthenticated) {
+      // Reset the flag when auth is restored
+      hasHandledAuthError.current = false;
+    }
+  }, [isAuthenticated, isLoading, authStateLoadable.state, segments, router]);
 
   // Update auth token
   const setAuthToken = (token: string | null) => {

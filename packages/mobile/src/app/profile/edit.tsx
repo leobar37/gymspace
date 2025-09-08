@@ -5,7 +5,6 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { useProfileController } from '@/controllers/profile.controller';
 import { UpdateProfileDto } from '@gymspace/sdk';
@@ -13,6 +12,7 @@ import { format, parseISO } from 'date-fns';
 import { UserIcon, PhoneIcon, CalendarIcon, EditIcon, XIcon, LockIcon } from 'lucide-react-native';
 import { FormProvider, FormInput, FormDatePicker, useForm, zodResolver } from '@/components/forms';
 import { z } from 'zod';
+import { BackButton } from '@/shared/components';
 
 // Validation schema
 const profileSchema = z.object({
@@ -92,7 +92,7 @@ export default function EditProfileScreen() {
 
   if (isLoadingProfile) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
+      <View className="flex-1 items-center justify-center bg-white">
         <ButtonSpinner />
         <Text className="mt-2 text-gray-600">Cargando perfil...</Text>
       </View>
@@ -110,41 +110,37 @@ export default function EditProfileScreen() {
       <Stack.Screen
         options={{
           title: isEditMode ? 'Editar Perfil' : 'Mi Perfil',
-          headerBackTitle: 'Atrás',
+          headerBackTitle: '',
           animation: 'simple_push',
           headerShown: true,
           headerLeft: () => {
-            return (
-              <Button size="sm" onPress={() => router.replace('/more')}>
-                <ButtonText>Volver</ButtonText>
-              </Button>
-            );
+            return <BackButton label="" />;
           },
         }}
       />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1 bg-gray-50"
+        className="flex-1"
       >
         <ScrollView
-          className="flex-1"
+          className="flex-1 bg-white"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <VStack className="p-4 gap-4">
+          <VStack className="p-4 gap-6">
             {!isEditMode ? (
               // View Mode - Read Only
               <>
-                {/* Personal Information Card */}
-                <Card className="p-4">
+                {/* Personal Information Section */}
+                <View className="bg-white">
                   <VStack className="gap-4">
                     <HStack className="items-center justify-between">
                       <Text className="text-lg font-semibold text-gray-900">
                         Información Personal
                       </Text>
                       <Button variant="outline" size="sm" onPress={() => setIsEditMode(true)}>
-                        <Icon as={EditIcon} className="w-4 h-4 mr-1" />
+                        <Icon as={EditIcon} className="w-4 text-gray-500 h-4 mr-1" />
                         <ButtonText>Editar</ButtonText>
                       </Button>
                     </HStack>
@@ -184,10 +180,13 @@ export default function EditProfileScreen() {
                       </VStack>
                     </VStack>
                   </VStack>
-                </Card>
+                </View>
 
-                {/* Account Information Card */}
-                <Card className="p-4">
+                {/* Divider */}
+                <View className="h-px bg-gray-200" />
+
+                {/* Account Information Section */}
+                <View className="bg-white">
                   <VStack className="gap-4">
                     <Text className="text-lg font-semibold text-gray-900">
                       Información de Cuenta
@@ -240,13 +239,13 @@ export default function EditProfileScreen() {
                       <ButtonText>Cambiar Contraseña</ButtonText>
                     </Button>
                   </VStack>
-                </Card>
+                </View>
               </>
             ) : (
               // Edit Mode - Form
               <FormProvider {...methods}>
-                {/* Personal Information Card - Edit Mode */}
-                <Card className="p-4">
+                {/* Personal Information Section - Edit Mode */}
+                <View className="bg-white">
                   <VStack className="gap-4">
                     <HStack className="items-center justify-between">
                       <Text className="text-lg font-semibold text-gray-900">
@@ -286,10 +285,13 @@ export default function EditProfileScreen() {
                       minimumDate={new Date(1900, 0, 1)}
                     />
                   </VStack>
-                </Card>
+                </View>
 
-                {/* Account Information Card - Still Read Only in Edit Mode */}
-                <Card className="p-4">
+                {/* Divider */}
+                <View className="h-px bg-gray-200" />
+
+                {/* Account Information Section - Still Read Only in Edit Mode */}
+                <View className="bg-white">
                   <VStack className="gap-4">
                     <Text className="text-lg font-semibold text-gray-900">
                       Información de Cuenta
@@ -313,7 +315,7 @@ export default function EditProfileScreen() {
                       El correo electrónico y tipo de cuenta no se pueden cambiar
                     </Text>
                   </VStack>
-                </Card>
+                </View>
 
                 {/* Action Buttons - Edit Mode */}
                 <VStack className="gap-3 mt-4 pb-safe">

@@ -51,8 +51,11 @@ export const useAuthController = () => {
         expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
       });
 
-      // Refetch session to get current user data
-      await refetchSession();
+      // Small delay to ensure tokens are set in provider
+      setTimeout(async () => {
+        // Refetch session to get current user data
+        await refetchSession();
+      }, 100);
     },
     onError: (error) => {
       console.error('Login failed:', error);

@@ -1,12 +1,9 @@
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import type { CurrentSessionResponse } from '@gymspace/sdk';
 import { 
   sessionAtom, 
-  isAuthenticatedAtom, 
   clearAuthAtom,
   setCurrentGymIdAtom 
 } from '@/store/auth.atoms';
@@ -26,13 +23,11 @@ export interface UseCurrentSessionOptions {
 }
 
 export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
-  const { sdk, authToken, currentGymId } = useGymSdk();
+  const { sdk, authToken, currentGymId, isAuthenticated: isAuthFromProvider, isLoading: isProviderLoading } = useGymSdk();
   const [session, setSession] = useAtom(sessionAtom) as [any, any];
-  const isAuthenticated = useAtomValue(isAuthenticatedAtom);
   const clearAuth = useSetAtom(clearAuthAtom);
   const setCurrentGymId = useSetAtom(setCurrentGymIdAtom);
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   const {
     enabled = true,
@@ -45,6 +40,11 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
   const sessionQuery = useQuery({
     queryKey: sessionKeys.current(),
     queryFn: async (): Promise<CurrentSessionResponse | null> => {
+      // Don't even try if we don't have a token
+      if (!authToken) {
+        return null;
+      }
+      
       try {
         const response = await sdk.auth.getCurrentSession();
         console.log('Session fetched successfully:', response);
@@ -61,17 +61,17 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
         return response;
       } catch (error: any) {
         console.error('Session fetch error:', error);
-        // Handle 401 errors by clearing tokens and redirecting
+        // Handle 401 errors by clearing tokens but NOT redirecting here
+        // Let the layout components handle navigation
         if (error.status === 401 || error.message?.includes('Unauthorized')) {
-          console.log('Auth error, clearing tokens and redirecting');
+          console.log('Auth error, clearing tokens');
           clearAuth();
-          setTimeout(() => router.replace('/(onboarding)'), 100);
           return null;
         }
         throw error;
       }
     },
-    enabled: enabled && isAuthenticated && Boolean(authToken),
+    enabled: enabled && isAuthFromProvider && Boolean(authToken) && !isProviderLoading,
     staleTime,
     gcTime,
     refetchOnMount,
@@ -91,16 +91,7 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // Handle authentication errors
-  useEffect(() => {
-    if (sessionQuery.isError && sessionQuery.error) {
-      const error = sessionQuery.error as any;
-      if (error?.status === 401 || error?.message?.includes('Unauthorized')) {
-        clearAuth();
-        router.replace('/(onboarding)');
-      }
-    }
-  }, [sessionQuery.isError, sessionQuery.error, clearAuth, router]);
+  // No useEffect here - let the layout components handle navigation based on auth state
 
   // Utility functions
   const refetchSession = () => {
@@ -125,6 +116,15 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
   // Use session from Jotai atom for immediate updates
   const currentSession = session || sessionQuery.data;
 
+  // Determine loading state - we're loading if provider is loading OR session is loading when auth is true
+  const isLoading = isProviderLoading || (isAuthFromProvider && sessionQuery.isLoading);
+  
+  // Determine authentication state more carefully
+  // We're authenticated if:
+  // 1. Provider says we have auth token AND
+  // 2. Either we're still loading the session OR we have a successful session
+  const isAuthenticated = isAuthFromProvider && (sessionQuery.isLoading || (sessionQuery.isSuccess && !!currentSession?.isAuthenticated));
+
   return {
     // Session data
     session: currentSession,
@@ -136,7 +136,7 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
     authToken,
 
     // Query states
-    isLoading: sessionQuery.isLoading,
+    isLoading,
     isFetching: sessionQuery.isFetching,
     isError: sessionQuery.isError,
     error: sessionQuery.error,
@@ -148,7 +148,7 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
     updateSessionCache,
 
     // Computed values
-    isAuthenticated: sessionQuery.isSuccess && !!currentSession?.isAuthenticated,
+    isAuthenticated,
     hasPermission: (permission: string) => {
       return currentSession?.permissions?.includes(permission) || false;
     },
