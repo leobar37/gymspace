@@ -17,7 +17,7 @@ export default ({ config }) => {
       },
       ios: {
         supportsTablet: true,
-        bundleIdentifier: 'com.gymspace.mobile',
+        bundleIdentifier: 'com.elena.gymspace',
         infoPlist: {
           ITSAppUsesNonExemptEncryption: false,
         },
@@ -27,7 +27,7 @@ export default ({ config }) => {
           foregroundImage: './assets/adaptive-icon.png',
           backgroundColor: '#ffffff',
         },
-        package: 'com.gymspace.mobile',
+        package: 'com.elena.gymspace',
         edgeToEdgeEnabled: true,
         permissions: [
           'android.permission.RECORD_AUDIO',

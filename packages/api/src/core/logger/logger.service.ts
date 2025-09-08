@@ -1,6 +1,7 @@
 import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as winston from 'winston';
+import { LoggingWinston } from '@google-cloud/logging-winston';
 
 @Injectable()
 export class LoggerService implements NestLoggerService {
@@ -13,7 +14,31 @@ export class LoggerService implements NestLoggerService {
     // Create transports array
     const transports: winston.transport[] = [];
 
-    // Console transport for all environments
+    // Add Google Cloud Logging transport in production
+    if (this.isProduction) {
+      const loggingWinston = new LoggingWinston({
+        projectId: this.configService.get('GCP_PROJECT_ID'),
+        keyFilename: this.configService.get('GCP_KEY_FILE'), // Optional if using default service account
+        logName: 'gymspace-api',
+        resource: {
+          type: 'cloud_run_revision',
+          labels: {
+            service_name: this.configService.get('K_SERVICE', 'gymspace-api'),
+            revision_name: this.configService.get('K_REVISION', 'unknown'),
+            configuration_name: this.configService.get('K_CONFIGURATION', 'unknown'),
+            location: this.configService.get('GCP_REGION', 'us-central1'),
+          },
+        },
+        defaultCallback: (err) => {
+          if (err) {
+            console.error('Error sending log to Google Cloud Logging:', err);
+          }
+        },
+      });
+      transports.push(loggingWinston);
+    }
+
+    // Console transport for all environments (development and as fallback)
     const consoleFormat = this.isProduction
       ? winston.format.combine(
           winston.format.timestamp(),
@@ -78,12 +103,16 @@ export class LoggerService implements NestLoggerService {
 
   // Additional helper methods for structured logging
   logRequest(method: string, url: string, statusCode: number, responseTime: number): void {
+    // Use Google Cloud Logging format for HTTP requests
     this.logger.info('HTTP Request', {
       httpRequest: {
         requestMethod: method,
         requestUrl: url,
         status: statusCode,
-        responseTime,
+        latency: `${responseTime}ms`,
+        responseSize: 0, // Can be added if needed
+        userAgent: '', // Can be extracted from request headers
+        remoteIp: '', // Can be extracted from request
       },
     });
   }

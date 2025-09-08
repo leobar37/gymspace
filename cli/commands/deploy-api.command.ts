@@ -1,5 +1,6 @@
 import { Command } from 'commander';
-import inquirer from 'inquirer';
+import * as readline from 'readline/promises';
+import { stdin as input, stdout as output } from 'process';
 import chalk from 'chalk';
 import { deployApi } from '../functions/deploy-api.js';
 
@@ -11,7 +12,7 @@ export function createDeployApiCommand(): Command {
     .option('-p, --project <projectId>', 'Google Cloud project ID', 'meta-episode-466920-h4')
     .option('-e, --environment <env>', 'Deployment environment', 'production')
     .option('-t, --tag <tag>', 'Custom image tag', 'latest')
-    .option('-c, --cloud-run', 'Deploy to Cloud Run after pushing image', false)
+    .option('-c, --cloud-run', 'Deploy to Cloud Run after pushing image', true)
     .option('-d, --dry-run', 'Perform a dry run without making changes')
     .action(async (options) => {
       try {
@@ -25,15 +26,15 @@ export function createDeployApiCommand(): Command {
 
         // Confirm deployment
         const action = options.cloudRun ? 'build, push and deploy' : 'build and push';
-        const { confirmDeploy } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirmDeploy',
-            message: `Are you sure you want to ${options.dryRun ? 'simulate' : 'execute'} ${action} to ${options.environment}?`,
-            default: false,
-          },
-        ]);
+        const rl = readline.createInterface({ input, output });
+        
+        const answer = await rl.question(
+          chalk.cyan(`Are you sure you want to ${options.dryRun ? 'simulate' : 'execute'} ${action} to ${options.environment}? (y/N) `)
+        );
+        rl.close();
 
+        const confirmDeploy = answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
+        
         if (!confirmDeploy) {
           console.log(chalk.yellow('\n❌ Deployment cancelled\n'));
           process.exit(0);

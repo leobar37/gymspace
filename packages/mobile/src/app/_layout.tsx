@@ -9,6 +9,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../../global.css';
 
 function RootLayout() {
+  console.log('starting in...', process.env.EXPO_PUBLIC_API_URL);
+
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView className="flex-1">
