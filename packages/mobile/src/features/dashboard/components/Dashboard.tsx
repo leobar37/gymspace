@@ -17,6 +17,7 @@ import {
   CheckInsWidget,
   NewClientsWidget
 } from './widgets/MetricsWidget';
+import { DataPrefetch } from './DataPrefetch';
 
 export const Dashboard: React.FC = () => {
   // Dashboard date range management
@@ -36,6 +37,9 @@ export const Dashboard: React.FC = () => {
 
   return (
     <View className="flex-1 bg-gray-50">
+      {/* Prefetch data in background without blocking UI */}
+      <DataPrefetch />
+      
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}

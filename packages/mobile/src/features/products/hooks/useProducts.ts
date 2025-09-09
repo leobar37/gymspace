@@ -20,6 +20,25 @@ export const productKeys = {
   lowStock: () => [...productKeys.all, 'low-stock'] as const,
 };
 
+// Shared configuration for products list
+const PRODUCTS_LIST_CONFIG = {
+  page: 1,
+  limit: 1000,
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  gcTime: 10 * 60 * 1000, // 10 minutes
+} as const;
+
+// Shared query function for fetching all products
+const createProductsQueryFn = (sdk: ReturnType<typeof useGymSdk>['sdk']) => {
+  return async (): Promise<Product[]> => {
+    const response = await sdk.products.searchProducts({ 
+      page: PRODUCTS_LIST_CONFIG.page, 
+      limit: PRODUCTS_LIST_CONFIG.limit
+    });
+    return response.data || [];
+  };
+};
+
 export interface UseProductsOptions {
   enabled?: boolean;
   staleTime?: number;
@@ -30,20 +49,13 @@ export function useProducts(options: UseProductsOptions = {}) {
   const { sdk } = useGymSdk();
   const {
     enabled = true,
-    staleTime = 5 * 60 * 1000, // 5 minutes
-    gcTime = 10 * 60 * 1000, // 10 minutes
+    staleTime = PRODUCTS_LIST_CONFIG.staleTime,
+    gcTime = PRODUCTS_LIST_CONFIG.gcTime,
   } = options;
 
   return useQuery({
     queryKey: productKeys.all,
-    queryFn: async (): Promise<Product[]> => {
-      // Load up to 100 products without pagination
-      const response = await sdk.products.searchProducts({ 
-        page: 1, 
-        limit: 100 
-      });
-      return response.data || [];
-    },
+    queryFn: createProductsQueryFn(sdk),
     enabled,
     staleTime,
     gcTime,
@@ -71,12 +83,10 @@ export function useProductCategories(options: { enabled?: boolean } = {}) {
 
   return useQuery({
     queryKey: productKeys.categories(),
-    queryFn: async (): Promise<ProductCategory[]> => {
-      return sdk.products.getCategories();
-    },
+    queryFn: createCategoriesQueryFn(sdk),
     enabled,
-    staleTime: 10 * 60 * 1000, // Categories don't change often
-    gcTime: 30 * 60 * 1000,
+    staleTime: CATEGORIES_CONFIG.staleTime,
+    gcTime: CATEGORIES_CONFIG.gcTime,
   });
 }
 
@@ -189,6 +199,47 @@ export function useUpdateStock() {
       queryClient.invalidateQueries({ queryKey: productKeys.lowStock() });
     },
   });
+}
+
+// Shared configuration for categories
+const CATEGORIES_CONFIG = {
+  staleTime: 10 * 60 * 1000, // 10 minutes - categories don't change often
+  gcTime: 30 * 60 * 1000,
+} as const;
+
+// Shared query function for fetching categories
+const createCategoriesQueryFn = (sdk: ReturnType<typeof useGymSdk>['sdk']) => {
+  return async (): Promise<ProductCategory[]> => {
+    return sdk.products.getCategories();
+  };
+};
+
+// Prefetch function for products
+export function usePrefetchProducts() {
+  const { sdk } = useGymSdk();
+  const queryClient = useQueryClient();
+
+  return async () => {
+    await queryClient.prefetchQuery({
+      queryKey: productKeys.all,
+      queryFn: createProductsQueryFn(sdk),
+      staleTime: PRODUCTS_LIST_CONFIG.staleTime,
+    });
+  };
+}
+
+// Prefetch function for categories
+export function usePrefetchCategories() {
+  const { sdk } = useGymSdk();
+  const queryClient = useQueryClient();
+
+  return async () => {
+    await queryClient.prefetchQuery({
+      queryKey: productKeys.categories(),
+      queryFn: createCategoriesQueryFn(sdk),
+      staleTime: CATEGORIES_CONFIG.staleTime,
+    });
+  };
 }
 
 // Re-export filter hook

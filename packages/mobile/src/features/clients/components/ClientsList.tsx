@@ -20,18 +20,20 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Fab } from '@/components/ui/fab';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useDataSearch } from '@/hooks/useDataSearch';
 import { router } from 'expo-router';
 import {
   EditIcon,
   MoreHorizontalIcon,
   PhoneIcon,
+  PlusIcon,
   SearchIcon,
   TrashIcon,
   UserPlusIcon,
@@ -98,21 +100,32 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
 };
 
 export const ClientsList: React.FC = () => {
-  const [searchText, setSearchText] = useState('');
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showActionsheet, setShowActionsheet] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<any>(null);
-  const debouncedSearch = useDebounce(searchText, 300);
 
   const { useClientsList, toggleStatus, isTogglingStatus } = useClientsController();
 
+  // Fetch first 1000 clients for local filtering
   const { data, isLoading, refetch, isRefetching } = useClientsList({
-    search: debouncedSearch,
+    search: '',
     activeOnly: false,
     page: 0,
-    limit: 50,
+    limit: 1000,
     sortBy: 'createdAt',
+  });
+
+  // Use local search hook
+  const { searchInput, setSearchInput, filteredData, hasSearch } = useDataSearch({
+    data: data?.data || [],
+    searchFields: (client) => [
+      client.name || '',
+      client.email || '',
+      client.phone || '',
+      client.clientNumber || '',
+    ],
+    searchPlaceholder: 'Buscar ...',
   });
 
   const handleClientPress = (clientId: string) => {
@@ -157,9 +170,9 @@ export const ClientsList: React.FC = () => {
   const renderEmptyState = () => (
     <VStack className="flex-1 items-center justify-center p-8">
       <Text className="text-gray-500 text-center mb-4">
-        {searchText ? 'No se encontraron clientes' : 'No hay clientes registrados'}
+        {hasSearch ? 'No se encontraron clientes' : 'No hay clientes registrados'}
       </Text>
-      {!searchText && (
+      {!hasSearch && (
         <Button onPress={handleAddClient}>
           <Icon as={UserPlusIcon} className="text-white mr-2" />
           <ButtonText>Agregar primer cliente</ButtonText>
@@ -172,14 +185,14 @@ export const ClientsList: React.FC = () => {
     <View className="flex-1 bg-gray-50">
       {/* Search bar */}
       <View className="px-4 py-3 bg-white border-b border-gray-200">
-        <Input className="bg-gray-50">
+        <Input className="-gray-50">
           <InputSlot className="pl-3">
             <InputIcon as={SearchIcon} className="text-gray-400" />
           </InputSlot>
           <InputField
-            placeholder="Buscar por nombre, email o teléfono..."
-            value={searchText}
-            onChangeText={setSearchText}
+            placeholder="Buscar..."
+            value={searchInput}
+            onChangeText={setSearchInput}
             autoCapitalize="none"
           />
         </Input>
@@ -193,7 +206,7 @@ export const ClientsList: React.FC = () => {
         </VStack>
       ) : (
         <FlatList
-          data={data?.data || []}
+          data={filteredData}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ClientCard
@@ -212,12 +225,14 @@ export const ClientsList: React.FC = () => {
       )}
 
       {/* FAB for adding client */}
-      {data?.data && data.data.length > 0 && (
-        <View className="absolute bottom-6 right-6">
-          <Button onPress={handleAddClient} action="primary">
-            <Icon className="text-white" as={UserPlusIcon} />
-          </Button>
-        </View>
+      {filteredData.length > 0 && (
+        <Fab
+          size="md"
+          placement="bottom right"
+          onPress={handleAddClient}
+        >
+          <Icon as={PlusIcon} />
+        </Fab>
       )}
 
       {/* Action Sheet */}

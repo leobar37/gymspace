@@ -1,6 +1,7 @@
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import type { CreateProductDto, CreateServiceDto, UpdateProductDto } from '@gymspace/sdk';
+import type { CreateProductDto, CreateServiceDto, UpdateProductDto, UpdateStockDto } from '@gymspace/sdk';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { productKeys } from '../hooks/useProducts';
 
 export const useProductsController = () => {
   const queryClient = useQueryClient();
@@ -11,7 +12,8 @@ export const useProductsController = () => {
       return sdk.products.createProduct(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.lowStock() });
     },
   });
 
@@ -20,7 +22,8 @@ export const useProductsController = () => {
       return sdk.products.createService(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.lowStock() });
     },
   });
 
@@ -28,8 +31,12 @@ export const useProductsController = () => {
     mutationFn: async ({ id, data }: { id: string; data: UpdateProductDto }) => {
       return sdk.products.updateProduct(id, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+    onSuccess: (updatedProduct) => {
+      // Update the specific product in cache
+      queryClient.setQueryData(productKeys.detail(updatedProduct.id), updatedProduct);
+      // Invalidate lists to show updated data
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.lowStock() });
     },
   });
 
@@ -37,8 +44,12 @@ export const useProductsController = () => {
     mutationFn: async (id: string) => {
       return sdk.products.deleteProduct(id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+    onSuccess: (_, deletedId) => {
+      // Remove the specific product from cache
+      queryClient.removeQueries({ queryKey: productKeys.detail(deletedId) });
+      // Invalidate lists
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.lowStock() });
     },
   });
 
@@ -46,17 +57,25 @@ export const useProductsController = () => {
     mutationFn: async (id: string) => {
       return sdk.products.toggleProductStatus(id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+    onSuccess: (updatedProduct) => {
+      // Update the specific product in cache
+      queryClient.setQueryData(productKeys.detail(updatedProduct.id), updatedProduct);
+      // Invalidate lists
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.lowStock() });
     },
   });
 
   const updateStock = useMutation({
-    mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
-      return sdk.products.updateStock(id, quantity);
+    mutationFn: async ({ id, data }: { id: string; data: UpdateStockDto }) => {
+      return sdk.products.updateStock(id, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+    onSuccess: (updatedProduct) => {
+      // Update the specific product in cache
+      queryClient.setQueryData(productKeys.detail(updatedProduct.id), updatedProduct);
+      // Invalidate lists and low stock queries
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productKeys.lowStock() });
     },
   });
 

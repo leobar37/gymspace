@@ -42,8 +42,12 @@ export const useClientsController = () => {
   const queryClient = useQueryClient();
 
   // Get clients list
-  const useClientsList = (filters: SearchFilters = {}) => {
-    
+  const useClientsList = (
+    filters: SearchFilters = {
+      page: 1,
+      limit: 20,
+    },
+  ) => {
     return useQuery({
       queryKey: clientsKeys.list(filters),
       queryFn: async () => {
@@ -125,18 +129,6 @@ export const useClientsController = () => {
     },
   });
 
-  // Note: There is no delete endpoint for clients in the API
-  // Clients are managed through status toggling (active/inactive)
-  // const deleteClientMutation = useMutation({
-  //   mutationFn: async (clientId: string) => {
-  //     await sdk.clients.delete(clientId);
-  //   },
-  //   onSuccess: (_, clientId) => {
-  //     queryClient.removeQueries({ queryKey: clientsKeys.detail(clientId) });
-  //     queryClient.invalidateQueries({ queryKey: clientsKeys.lists() });
-  //   },
-  // });
-
   // Prefetch client data
   const prefetchClient = async (clientId: string) => {
     await queryClient.prefetchQuery({
@@ -145,6 +137,19 @@ export const useClientsController = () => {
         const response = await sdk.clients.getClient(clientId);
         return response;
       },
+    });
+  };
+
+  // Prefetch clients list
+  const prefetchClientsList = async () => {
+    const filters = { page: 1, limit: 1000 };
+    await queryClient.prefetchQuery({
+      queryKey: clientsKeys.list(filters),
+      queryFn: async () => {
+        const response = await sdk.clients.searchClients(filters);
+        return response;
+      },
+      staleTime: 2 * 60 * 1000, // 2 minutes
     });
   };
 
@@ -170,6 +175,7 @@ export const useClientsController = () => {
 
     // Utilities
     prefetchClient,
+    prefetchClientsList,
     invalidateClients: () => queryClient.invalidateQueries({ queryKey: clientsKeys.all }),
   };
 };

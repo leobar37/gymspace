@@ -50,7 +50,7 @@ export default function ClientDetailScreen() {
       if (error?.response?.data?.code === 'CANNOT_DEACTIVATE_CLIENT_WITH_ACTIVE_CONTRACTS') {
         setStatusError(
           error.response.data.message ||
-            'No se puede desactivar el cliente porque tiene contratos activos.',
+          'No se puede desactivar el cliente porque tiene contratos activos.',
         );
       } else {
         setStatusError('Ocurrió un error al cambiar el estado del cliente.');

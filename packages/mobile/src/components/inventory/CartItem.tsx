@@ -1,14 +1,16 @@
 import React from 'react';
-import { Pressable, Image } from 'react-native';
+import { Pressable } from 'react-native';
 import { Card } from '@/components/ui/card';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Icon } from '@/components/ui/icon';
-import { TrashIcon } from 'lucide-react-native';
+import { View } from '@/components/ui/view';
+import { TrashIcon, PackageIcon } from 'lucide-react-native';
 import { QuantitySelector } from './QuantitySelector';
+import { AssetPreview } from '@/features/assets/components/AssetPreview';
 import { useFormatPrice } from '@/config/ConfigContext';
-import type { CartItem as CartItemType } from '@/contexts/CartContext';
+import type { CartItem as CartItemType } from '@/features/sales/types';
 
 interface CartItemProps {
   item: CartItemType;
@@ -24,19 +26,18 @@ export function CartItem({ item, onQuantityChange, onRemove }: CartItemProps) {
     <Card className="bg-white border border-gray-200 shadow-sm">
       <HStack space="md" className="p-4">
         {/* Product Image */}
-        <VStack className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-          {product.imageUrl ? (
-            <Image
-              source={{ uri: product.imageUrl }}
-              className="w-full h-full"
-              style={{ resizeMode: 'cover' }}
+        <View className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden items-center justify-center">
+          {product.imageId ? (
+            <AssetPreview
+              assetId={product.imageId}
+              size="small"
+              resizeMode="cover"
+              showLoading={false}
             />
           ) : (
-            <VStack className="flex-1 items-center justify-center">
-              <Text className="text-gray-400 text-xs">No img</Text>
-            </VStack>
+            <Icon as={PackageIcon} className="w-8 h-8 text-gray-400" />
           )}
-        </VStack>
+        </View>
 
         {/* Product Info & Controls */}
         <VStack className="flex-1" space="xs">

@@ -79,22 +79,6 @@ export const useClientSearchController = (options: ClientSearchOptions = {}) => 
     });
   };
 
-  // Search by specific fields
-  const searchByClientNumber = useCallback(async (clientNumber: string) => {
-    return sdk.clients.searchClients({
-      clientNumber,
-      activeOnly: options.activeOnly,
-      includeContractStatus: options.includeContractStatus,
-    });
-  }, [sdk, options]);
-
-  const searchByDocumentId = useCallback(async (documentId: string) => {
-    return sdk.clients.searchClients({
-      documentId,
-      activeOnly: options.activeOnly,
-      includeContractStatus: options.includeContractStatus,
-    });
-  }, [sdk, options]);
 
   // Check if client can check in
   const canClientCheckIn = useCallback((client: Client): { 
@@ -156,8 +140,6 @@ export const useClientSearchController = (options: ClientSearchOptions = {}) => 
     useClientSearchForCheckIn,
     
     // Utilities
-    searchByClientNumber,
-    searchByDocumentId,
     canClientCheckIn,
   };
 };

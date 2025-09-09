@@ -31,6 +31,7 @@ export function AppProviders({ children }: AppProvidersProps) {
             segments,
           });
           try {
+            router.replace('(onboarding)/login');
             queryClient.clear();
           } catch (error) {
             console.log('error to login', error);
