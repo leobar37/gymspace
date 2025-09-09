@@ -54,9 +54,17 @@ export default function PaymentMethodsLayout() {
       <Stack.Screen
         name="[id]/index"
         options={{
-          title: 'Detalle del método',
-          headerShown: false,
+          title: '',
+          headerShown: true,
           animation: 'ios_from_right',
+          headerLeft: () => (
+            <BackButton
+              label=""
+              onPress={() => {
+                router.back();
+              }}
+            />
+          ),
         }}
       />
       <Stack.Screen

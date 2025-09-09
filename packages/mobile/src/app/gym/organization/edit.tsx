@@ -13,14 +13,14 @@ import { Spinner } from '@/components/ui/spinner';
 
 export default function EditOrganizationScreen() {
   const router = useRouter();
-  const { organization, isLoading: sessionLoading } = useCurrentSession();
-  
-  const { 
-    data: organizationData, 
-    isLoading: orgLoading 
-  } = useOrganization(organization?.id || '');
+  const {
+    session: { organization },
+    isLoading: sessionLoading,
+  } = useCurrentSession();
 
-  console.log("organization data:", organizationData);
+  const { data: organizationData, isLoading: orgLoading } = useOrganization(organization?.id || '');
+
+  console.log('organization data:', organizationData);
 
   const isLoading = sessionLoading || orgLoading;
 
@@ -28,6 +28,10 @@ export default function EditOrganizationScreen() {
     // Navigate back to organization screen
     router.back();
   };
+
+  console.log("useOrganization", JSON.stringify({
+    organization,
+  }));
 
   const handleCancel = () => {
     // Navigate back to organization screen

@@ -3,7 +3,6 @@ import {
   clearAuthAtom,
   sessionAtom,
   setCurrentGymIdAtom,
-  authFailureCount,
   hasReachedMaxFailures,
   resetAuthFailureTracking,
   incrementAuthFailureCount,
@@ -12,7 +11,6 @@ import type { CurrentSessionResponse } from '@gymspace/sdk';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAtom, useSetAtom } from 'jotai';
 import { useSegments } from 'expo-router';
-import { useEffect } from 'react';
 
 export const sessionKeys = {
   all: ['session'] as const,
@@ -51,32 +49,22 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
 
   const isOnAuthRoute = segments[0] === '(onboarding)' || Array(segments).length === 0;
 
-  useEffect(() => {
-    if (isAuthFromProvider && authToken) {
-      resetAuthFailureTracking();
-      // Invalidate the query to trigger a fresh fetch after auth is restored
-      queryClient.invalidateQueries({ queryKey: sessionKeys.current() });
-    }
-  }, [isAuthFromProvider, authToken, queryClient]);
-
-  const sessionQuery = useQuery<CurrentSessionResponse | null>({
+  const sessionQuery = useQuery<CurrentSessionResponse>({
     queryKey: sessionKeys.current(),
     queryFn: async () => {
       if (!authToken) {
-        console.log('No auth token available');
-        return null;
+        throw new Error('No auth token available');
       }
 
-      // Small delay to ensure failure tracking reset and SDK token setup has taken effect
-      await new Promise(resolve => setTimeout(resolve, 200));
-
       if (hasReachedMaxFailures) {
-        console.log('Max auth failures reached, skipping session fetch');
-        return null;
+        throw new Error('Max auth failures reached');
       }
 
       try {
-        console.log('Fetching current session with token:', authToken ? 'Token present' : 'No token');
+        console.log(
+          'Fetching current session with token:',
+          authToken ? 'Token present' : 'No token',
+        );
         const response = await sdk.auth.getCurrentSession();
         console.log('Session fetched successfully', response);
 
@@ -104,7 +92,6 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
 
           await clearAuth();
           queryClient.removeQueries({ queryKey: sessionKeys.all });
-          return null;
         }
 
         throw error;
@@ -144,18 +131,29 @@ export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
   };
 
   const refreshSession = async () => {
-    return queryClient.invalidateQueries({ queryKey: sessionKeys.current() });
+    await queryClient.invalidateQueries({ queryKey: sessionKeys.current() });
+    return sessionQuery.refetch();
   };
 
+  const refetchSession = async () => {
+    return sessionQuery.refetch();
+  };
+
+  const currentSession = session || sessionQuery.data;
+
   return {
-    session: session || sessionQuery.data,
+    session: currentSession,
+    organization: currentSession?.organization,
+    gym: currentSession?.gym,
+    user: currentSession?.user,
     isLoading,
     isError: sessionQuery.isError,
     error: sessionQuery.error,
     isAuthenticated,
-    hasSession: !!session || !!sessionQuery.data,
+    hasSession: !!currentSession,
     clearSession,
     refreshSession,
+    refetchSession,
     refetch: sessionQuery.refetch,
   };
 }

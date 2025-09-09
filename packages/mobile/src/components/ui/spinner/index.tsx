@@ -17,6 +17,7 @@ const Spinner = React.forwardRef<
   {
     className,
     color,
+    size = 'small',
     focusable = false,
     'aria-label': ariaLabel = 'loading',
     ...props
@@ -28,6 +29,7 @@ const Spinner = React.forwardRef<
       ref={ref}
       focusable={focusable}
       aria-label={ariaLabel}
+      size={size}
       {...props}
       color={color}
       className={spinnerStyle({ class: className })}

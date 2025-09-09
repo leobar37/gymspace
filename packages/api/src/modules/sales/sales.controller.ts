@@ -30,7 +30,6 @@ export class SalesController {
   @ApiResponse({ status: 200, description: 'Paginated list of sales' })
   async searchSales(@Query() dto: SearchSalesDto, @AppCtxt() ctx: RequestContext) {
     return await this.salesService.searchSales(ctx, dto);
-    return await this.salesService.searchSales(ctx, dto);
   }
 
   @Get('stats')

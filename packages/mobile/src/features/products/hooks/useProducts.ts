@@ -1,14 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { transformPaginatedResponse, type TransformedPaginatedResponse } from '@/utils/pagination';
-import type { 
-  Product, 
-  ProductCategory,
-  SearchProductsParams, 
+import type {
   CreateProductDto,
   CreateServiceDto,
+  Product,
+  ProductCategory,
+  SearchProductsParams,
   UpdateProductDto
 } from '@gymspace/sdk';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Query key factories
 export const productKeys = {
@@ -21,26 +20,29 @@ export const productKeys = {
   lowStock: () => [...productKeys.all, 'low-stock'] as const,
 };
 
-export interface UseProductsOptions extends SearchProductsParams {
+export interface UseProductsOptions {
   enabled?: boolean;
   staleTime?: number;
   gcTime?: number;
 }
 
-export function useProducts(options: UseProductsOptions = { page: 1, limit: 20 }) {
+export function useProducts(options: UseProductsOptions = {}) {
   const { sdk } = useGymSdk();
   const {
     enabled = true,
     staleTime = 5 * 60 * 1000, // 5 minutes
     gcTime = 10 * 60 * 1000, // 10 minutes
-    ...searchParams
   } = options;
 
   return useQuery({
-    queryKey: productKeys.list(searchParams),
-    queryFn: async (): Promise<TransformedPaginatedResponse<Product>> => {
-      const response = await sdk.products.searchProducts(searchParams);
-      return transformPaginatedResponse(response);
+    queryKey: productKeys.all,
+    queryFn: async (): Promise<Product[]> => {
+      // Load up to 100 products without pagination
+      const response = await sdk.products.searchProducts({ 
+        page: 1, 
+        limit: 100 
+      });
+      return response.data || [];
     },
     enabled,
     staleTime,
@@ -188,3 +190,11 @@ export function useUpdateStock() {
     },
   });
 }
+
+// Re-export filter hook
+export { useProductsFilter } from './useProductsFilter';
+export type { ProductFilters, UseProductsFilterOptions, UseProductsFilterReturn } from './useProductsFilter';
+
+// Re-export services hook
+export { serviceKeys, useServices } from './useServices';
+export type { UseServicesOptions } from './useServices';

@@ -27,6 +27,8 @@ export const PaymentMethodDetailsModal: React.FC<PaymentMethodDetailsModalProps>
   const strategy = getPaymentViewerStrategy(paymentMethod);
   const colorClasses = getPaymentMethodColor(paymentMethod.code);
 
+  console.log("method", paymentMethod);
+
   return (
     <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 bg-black/50">

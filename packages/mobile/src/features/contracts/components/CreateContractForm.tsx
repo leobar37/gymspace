@@ -1,26 +1,26 @@
+import { FormDatePicker } from '@/components/forms/FormDatePicker';
+import { FormInput } from '@/components/forms/FormInput';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { useFormatPrice } from '@/config/ConfigContext';
+import { ClientSelector } from '@/features/clients/components/ClientSelector';
+import { FileSelector } from '@/features/files/components/FileSelector';
+import { PaymentMethodSelectorField } from '@/features/payment-methods/components/PaymentMethodSelectorField';
+import { PlanSelector } from '@/features/plans/components/PlanSelector';
+import { ScreenForm } from '@/shared/components/ScreenForm';
+import { useLoadingScreen } from '@/shared/loading-screen';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, parse } from 'date-fns';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { View } from 'react-native';
 import { z } from 'zod';
-import { useLoadingScreen } from '@/shared/loading-screen';
-import { FormInput } from '@/components/forms/FormInput';
-import { FormDatePicker } from '@/components/forms/FormDatePicker';
-import { Heading } from '@/components/ui/heading';
-import { Card } from '@/components/ui/card';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { useFormatPrice } from '@/config/ConfigContext';
-import { ClientSelector } from '@/features/clients/components/ClientSelector';
-import { PlanSelector } from '@/features/plans/components/PlanSelector';
-import { FileSelector } from '@/features/files/components/FileSelector';
-import { PaymentMethodSelectorField } from '@/features/payment-methods/components/PaymentMethodSelectorField';
 import { ContractFormData, useContractsController } from '../controllers/contracts.controller';
-import { ScreenForm } from '@/shared/components/ScreenForm';
-import { Button, ButtonText } from '@/components/ui/button';
 
 // Form validation schema
 const createContractSchema = z.object({
@@ -60,7 +60,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   const formatPrice = useFormatPrice();
   const { createContract } = useContractsController();
   const { execute } = useLoadingScreen();
-  
+
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   // Parse initial date if provided as string
   const parseInitialDate = (dateStr?: string) => {
@@ -92,7 +92,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
     watch,
     formState: { isValid },
   } = methods;
-  
+
   const watchedDiscount = watch('discountPercentage');
   const watchedCustomPrice = watch('customPrice');
 
@@ -179,7 +179,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
         showBackButton={true}
         showFixedFooter
         footerContent={
-          <View className="bg-white border-t border-gray-200">
+          <View>
             {/* Price Summary */}
             {selectedPlan && (
               <Card className="mx-4 mt-3 mb-2">
@@ -190,14 +190,19 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                   <VStack className="gap-2">
                     <HStack className="justify-between">
                       <Text className="text-gray-600">Precio del plan:</Text>
-                      <Text className="font-medium">{formatPrice(selectedPlan.basePrice || 0)}</Text>
+                      <Text className="font-medium">
+                        {formatPrice(selectedPlan.basePrice || 0)}
+                      </Text>
                     </HStack>
 
                     {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
                       <HStack className="justify-between">
                         <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                         <Text className="font-medium text-green-600">
-                          -{formatPrice(((selectedPlan.basePrice || 0) * Number(watchedDiscount)) / 100)}
+                          -
+                          {formatPrice(
+                            ((selectedPlan.basePrice || 0) * Number(watchedDiscount)) / 100,
+                          )}
                         </Text>
                       </HStack>
                     )}
@@ -213,13 +218,15 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
 
                     <HStack className="justify-between pt-2 border-t border-gray-200">
                       <Text className="font-semibold">Precio final:</Text>
-                      <Text className="font-bold text-lg">{formatPrice(calculateFinalPrice())}</Text>
+                      <Text className="font-bold text-lg">
+                        {formatPrice(calculateFinalPrice())}
+                      </Text>
                     </HStack>
                   </VStack>
                 </View>
               </Card>
             )}
-            
+
             {/* Submit Button */}
             <View className="px-4 pb-3">
               <Button onPress={handleSubmit(onSubmit)} isDisabled={!isValid} variant="solid">
@@ -229,7 +236,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
           </View>
         }
       >
-        <View className="py-1 px-3 pb-40">
+        <View className="py-1 px-3 pb-40 bg-white">
           <Heading size="md" className="mb-3">
             Información del contrato
           </Heading>
@@ -299,7 +306,6 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
             <FileSelector name="receiptIds" multi={true} label="Recibos adjuntos (opcional)" />
           </View>
         </View>
-
       </ScreenForm>
     </FormProvider>
   );

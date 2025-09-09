@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
@@ -8,11 +8,11 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Icon } from '@/components/ui/icon';
-import { BackButton } from '@/shared/components';
 import { EditIcon, CreditCardIcon, TrashIcon } from 'lucide-react-native';
 import { usePaymentMethodsController } from '@/features/payment-methods/controllers/payment-methods.controller';
-import { ScrollView, View, Pressable } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PreviewFile } from '@/features/files/components/FilePreview';
 
 export default function PaymentMethodDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -54,24 +54,6 @@ export default function PaymentMethodDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-white border-b border-gray-200 px-4 py-3">
-        <HStack className="items-center justify-between">
-          <HStack className="items-center gap-3 flex-1">
-            <BackButton
-              label=""
-              onPress={() => router.back()}
-            />
-            <Text className="text-lg font-semibold text-gray-900">
-              {paymentMethod.name}
-            </Text>
-          </HStack>
-          <Pressable onPress={handleEditPress} className="p-2">
-            <Icon as={EditIcon} size="sm" className="text-gray-600" />
-          </Pressable>
-        </HStack>
-      </View>
-
       <ScrollView className="flex-1">
         <VStack className="p-4" space="lg">
           {/* Status and Basic Info */}
@@ -114,10 +96,35 @@ export default function PaymentMethodDetailScreen() {
                     // Skip empty or system values
                     if (!value || key === 'type' || key === 'country') return null;
                     
+                    // Check if this is a QR code file ID
+                    const isQrCodeFile = key.toLowerCase().includes('qr') && 
+                                       typeof value === 'string' && 
+                                       value.match(/^[a-f0-9-]{36}/i);
+                    
                     // Format key display name
                     const displayKey = key
                       .replace(/([A-Z])/g, ' $1')
-                      .replace(/^./, str => str.toUpperCase());
+                      .replace(/^./, str => str.toUpperCase())
+                      .replace('Qr', 'QR');
+                    
+                    if (isQrCodeFile) {
+                      return (
+                        <VStack key={key} space="xs">
+                          <Text className="text-sm font-medium text-gray-600">
+                            {displayKey}:
+                          </Text>
+                          <View className="items-center mt-2">
+                            <PreviewFile
+                              fileId={value as string}
+                              width={200}
+                              height={200}
+                              resizeMode="contain"
+                              fullscreenEnabled={true}
+                            />
+                          </View>
+                        </VStack>
+                      );
+                    }
                     
                     return (
                       <HStack key={key} className="justify-between">

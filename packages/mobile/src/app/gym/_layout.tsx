@@ -7,6 +7,14 @@ export default function GymLayout() {
         headerShown: true,
         animation: 'slide_from_right',
       }}
-    />
+    >
+      <Stack.Screen
+        name="[id]"
+        options={{
+          headerShown: false,
+          title: 'Detalles del Gimnasio',
+        }}
+      />
+    </Stack>
   );
 }

@@ -89,15 +89,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {product.name}
             </Text>
 
-            {/* Description */}
-            {product.description && !compact && (
-              <Text 
-                className="text-xs text-gray-600" 
-                numberOfLines={2}
-              >
-                {product.description}
-              </Text>
-            )}
 
             {/* Price and Stock Row */}
             <HStack className="items-center justify-between mt-1">

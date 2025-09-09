@@ -3,20 +3,7 @@ import React from 'react';
 
 export default function ContractsLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#ffffff',
-        },
-        headerTitleStyle: {
-          fontSize: 18,
-          fontWeight: '600',
-        },
-        headerTintColor: '#374151',
-        animation: 'slide_from_right',
-        headerBackTitle: ' ',
-      }}
-    >
+    <Stack screenOptions={{}}>
       <Stack.Screen
         name="index"
         options={{
@@ -26,7 +13,7 @@ export default function ContractsLayout() {
       <Stack.Screen
         name="create"
         options={{
-          headerShown: false
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -51,7 +38,7 @@ export default function ContractsLayout() {
         name="expiring"
         options={{
           title: 'Contratos por Vencer 2',
-          headerShown: false
+          headerShown: false,
         }}
       />
     </Stack>

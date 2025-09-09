@@ -108,7 +108,7 @@ export const ScreenForm: React.FC<ScreenFormProps> = ({
   );
 
   return (
-    <ContentWrapper className={`flex-1 bg-gray-50 ${className}`}>
+    <ContentWrapper className={`flex-1 bg-white ${className}`}>
       {content}
     </ContentWrapper>
   );

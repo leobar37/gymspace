@@ -85,15 +85,6 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
               {service.name}
             </Text>
 
-            {/* Description */}
-            {service.description && !compact && (
-              <Text 
-                className="text-xs text-gray-600" 
-                numberOfLines={2}
-              >
-                {service.description}
-              </Text>
-            )}
 
             {/* Price Row */}
             <HStack className="items-center justify-between mt-1">

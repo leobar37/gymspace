@@ -12,19 +12,18 @@ export class IngestClient {
 
   constructor(private readonly configService: ConfigService) {
     const appId = this.configService.get<string>('app.name', 'gymspace-api');
-    const environment = this.configService.get<string>('app.environment', 'development');
-
+    const isDev = this.configService.get<boolean>('app.isDev', false);
     const eventKey = this.configService.get<string>('ingestKey');
     this.client = new Inngest({
-      id: `${appId}-${environment}`,
+      id: `${appId}-${isDev ? 'dev' : 'prd'}`,
       eventKey: this.configService.get<string>('ingestKey'),
-      isDev: environment === 'development',
+      isDev: isDev,
     });
     if (!isEmpty(eventKey)) {
       console.log('found event key ingest=======');
     }
 
-    this.logger.log(`Inngest client initialized with ID: ${appId}-${environment}`);
+    this.logger.log(`Inngest client initialized with ID: ${appId}`);
   }
 
   /**
@@ -34,6 +33,7 @@ export class IngestClient {
   getClient(): Inngest {
     return this.client;
   }
+  
 
   /**
    * Get the raw Inngest client for typing compatibility

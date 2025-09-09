@@ -4,7 +4,7 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Icon } from '@/components/ui/icon';
-import { FilePreview } from '@/features/files/components/FilePreview';
+import { FilePreview, PreviewFile } from '@/features/files/components/FilePreview';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -40,24 +40,18 @@ const InfoRow: React.FC<{ icon: any; label: string; value: string }> = ({ icon, 
 // Mobile Payment Strategy Component (Yape/Plin)
 const MobilePaymentComponent: React.FC<PaymentViewerStrategyProps> = ({ paymentMethod }) => {
   const metadata = paymentMethod.metadata as MobilePaymentMetadata;
-  const { sdk } = useGymSdk();
 
-  // Fetch QR image if exists
-  const { data: qrFile } = useQuery({
-    queryKey: ['file', metadata?.qrImageId],
-    queryFn: () => sdk.files.findOne(metadata.qrImageId!),
-    enabled: !!metadata?.qrImageId,
-  });
-
+  console.log("metadata", JSON.stringify(metadata));
+  
   return (
     <VStack space="md">
       {/* QR Code Section */}
-      {qrFile && (
+      {paymentMethod.metadata.qrCodeFileId && (
         <VStack space="sm" className="items-center py-4">
           <Text className="text-sm font-medium text-gray-700">Código QR</Text>
           <View className="w-full items-center">
-            <FilePreview 
-              file={qrFile} 
+            <PreviewFile
+              fileId={(metadata as any).qrCodeFileId}
               width={280}
               height={280}
               resizeMode="contain"

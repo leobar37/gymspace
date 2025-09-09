@@ -1,6 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import type { CreateProductDto, CreateServiceDto, UpdateProductDto, Product } from '@gymspace/sdk';
+import type { CreateProductDto, CreateServiceDto, UpdateProductDto } from '@gymspace/sdk';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const useProductsController = () => {
   const queryClient = useQueryClient();

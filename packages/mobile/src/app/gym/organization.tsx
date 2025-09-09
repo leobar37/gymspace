@@ -126,12 +126,6 @@ export default function OrganizationScreen() {
                   <Icon as={Building2} size="sm" className="text-gray-500" />
                   <Text className="text-lg font-semibold text-gray-900">Gimnasios</Text>
                 </HStack>
-                <Button size="sm" variant="outline" onPress={handleAddGym} className="px-3">
-                  <HStack className="items-center" space="xs">
-                    <Icon as={Plus} size="xs" />
-                    <ButtonText className="text-sm">Agregar</ButtonText>
-                  </HStack>
-                </Button>
               </HStack>
 
               {organizationGyms && organizationGyms.length > 0 ? (
@@ -140,8 +134,8 @@ export default function OrganizationScreen() {
                     <Pressable
                       key={gym.id}
                       onPress={() => {
-                        // Navigate to gym details or switch context
-                        router.push(`/gym/${gym.id}/details`);
+                        // Navigate to gym details
+                        router.push(`/gym/${gym.id}`);
                       }}
                       className="flex-row items-center justify-between py-3 px-2 rounded-lg bg-gray-50 active:bg-gray-100"
                     >

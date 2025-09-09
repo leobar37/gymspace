@@ -7,42 +7,26 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { View } from '@/components/ui/view';
 import { VStack } from '@/components/ui/vstack';
-import { useProducts } from '@/features/products/hooks/useProducts';
-import { PRODUCT_TYPES } from '@/shared/constants';
+import { Fab, FabIcon } from '@/components/ui/fab';
+import { useServices, useServicesFilter } from '@/features/products/hooks';
 import type { Product } from '@gymspace/sdk';
 import { router } from 'expo-router';
 import { PlusIcon, SearchIcon } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { Pressable } from 'react-native';
+import React from 'react';
 
 export default function ServicesScreen() {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Fetch all services at once (no pagination, no API search)
-  const { data, isLoading, refetch } = useProducts({
-    type: PRODUCT_TYPES.SERVICE,
-    limit: 9999, // Get all services
-    page: 1,
+  // Load all services (up to 100)
+  const { data: services = [], isLoading, refetch } = useServices({
+    enabled: true,
   });
 
-  const allServices = data?.items || [];
-
-  // Filter services locally based on search term
-  const filteredServices = React.useMemo(() => {
-    if (!searchTerm.trim()) {
-      return allServices;
-    }
-
-    const searchLower = searchTerm.toLowerCase().trim();
-    return allServices.filter((service) => {
-      // Search in name and description
-      const nameMatch = service.name?.toLowerCase().includes(searchLower);
-      const descriptionMatch = service.description?.toLowerCase().includes(searchLower);
-      const skuMatch = service.sku?.toLowerCase().includes(searchLower);
-
-      return nameMatch || descriptionMatch || skuMatch;
-    });
-  }, [allServices, searchTerm]);
+  // Use local filtering hook for services
+  const {
+    filteredServices,
+    filters,
+    searchInput,
+    setSearchInput,
+  } = useServicesFilter({ services });
 
   const handleServicePress = (service: Product) => {
     router.push(`/inventory/services/${service.id}`);
@@ -52,11 +36,8 @@ export default function ServicesScreen() {
     router.push('/inventory/services/new');
   };
 
-  const handleSearch = (text: string) => {
-    setSearchTerm(text);
-  };
 
-  if (isLoading && !data) {
+  if (isLoading && services.length === 0) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center">
@@ -68,10 +49,10 @@ export default function ServicesScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-white">
       <VStack className="flex-1">
         {/* Header */}
-        <View className="bg-white border-b border-gray-200">
+        <View className="bg-white">
           <VStack space="sm" className="px-4 py-3">
             {/* Search Bar */}
             <Input variant="outline" size="md">
@@ -80,40 +61,43 @@ export default function ServicesScreen() {
               </InputSlot>
               <InputField
                 placeholder="Buscar servicios..."
-                value={searchTerm}
-                onChangeText={handleSearch}
+                value={searchInput}
+                onChangeText={setSearchInput}
                 autoCapitalize="none"
               />
             </Input>
 
             {/* Search Results Info */}
-            {searchTerm.trim() && (
+            {filters.search && (
               <Text className="text-sm text-gray-600">
-                {filteredServices.length} de {allServices.length} servicios encontrados
+                {filteredServices.length} de {services.length} servicios encontrados
               </Text>
             )}
 
             {/* Stats */}
-            <HStack space="md" className='-mt-4'>
+            <HStack space="md" className='mt-2'>
               <View className="flex-1 bg-blue-50 rounded-lg p-3">
                 <Text className="text-xs text-blue-600 font-medium">Total Servicios</Text>
-                <Text className="text-lg font-bold text-blue-700">{allServices.length}</Text>
+                <Text className="text-lg font-bold text-blue-700">{services.length}</Text>
               </View>
               <View className="flex-1 bg-green-50 rounded-lg p-3">
                 <Text className="text-xs text-green-600 font-medium">Activos</Text>
                 <Text className="text-lg font-bold text-green-700">
-                  {allServices.filter((s) => s.status === 'active').length}
+                  {services.filter((s: Product) => s.status === 'active').length}
                 </Text>
               </View>
               <View className="flex-1 bg-gray-100 rounded-lg p-3">
                 <Text className="text-xs text-gray-600 font-medium">Inactivos</Text>
                 <Text className="text-lg font-bold text-gray-700">
-                  {allServices.filter((s) => s.status === 'inactive').length}
+                  {services.filter((s: Product) => s.status === 'inactive').length}
                 </Text>
               </View>
             </HStack>
           </VStack>
         </View>
+
+        {/* Spacing between header and content */}
+        <View className="h-4" />
 
         {/* Services List */}
         <ServicesList
@@ -125,19 +109,13 @@ export default function ServicesScreen() {
         />
 
         {/* Floating Action Button */}
-        <Pressable
+        <Fab
           onPress={handleNewService}
-          className="absolute bottom-6 right-6 bg-blue-600 rounded-full p-4 active:bg-blue-700"
-          style={{
-            elevation: 5,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 4,
-          }}
+          size="lg"
+          placement="bottom right"
         >
-          <Icon as={PlusIcon} className="w-6 h-6 text-white" />
-        </Pressable>
+          <FabIcon as={PlusIcon} />
+        </Fab>
       </VStack>
     </SafeAreaView>
   );

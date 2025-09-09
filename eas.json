@@ -9,7 +9,13 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "API_URL": "http://192.168.100.19:5200/api/v1"
+        "API_URL": "http://192.168.100.19:5200/api/v1",
+        "ANDROID_HOME": "/Users/leobar37/Library/Android/sdk"
+      },
+      "android": {
+        "env": {
+          "ANDROID_HOME": "/Users/leobar37/Library/Android/sdk"
+        }
       },
       "ios": {
         "simulator": true
@@ -18,17 +24,27 @@
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "env": {
+          "ANDROID_HOME": "/Users/leobar37/Library/Android/sdk"
+        }
       },
       "env": {
-        "API_URL": "https://gymspace-api-dev-vxzoxrvkoq-uc.a.run.app/api/v1"
+        "API_URL": "https://gymspace-api-dev-vxzoxrvkoq-uc.a.run.app/api/v1",
+        "ANDROID_HOME": "/Users/leobar37/Library/Android/sdk"
       },
       "prebuildCommand": "cd ../sdk && pnpm build && cd ../shared && pnpm build"
     },
     "production": {
       "autoIncrement": true,
+      "android": {
+        "env": {
+          "ANDROID_HOME": "/Users/leobar37/Library/Android/sdk"
+        }
+      },
       "env": {
-        "API_URL": "https://gymspace-api-dev-vxzoxrvkoq-uc.a.run.app/api/v1"
+        "API_URL": "https://gymspace-api-dev-vxzoxrvkoq-uc.a.run.app/api/v1",
+        "ANDROID_HOME": "/Users/leobar37/Library/Android/sdk"
       },
       "prebuildCommand": "cd ../sdk && pnpm build && cd ../shared && pnpm build"
     }
