@@ -5,6 +5,7 @@ import { CreateLeadDto, UpdateLeadDto, SearchLeadsDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Lead, Prisma, ClientStatus } from '@prisma/client';
 import { LeadStatus } from '@gymspace/shared';
+import { RequestContext } from '../../common/services/request-context.service';
 
 @Injectable()
 export class LeadsService {
@@ -161,9 +162,12 @@ export class LeadsService {
   /**
    * Search leads
    */
-  async searchLeads(gymId: string, dto: SearchLeadsDto, userId: string) {
+  async searchLeads(context: RequestContext, dto: SearchLeadsDto) {
+    const gymId = context.getGymId()!;
+    const userId = context.getUserId()!;
+    
     // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+    const hasAccess = await this.gymsService.hasGymAccess(context, gymId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
     }
@@ -237,9 +241,12 @@ export class LeadsService {
   /**
    * Get lead statistics for a gym
    */
-  async getLeadStats(gymId: string, userId: string) {
+  async getLeadStats(context: RequestContext) {
+    const gymId = context.getGymId()!;
+    const userId = context.getUserId()!;
+    
     // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+    const hasAccess = await this.gymsService.hasGymAccess(context, gymId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
     }

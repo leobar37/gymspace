@@ -54,11 +54,11 @@ export function useAuthToken() {
   /**
    * Retrieve stored authentication token
    */
-  const getStoredToken = useCallback((): string | null => {
+  const getStoredToken = useCallback(async (): Promise<string | null> => {
     // Check if token is expired
     if (authState.expiresAt && Date.now() > authState.expiresAt) {
       // Token is expired, clear it
-      clearAuth();
+      await clearAuth();
       return null;
     }
     return authState.accessToken;
@@ -81,16 +81,15 @@ export function useAuthToken() {
   /**
    * Clear all stored authentication data
    */
-  const clearStoredTokens = useCallback((): boolean => {
+  const clearStoredTokens = useCallback(async (): Promise<boolean> => {
     try {
-      clearAuth();
-      sdk.clearAuth();
+      await clearAuth(); // This now also clears SDK auth
       return true;
     } catch (error) {
       console.error('Failed to clear auth tokens:', error);
       return false;
     }
-  }, [clearAuth, sdk]);
+  }, [clearAuth]);
 
   /**
    * Refresh expired token

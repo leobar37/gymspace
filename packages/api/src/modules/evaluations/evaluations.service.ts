@@ -19,12 +19,14 @@ export class EvaluationsService {
    * Create a new evaluation (CU-015)
    */
   async createEvaluation(
-    gymId: string,
+    context: RequestContext,
     dto: CreateEvaluationDto,
-    userId: string,
   ): Promise<Evaluation> {
+    const gymId = context.getGymId()!;
+    const userId = context.getUserId()!;
+    
     // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+    const hasAccess = await this.gymsService.hasGymAccess(context, gymId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
     }
@@ -321,9 +323,12 @@ export class EvaluationsService {
   /**
    * Get gym evaluation statistics
    */
-  async getGymEvaluationStats(gymId: string, userId: string) {
+  async getGymEvaluationStats(context: RequestContext) {
+    const gymId = context.getGymId()!;
+    const userId = context.getUserId()!;
+    
     // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+    const hasAccess = await this.gymsService.hasGymAccess(context, gymId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
     }

@@ -7,6 +7,7 @@ export default Joi.object({
   PORT: Joi.number().default(3000),
   API_PREFIX: Joi.string().default('api/v1'),
 
+  INNGEST_EVENT_KEY: Joi.optional(),
   // Database
   DATABASE_URL: Joi.string().required(),
 

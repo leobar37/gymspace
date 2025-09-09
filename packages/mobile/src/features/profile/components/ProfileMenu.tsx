@@ -1,4 +1,4 @@
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallbackText } from '@/components/ui/avatar';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Divider } from '@/components/ui/divider';
@@ -10,6 +10,8 @@ import { useAuthToken } from '@/hooks/useAuthToken';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { router } from 'expo-router';
+
+
 import {
   BellIcon,
   Building2Icon,
@@ -62,16 +64,19 @@ const MenuItem: React.FC<MenuItemProps> = ({
 export const ProfileMenu: React.FC = () => {
   const { clearAuth } = useGymSdk();
   const { clearStoredTokens } = useAuthToken();
-  const { user, gym, clearSessionCache } = useCurrentSession();
+  const { session, clearSession } = useCurrentSession();
+
+  const user = session?.user;
+  const gym = session?.gym;
 
   const handleLogout = async () => {
     try {
       // Clear auth from provider
-      await clearAuth();
+      clearAuth();
       // Clear stored tokens
       await clearStoredTokens();
       // Clear session cache
-      clearSessionCache();
+      clearSession();
       // Navigate to onboarding
       router.replace('/(onboarding)');
     } catch (error) {
@@ -182,18 +187,18 @@ export const ProfileMenu: React.FC = () => {
   ];
 
   return (
-    <ScrollView  className="flex-1  bg-gray-50">
+    <ScrollView className="flex-1 bg-gray-50">
       <VStack className="pb-8">
         {/* Profile Header */}
         <Card className="mb-4 p-6">
           <HStack className="items-center gap-4">
-            <Avatar className="w-16 h-16 bg-blue-600">
-              <Text className="text-white text-xl font-semibold">
+            <Avatar size="lg">
+              <AvatarFallbackText>
                 {user?.name
                   ?.split(' ')
                   .map((n: string) => n[0])
                   .join('') || 'U'}
-              </Text>
+              </AvatarFallbackText>
             </Avatar>
             <VStack className="flex-1">
               <Text className="text-lg font-semibold text-gray-900">{user?.name || 'Usuario'}</Text>
@@ -224,8 +229,8 @@ export const ProfileMenu: React.FC = () => {
 
         {/* Logout Button */}
         <View className="mx-4 mt-8">
-          <Button onPress={handleLogout} variant="outline" className="w-full">
-            <Icon as={LogOutIcon} className="text-red-600 mr-2" />
+          <Button onPress={handleLogout} variant="outline" className="w-full border-red-600">
+            <Icon as={LogOutIcon} className="text-red-600 w-4 h-4 mr-2" />
             <ButtonText className="text-red-600">Cerrar Sesión</ButtonText>
           </Button>
         </View>

@@ -9,6 +9,8 @@ export default () => ({
   isDev: process.env.NODE_ENV === 'development',
   port: parseInt(process.env.PORT || '5200', 10),
   apiPrefix: process.env.API_PREFIX || 'api/v1',
+ 
+  ingestKey: process.env.INNGEST_EVENT_KEY,
 
   // Database
   database: {

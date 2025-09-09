@@ -1,14 +1,19 @@
-import { useAtom, useSetAtom } from 'jotai';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import type { CurrentSessionResponse } from '@gymspace/sdk';
-import { 
-  sessionAtom, 
+import {
   clearAuthAtom,
-  setCurrentGymIdAtom 
+  sessionAtom,
+  setCurrentGymIdAtom,
+  authFailureCount,
+  hasReachedMaxFailures,
+  resetAuthFailureTracking,
+  incrementAuthFailureCount,
 } from '@/store/auth.atoms';
+import type { CurrentSessionResponse } from '@gymspace/sdk';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAtom, useSetAtom } from 'jotai';
+import { useSegments } from 'expo-router';
+import { useEffect } from 'react';
 
-// Query key factory
 export const sessionKeys = {
   all: ['session'] as const,
   current: () => [...sessionKeys.all, 'current'] as const,
@@ -23,136 +28,134 @@ export interface UseCurrentSessionOptions {
 }
 
 export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
-  const { sdk, authToken, currentGymId, isAuthenticated: isAuthFromProvider, isLoading: isProviderLoading } = useGymSdk();
+  const {
+    sdk,
+    authToken,
+    currentGymId,
+    isAuthenticated: isAuthFromProvider,
+    isLoading: isProviderLoading,
+  } = useGymSdk();
   const [session, setSession] = useAtom(sessionAtom) as [any, any];
   const clearAuth = useSetAtom(clearAuthAtom);
   const setCurrentGymId = useSetAtom(setCurrentGymIdAtom);
   const queryClient = useQueryClient();
+  const segments = useSegments();
 
   const {
     enabled = true,
     refetchOnMount = true,
     refetchOnWindowFocus = false,
-    staleTime = 5 * 60 * 1000, // 5 minutes
-    gcTime = 30 * 60 * 1000, // 30 minutes
+    staleTime = 5 * 60 * 1000,
+    gcTime = 30 * 60 * 1000,
   } = options;
 
-  const sessionQuery = useQuery({
+  const isOnAuthRoute = segments[0] === '(onboarding)' || Array(segments).length === 0;
+
+  useEffect(() => {
+    if (isAuthFromProvider && authToken) {
+      resetAuthFailureTracking();
+      // Invalidate the query to trigger a fresh fetch after auth is restored
+      queryClient.invalidateQueries({ queryKey: sessionKeys.current() });
+    }
+  }, [isAuthFromProvider, authToken, queryClient]);
+
+  const sessionQuery = useQuery<CurrentSessionResponse | null>({
     queryKey: sessionKeys.current(),
-    queryFn: async (): Promise<CurrentSessionResponse | null> => {
-      // Don't even try if we don't have a token
+    queryFn: async () => {
       if (!authToken) {
+        console.log('No auth token available');
         return null;
       }
-      
+
+      // Small delay to ensure failure tracking reset and SDK token setup has taken effect
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      if (hasReachedMaxFailures) {
+        console.log('Max auth failures reached, skipping session fetch');
+        return null;
+      }
+
       try {
+        console.log('Fetching current session with token:', authToken ? 'Token present' : 'No token');
         const response = await sdk.auth.getCurrentSession();
-        console.log('Session fetched successfully:', response);
-        
-        // Store in Jotai atom
+        console.log('Session fetched successfully', response);
+
+        resetAuthFailureTracking();
         setSession(response);
-        
-        // If we get a gym in the response but don't have a current gym ID stored,
-        // store it automatically (this handles the onboarding case)
-        if (response?.gym?.id && !currentGymId) {
-          setCurrentGymId(response.gym.id);
+
+        if (response.gym) {
+          if (!currentGymId || currentGymId !== response.gym.id) {
+            setCurrentGymId(response.gym.id);
+            sdk.setGymId(response.gym.id);
+          }
         }
 
         return response;
       } catch (error: any) {
         console.error('Session fetch error:', error);
-        // Handle 401 errors by clearing tokens but NOT redirecting here
-        // Let the layout components handle navigation
+
         if (error.status === 401 || error.message?.includes('Unauthorized')) {
-          console.log('Auth error, clearing tokens');
-          clearAuth();
+          const newFailureCount = incrementAuthFailureCount();
+          console.log(`Auth error (attempt ${newFailureCount}/4), clearing tokens`);
+
+          if (newFailureCount >= 4) {
+            console.log('Max auth failures reached, stopping further attempts');
+          }
+
+          await clearAuth();
+          queryClient.removeQueries({ queryKey: sessionKeys.all });
           return null;
         }
+
         throw error;
       }
     },
-    enabled: enabled && isAuthFromProvider && Boolean(authToken) && !isProviderLoading,
+    enabled:
+      enabled &&
+      isAuthFromProvider &&
+      Boolean(authToken) &&
+      !isProviderLoading &&
+      !isOnAuthRoute &&
+      !hasReachedMaxFailures,
     staleTime,
     gcTime,
+    retry: (failureCount, error: any) => {
+      if (error?.status === 401 || error?.status === 403) {
+        return false;
+      }
+
+      if (isOnAuthRoute) {
+        return false;
+      }
+
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     refetchOnMount,
     refetchOnWindowFocus,
-    retry: (failureCount, error: any) => {
-      // Don't retry on auth errors
-      if (error?.status === 401 || error?.message?.includes('Unauthorized')) {
-        return false;
-      }
-      // Don't retry if we don't have valid tokens
-      if (!authToken) {
-        return false;
-      }
-      // Retry network errors up to 1 time
-      return failureCount < 1;
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // No useEffect here - let the layout components handle navigation based on auth state
+  const isLoading = sessionQuery.isLoading || isProviderLoading;
+  const isAuthenticated = isAuthFromProvider && !!session && !sessionQuery.isError;
 
-  // Utility functions
-  const refetchSession = () => {
+  const clearSession = () => {
+    setSession(null);
+    queryClient.removeQueries({ queryKey: sessionKeys.all });
+  };
+
+  const refreshSession = async () => {
     return queryClient.invalidateQueries({ queryKey: sessionKeys.current() });
   };
 
-  const clearSessionCache = () => {
-    queryClient.removeQueries({ queryKey: sessionKeys.all });
-    setSession(null);
-  };
-
-  const updateSessionCache = (
-    updater: (old: CurrentSessionResponse | null | undefined) => CurrentSessionResponse | null,
-  ) => {
-    queryClient.setQueryData(sessionKeys.current(), updater);
-    const newData = queryClient.getQueryData(sessionKeys.current()) as CurrentSessionResponse | null;
-    if (newData) {
-      setSession(newData);
-    }
-  };
-
-  // Use session from Jotai atom for immediate updates
-  const currentSession = session || sessionQuery.data;
-
-  // Determine loading state - we're loading if provider is loading OR session is loading when auth is true
-  const isLoading = isProviderLoading || (isAuthFromProvider && sessionQuery.isLoading);
-  
-  // Determine authentication state more carefully
-  // We're authenticated if:
-  // 1. Provider says we have auth token AND
-  // 2. Either we're still loading the session OR we have a successful session
-  const isAuthenticated = isAuthFromProvider && (sessionQuery.isLoading || (sessionQuery.isSuccess && !!currentSession?.isAuthenticated));
-
   return {
-    // Session data
-    session: currentSession,
-    user: currentSession?.user || null,
-    gym: currentSession?.gym || null,
-    organization: currentSession?.organization || null,
-    subscription: currentSession?.subscription || null,
-    permissions: currentSession?.permissions || [],
-    authToken,
-
-    // Query states
+    session: session || sessionQuery.data,
     isLoading,
-    isFetching: sessionQuery.isFetching,
     isError: sessionQuery.isError,
     error: sessionQuery.error,
-    isSuccess: sessionQuery.isSuccess,
-
-    // Utility functions
-    refetchSession,
-    clearSessionCache,
-    updateSessionCache,
-
-    // Computed values
     isAuthenticated,
-    hasPermission: (permission: string) => {
-      return currentSession?.permissions?.includes(permission) || false;
-    },
-    isOwner: currentSession?.user?.userType === 'owner',
-    isCollaborator: currentSession?.user?.userType === 'collaborator',
+    hasSession: !!session || !!sessionQuery.data,
+    clearSession,
+    refreshSession,
+    refetch: sessionQuery.refetch,
   };
 }

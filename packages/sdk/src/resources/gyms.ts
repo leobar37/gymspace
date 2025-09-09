@@ -1,5 +1,5 @@
 import { BaseResource } from './base';
-import { Gym, CreateGymDto, UpdateGymDto, GymStats } from '../models/gyms';
+import { Gym, CreateGymDto, UpdateGymDto, GymStats, UpdateGymScheduleDto, UpdateGymSocialMediaDto } from '../models/gyms';
 import { RequestOptions } from '../types';
 
 export class GymsResource extends BaseResource {
@@ -57,5 +57,21 @@ export class GymsResource extends BaseResource {
     options?: RequestOptions
   ): Promise<Gym> {
     return this.client.put<Gym>(`${this.basePath}/current`, data, options);
+  }
+
+  async updateGymSchedule(
+    id: string,
+    data: UpdateGymScheduleDto,
+    options?: RequestOptions
+  ): Promise<Gym> {
+    return this.client.put<Gym>(`${this.basePath}/${id}/schedule`, data, options);
+  }
+
+  async updateGymSocialMedia(
+    id: string,
+    data: UpdateGymSocialMediaDto,
+    options?: RequestOptions
+  ): Promise<Gym> {
+    return this.client.put<Gym>(`${this.basePath}/${id}/social-media`, data, options);
   }
 }

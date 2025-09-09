@@ -19,7 +19,7 @@ export class EvaluationsController {
   @ApiResponse({ status: 201, description: 'Evaluation created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   async createEvaluation(@Body() dto: CreateEvaluationDto, @AppCtxt() ctx: RequestContext) {
-    return await this.evaluationsService.createEvaluation(ctx.getGymId()!, dto, ctx.getUserId());
+    return await this.evaluationsService.createEvaluation(ctx, dto);
   }
 
   @Get(':id')
@@ -65,7 +65,7 @@ export class EvaluationsController {
   @ApiOperation({ summary: 'Get gym evaluation statistics' })
   @ApiResponse({ status: 200, description: 'Gym evaluation statistics' })
   async getGymEvaluationStats(@AppCtxt() ctx: RequestContext) {
-    return await this.evaluationsService.getGymEvaluationStats(ctx.getGymId()!, ctx.getUserId());
+    return await this.evaluationsService.getGymEvaluationStats(ctx);
   }
 
   @Get(':id/report')

@@ -310,9 +310,9 @@ model Gym {
     description    String? @db.Text
     phone          String?
     email          String?
-    openingTime    String? @map("opening_time")
-    closingTime    String? @map("closing_time")
     capacity       Int?
+    schedule       Json?   @map("schedule")
+    socialMedia    Json?   @map("social_media")
     amenities      Json?
     settings       Json?
     isActive       Boolean @default(true) @map("is_active")
@@ -330,7 +330,6 @@ model Gym {
     catalogImages      Json?   @map("catalog_images") // Array of asset IDs
     catalogFeatured    Boolean @default(false) @map("catalog_featured")
     catalogPriority    Int     @default(0) @map("catalog_priority")
-    socialMedia        Json?   @map("social_media")
 
     createdByUserId String    @map("created_by_user_id")
     updatedByUserId String?   @map("updated_by_user_id")

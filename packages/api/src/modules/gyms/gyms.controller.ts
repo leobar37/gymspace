@@ -1,7 +1,13 @@
 import { Controller, Get, Post, Put, Param, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiSecurity } from '@nestjs/swagger';
 import { GymsService } from './gyms.service';
-import { CreateGymDto, UpdateGymDto, UpdateCurrentGymDto } from './dto';
+import {
+  CreateGymDto,
+  UpdateGymDto,
+  UpdateCurrentGymDto,
+  UpdateGymScheduleDto,
+  UpdateGymSocialMediaDto,
+} from './dto';
 import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS } from '@gymspace/shared';
@@ -80,5 +86,33 @@ export class GymsController {
   @ApiResponse({ status: 404, description: 'Gym not found' })
   async toggleGymStatus(@AppCtxt() ctx: RequestContext, @Param('id') id: string) {
     return await this.gymsService.toggleGymStatus(ctx, id);
+  }
+
+  @Put(':id/schedule')
+  @Allow(PERMISSIONS.GYMS_UPDATE)
+  @ApiSecurity('gym-id')
+  @ApiOperation({ summary: 'Update gym schedule' })
+  @ApiResponse({ status: 200, description: 'Gym schedule updated successfully' })
+  @ApiResponse({ status: 404, description: 'Gym not found' })
+  async updateGymSchedule(
+    @AppCtxt() ctx: RequestContext,
+    @Param('id') id: string,
+    @Body() dto: UpdateGymScheduleDto,
+  ) {
+    return await this.gymsService.updateGymSchedule(ctx, id, dto);
+  }
+
+  @Put(':id/social-media')
+  @Allow(PERMISSIONS.GYMS_UPDATE)
+  @ApiSecurity('gym-id')
+  @ApiOperation({ summary: 'Update gym social media' })
+  @ApiResponse({ status: 200, description: 'Gym social media updated successfully' })
+  @ApiResponse({ status: 404, description: 'Gym not found' })
+  async updateGymSocialMedia(
+    @AppCtxt() ctx: RequestContext,
+    @Param('id') id: string,
+    @Body() dto: UpdateGymSocialMediaDto,
+  ) {
+    return await this.gymsService.updateGymSocialMedia(ctx, id, dto);
   }
 }

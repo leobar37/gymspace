@@ -3,15 +3,16 @@ import { GymSpaceSdk } from '@gymspace/sdk';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { useRouter, useSegments } from 'expo-router';
-import { 
-  authAtom, 
-  setAuthTokensAtom, 
-  clearAuthAtom, 
+import {
+  authAtom,
+  setAuthTokensAtom,
+  clearAuthAtom,
   isAuthenticatedAtom,
   accessTokenAtom,
   currentGymIdAtom,
   setCurrentGymIdAtom,
-  authLoadingAtom
+  authLoadingAtom,
+  sdkClearCallbackAtom,
 } from '@/store/auth.atoms';
 
 interface GymSdkContextValue {
@@ -33,7 +34,6 @@ interface GymSdkProviderProps {
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-// Create loadable atoms for async values
 const loadableAuthAtom = loadable(authAtom);
 const loadableIsAuthenticatedAtom = loadable(isAuthenticatedAtom);
 const loadableAccessTokenAtom = loadable(accessTokenAtom);
@@ -44,6 +44,7 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
   const setTokens = useSetAtom(setAuthTokensAtom);
   const clearAuthState = useSetAtom(clearAuthAtom);
   const setGymId = useSetAtom(setCurrentGymIdAtom);
+  const setSdkClearCallback = useSetAtom(sdkClearCallbackAtom as any);
   const [isLoading, setIsLoading] = useAtom(authLoadingAtom);
   const isAuthenticatedLoadable = useAtomValue(loadableIsAuthenticatedAtom);
   const authTokenLoadable = useAtomValue(loadableAccessTokenAtom);
@@ -51,13 +52,12 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
   const router = useRouter();
   const segments = useSegments();
   const hasHandledAuthError = useRef(false);
-  
-  // Extract values from loadables with defaults
-  const isAuthenticated = isAuthenticatedLoadable.state === 'hasData' ? isAuthenticatedLoadable.data : false;
+
+  const isAuthenticated =
+    isAuthenticatedLoadable.state === 'hasData' ? isAuthenticatedLoadable.data : false;
   const authToken = authTokenLoadable.state === 'hasData' ? authTokenLoadable.data : null;
   const currentGymId = currentGymIdLoadable.state === 'hasData' ? currentGymIdLoadable.data : null;
 
-  // Initialize SDK
   const sdk = useMemo(() => {
     const sdkInstance = new GymSpaceSdk({
       baseURL: API_BASE_URL,
@@ -66,9 +66,11 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
     return sdkInstance;
   }, []);
 
-  // Sync SDK with auth state
   useEffect(() => {
-    // Only sync when data is loaded
+    setSdkClearCallback(() => sdk.clearAuth.bind(sdk));
+  }, [sdk, setSdkClearCallback]);
+
+  useEffect(() => {
     if (authStateLoadable.state === 'hasData') {
       const data = authStateLoadable.data;
       if (data.accessToken) {
@@ -80,53 +82,45 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
       } else {
         sdk.clearAuth();
       }
+
       if (data.currentGymId) {
         sdk.setGymId(data.currentGymId);
       }
-      // Mark as loaded after initial sync
+
       setIsLoading(false);
     } else if (authStateLoadable.state === 'loading') {
       setIsLoading(true);
     }
   }, [authStateLoadable, sdk, setIsLoading]);
-  
-  // Monitor auth state and handle errors
+
   useEffect(() => {
-    // Check if we lost authentication
     if (!isLoading && !isAuthenticated && authStateLoadable.state === 'hasData') {
-      // Check if we're not already on onboarding pages
-      const isOnOnboarding = segments[0] === '(onboarding)' || segments.length === 0;
-      
-      // Only redirect if we're not on onboarding and haven't handled this error
+      const isOnOnboarding = segments[0] === '(onboarding)' || Array(segments).length === 0;
+
       if (!isOnOnboarding && !hasHandledAuthError.current) {
         console.log('Auth lost, redirecting to onboarding');
         hasHandledAuthError.current = true;
         router.replace('/(onboarding)');
       }
     } else if (isAuthenticated) {
-      // Reset the flag when auth is restored
       hasHandledAuthError.current = false;
     }
   }, [isAuthenticated, isLoading, authStateLoadable.state, segments, router]);
 
-  // Update auth token
-  const setAuthToken = (token: string | null) => {
+  const setAuthToken = async (token: string | null) => {
     if (token) {
-      setTokens({ accessToken: token });
+      await setTokens({ accessToken: token });
     } else {
-      clearAuthState();
+      await clearAuthState();
     }
   };
 
-  // Update current gym ID
   const setCurrentGymId = (gymId: string | null) => {
     setGymId(gymId);
   };
 
-  // Clear auth for external use (includes SDK clearing)
-  const clearAuth = () => {
-    clearAuthState();
-    sdk.clearAuth();
+  const clearAuth = async () => {
+    await clearAuthState();
   };
 
   const value = useMemo(
@@ -143,7 +137,6 @@ export function GymSdkProvider({ children }: GymSdkProviderProps) {
     [sdk, isAuthenticated, authToken, currentGymId, isLoading],
   );
 
-  // Always provide the context, even while loading
   return <GymSdkContext.Provider value={value}>{children}</GymSdkContext.Provider>;
 }
 

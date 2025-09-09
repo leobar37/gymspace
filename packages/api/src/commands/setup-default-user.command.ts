@@ -88,18 +88,14 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
     console.log('📧 Creating user with email:', email);
 
-    // Get default free subscription plan
     const defaultPlan = await this.prismaService.subscriptionPlan.findFirst({
       where: {
-        price: {
-          path: ['USD', 'value'],
-          equals: 0,
-        },
+        name: 'Enterprise',
       },
     });
 
     if (!defaultPlan) {
-      throw new Error('No free subscription plan found. Please run database seed first.');
+      throw new Error('No Enterprise subscription plan found. Please run database seed first.');
     }
 
     console.log('📦 Using subscription plan:', defaultPlan.name);
@@ -166,7 +162,8 @@ export class SetupDefaultUserCommand extends CommandRunner {
   private async configureGym(gymId: string): Promise<void> {
     console.log('\n⚙️  Configuring gym settings...');
 
-    await this.onboardingService.updateGymSettings(this.context, {
+    // Update basic info
+    await this.onboardingService.updateGymBasicInfo(this.context, {
       gymId,
       name: 'Gimnasio Elite Lima',
       address: 'Av. Javier Prado Este 4200',
@@ -176,21 +173,27 @@ export class SetupDefaultUserCommand extends CommandRunner {
       phone: '+51999888777',
       email: 'contacto@gimnasioelite.pe',
       capacity: 150,
-      description: 'El mejor gimnasio de Lima con equipamiento de última generación',
-      businessHours: {
-        monday: { open: '06:00', close: '22:00', closed: false },
-        tuesday: { open: '06:00', close: '22:00', closed: false },
-        wednesday: { open: '06:00', close: '22:00', closed: false },
-        thursday: { open: '06:00', close: '22:00', closed: false },
-        friday: { open: '06:00', close: '22:00', closed: false },
-        saturday: { open: '08:00', close: '18:00', closed: false },
-        sunday: { open: '08:00', close: '18:00', closed: false },
-      },
-      socialMedia: {
-        facebook: 'https://facebook.com/gimnasioelitelima',
-        instagram: 'https://instagram.com/gimnasioelitelima',
-      },
     });
+
+    // Update schedule
+    const schedule = {
+      monday: { isOpen: true, slots: [{ open: '06:00', close: '22:00' }] },
+      tuesday: { isOpen: true, slots: [{ open: '06:00', close: '22:00' }] },
+      wednesday: { isOpen: true, slots: [{ open: '06:00', close: '22:00' }] },
+      thursday: { isOpen: true, slots: [{ open: '06:00', close: '22:00' }] },
+      friday: { isOpen: true, slots: [{ open: '06:00', close: '22:00' }] },
+      saturday: { isOpen: true, slots: [{ open: '08:00', close: '18:00' }] },
+      sunday: { isOpen: true, slots: [{ open: '08:00', close: '18:00' }] },
+    };
+    await this.onboardingService.updateGymSchedule(this.context, gymId, schedule);
+
+    // Update social media
+    const socialMedia = {
+      facebook: 'https://facebook.com/gimnasioelitelima',
+      instagram: '@gimnasioelitelima',
+      whatsapp: '+51999888777',
+    };
+    await this.onboardingService.updateGymSocialMedia(this.context, gymId, socialMedia);
 
     console.log('✅ Gym settings configured');
   }
@@ -453,6 +456,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
     console.log('🆔 User ID:', userInfo.user.id);
     console.log('🏢 Organization:', userInfo.organization.name);
     console.log('🏋️  Gym:', userInfo.gym.name);
+    console.log('💎 Plan: Enterprise (Maximum)');
     console.log('✉️  Email Verified: Yes');
     console.log('🚀 Setup Status: Completed');
     console.log('🔐 Access Token:', userInfo.access_token.substring(0, 20) + '...');

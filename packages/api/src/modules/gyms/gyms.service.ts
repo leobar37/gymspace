@@ -6,14 +6,17 @@ import { CreateGymDto, UpdateGymDto, UpdateCurrentGymDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Gym } from '@prisma/client';
 import { RequestContext } from '../../common/services/request-context.service';
+import { BaseGymService } from './base-gym.service';
 
 @Injectable()
-export class GymsService {
+export class GymsService extends BaseGymService {
   constructor(
-    private prismaService: PrismaService,
+    protected prismaService: PrismaService,
     private cacheService: CacheService,
     private organizationsService: OrganizationsService,
-  ) {}
+  ) {
+    super(prismaService);
+  }
 
   /**
    * Create a new gym (CU-004)
@@ -67,19 +70,9 @@ export class GymsService {
    */
   async updateGym(context: RequestContext, gymId: string, dto: UpdateGymDto): Promise<Gym> {
     const userId = context.getUserId();
-    // Verify gym exists and user has access
-    const gym = await this.prismaService.gym.findFirst({
-      where: {
-        id: gymId,
-        organization: {
-          ownerUserId: userId,
-        },
-      },
-    });
-
-    if (!gym) {
-      throw new ResourceNotFoundException('Gym', gymId);
-    }
+    
+    // Verify gym exists and user has access using base service
+    await this.validateGymOwnership(context, gymId);
 
     // Update gym
     const updated = await this.prismaService.gym.update({
@@ -110,11 +103,16 @@ export class GymsService {
    * Get gym by ID
    */
   async getGym(context: RequestContext, gymId: string): Promise<Gym> {
+    // First validate access using base service
+    await this.validateGymOwnership(context, gymId);
+    
     const userId = context.getUserId();
+    
+    // Then get full gym details
     const gym = await this.prismaService.gym.findFirst({
       where: {
         id: gymId,
-        OR: [{ organization: { ownerUserId: userId } }, { collaborators: { some: { userId } } }],
+        organization: { ownerUserId: userId },
       },
       include: {
         organization: {
@@ -275,16 +273,9 @@ export class GymsService {
    */
   async toggleGymStatus(context: RequestContext, gymId: string): Promise<Gym> {
     const userId = context.getUserId();
-    const gym = await this.prismaService.gym.findFirst({
-      where: {
-        id: gymId,
-        organization: { ownerUserId: userId },
-      },
-    });
-
-    if (!gym) {
-      throw new ResourceNotFoundException('Gym', gymId);
-    }
+    
+    // Use base service to find gym with validation
+    const gym = await this.findGymByIdWithOwnerValidation(context, gymId);
 
     return this.prismaService.gym.update({
       where: { id: gymId },
@@ -306,20 +297,8 @@ export class GymsService {
       throw new BusinessException('Gym context is required');
     }
 
-    // Verify gym exists and user has access
-    const gym = await this.prismaService.gym.findFirst({
-      where: {
-        id: gymId,
-        OR: [
-          { organization: { ownerUserId: userId } },
-          { collaborators: { some: { userId, status: 'active' } } },
-        ],
-      },
-    });
-
-    if (!gym) {
-      throw new ResourceNotFoundException('Gym', gymId);
-    }
+    // Use base service to find gym with validation
+    const gym = await this.findGymByIdWithAccess(context, gymId);
 
     // Build update data with only the provided fields
     const updateData: any = {
@@ -360,29 +339,6 @@ export class GymsService {
     return updated;
   }
 
-  /**
-   * Check if user has access to gym
-   */
-  async hasGymAccess(gymId: string, userId: string): Promise<boolean> {
-    const access = await this.prismaService.gym.findFirst({
-      where: {
-        id: gymId,
-        OR: [
-          { organization: { ownerUserId: userId } },
-          {
-            collaborators: {
-              some: {
-                userId,
-                status: 'active',
-              },
-            },
-          },
-        ],
-      },
-    });
-
-    return !!access;
-  }
 
   /**
    * Generate unique slug for gym
@@ -455,5 +411,41 @@ export class GymsService {
     return contracts.reduce((total, contract) => {
       return total + parseFloat((contract as any).gymMembershipPlan.basePrice.toString());
     }, 0);
+  }
+
+  /**
+   * Update gym schedule
+   */
+  async updateGymSchedule(context: RequestContext, gymId: string, dto: any): Promise<Gym> {
+    const userId = context.getUserId();
+
+    // Use base service to validate gym access
+    await this.validateGymOwnership(context, gymId);
+
+    return await this.prismaService.gym.update({
+      where: { id: gymId },
+      data: {
+        schedule: dto,
+        updatedByUserId: userId,
+      },
+    });
+  }
+
+  /**
+   * Update gym social media
+   */
+  async updateGymSocialMedia(context: RequestContext, gymId: string, dto: any): Promise<Gym> {
+    const userId = context.getUserId();
+
+    // Use base service to validate gym access
+    await this.validateGymOwnership(context, gymId);
+
+    return await this.prismaService.gym.update({
+      where: { id: gymId },
+      data: {
+        socialMedia: dto,
+        updatedByUserId: userId,
+      },
+    });
   }
 }

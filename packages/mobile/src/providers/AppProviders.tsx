@@ -77,6 +77,8 @@ export function AppProviders({ children }: AppProvidersProps) {
           retry: 0,
           // Global mutation error handling
           onError: (error: any) => {
+            console.log("error-funny", error);
+            
             // Check for authentication errors in mutations
             if (error?.response?.status === 401 || error?.response?.status === 403) {
               // Clear all queries

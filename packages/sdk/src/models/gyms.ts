@@ -57,9 +57,61 @@ export interface Gym {
   capacity?: number;
   amenities?: GymAmenities;
   settings?: GymSettings;
+  schedule?: GymSchedule;
+  socialMedia?: GymSocialMedia;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TimeSlot {
+  open: string;
+  close: string;
+}
+
+export interface DaySchedule {
+  isOpen: boolean;
+  slots?: TimeSlot[];
+}
+
+export interface GymSchedule {
+  monday?: DaySchedule;
+  tuesday?: DaySchedule;
+  wednesday?: DaySchedule;
+  thursday?: DaySchedule;
+  friday?: DaySchedule;
+  saturday?: DaySchedule;
+  sunday?: DaySchedule;
+}
+
+export interface GymSocialMedia {
+  facebook?: string;
+  instagram?: string;
+  whatsapp?: string;
+  twitter?: string;
+  linkedin?: string;
+  youtube?: string;
+  tiktok?: string;
+}
+
+export interface UpdateGymScheduleDto {
+  monday?: DaySchedule;
+  tuesday?: DaySchedule;
+  wednesday?: DaySchedule;
+  thursday?: DaySchedule;
+  friday?: DaySchedule;
+  saturday?: DaySchedule;
+  sunday?: DaySchedule;
+}
+
+export interface UpdateGymSocialMediaDto {
+  facebook?: string;
+  instagram?: string;
+  whatsapp?: string;
+  twitter?: string;
+  linkedin?: string;
+  youtube?: string;
+  tiktok?: string;
 }
 
 export interface GymStats {

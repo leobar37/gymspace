@@ -579,7 +579,7 @@ export class ContractsService {
 
     // Verify gym access - use cached gym from context if available
     if (!context.gym) {
-      const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+      const hasAccess = await this.gymsService.hasGymAccess(context as any, gymId);
       if (!hasAccess) {
         throw new ResourceNotFoundException('Gimnasio', gymId);
       }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Inngest } from 'inngest';
-
+import { isEmpty } from 'radash';
 /**
  * Inngest client for handling event-driven data processing and background jobs
  */
@@ -14,11 +14,15 @@ export class IngestClient {
     const appId = this.configService.get<string>('app.name', 'gymspace-api');
     const environment = this.configService.get<string>('app.environment', 'development');
 
+    const eventKey = this.configService.get<string>('ingestKey');
     this.client = new Inngest({
       id: `${appId}-${environment}`,
-      eventKey: this.configService.get<string>('INNGEST_EVENT_KEY'),
+      eventKey: this.configService.get<string>('ingestKey'),
       isDev: environment === 'development',
     });
+    if (!isEmpty(eventKey)) {
+      console.log('found event key ingest=======');
+    }
 
     this.logger.log(`Inngest client initialized with ID: ${appId}-${environment}`);
   }

@@ -1221,6 +1221,96 @@
         ]
       }
     },
+    "/api/v1/gyms/{id}/schedule": {
+      "put": {
+        "operationId": "GymsController_updateGymSchedule",
+        "summary": "Update gym schedule",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGymScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Gym schedule updated successfully"
+          },
+          "404": {
+            "description": "Gym not found"
+          }
+        },
+        "tags": [
+          "Gyms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "gym-id": []
+          }
+        ]
+      }
+    },
+    "/api/v1/gyms/{id}/social-media": {
+      "put": {
+        "operationId": "GymsController_updateGymSocialMedia",
+        "summary": "Update gym social media",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGymSocialMediaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Gym social media updated successfully"
+          },
+          "404": {
+            "description": "Gym not found"
+          }
+        },
+        "tags": [
+          "Gyms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "gym-id": []
+          }
+        ]
+      }
+    },
     "/api/v1/clients": {
       "post": {
         "operationId": "ClientsController_createClient",
@@ -7083,6 +7173,166 @@
               "logo": "https://example.com/logo.png",
               "primaryColor": "#FF0000"
             }
+          }
+        }
+      },
+      "TimeSlot": {
+        "type": "object",
+        "properties": {
+          "open": {
+            "type": "string",
+            "example": "06:00",
+            "description": "Opening time in HH:MM format"
+          },
+          "close": {
+            "type": "string",
+            "example": "12:00",
+            "description": "Closing time in HH:MM format"
+          }
+        },
+        "required": [
+          "open",
+          "close"
+        ]
+      },
+      "DaySchedule": {
+        "type": "object",
+        "properties": {
+          "isOpen": {
+            "type": "boolean",
+            "description": "Is the gym open this day",
+            "example": true
+          },
+          "slots": {
+            "description": "Time slots for the day",
+            "example": [
+              {
+                "open": "06:00",
+                "close": "12:00"
+              },
+              {
+                "open": "16:00",
+                "close": "21:00"
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimeSlot"
+            }
+          }
+        },
+        "required": [
+          "isOpen",
+          "slots"
+        ]
+      },
+      "UpdateGymScheduleDto": {
+        "type": "object",
+        "properties": {
+          "monday": {
+            "description": "Monday schedule",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DaySchedule"
+              }
+            ]
+          },
+          "tuesday": {
+            "description": "Tuesday schedule",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DaySchedule"
+              }
+            ]
+          },
+          "wednesday": {
+            "description": "Wednesday schedule",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DaySchedule"
+              }
+            ]
+          },
+          "thursday": {
+            "description": "Thursday schedule",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DaySchedule"
+              }
+            ]
+          },
+          "friday": {
+            "description": "Friday schedule",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DaySchedule"
+              }
+            ]
+          },
+          "saturday": {
+            "description": "Saturday schedule",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DaySchedule"
+              }
+            ]
+          },
+          "sunday": {
+            "description": "Sunday schedule",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DaySchedule"
+              }
+            ]
+          }
+        },
+        "required": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ]
+      },
+      "UpdateGymSocialMediaDto": {
+        "type": "object",
+        "properties": {
+          "facebook": {
+            "type": "string",
+            "description": "Facebook page URL",
+            "example": "https://facebook.com/gymspace"
+          },
+          "instagram": {
+            "type": "string",
+            "description": "Instagram username",
+            "example": "@gymspace"
+          },
+          "whatsapp": {
+            "type": "string",
+            "description": "WhatsApp phone number",
+            "example": "+1234567890"
+          },
+          "twitter": {
+            "type": "string",
+            "description": "Twitter/X username",
+            "example": "@gymspace"
+          },
+          "linkedin": {
+            "type": "string",
+            "description": "LinkedIn page URL",
+            "example": "https://linkedin.com/company/gymspace"
+          },
+          "youtube": {
+            "type": "string",
+            "description": "YouTube channel URL",
+            "example": "https://youtube.com/c/gymspace"
+          },
+          "tiktok": {
+            "type": "string",
+            "description": "TikTok username",
+            "example": "@gymspace"
           }
         }
       },

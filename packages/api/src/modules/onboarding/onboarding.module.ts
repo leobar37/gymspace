@@ -5,9 +5,10 @@ import { CommonModule } from '../../common/common.module';
 import { AuthModule } from '../auth/auth.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { EmailModule } from '../../core/email/email.module';
+import { GymsModule } from '../gyms/gyms.module';
 
 @Module({
-  imports: [CommonModule, AuthModule, SubscriptionsModule, EmailModule],
+  imports: [CommonModule, AuthModule, SubscriptionsModule, EmailModule, GymsModule],
   controllers: [OnboardingController],
   providers: [OnboardingService],
   exports: [OnboardingService],

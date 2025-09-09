@@ -276,7 +276,7 @@ export class GymMembershipPlansService {
     }
 
     // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+    const hasAccess = await this.gymsService.hasGymAccess(context as any, gymId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
     }

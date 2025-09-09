@@ -34,7 +34,7 @@ export class ClientsService {
     }
 
     // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+    const hasAccess = await this.gymsService.hasGymAccess(ctx, gymId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
     }
@@ -246,7 +246,7 @@ export class ClientsService {
     const userId = ctx.getUserId()!;
 
     // Verify gym access
-    const hasAccess = await this.gymsService.hasGymAccess(gymId, userId);
+    const hasAccess = await this.gymsService.hasGymAccess(ctx, gymId);
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
     }

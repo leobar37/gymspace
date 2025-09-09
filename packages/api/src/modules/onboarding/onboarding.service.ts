@@ -6,10 +6,14 @@ import {
   ResourceNotFoundException,
   ValidationException,
 } from '../../common/exceptions';
+import { RequestContext } from '../../common/services/request-context.service';
 import { AuthService } from '../../core/auth/services/auth.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { EmailService } from '../../core/email/email.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { BaseGymService } from '../gyms/base-gym.service';
+import { GymsService } from '../gyms/gyms.service';
+import { UpdateGymDto } from '../gyms/dto/update-gym.dto';
 import {
   CompleteGuidedSetupDto,
   ConfigureFeaturesDto,
@@ -27,6 +31,8 @@ export class OnboardingService {
     private authService: AuthService,
     private subscriptionsService: SubscriptionsService,
     private emailService: EmailService,
+    private baseGymService: BaseGymService,
+    private gymsService: GymsService,
   ) {}
 
   /**
@@ -238,69 +244,107 @@ export class OnboardingService {
   /**
    * Update gym settings during onboarding
    */
-  async updateGymSettings(context: IRequestContext, dto: UpdateGymSettingsDto) {
-    const userId = context.user.id;
+  async updateGymBasicInfo(context: IRequestContext, dto: { gymId: string } & Partial<UpdateGymDto>) {
+    // Use BaseGymService to verify gym ownership
+    await this.baseGymService.validateGymOwnership(context as any, dto.gymId);
 
-    // Verify gym ownership
-    const gym = await this.prismaService.gym.findFirst({
-      where: {
-        id: dto.gymId,
-        organization: {
-          ownerUserId: userId,
-        },
-      },
-      include: {
-        organization: true,
-      },
-    });
-
-    if (!gym) {
-      throw new ResourceNotFoundException('Gym not found or access denied');
-    }
-
-    // Update gym with all settings
-    const updatedGym = await this.prismaService.gym.update({
-      where: { id: dto.gymId },
-      data: {
-        name: dto.name,
-        address: dto.address,
-        city: dto.city,
-        state: dto.state,
-        postalCode: dto.postalCode,
-        phone: dto.phone,
-        email: dto.email,
-        capacity: dto.capacity,
-        description: dto.description,
-        openingTime: dto.businessHours.monday.open, // Default opening time
-        closingTime: dto.businessHours.monday.close, // Default closing time
-        socialMedia: dto.socialMedia as any,
-        settings: {
-          ...(gym.settings as object),
-          businessHours: dto.businessHours as any,
-          logo: dto.logo,
-          coverPhoto: dto.coverPhoto,
-          primaryColor: dto.primaryColor,
-          gymSettingsCompleted: true,
-        } as any,
-        updatedByUserId: userId,
-      },
-    });
-
-    // Update organization onboarding step
-    await this.prismaService.organization.update({
-      where: { id: gym.organizationId },
-      data: {
-        settings: {
-          ...(gym.organization.settings as object),
-          onboardingStep: OnboardingStep.GYM_SETTINGS,
-        },
-      },
+    // Update gym basic info using GymsService
+    const updatedGym = await this.gymsService.updateGym(context as any, dto.gymId, {
+      name: dto.name,
+      address: dto.address,
+      city: dto.city,
+      state: dto.state,
+      postalCode: dto.postalCode,
+      phone: dto.phone,
+      email: dto.email,
+      capacity: dto.capacity,
     });
 
     return {
       success: true,
       gym: updatedGym,
-      onboardingStatus: await this.getOnboardingStatus(gym.organizationId, gym.id),
+    };
+  }
+
+  async updateGymSchedule(context: IRequestContext, gymId: string, schedule: any) {
+    // Use BaseGymService to verify gym ownership
+    await this.baseGymService.validateGymOwnership(context as any, gymId);
+
+    // Update gym schedule using GymsService
+    const updatedGym = await this.gymsService.updateGymSchedule(context as any, gymId, schedule);
+
+    return {
+      success: true,
+      gym: updatedGym,
+    };
+  }
+
+  async updateGymSocialMedia(context: IRequestContext, gymId: string, socialMedia: any) {
+    // Use BaseGymService to verify gym ownership
+    await this.baseGymService.validateGymOwnership(context as any, gymId);
+
+    // Update gym social media using GymsService
+    const updatedGym = await this.gymsService.updateGymSocialMedia(context as any, gymId, socialMedia);
+
+    return {
+      success: true,
+      gym: updatedGym,
+    };
+  }
+
+  /**
+   * Update gym settings during onboarding
+   */
+  async updateGymSettings(context: IRequestContext, dto: UpdateGymSettingsDto) {
+    const userId = context.user.id;
+
+    // Verify gym ownership
+    const gym = await this.baseGymService.findGymWithDetails(context as RequestContext, dto.gymId);
+
+    // Prepare the update data
+    const gymDto: UpdateGymDto = {
+      name: dto.name,
+      address: dto.address,
+      city: dto.city,
+      state: dto.state,
+      postalCode: dto.postalCode,
+      phone: dto.phone,
+      email: dto.email,
+      capacity: dto.capacity,
+      settings: {
+        schedule: dto.businessHours,
+        socialMedia: dto.socialMedia,
+        description: dto.description,
+        logo: dto.logo,
+        coverPhoto: dto.coverPhoto,
+        primaryColor: dto.primaryColor,
+      },
+    };
+
+    // Update the gym
+    const updatedGym = await this.gymsService.updateGym(context as any, dto.gymId, gymDto);
+
+    // Update onboarding status
+    const settings = gym.settings as any;
+    if (settings?.onboarding) {
+      await this.prismaService.gym.update({
+        where: { id: dto.gymId },
+        data: {
+          settings: {
+            ...settings,
+            onboarding: {
+              ...settings.onboarding,
+              gymSettingsCompleted: true,
+              currentStep: OnboardingStep.FEATURES_CONFIGURED,
+            },
+          },
+        },
+      });
+    }
+
+    return {
+      message: 'Configuración del gimnasio actualizada exitosamente',
+      gym: updatedGym,
     };
   }
 
@@ -310,22 +354,8 @@ export class OnboardingService {
   async configureFeatures(context: IRequestContext, dto: ConfigureFeaturesDto) {
     const userId = context.user.id;
 
-    // Verify gym ownership
-    const gym = await this.prismaService.gym.findFirst({
-      where: {
-        id: dto.gymId,
-        organization: {
-          ownerUserId: userId,
-        },
-      },
-      include: {
-        organization: true,
-      },
-    });
-
-    if (!gym) {
-      throw new ResourceNotFoundException('Gym not found or access denied');
-    }
+    // Use BaseGymService to verify gym ownership and get gym with details
+    const gym = await this.baseGymService.findGymWithDetails(context as RequestContext, dto.gymId);
 
     // Update gym features
     const updatedGym = await this.prismaService.gym.update({
@@ -377,22 +407,8 @@ export class OnboardingService {
   async completeGuidedSetup(context: IRequestContext, dto: CompleteGuidedSetupDto) {
     const userId = context.user.id;
 
-    // Verify gym ownership and check if all steps are completed
-    const gym = await this.prismaService.gym.findFirst({
-      where: {
-        id: dto.gymId,
-        organization: {
-          ownerUserId: userId,
-        },
-      },
-      include: {
-        organization: true,
-      },
-    });
-
-    if (!gym) {
-      throw new ResourceNotFoundException('Gym not found or access denied');
-    }
+    // Use BaseGymService to verify gym ownership and get gym with details
+    const gym = await this.baseGymService.findGymWithDetails(context as RequestContext, dto.gymId);
 
     const settings = gym.settings as any;
 

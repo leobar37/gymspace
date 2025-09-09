@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { Gym, UpdateGymDto, GymStats } from '@gymspace/sdk';
+import { Gym, UpdateGymDto, GymStats, UpdateGymScheduleDto, UpdateGymSocialMediaDto } from '@gymspace/sdk';
 
 const QUERY_KEYS = {
   currentGym: ['gym', 'current'],
@@ -129,6 +129,44 @@ export const useToggleGymStatus = () => {
     },
     onError: (error: any) => {
       console.error('Error toggling gym status:', error);
+    },
+  });
+};
+
+export const useUpdateGymSchedule = () => {
+  const { sdk } = useGymSdk();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateGymScheduleDto }) => {
+      return sdk.gyms.updateGymSchedule(id, data);
+    },
+    onSuccess: (updatedGym) => {
+      // Update cache
+      queryClient.setQueryData(QUERY_KEYS.gymById(updatedGym.id), updatedGym);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.organizationGyms });
+    },
+    onError: (error: any) => {
+      console.error('Error updating gym schedule:', error);
+    },
+  });
+};
+
+export const useUpdateGymSocialMedia = () => {
+  const { sdk } = useGymSdk();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateGymSocialMediaDto }) => {
+      return sdk.gyms.updateGymSocialMedia(id, data);
+    },
+    onSuccess: (updatedGym) => {
+      // Update cache
+      queryClient.setQueryData(QUERY_KEYS.gymById(updatedGym.id), updatedGym);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.organizationGyms });
+    },
+    onError: (error: any) => {
+      console.error('Error updating gym social media:', error);
     },
   });
 };

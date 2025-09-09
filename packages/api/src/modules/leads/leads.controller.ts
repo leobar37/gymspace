@@ -51,7 +51,7 @@ export class LeadsController {
   @ApiOperation({ summary: 'Search leads' })
   @ApiResponse({ status: 200, description: 'List of leads' })
   async searchLeads(@Query() dto: SearchLeadsDto, @AppCtxt() ctx: RequestContext) {
-    return await this.leadsService.searchLeads(ctx.getGymId()!, dto, ctx.getUserId());
+    return await this.leadsService.searchLeads(ctx, dto);
   }
 
   @Get('stats/gym')
@@ -61,7 +61,7 @@ export class LeadsController {
   @ApiOperation({ summary: 'Get lead statistics for gym' })
   @ApiResponse({ status: 200, description: 'Lead statistics' })
   async getLeadStats(@AppCtxt() ctx: RequestContext) {
-    return await this.leadsService.getLeadStats(ctx.getGymId()!, ctx.getUserId());
+    return await this.leadsService.getLeadStats(ctx);
   }
 
   @Post(':id/convert')

@@ -10,6 +10,7 @@ import { VStack } from '@/components/ui/vstack';
 import { useAuthToken } from '@/hooks/useAuthToken';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { LoadingScreen, useLoadingScreen } from '@/shared/loading-screen';
+import { resetAuthFailureTracking } from '@/store/auth.atoms';
 import { Link, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'lucide-react-native';
@@ -136,23 +137,31 @@ export default function LoginScreen() {
     methods.clearErrors();
 
     const loginPromise = async () => {
+      resetAuthFailureTracking();
+
       const response = await sdk.auth.login({
         email: data.email,
         password: data.password,
       });
+
       console.log('response', response);
-      // Store tokens
+      
+      // Set tokens in SDK immediately
+      sdk.setTokens(response.access_token, response.refresh_token);
+      
+      // Store tokens in persistent storage
       const success = await storeTokens({
         accessToken: response.access_token,
         refreshToken: response.refresh_token,
         expiresAt: Date.now() + 24 * 60 * 60 * 1000,
       });
 
-      router.replace('/(app)');
-
       if (!success) {
         throw new Error('Error al guardar la sesión. Por favor, inténtalo de nuevo.');
       }
+
+      // Reset failure tracking again after successful token storage
+      resetAuthFailureTracking();
 
       return response;
     };
@@ -200,7 +209,7 @@ export default function LoginScreen() {
           (x, y) => {
             scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
           },
-          () => {},
+          () => { },
         );
       }
     }, 300);

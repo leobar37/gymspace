@@ -162,9 +162,9 @@ Table gyms {
   description String
   phone String
   email String
-  openingTime String
-  closingTime String
   capacity Int
+  schedule Json
+  socialMedia Json
   amenities Json
   settings Json
   isActive Boolean [not null, default: true]
@@ -177,7 +177,6 @@ Table gyms {
   catalogImages Json
   catalogFeatured Boolean [not null, default: false]
   catalogPriority Int [not null, default: 0]
-  socialMedia Json
   createdByUserId String [not null]
   updatedByUserId String
   createdAt DateTime [default: `now()`, not null]
