@@ -6,7 +6,6 @@ import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useAuthToken } from '@/hooks/useAuthToken';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { router } from 'expo-router';
@@ -63,7 +62,6 @@ const MenuItem: React.FC<MenuItemProps> = ({
 
 export const ProfileMenu: React.FC = () => {
   const { clearAuth } = useGymSdk();
-  const { clearStoredTokens } = useAuthToken();
   const { session, clearSession } = useCurrentSession();
 
   const user = session?.user;
@@ -71,12 +69,8 @@ export const ProfileMenu: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      // Clear auth from provider
-      clearAuth();
-      // Clear stored tokens
-      await clearStoredTokens();
-      // Clear session cache
-      clearSession();
+      // Clear all auth and session data
+      await clearAuth();
       // Navigate to onboarding
       router.replace('/(onboarding)');
     } catch (error) {

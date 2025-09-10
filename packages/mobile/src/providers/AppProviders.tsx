@@ -1,10 +1,10 @@
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { ConfigProvider } from '@/config/ConfigContext';
 import { CartProvider } from '@/contexts/CartContext';
+import { SessionProvider } from '@/contexts/SessionContext';
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter, useSegments } from 'expo-router';
 
-import { Provider as JotaiProvider } from 'jotai';
 import React, { useState } from 'react';
 import { Alert } from 'react-native';
 import { SheetProvider } from 'react-native-actions-sheet';
@@ -113,8 +113,8 @@ export function AppProviders({ children }: AppProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <JotaiProvider>
-        <GymSdkProvider>
+      <GymSdkProvider>
+        <SessionProvider>
           <GluestackUIProvider>
             <ConfigProvider>
               <CartProvider>
@@ -125,8 +125,8 @@ export function AppProviders({ children }: AppProvidersProps) {
               </CartProvider>
             </ConfigProvider>
           </GluestackUIProvider>
-        </GymSdkProvider>
-      </JotaiProvider>
+        </SessionProvider>
+      </GymSdkProvider>
     </QueryClientProvider>
   );
 }

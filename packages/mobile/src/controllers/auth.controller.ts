@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
-import { useAuthToken } from '@/hooks/useAuthToken';
+import { useSession } from '@/contexts/SessionContext';
 import { router } from 'expo-router';
 
 // Query keys factory pattern for better type safety and organization
@@ -16,7 +16,7 @@ export const authKeys = {
 export const useAuthController = () => {
   const { sdk, setCurrentGymId, isAuthenticated } = useGymSdk();
   const queryClient = useQueryClient();
-  const { storeTokens, clearStoredTokens } = useAuthToken();
+  const { storeTokens, clearAuth } = useSession();
 
   // Use the new session hook for current user and gym data
   const {
@@ -24,15 +24,11 @@ export const useAuthController = () => {
     user,
     gym,
     organization,
-    permissions,
     isLoading: isLoadingSession,
     isError: isSessionError,
     error: sessionError,
     refetchSession,
-    clearSessionCache,
-    hasPermission,
-    isOwner,
-    isCollaborator,
+    clearSession,
   } = useCurrentSession({
     enabled: isAuthenticated,
   });
@@ -65,12 +61,12 @@ export const useAuthController = () => {
   // Logout mutation with complete cleanup
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      // Clear stored tokens
-      await clearStoredTokens();
+      // Clear all auth and session data
+      await clearAuth();
     },
     onSuccess: () => {
       // Clear session cache
-      clearSessionCache();
+      clearSession();
 
       // Clear all other cached data
       queryClient.clear();
@@ -83,18 +79,12 @@ export const useAuthController = () => {
     user,
     gym,
     organization,
-    permissions,
 
     // Authentication state
-    isAuthenticated: !!session?.isAuthenticated,
+    isAuthenticated: !!session,
     isLoadingSession,
     isSessionError,
     sessionError,
-
-    // User role helpers
-    isOwner,
-    isCollaborator,
-    hasPermission,
 
     // Mutations
     login: loginMutation.mutate,

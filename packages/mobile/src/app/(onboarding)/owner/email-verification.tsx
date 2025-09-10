@@ -1,13 +1,13 @@
 import { EmailVerification } from '@/features/auth/components/EmailVerification';
 import { OnboardingStepsContainer } from '@/features/onboarding/components/OnboardingStepsContainer';
 import { useOnboardingStore } from '@/store/onboarding';
-import { useAuthToken } from '@/hooks/useAuthToken';
+import { useSession } from '@/contexts/SessionContext';
 import { router } from 'expo-router';
 import React from 'react';
 
 export default function EmailVerificationScreen() {
   const { ownerData, setEmailVerified, emailVerified, tempAuthTokens, setVerificationCode } = useOnboardingStore();
-  const { storeTokens } = useAuthToken();
+  const { storeTokens } = useSession();
 
   // Redirect if no owner data (shouldn't happen with proper navigation)
   if (!ownerData) {

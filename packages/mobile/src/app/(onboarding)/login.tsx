@@ -7,10 +7,9 @@ import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useAuthToken } from '@/hooks/useAuthToken';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { LoadingScreen, useLoadingScreen } from '@/shared/loading-screen';
-import { resetAuthFailureTracking } from '@/store/auth.atoms';
+import { useSession } from '@/contexts/SessionContext';
 import { Link, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'lucide-react-native';
@@ -39,7 +38,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
   const { sdk } = useGymSdk();
-  const { storeTokens } = useAuthToken();
+  const { storeTokens } = useSession();
   const { execute } = useLoadingScreen();
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -137,8 +136,6 @@ export default function LoginScreen() {
     methods.clearErrors();
 
     const loginPromise = async () => {
-      resetAuthFailureTracking();
-
       const response = await sdk.auth.login({
         email: data.email,
         password: data.password,
@@ -159,9 +156,6 @@ export default function LoginScreen() {
       if (!success) {
         throw new Error('Error al guardar la sesión. Por favor, inténtalo de nuevo.');
       }
-
-      // Reset failure tracking again after successful token storage
-      resetAuthFailureTracking();
 
       return response;
     };
