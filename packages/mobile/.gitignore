@@ -218,4 +218,10 @@ dist/
 .netlify
 
 # Sentry
+
+# Android build artifacts
+*.apk
+*.aab
+build-*.apk
+build-*.aab
 .sentryclirc
