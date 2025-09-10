@@ -1,83 +1,160 @@
-import { Logo } from '@/components/Logo';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Heading } from '@/components/ui/heading';
-import { Icon } from '@/components/ui/icon';
-import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
-import { Link, useRouter } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Dimensions, 
+  TouchableOpacity,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Building2Icon } from 'lucide-react-native';
-import React from 'react';
-import { SafeAreaView, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import Animated, { 
+  FadeInUp, 
+  FadeInDown,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 
-export default function UserTypeSelectionScreen() {
+// Feature components
+import { AnimatedLogo } from '@/features/onboarding/components/AnimatedLogo';
+import { OnboardingCarousel } from '@/features/onboarding/components/OnboardingCarousel';
+import { ProgressIndicator } from '@/features/onboarding/components/ProgressIndicator';
+import { onboardingSlides } from '@/features/onboarding/constants/onboardingData';
+
+const { width } = Dimensions.get('window');
+
+export default function OnboardingScreen() {
   const router = useRouter();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handleLoginPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(onboarding)/login');
+  };
+
+  const handleRegisterPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(onboarding)/owner/step-1-personal');
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View style={styles.container}>
       <StatusBar style="dark" />
-      <VStack className="flex-1 px-6">
-        {/* Logo Section - Fixed positioning */}
-        <VStack className="items-center mt-44 pb-4">
-          <View className="p-4 rounded-2xl bg-orange-50 border border-orange-200">
-            <Logo variant="sm" width={56} height={52} />
-          </View>
-        </VStack>
+      
+      <SafeAreaView style={styles.safeArea}>
+        {/* Logo */}
+        <Animated.View entering={FadeInDown.delay(200).duration(600)}>
+          <AnimatedLogo />
+        </Animated.View>
 
-        {/* Welcome Section */}
-        <VStack className="items-center gap-3 px-4 pb-0">
-          <Heading className="text-center text-gray-900 text-3xl font-bold">
-            Bienvenido a GymSpace
-          </Heading>
-          <Text className="text-center text-gray-600 text-base leading-relaxed">
-            La plataforma completa para gestionar tu gimnasio
-          </Text>
-        </VStack>
+        {/* Carousel */}
+        <View style={styles.carouselContainer}>
+          <OnboardingCarousel 
+            currentIndex={currentIndex}
+            onSlideChange={setCurrentIndex}
+          />
+        </View>
 
-        {/* Main Action Card */}
-        <VStack className="flex-1 justify-center px-2">
-          <Card className="p-6 bg-white border border-gray-200 shadow-lg rounded-2xl">
-            <VStack className="gap-5 items-center">
-              {/* Icon Container with proper white icon */}
-              <View className="w-20 bg-gray-600 h-20 rounded-2xl items-center justify-center shadow-md">
-                <Icon as={Building2Icon} className="w-10 h-10" />
-              </View>
+        {/* Progress Indicator */}
+        <Animated.View entering={FadeInUp.delay(400).duration(600)}>
+          <ProgressIndicator 
+            total={onboardingSlides.length}
+            currentIndex={currentIndex}
+          />
+        </Animated.View>
 
-              <VStack className="gap-2 items-center">
-                <Text className="font-bold text-xl text-gray-900 text-center">
-                  Soy Dueño de Gimnasio
-                </Text>
-                <Text className="text-gray-600 text-sm text-center leading-relaxed px-4">
-                  Registra tu gimnasio y comienza a gestionar tus clientes, planes y más
-                </Text>
-              </VStack>
+        {/* Action Buttons */}
+        <Animated.View 
+          entering={FadeInUp.delay(600).duration(600)}
+          style={styles.buttonsContainer}
+        >
+          <TouchableOpacity 
+            style={styles.primaryButton}
+            onPress={handleLoginPress}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
+          </TouchableOpacity>
 
-              {/* Call-to-Action Button */}
-              <Button
-                variant="solid"
-                size="lg"
-                className="w-full mt-3"
-                onPress={() => {
-                  console.log('hello world');
-                  router.push('owner/step-1-personal');
-                }}
-              >
-                <ButtonText>Comenzar Ahora</ButtonText>
-              </Button>
-            </VStack>
-          </Card>
-        </VStack>
-
-        {/* Bottom Login Section */}
-        <VStack className="pb-10 pt-6 gap-3 items-center">
-          <Text className="text-gray-500 text-sm">¿Ya tienes una cuenta?</Text>
-          <Link href="/login" asChild>
-            <Button variant="outline" size="md">
-              <ButtonText>Iniciar Sesión</ButtonText>
-            </Button>
-          </Link>
-        </VStack>
-      </VStack>
-    </SafeAreaView>
+          <TouchableOpacity 
+            style={styles.secondaryButton}
+            onPress={handleRegisterPress}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.secondaryButtonText}>Crear Cuenta</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  skipContainer: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    zIndex: 10,
+  },
+  skipButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+  },
+  skipText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  carouselContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  buttonsContainer: {
+    paddingHorizontal: 30,
+    paddingBottom: 30,
+    gap: 12,
+  },
+  primaryButton: {
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#f97316',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  primaryButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: 'white',
+  },
+  secondaryButton: {
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+  },
+  secondaryButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+  },
+});
