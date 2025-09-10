@@ -1,7 +1,18 @@
 import React, { createContext, useContext } from 'react';
+import { useForm, FormProvider, UseFormReturn } from 'react-hook-form';
 import { useProducts, useServices } from '@/features/products/hooks';
 import { useCreateSale } from '../hooks/useSales';
-import type { Product } from '@gymspace/sdk';
+import type { Product, Client } from '@gymspace/sdk';
+import type { PaymentStatus } from '../types';
+
+export interface SaleDetailsFormData {
+  client?: Client;
+  customerName?: string;
+  notes?: string;
+  fileIds: string[];
+  paymentMethodId?: string;
+  paymentStatus: PaymentStatus;
+}
 
 interface NewSaleContextValue {
   // Products and Services data
@@ -12,6 +23,9 @@ interface NewSaleContextValue {
 
   // API mutations
   createSaleMutation: ReturnType<typeof useCreateSale>;
+  
+  // Form methods
+  formMethods: UseFormReturn<SaleDetailsFormData>;
 }
 
 const NewSaleContext = createContext<NewSaleContextValue | undefined>(undefined);
@@ -29,6 +43,18 @@ interface NewSaleProviderProps {
 }
 
 export const NewSaleProvider: React.FC<NewSaleProviderProps> = ({ children }) => {
+  // Initialize form with default values
+  const formMethods = useForm<SaleDetailsFormData>({
+    defaultValues: {
+      client: undefined,
+      customerName: '',
+      notes: '',
+      fileIds: [],
+      paymentMethodId: '',
+      paymentStatus: 'paid',
+    },
+  });
+
   // Load products and services using the new hooks (up to 100 items each)
   const { data: products = [], isLoading: loadingProducts } = useProducts({
     enabled: true,
@@ -51,7 +77,14 @@ export const NewSaleProvider: React.FC<NewSaleProviderProps> = ({ children }) =>
     loadingProducts,
     loadingServices,
     createSaleMutation,
+    formMethods,
   };
 
-  return <NewSaleContext.Provider value={value}>{children}</NewSaleContext.Provider>;
+  return (
+    <NewSaleContext.Provider value={value}>
+      <FormProvider {...formMethods}>
+        {children}
+      </FormProvider>
+    </NewSaleContext.Provider>
+  );
 };

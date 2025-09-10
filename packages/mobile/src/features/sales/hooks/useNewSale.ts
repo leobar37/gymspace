@@ -1,17 +1,34 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Alert } from 'react-native';
+import { useFormContext } from 'react-hook-form';
 import { useCartStore } from '../stores/useCartStore';
-import { useSaleDetailsStore } from '../stores/useSaleDetailsStore';
 import { useSaleUIStore } from '../stores/useSaleUIStore';
-import { useNewSaleContext } from '../context/NewSaleProvider';
-import type { CreateSaleDto, SaleItemDto, Product } from '@gymspace/sdk';
+import { useNewSaleContext, type SaleDetailsFormData } from '../context/NewSaleProvider';
+import type { CreateSaleDto, SaleItemDto, Product, Sale } from '@gymspace/sdk';
 import { PRODUCT_TYPES } from '@/shared/constants';
 
 export const useNewSale = () => {
-  // Get all store states and actions
-  const cartStore = useCartStore();
-  const saleDetailsStore = useSaleDetailsStore();
-  const uiStore = useSaleUIStore();
+  // Get form methods
+  const { getValues, reset: resetForm, setValue, watch } = useFormContext<SaleDetailsFormData>();
+  
+  // Get all store states and actions separately
+  const items = useCartStore((state) => state.items);
+  const addItem = useCartStore((state) => state.addItem);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const clearCart = useCartStore((state) => state.clearCart);
+  
+  const isProcessing = useSaleUIStore((state) => state.isProcessing);
+  const error = useSaleUIStore((state) => state.error);
+  const showItemSelection = useSaleUIStore((state) => state.showItemSelection);
+  const selectedTab = useSaleUIStore((state) => state.selectedTab);
+  const setShowItemSelection = useSaleUIStore((state) => state.setShowItemSelection);
+  const setSelectedTab = useSaleUIStore((state) => state.setSelectedTab);
+  const openItemSelection = useSaleUIStore((state) => state.openItemSelection);
+  const closeItemSelection = useSaleUIStore((state) => state.closeItemSelection);
+  const setProcessing = useSaleUIStore((state) => state.setProcessing);
+  const setError = useSaleUIStore((state) => state.setError);
+  const resetUI = useSaleUIStore((state) => state.reset);
   
   // Get context data
   const context = useNewSaleContext();
@@ -24,24 +41,34 @@ export const useNewSale = () => {
       return false;
     }
     
-    cartStore.addItem(product, 1);
-    uiStore.closeItemSelection();
+    addItem(product, 1);
+    closeItemSelection();
     return true;
-  }, [cartStore, uiStore]);
+  }, [addItem, closeItemSelection]);
+  
+  // Composite action: Reset entire sale
+  const resetSale = useCallback(() => {
+    clearCart();
+    resetForm();
+    resetUI();
+  }, [clearCart, resetForm, resetUI]);
   
   // Composite action: Complete sale
-  const completeSale = useCallback(async (): Promise<void> => {
-    if (!cartStore.hasItems()) {
+  const completeSale = useCallback(async (): Promise<Sale> => {
+    if (items.length === 0) {
       Alert.alert('Carrito vacío', 'Agrega items al carrito antes de completar la venta.');
       throw new Error('Cart is empty');
     }
     
-    uiStore.setProcessing(true);
-    uiStore.setError(null);
+    setProcessing(true);
+    setError(null);
     
     try {
+      // Get form values
+      const formValues = getValues();
+      
       // Build sale data
-      const saleItems: SaleItemDto[] = cartStore.items.map(item => ({
+      const saleItems: SaleItemDto[] = items.map(item => ({
         productId: item.product.id,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
@@ -49,12 +76,12 @@ export const useNewSale = () => {
       
       const saleData: CreateSaleDto = {
         items: saleItems,
-        customerId: saleDetailsStore.details.client?.id,
-        customerName: saleDetailsStore.details.customerName || undefined,
-        notes: saleDetailsStore.details.notes || undefined,
-        paymentStatus: saleDetailsStore.details.paymentStatus,
-        paymentMethodId: saleDetailsStore.details.paymentMethodId || undefined,
-        fileIds: saleDetailsStore.details.fileIds.filter(id => id),
+        customerId: formValues.client?.id,
+        customerName: formValues.customerName || undefined,
+        notes: formValues.notes || undefined,
+        paymentStatus: formValues.paymentStatus,
+        paymentMethodId: formValues.paymentMethodId || undefined,
+        fileIds: formValues.fileIds.filter((id): id is string => Boolean(id)),
       };
       
       // Execute sale
@@ -65,19 +92,12 @@ export const useNewSale = () => {
       
       return result;
     } catch (error) {
-      uiStore.setError(error as Error);
+      setError(error as Error);
       throw error;
     } finally {
-      uiStore.setProcessing(false);
+      setProcessing(false);
     }
-  }, [cartStore, saleDetailsStore.details, uiStore, context.createSaleMutation]);
-  
-  // Composite action: Reset entire sale
-  const resetSale = useCallback(() => {
-    cartStore.clearCart();
-    saleDetailsStore.reset();
-    uiStore.reset();
-  }, [cartStore, saleDetailsStore, uiStore]);
+  }, [items, getValues, setProcessing, setError, context.createSaleMutation, resetSale]);
   
   // Composite action: Remove item with confirmation
   const removeItemWithConfirmation = useCallback((productId: string) => {
@@ -89,37 +109,40 @@ export const useNewSale = () => {
         { 
           text: 'Remover', 
           style: 'destructive', 
-          onPress: () => cartStore.removeItem(productId) 
+          onPress: () => removeItem(productId) 
         },
       ]
     );
-  }, [cartStore]);
+  }, [removeItem]);
+  
+  // Compute values once per render
+  const total = useMemo(() => items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0), [items]);
+  const itemCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
+  const hasItemsValue = useMemo(() => items.length > 0, [items]);
   
   return {
     // Cart state and actions
-    items: cartStore.items,
+    items,
     addItem: addItemToCart,
     removeItem: removeItemWithConfirmation,
-    updateQuantity: cartStore.updateQuantity,
-    clearCart: cartStore.clearCart,
-    total: cartStore.getTotal(),
-    itemCount: cartStore.getItemCount(),
-    hasItems: cartStore.hasItems(),
+    updateQuantity,
+    clearCart,
+    hasItems: hasItemsValue,
+    total,
+    itemCount,
     
-    // Sale details state and actions
-    saleDetails: saleDetailsStore.details,
-    setSaleDetails: saleDetailsStore.setSaleDetails,
-    setClient: saleDetailsStore.setClient,
+    // Form methods for sale details
+    formMethods: { getValues, setValue, watch, reset: resetForm },
     
     // UI state and actions
-    isProcessing: uiStore.isProcessing,
-    error: uiStore.error,
-    showItemSelection: uiStore.showItemSelection,
-    selectedTab: uiStore.selectedTab,
-    setShowItemSelection: uiStore.setShowItemSelection,
-    setSelectedTab: uiStore.setSelectedTab,
-    openItemSelection: uiStore.openItemSelection,
-    closeItemSelection: uiStore.closeItemSelection,
+    isProcessing,
+    error,
+    showItemSelection,
+    selectedTab,
+    setShowItemSelection,
+    setSelectedTab,
+    openItemSelection,
+    closeItemSelection,
     
     // Products and services data
     products: context.products,

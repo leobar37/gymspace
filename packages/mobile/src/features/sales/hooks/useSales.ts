@@ -1,16 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { transformPaginatedResponse, type TransformedPaginatedResponse } from '@/utils/pagination';
-import type { PaymentStatus } from '@/types/inventory';
-import type { 
-  Sale, 
+import type {
   CreateSaleDto,
-  UpdateSaleDto,
-  SaleItem,
+  Sale,
   SearchSalesParams,
-  PaginatedResponseDto,
-  CustomerSalesReport
+  UpdateSaleDto
 } from '@gymspace/sdk';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Query key factories
 export const saleKeys = {
@@ -80,6 +76,7 @@ export function useTodaySales(options: { enabled?: boolean } = {}) {
         startDate: today.toISOString(),
         endDate: tomorrow.toISOString(),
         limit: 1000, // Get all sales for today
+        page: 1
       });
       return result.data;
     },

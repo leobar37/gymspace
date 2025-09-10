@@ -7,7 +7,7 @@ import type { CartItem as CartItemType } from '../types';
 
 export const CartItemList: React.FC = () => {
   const { items, updateQuantity, removeItem } = useNewSale();
-  
+
   const renderCartItem = useCallback(
     ({ item }: { item: CartItemType }) => (
       <CartItem
@@ -16,9 +16,9 @@ export const CartItemList: React.FC = () => {
         onRemove={() => removeItem(item.product.id)}
       />
     ),
-    [updateQuantity, removeItem]
+    [],
   );
-  
+
   return (
     <FlatList
       data={items}
