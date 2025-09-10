@@ -327,7 +327,6 @@ export default function LoginScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-
       {/* Loading Screen Modal */}
       <LoadingScreen />
     </>

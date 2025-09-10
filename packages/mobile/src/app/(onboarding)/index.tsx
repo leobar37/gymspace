@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
-  Dimensions, 
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,8 +19,6 @@ import { AnimatedLogo } from '@/features/onboarding/components/AnimatedLogo';
 import { OnboardingCarousel } from '@/features/onboarding/components/OnboardingCarousel';
 import { ProgressIndicator } from '@/features/onboarding/components/ProgressIndicator';
 import { onboardingSlides } from '@/features/onboarding/constants/onboardingData';
-
-const { width } = Dimensions.get('window');
 
 export default function OnboardingScreen() {
   const router = useRouter();
