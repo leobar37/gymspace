@@ -32,6 +32,7 @@ const PRODUCTS_LIST_CONFIG = {
 const createProductsQueryFn = (sdk: ReturnType<typeof useGymSdk>['sdk']) => {
   return async (): Promise<Product[]> => {
     const response = await sdk.products.searchProducts({ 
+      type: 'Product',
       page: PRODUCTS_LIST_CONFIG.page, 
       limit: PRODUCTS_LIST_CONFIG.limit
     });

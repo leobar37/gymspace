@@ -57,8 +57,6 @@ export const DebtsWidget: React.FC = () => {
 
 export const CheckInsWidget: React.FC = () => {
   const { data, isLoading, error } = useCheckInsWidget();
-
-  console.log("data", data);
   
   if (isLoading) {
     return (

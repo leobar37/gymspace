@@ -7,12 +7,14 @@ interface SaleUIStore {
   error: Error | null;
   showItemSelection: boolean;
   selectedTab: ItemTab;
+  lastSelectedProductId: string | null;
   
   // Actions
   setProcessing: (processing: boolean) => void;
   setError: (error: Error | null) => void;
   setShowItemSelection: (show: boolean) => void;
   setSelectedTab: (tab: ItemTab) => void;
+  setLastSelectedProduct: (productId: string | null) => void;
   openItemSelection: () => void;
   closeItemSelection: () => void;
   reset: () => void;
@@ -23,6 +25,7 @@ const initialState = {
   error: null,
   showItemSelection: false,
   selectedTab: 'products' as ItemTab,
+  lastSelectedProductId: null as string | null,
 };
 
 export const useSaleUIStore = create<SaleUIStore>((set) => ({
@@ -36,9 +39,11 @@ export const useSaleUIStore = create<SaleUIStore>((set) => ({
   
   setSelectedTab: (tab) => set({ selectedTab: tab }),
   
+  setLastSelectedProduct: (productId) => set({ lastSelectedProductId: productId }),
+  
   openItemSelection: () => set({ showItemSelection: true }),
   
-  closeItemSelection: () => set({ showItemSelection: false }),
+  closeItemSelection: () => set({ showItemSelection: false, lastSelectedProductId: null }),
   
   reset: () => set(initialState),
 }));

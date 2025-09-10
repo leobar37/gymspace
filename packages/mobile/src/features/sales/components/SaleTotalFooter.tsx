@@ -4,7 +4,7 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { CheckIcon } from 'lucide-react-native';
+import { CheckIcon, PlusIcon } from 'lucide-react-native';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import { useNewSale } from '../hooks/useNewSale';
@@ -13,7 +13,7 @@ import { router } from 'expo-router';
 export const SaleTotalFooter: React.FC = () => {
   const formatPrice = useFormatPrice();
   const { execute } = useLoadingScreen();
-  const { total, completeSale, resetSale } = useNewSale();
+  const { total, completeSale, resetSale, openItemSelection } = useNewSale();
 
   const handleCompleteSale = async () => {
     await execute(completeSale(), {
@@ -72,13 +72,24 @@ export const SaleTotalFooter: React.FC = () => {
         </Text>
       </HStack>
 
-      {/* Complete Sale Button */}
-      <Button onPress={handleCompleteSale} variant="solid" size="lg" className="w-full">
-        <HStack space="sm" className="items-center">
-          <Icon as={CheckIcon} className="w-5 h-5" />
-          <ButtonText className="font-semibold">Completar Venta</ButtonText>
-        </HStack>
-      </Button>
+      {/* Action Buttons */}
+      <HStack space="sm">
+        {/* Add Items Button */}
+        <Button onPress={openItemSelection} variant="outline" size="md" className="flex-1">
+          <HStack space="xs" className="items-center">
+            <Icon as={PlusIcon} className="w-4 h-4" />
+            <ButtonText>Agregar items</ButtonText>
+          </HStack>
+        </Button>
+
+        {/* Complete Sale Button */}
+        <Button onPress={handleCompleteSale} variant="solid" size="md" className="flex-1">
+          <HStack space="xs" className="items-center">
+            <Icon as={CheckIcon} className="w-4 h-4" />
+            <ButtonText className="font-semibold">Completar</ButtonText>
+          </HStack>
+        </Button>
+      </HStack>
     </VStack>
   );
 };

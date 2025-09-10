@@ -25,7 +25,7 @@ export const CartItemList: React.FC = () => {
       renderItem={renderCartItem}
       keyExtractor={(item) => item.product.id}
       scrollEnabled={false}
-      ItemSeparatorComponent={() => <View className="h-2" />}
+      ItemSeparatorComponent={() => <View className="h-1" />}
     />
   );
 };

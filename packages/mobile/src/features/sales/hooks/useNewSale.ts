@@ -17,6 +17,8 @@ export const useNewSale = () => {
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const clearCart = useCartStore((state) => state.clearCart);
+  const isInCart = useCartStore((state) => state.isInCart);
+  const getItemQuantity = useCartStore((state) => state.getItemQuantity);
   
   const isProcessing = useSaleUIStore((state) => state.isProcessing);
   const error = useSaleUIStore((state) => state.error);
@@ -29,11 +31,13 @@ export const useNewSale = () => {
   const setProcessing = useSaleUIStore((state) => state.setProcessing);
   const setError = useSaleUIStore((state) => state.setError);
   const resetUI = useSaleUIStore((state) => state.reset);
+  const lastSelectedProductId = useSaleUIStore((state) => state.lastSelectedProductId);
+  const setLastSelectedProduct = useSaleUIStore((state) => state.setLastSelectedProduct);
   
   // Get context data
   const context = useNewSaleContext();
   
-  // Composite action: Add item with stock validation
+  // Composite action: Toggle item in cart
   const addItemToCart = useCallback((product: Product) => {
     // Only check stock for products, not services
     if (product.type === PRODUCT_TYPES.PRODUCT && product.stock !== null && product.stock <= 0) {
@@ -41,10 +45,24 @@ export const useNewSale = () => {
       return false;
     }
     
-    addItem(product, 1);
-    closeItemSelection();
+    // Check if item is already in cart
+    const existingQuantity = getItemQuantity(product.id);
+    
+    if (existingQuantity === 0) {
+      // Not in cart, add it
+      addItem(product, 1);
+      setLastSelectedProduct(product.id);
+    } else if (existingQuantity === 1) {
+      // In cart with quantity 1, remove it
+      removeItem(product.id);
+      setLastSelectedProduct(null);
+    } else {
+      // In cart with quantity > 1, just set as selected for controls
+      setLastSelectedProduct(product.id);
+    }
+    
     return true;
-  }, [addItem, closeItemSelection]);
+  }, [addItem, removeItem, getItemQuantity, setLastSelectedProduct]);
   
   // Composite action: Reset entire sale
   const resetSale = useCallback(() => {
@@ -130,6 +148,8 @@ export const useNewSale = () => {
     hasItems: hasItemsValue,
     total,
     itemCount,
+    isInCart,
+    getItemQuantity,
     
     // Form methods for sale details
     formMethods: { getValues, setValue, watch, reset: resetForm },
@@ -149,6 +169,10 @@ export const useNewSale = () => {
     services: context.services,
     loadingProducts: context.loadingProducts,
     loadingServices: context.loadingServices,
+    
+    // Last selected product
+    lastSelectedProductId,
+    setLastSelectedProduct,
     
     // Composite actions
     completeSale,

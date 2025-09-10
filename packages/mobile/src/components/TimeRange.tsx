@@ -152,7 +152,7 @@ export function TimeRange({
     },
     { 
       value: 'custom', 
-      label: 'Personalizado',
+      label: 'Per..',
       icon: <CalendarClock size={16} color={state.selectedOption === 'custom' ? '#3b82f6' : '#6b7280'} />
     },
   ];

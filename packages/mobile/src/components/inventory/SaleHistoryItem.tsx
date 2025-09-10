@@ -6,12 +6,12 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Icon } from '@/components/ui/icon';
-import { 
-  CalendarIcon, 
-  UserIcon, 
+import {
+  CalendarIcon,
+  UserIcon,
   ShoppingCartIcon,
   CreditCardIcon,
-  ClockIcon 
+  ClockIcon,
 } from 'lucide-react-native';
 import { useFormatPrice } from '@/config/ConfigContext';
 import type { Sale } from '@gymspace/sdk';
@@ -22,16 +22,9 @@ interface SaleHistoryItemProps {
   showCustomer?: boolean;
 }
 
-export function SaleHistoryItem({ 
-  sale, 
-  onPress,
-  showCustomer = true 
-}: SaleHistoryItemProps) {
-
-  console.log("saleasas", sale);
-  
+export function SaleHistoryItem({ sale, onPress, showCustomer = true }: SaleHistoryItemProps) {
   const formatPrice = useFormatPrice();
-  
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('es-PE', {
@@ -56,15 +49,10 @@ export function SaleHistoryItem({
 
   const isPaid = sale.paymentStatus === 'paid';
   const itemCount = sale._count?.saleItems || sale.saleItems?.length || 0;
-  // ({totalQuantity} unidad{totalQuantity !== 1 ? 'es' : ''})
-  // const totalQuantity = sale.saleItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   return (
     <Card className="bg-white border border-gray-200 shadow-sm">
-      <Pressable 
-        onPress={handlePress}
-        className="p-4 active:bg-gray-50"
-      >
+      <Pressable onPress={handlePress} className="p-4 active:bg-gray-50">
         <VStack space="sm">
           {/* Header Row - Date, Time, and Payment Status */}
           <HStack className="justify-between items-start">
@@ -74,19 +62,17 @@ export function SaleHistoryItem({
                 <Text className="text-sm font-medium text-gray-900">
                   {formatDate(sale.saleDate)}
                 </Text>
-                <Text className="text-xs text-gray-500">
-                  {formatTime(sale.saleDate)}
-                </Text>
+                <Text className="text-xs text-gray-500">{formatTime(sale.saleDate)}</Text>
               </VStack>
             </HStack>
-            
-            <Badge 
-              variant={isPaid ? "solid" : "outline"} 
+
+            <Badge
+              variant={isPaid ? 'solid' : 'outline'}
               className={isPaid ? 'bg-green-100 border-green-200' : 'bg-red-100 border-red-200'}
             >
-              <Icon 
-                as={isPaid ? CreditCardIcon : ClockIcon} 
-                className={`w-3 h-3 mr-1 ${isPaid ? 'text-green-600' : 'text-red-600'}`} 
+              <Icon
+                as={isPaid ? CreditCardIcon : ClockIcon}
+                className={`w-3 h-3 mr-1 ${isPaid ? 'text-green-600' : 'text-red-600'}`}
               />
               <BadgeText className={isPaid ? 'text-green-700' : 'text-red-700'}>
                 {isPaid ? 'Pagado' : 'Pendiente'}
@@ -101,9 +87,7 @@ export function SaleHistoryItem({
               <Text className="text-sm text-gray-700">
                 {sale.customer?.name || sale.customerName}
                 {sale.customer?.clientNumber && (
-                  <Text className="text-xs text-gray-500 ml-2">
-                    #{sale.customer.clientNumber}
-                  </Text>
+                  <Text className="text-xs text-gray-500 ml-2">#{sale.customer.clientNumber}</Text>
                 )}
               </Text>
             </HStack>
@@ -114,13 +98,11 @@ export function SaleHistoryItem({
             <HStack space="sm" className="items-center">
               <Icon as={ShoppingCartIcon} className="w-4 h-4 text-gray-500" />
               <Text className="text-sm text-gray-600">
-                {itemCount} items {itemCount !== 1 ? 's' : ''} 
+                {itemCount} items {itemCount !== 1 ? 's' : ''}
               </Text>
             </HStack>
-            
-            <Text className="text-lg font-bold text-gray-900">
-              {formatPrice(sale.total)}
-            </Text>
+
+            <Text className="text-lg font-bold text-gray-900">{formatPrice(sale.total)}</Text>
           </HStack>
 
           {/* Notes */}

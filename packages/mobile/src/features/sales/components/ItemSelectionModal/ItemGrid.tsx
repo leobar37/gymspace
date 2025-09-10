@@ -4,11 +4,12 @@ import { View } from '@/components/ui/view';
 import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { ProductCard } from '@/components/inventory/ProductCard';
-import { ServiceCard } from '@/components/inventory/services';
+import { SelectableProductCard } from './SelectableProductCard';
+import { SelectableServiceCard } from './SelectableServiceCard';
 import { PackageIcon, WrenchIcon } from 'lucide-react-native';
 import type { Product } from '@gymspace/sdk';
 import type { ItemTab } from '../../types';
+import { useNewSale } from '../../hooks/useNewSale';
 
 interface ItemGridProps {
   items: Product[];
@@ -18,22 +19,44 @@ interface ItemGridProps {
 }
 
 export const ItemGrid: React.FC<ItemGridProps> = ({ items, type, loading, onItemPress }) => {
+  const { isInCart, getItemQuantity } = useNewSale();
+  
   const renderProductCard = useCallback(
-    ({ item }: { item: Product }) => (
-      <View className="w-1/2 p-1">
-        <ProductCard product={item} onPress={onItemPress} compact={true} showStock={true} />
-      </View>
-    ),
-    [onItemPress]
+    ({ item }: { item: Product }) => {
+      const inCart = isInCart(item.id);
+      const quantity = getItemQuantity(item.id);
+      
+      return (
+        <View className="w-1/2 p-1">
+          <SelectableProductCard 
+            product={item} 
+            onPress={onItemPress}
+            isSelected={inCart}
+            selectedQuantity={quantity}
+          />
+        </View>
+      );
+    },
+    [onItemPress, isInCart, getItemQuantity]
   );
 
   const renderServiceCard = useCallback(
-    ({ item }: { item: Product }) => (
-      <View className="w-1/2 p-1">
-        <ServiceCard service={item} onPress={onItemPress} compact={true} />
-      </View>
-    ),
-    [onItemPress]
+    ({ item }: { item: Product }) => {
+      const inCart = isInCart(item.id);
+      const quantity = getItemQuantity(item.id);
+      
+      return (
+        <View className="w-1/2 p-1">
+          <SelectableServiceCard 
+            service={item} 
+            onPress={onItemPress}
+            isSelected={inCart}
+            selectedQuantity={quantity}
+          />
+        </View>
+      );
+    },
+    [onItemPress, isInCart, getItemQuantity]
   );
 
   if (loading) {

@@ -259,14 +259,12 @@ export default function SalesHistoryScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50" >
       <VStack className="flex-1">
         {/* Fixed Header with Stats and Search - Improved Size */}
         <View className="bg-white shadow-sm border-b border-gray-100">
           <VStack className="p-4" space="lg">
             {/* Header */}
-            <Text className="text-2xl font-bold text-gray-900">Historial de Ventas</Text>
-
             {/* Quick Stats - Larger Cards */}
             <HStack space="md">
               <View className="flex-1 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
@@ -382,6 +380,6 @@ export default function SalesHistoryScreen() {
           </Pressable>
         </View>
       </VStack>
-    </SafeAreaView>
+    </View>
   );
 }

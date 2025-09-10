@@ -1,4 +1,5 @@
-import { Stack } from 'expo-router';
+import { BackButton } from '@/shared/components';
+import { router, Stack } from 'expo-router';
 
 export default function PlansLayout() {
   return (
@@ -6,7 +7,9 @@ export default function PlansLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerShown: false
+          headerShown: true,
+          title: 'Planes',
+          headerLeft: () => <BackButton label="" onPress={() => router.push('/more')} />,
         }}
       />
       <Stack.Screen

@@ -3,20 +3,10 @@ import { VStack } from '@/components/ui/vstack';
 import React from 'react';
 import { RefreshControl, ScrollView, View } from 'react-native';
 import { CheckInButton } from './CheckInButton';
-import { SalesButton } from './SalesButton';
 import { TimeRange } from '@/components/TimeRange';
-import {
-  useDashboardDateRangeManager
-} from '../hooks/useDashboardWidgets';
-import {
-  ContractsRevenueWidget,
-  SalesRevenueWidget
-} from './widgets/RevenueWidget';
-import {
-  DebtsWidget,
-  CheckInsWidget,
-  NewClientsWidget
-} from './widgets/MetricsWidget';
+import { useDashboardDateRangeManager } from '../hooks/useDashboardWidgets';
+import { ContractsRevenueWidget, SalesRevenueWidget } from './widgets/RevenueWidget';
+import { DebtsWidget, CheckInsWidget, NewClientsWidget } from './widgets/MetricsWidget';
 import { DataPrefetch } from './DataPrefetch';
 
 export const Dashboard: React.FC = () => {
@@ -39,7 +29,7 @@ export const Dashboard: React.FC = () => {
     <View className="flex-1 bg-gray-50">
       {/* Prefetch data in background without blocking UI */}
       <DataPrefetch />
-      
+
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -48,10 +38,7 @@ export const Dashboard: React.FC = () => {
       >
         <VStack className="p-4 gap-4">
           {/* Date Range Selector */}
-          <TimeRange
-            onRangeChange={handleRangeChange}
-            hideLabel={true}
-          />
+          <TimeRange onRangeChange={handleRangeChange} hideLabel={true} />
 
           {/* Metrics Section - Primary Stats */}
           <View className="flex-row gap-3">
@@ -85,7 +72,6 @@ export const Dashboard: React.FC = () => {
 
       {/* Floating Action Buttons */}
       <CheckInButton />
-      <SalesButton />
     </View>
   );
 };

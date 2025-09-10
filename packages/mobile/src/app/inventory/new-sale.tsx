@@ -5,9 +5,7 @@ import { VStack } from '@/components/ui/vstack';
 import { ScreenForm } from '@/shared/components/ScreenForm';
 import { NewSaleProvider } from '@/features/sales/context/NewSaleProvider';
 import { useNewSale } from '@/features/sales/hooks/useNewSale';
-import { 
-  SaleHeader,
-  CartSummary,
+import {
   EmptyCart,
   CartItemList,
   SaleDetailsForm,
@@ -17,26 +15,22 @@ import {
 
 // Inner component that uses the hook
 function NewSaleContent() {
-  const { hasItems } = useNewSale();
+  const { hasItems, itemCount } = useNewSale();
 
   return (
     <>
       <ScreenForm
-        useSafeArea={false}
+        useSafeArea={true}
         showBackButton={false}
         showFixedFooter={hasItems}
         footerContent={hasItems && <SaleTotalFooter />}
       >
-        <VStack space="md" className="pb-16">
-          {/* Header */}
-          <SaleHeader />
-
-          {/* Cart Summary */}
-          <CartSummary />
-
+        <VStack space="md" className="pb-16 ">
           {/* Cart Items */}
           <VStack space="sm">
-            <Text className="text-lg font-semibold text-gray-900">Items</Text>
+            <Text className="text-lg font-semibold text-gray-900">
+              Items{hasItems ? ` (${itemCount})` : ''}
+            </Text>
             {hasItems ? <CartItemList /> : <EmptyCart />}
           </VStack>
 
@@ -55,9 +49,7 @@ function NewSaleContent() {
 export default function NewSaleScreen() {
   return (
     <NewSaleProvider>
-      <SafeAreaView className="flex-1 bg-gray-50">
-        <NewSaleContent />
-      </SafeAreaView>
+      <NewSaleContent />
     </NewSaleProvider>
   );
 }

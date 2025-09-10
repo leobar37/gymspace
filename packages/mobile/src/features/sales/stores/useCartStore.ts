@@ -17,6 +17,8 @@ interface CartStore {
   getTotal: () => number;
   getItemCount: () => number;
   hasItems: () => boolean;
+  isInCart: (productId: string) => boolean;
+  getItemQuantity: (productId: string) => number;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -90,6 +92,17 @@ export const useCartStore = create<CartStore>()(
     
     hasItems: () => {
       return get().items.length > 0;
+    },
+    
+    isInCart: (productId) => {
+      const items = get().items;
+      return items.some(item => item.product.id === productId);
+    },
+    
+    getItemQuantity: (productId) => {
+      const items = get().items;
+      const item = items.find(item => item.product.id === productId);
+      return item ? item.quantity : 0;
     },
   }))
 );
