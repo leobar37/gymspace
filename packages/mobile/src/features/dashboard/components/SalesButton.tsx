@@ -8,7 +8,7 @@ export const SalesButton: React.FC = () => {
   const router = useRouter();
 
   const handlePress = () => {
-    router.push('/inventory/sales-history');
+    router.push('/(tabs)/sales-history');
   };
 
   return (

@@ -54,10 +54,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="inventory"
+        name="sales-history"
         options={{
           title: 'Ventas',
-          headerTitle: 'Inventario y Ventas',
+          headerTitle: 'Historial de Ventas',
           tabBarIcon: ({ color }) => (
             <Icon as={ShoppingCartIcon} className="w-6 h-6" style={{ color }} />
           ),

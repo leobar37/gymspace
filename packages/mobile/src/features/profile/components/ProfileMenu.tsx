@@ -22,9 +22,11 @@ import {
   LogOutIcon,
   PackageIcon,
   SettingsIcon,
+  TagIcon,
   TruckIcon,
   UserIcon,
   WalletIcon,
+  WrenchIcon,
 } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -97,6 +99,29 @@ export const ProfileMenu: React.FC = () => {
           title: 'Proveedores',
           subtitle: 'Gestiona proveedores de productos',
           onPress: () => router.push('/suppliers'),
+        },
+      ],
+    },
+    {
+      title: 'Inventario',
+      items: [
+        {
+          icon: PackageIcon,
+          title: 'Productos',
+          subtitle: 'Gestiona el inventario de productos',
+          onPress: () => router.push('/inventory/products'),
+        },
+        {
+          icon: WrenchIcon,
+          title: 'Servicios',
+          subtitle: 'Gestiona los servicios del gimnasio',
+          onPress: () => router.push('/inventory/services'),
+        },
+        {
+          icon: TagIcon,
+          title: 'Categorías',
+          subtitle: 'Organiza productos y servicios',
+          onPress: () => router.push('/inventory/categories'),
         },
       ],
     },

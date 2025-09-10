@@ -34,24 +34,6 @@ export default function InventoryLayout() {
         }}
       />
       <Stack.Screen
-        name="low-stock"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="reports"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="sales-history"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
         name="categories"
         options={{
           headerShown: false,
@@ -124,7 +106,7 @@ export default function InventoryLayout() {
           headerShown: true,
           title: 'Servicios',
           headerBackTitle: '',
-          headerLeft: () => <BackButton label="" onPress={() => router.push('/inventory')} />,
+          headerLeft: () => <BackButton label="" onPress={() => router.back()} />,
         }}
       />
     </Stack>

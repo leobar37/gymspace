@@ -15,7 +15,6 @@ import { useInfiniteScroll, InfiniteScrollList, PaginationControls } from '@/sha
 import type { Sale, SearchSalesParams } from '@gymspace/sdk';
 import { router } from 'expo-router';
 import {
-  ChevronLeftIcon,
   DollarSignIcon,
   InfoIcon,
   ShoppingCartIcon,
@@ -247,12 +246,7 @@ export default function SalesHistoryScreen() {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
         <VStack className="flex-1 p-4">
-          <HStack className="items-center mb-6">
-            <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-lg">
-              <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
-            </Pressable>
-            <Text className="text-2xl font-bold text-gray-900 ml-2">Historial de Ventas</Text>
-          </HStack>
+          <Text className="text-2xl font-bold text-gray-900 mb-6">Historial de Ventas</Text>
           <View className="flex-1 items-center justify-center">
             <VStack space="lg" className="items-center">
               <Spinner size="large" />
@@ -270,13 +264,8 @@ export default function SalesHistoryScreen() {
         {/* Fixed Header with Stats and Search - Improved Size */}
         <View className="bg-white shadow-sm border-b border-gray-100">
           <VStack className="p-4" space="lg">
-            {/* Header with Back Button */}
-            <HStack className="items-center">
-              <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-lg">
-                <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
-              </Pressable>
-              <Text className="text-2xl font-bold text-gray-900 ml-2">Historial de Ventas</Text>
-            </HStack>
+            {/* Header */}
+            <Text className="text-2xl font-bold text-gray-900">Historial de Ventas</Text>
 
             {/* Quick Stats - Larger Cards */}
             <HStack space="md">
