@@ -1,5 +1,5 @@
 import { BaseResource } from './base';
-import { Organization, UpdateOrganizationDto, OrganizationStats } from '../models/organizations';
+import { Organization, UpdateOrganizationDto, OrganizationStats, OrganizationWithDetails } from '../models/organizations';
 import { RequestOptions } from '../types';
 
 export class OrganizationsResource extends BaseResource {
@@ -19,5 +19,9 @@ export class OrganizationsResource extends BaseResource {
 
   async getOrganizationStats(id: string, options?: RequestOptions): Promise<OrganizationStats> {
     return this.client.get<OrganizationStats>(`${this.basePath}/${id}/stats`, undefined, options);
+  }
+
+  async listOrganizations(options?: RequestOptions): Promise<OrganizationWithDetails[]> {
+    return this.client.get<OrganizationWithDetails[]>(`${this.basePath}/list`, undefined, options);
   }
 }

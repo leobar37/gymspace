@@ -94,3 +94,10 @@ export interface IRequestContext {
   getOrganizationId(): UUID | undefined;
   getUserId(): UUID;
 }
+
+// Type aliases for convenience
+export type Organization = IOrganization;
+export type User = IUser;
+export type Gym = IGym;
+export type Collaborator = ICollaborator;
+export type Role = IRole;

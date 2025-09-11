@@ -5,7 +5,6 @@ import {
   ResourceNotFoundException,
   ValidationException,
 } from '../../common/exceptions';
-import { CacheService } from '../../core/cache/cache.service';
 import { PrismaService } from '../../core/database/prisma.service';
 import { AffiliateOrganizationDto, AvailablePlanDto, SubscriptionStatusDto } from './dto';
 import dayjs from 'dayjs';
@@ -35,23 +34,11 @@ interface CollaboratorData {
   userId: string;
 }
 
-interface SubscriptionData {
-  id: string;
-  organizationId: string;
-  organization: {
-    id: string;
-    name: string;
-  };
-}
-
 @Injectable()
 export class SubscriptionsService implements OnModuleInit {
   private readonly logger = new Logger(SubscriptionsService.name);
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly cache: CacheService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
     this.logger.log('SubscriptionsService initialized');
@@ -62,13 +49,6 @@ export class SubscriptionsService implements OnModuleInit {
    * For now, only returns free plans
    */
   async getAvailablePlans(): Promise<AvailablePlanDto[]> {
-    const cacheKey = 'subscription-plans:free';
-    const cached = await this.cache.get<AvailablePlanDto[]>(cacheKey);
-
-    if (cached) {
-      return cached;
-    }
-
     const plans = await this.prisma.subscriptionPlan.findMany({
       where: {
         deletedAt: null,
@@ -91,9 +71,6 @@ export class SubscriptionsService implements OnModuleInit {
       features: plan.features,
       isFreePlan: this.isFreePlan(plan.price),
     }));
-
-    // Cache for 1 hour
-    await this.cache.set(cacheKey, availablePlans, 3600);
 
     return availablePlans;
   }
@@ -326,9 +303,6 @@ export class SubscriptionsService implements OnModuleInit {
         });
       }
     });
-
-    // Clear cache
-    await this.cache.del(`org:${organizationId}:*`);
 
     // Return updated status
     return this.getSubscriptionStatus(organizationId, context);
@@ -625,9 +599,6 @@ export class SubscriptionsService implements OnModuleInit {
         },
       });
     });
-
-    // Clear cache
-    await this.cache.del(`org:${organizationId}:*`);
 
     // Return updated status
     return this.getSubscriptionStatus(organizationId, context);

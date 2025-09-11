@@ -1,0 +1,71 @@
+/* Tailwind CSS v4 Theme Configuration */
+@theme {
+  /* Custom Colors */
+  --color-gymspace-orange: #F57E24;
+  --color-gymspace-dark: #2D3C53;
+  --color-gymspace-orange-light: #FF9144;
+  --color-gymspace-orange-dark: #E56614;
+  --color-gymspace-dark-light: #3D4C63;
+  --color-gymspace-dark-darker: #1D2C43;
+
+  /* Custom Animations */
+  --animate-gradient: gradient 8s linear infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-delayed: float 6s ease-in-out 2s infinite;
+  --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-fade-in: fade-in 0.5s ease-out;
+}
+
+/* Custom Keyframes */
+@keyframes gradient {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes glow {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

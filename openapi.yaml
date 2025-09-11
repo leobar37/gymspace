@@ -553,6 +553,26 @@ paths:
         - Users
       security:
         - bearer: []
+  /api/v1/organizations/list:
+    get:
+      operationId: OrganizationsController_listOrganizations
+      summary: List all organizations (SUPER_ADMIN only)
+      parameters: []
+      responses:
+        '200':
+          description: List of all organizations with owner and gyms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListOrganizationsResponseDto'
+        '403':
+          description: Forbidden - Super admin access required
+      tags:
+        - Organizations
+      security:
+        - bearer: []
   /api/v1/organizations/{id}:
     get:
       operationId: OrganizationsController_getOrganization
@@ -3835,7 +3855,7 @@ tags:
 servers:
   - url: http://localhost:5200/api/v1
     description: Development (localhost)
-  - url: http://192.168.100.19:5200/api/v1
+  - url: http://192.168.53.169:5200/api/v1
     description: Development (LAN)
   - url: https://api.gymspace.com/api/v1
     description: Production
@@ -4365,6 +4385,9 @@ components:
           description: User birth date
           example: '1990-01-15'
           format: date
+    ListOrganizationsResponseDto:
+      type: object
+      properties: {}
     UpdateOrganizationDto:
       type: object
       properties:

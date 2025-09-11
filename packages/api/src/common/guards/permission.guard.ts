@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Permission } from '@gymspace/shared';
+import { Permission, PERMISSIONS } from '@gymspace/shared';
 import { PERMISSIONS_KEY } from '../decorators/allow.decorator';
 import { AuthorizationException } from '../exceptions';
 
@@ -16,6 +16,12 @@ export class PermissionGuard implements CanActivate {
 
     // If no permissions are required, allow access
     if (!requiredPermissions || requiredPermissions.length === 0) {
+      return true;
+    }
+
+    // If the route requires SUPER_ADMIN, it's treated as public by AuthGuard
+    // so we don't need to validate permissions here
+    if (requiredPermissions.includes(PERMISSIONS.SUPER_ADMIN)) {
       return true;
     }
 

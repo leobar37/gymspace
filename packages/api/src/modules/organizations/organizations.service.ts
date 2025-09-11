@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CacheService } from '../../core/cache/cache.service';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { UpdateOrganizationDto, ListOrganizationsResponseDto } from './dto';
 import { ResourceNotFoundException } from '../../common/exceptions';
 import { RequestContext } from '../../common/services/request-context.service';
 import { Organization } from '@prisma/client';
+import { IRequestContext } from '@gymspace/shared';
 
 @Injectable()
 export class OrganizationsService {
@@ -132,7 +133,6 @@ export class OrganizationsService {
    * Get organization statistics
    */
   async getOrganizationStats(context: RequestContext, organizationId: string) {
-    const userId = context.getUserId();
     // Verify ownership
     const organization = await this.getOrganization(context, organizationId);
 
@@ -230,7 +230,7 @@ export class OrganizationsService {
   /**
    * Check if organization can add more gyms
    */
-  async canAddGym(context: RequestContext, organizationId: string): Promise<boolean> {
+  async canAddGym(_context: RequestContext, organizationId: string): Promise<boolean> {
     const organization = await this.prismaService.organization.findUnique({
       where: { id: organizationId },
       include: {
@@ -264,7 +264,7 @@ export class OrganizationsService {
   /**
    * Check if gym can add more clients
    */
-  async canAddClient(context: RequestContext, gymId: string): Promise<boolean> {
+  async canAddClient(_context: RequestContext, gymId: string): Promise<boolean> {
     const gym = await this.prismaService.gym.findUnique({
       where: { id: gymId },
       include: {
@@ -302,7 +302,7 @@ export class OrganizationsService {
   /**
    * Check if gym can add more collaborators
    */
-  async canAddCollaborator(context: RequestContext, gymId: string): Promise<boolean> {
+  async canAddCollaborator(_context: RequestContext, gymId: string): Promise<boolean> {
     const gym = await this.prismaService.gym.findUnique({
       where: { id: gymId },
       include: {
@@ -339,5 +339,56 @@ export class OrganizationsService {
     }
 
     return gym._count.collaborators < subscriptionPlan.maxUsersPerGym;
+  }
+
+  /**
+   * List all organizations (SUPER_ADMIN only)
+   */
+  async listOrganizations(_context: IRequestContext): Promise<ListOrganizationsResponseDto[]> {
+    // Permission check is handled by the guard
+
+    const organizations = await this.prismaService.organization.findMany({
+      where: {
+        deletedAt: null,
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+        gyms: {
+          where: {
+            deletedAt: null,
+          },
+          select: {
+            id: true,
+            name: true,
+            address: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return organizations.map((org) => ({
+      id: org.id,
+      name: org.name,
+      owner: {
+        id: org.owner.id,
+        email: org.owner.email,
+        fullName: org.owner.name || '',
+      },
+      gyms: org.gyms.map((gym) => ({
+        id: gym.id,
+        name: gym.name,
+        address: gym.address || '',
+      })),
+      createdAt: org.createdAt,
+    }));
   }
 }

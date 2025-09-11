@@ -2,7 +2,7 @@ export type UUID = string;
 
 export type Currency = 'USD' | 'EUR' | 'PEN' | 'MXN' | 'COP' | 'ARS' | 'CLP';
 
-export type EntityType = 
+export type EntityType =
   | 'user'
   | 'organization'
   | 'gym'
@@ -12,7 +12,7 @@ export type EntityType =
   | 'evaluation'
   | 'asset';
 
-export type Permission = 
+export type Permission =
   | 'ORGANIZATIONS_CREATE'
   | 'ORGANIZATIONS_READ'
   | 'ORGANIZATIONS_UPDATE'
@@ -72,7 +72,8 @@ export type Permission =
   | 'PAYMENT_METHODS_CREATE'
   | 'PAYMENT_METHODS_READ'
   | 'PAYMENT_METHODS_UPDATE'
-  | 'PAYMENT_METHODS_DELETE';
+  | 'PAYMENT_METHODS_DELETE'
+  | 'SUPER_ADMIN';
 
 export interface AuditFields {
   createdByUserId: UUID;

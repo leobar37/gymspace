@@ -8,7 +8,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AuthService } from '../services/auth.service';
 import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator';
-import { IGym, IOrganization, ISubscription } from '@gymspace/shared';
+import { PERMISSIONS_KEY } from '../../../common/decorators/allow.decorator';
+import { IGym, IOrganization, ISubscription, Permission, PERMISSIONS } from '@gymspace/shared';
 import { RequestContext } from '../../../common/services/request-context.service';
 import { CacheService } from '../../cache/cache.service';
 
@@ -82,6 +83,21 @@ export class AuthGuard implements CanActivate {
     ]);
 
     if (isPublic) {
+      return true;
+    }
+
+    // Check if route requires SUPER_ADMIN permission (treat as public for now)
+    const requiredPermissions = this.reflector.getAllAndOverride<Permission[]>(PERMISSIONS_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // If the route requires SUPER_ADMIN, treat it as public (no token validation)
+    if (requiredPermissions && requiredPermissions.includes(PERMISSIONS.SUPER_ADMIN)) {
+      const request = context.switchToHttp().getRequest();
+      // Create empty context for SUPER_ADMIN routes
+      const requestContext = new RequestContext();
+      request.requestContext = requestContext.createEmpty();
       return true;
     }
 
@@ -173,6 +189,8 @@ export class AuthGuard implements CanActivate {
         tokenValidation.user.id,
         gym?.id,
       );
+      
+      // Store permissions (including SUPER_ADMIN if user has it)
       request.permissions = permissions;
 
       // Create and initialize RequestContext for this request
