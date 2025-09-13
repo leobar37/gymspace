@@ -3855,7 +3855,7 @@ tags:
 servers:
   - url: http://localhost:5200/api/v1
     description: Development (localhost)
-  - url: http://192.168.53.169:5200/api/v1
+  - url: http://192.168.100.19:5200/api/v1
     description: Development (LAN)
   - url: https://api.gymspace.com/api/v1
     description: Production

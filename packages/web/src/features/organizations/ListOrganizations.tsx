@@ -1,18 +1,14 @@
 'use client';
-
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  SearchIcon,
   MoreHorizontalIcon,
   BuildingIcon,
   UserIcon,
@@ -22,32 +18,14 @@ import {
   EditIcon,
   EyeIcon,
   TrashIcon,
-  FilterIcon,
   RefreshCwIcon,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { GenericTable, Column, SortConfig } from '@/components/ui/generic-table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { useOrganizations, OrganizationWithDetails } from './hooks/useOrganizations';
-
-interface FilterConfig {
-  search: string;
-  gymCount: 'all' | 'none' | 'single' | 'multiple';
-}
-
-// Helper functions
-const formatDate = (date: Date | string) => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return format(dateObj, 'dd MMM yyyy', { locale: es });
-};
-
-const formatDateTime = (date: Date | string) => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return format(dateObj, "dd MMM yyyy 'a las' HH:mm", { locale: es });
-};
+import { formatDate, formatDateTime } from '@/lib/utils';
 
 export function ListOrganizations() {
   const { data: organizations = [], isLoading, error, refetch } = useOrganizations();
@@ -57,55 +35,12 @@ export function ListOrganizations() {
     direction: 'asc',
   });
   
-  const [filterConfig, setFilterConfig] = useState<FilterConfig>({
-    search: '',
-    gymCount: 'all',
-  });
-
-  // Filtering logic
-  const filteredData = useMemo(() => {
-    let filtered = [...organizations];
-
-    // Search filter
-    if (filterConfig.search) {
-      const searchLower = filterConfig.search.toLowerCase();
-      filtered = filtered.filter(
-        (org) =>
-          org.name.toLowerCase().includes(searchLower) ||
-          org.owner.fullName.toLowerCase().includes(searchLower) ||
-          org.owner.email.toLowerCase().includes(searchLower) ||
-          org.gyms.some((gym) => 
-            gym.name.toLowerCase().includes(searchLower) ||
-            gym.address.toLowerCase().includes(searchLower)
-          )
-      );
-    }
-
-    // Gym count filter
-    if (filterConfig.gymCount !== 'all') {
-      filtered = filtered.filter((org) => {
-        const gymCount = org.gyms.length;
-        switch (filterConfig.gymCount) {
-          case 'none':
-            return gymCount === 0;
-          case 'single':
-            return gymCount === 1;
-          case 'multiple':
-            return gymCount > 1;
-          default:
-            return true;
-        }
-      });
-    }
-
-    return filtered;
-  }, [organizations, filterConfig]);
 
   // Sorting logic
   const sortedData = useMemo(() => {
-    if (!sortConfig.key) return filteredData;
+    if (!sortConfig.key) return organizations;
 
-    const sorted = [...filteredData].sort((a, b) => {
+    const sorted = [...organizations].sort((a, b) => {
       let aValue: any;
       let bValue: any;
 
@@ -126,7 +61,7 @@ export function ListOrganizations() {
     });
 
     return sorted;
-  }, [filteredData, sortConfig]);
+  }, [organizations, sortConfig]);
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => ({
@@ -240,61 +175,8 @@ export function ListOrganizations() {
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-4">
-          {/* Header with filters */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-1 items-center gap-2">
-              <div className="relative flex-1 max-w-sm">
-                <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar organizaciones..."
-                  value={filterConfig.search}
-                  onChange={(e) =>
-                    setFilterConfig((prev) => ({ ...prev, search: e.target.value }))
-                  }
-                  className="pl-9"
-                />
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <FilterIcon className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Filtrar por gimnasios</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() =>
-                      setFilterConfig((prev) => ({ ...prev, gymCount: 'all' }))
-                    }
-                  >
-                    Todos
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      setFilterConfig((prev) => ({ ...prev, gymCount: 'none' }))
-                    }
-                  >
-                    Sin gimnasios
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      setFilterConfig((prev) => ({ ...prev, gymCount: 'single' }))
-                    }
-                  >
-                    Un gimnasio
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      setFilterConfig((prev) => ({ ...prev, gymCount: 'multiple' }))
-                    }
-                  >
-                    Múltiples gimnasios
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            
+          {/* Header with refresh button */}
+          <div className="flex justify-end">
             <Button
               variant="outline"
               size="sm"
@@ -319,7 +201,7 @@ export function ListOrganizations() {
               <EmptyState
                 icon={Building2Icon}
                 title="No hay organizaciones"
-                description="No se encontraron organizaciones. Intenta ajustar los filtros o actualizar la página."
+                description="No se encontraron organizaciones. Intenta actualizar la página."
                 onRefresh={() => refetch()}
               />
             }
