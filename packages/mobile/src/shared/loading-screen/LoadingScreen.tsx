@@ -1,13 +1,52 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
-import { Button, ButtonText } from '@/components/ui/button';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
+import { View } from 'react-native';
 import { useLoadingScreenStore } from './store';
-import { CheckCircle, XCircle } from 'lucide-react-native';
 import ActionSheet, { ActionSheetRef } from 'react-native-actions-sheet';
+import { MultiScreen } from '@/components/ui/multi-screen';
+import { LoadingStep, SuccessStep, ErrorStep } from './screens';
+import type { StepConfig } from '@/components/ui/multi-screen/types';
 
+// Main LoadingScreen component
 export const LoadingScreen: React.FC = () => {
   const { state, message, actions, hide } = useLoadingScreenStore();
   const actionSheetRef = useRef<ActionSheetRef>(null);
+  const [currentStep, setCurrentStep] = useState<'loading' | 'success' | 'error'>('loading');
+
+  // Update current step when state changes
+  useEffect(() => {
+    if (state !== 'idle') {
+      setCurrentStep(state);
+    }
+  }, [state]);
+
+  const handleActionPress = (action: typeof actions[0]) => {
+    // First hide the sheet
+    hide();
+    // Then execute the action after a small delay to ensure sheet is closed
+    setTimeout(() => {
+      action.onPress();
+    }, 100);
+  };
+
+  // Wrapper components for each step
+  const LoadingStepWrapper: React.FC = () => {
+    return <LoadingStep message={message} />;
+  };
+
+  const SuccessStepWrapper: React.FC = () => {
+    return <SuccessStep message={message} actions={actions} onActionPress={handleActionPress} />;
+  };
+
+  const ErrorStepWrapper: React.FC = () => {
+    return <ErrorStep message={message} actions={actions} onActionPress={handleActionPress} />;
+  };
+
+  // Define steps for MultiScreen
+  const steps: StepConfig[] = useMemo(() => [
+    { id: 'loading', component: LoadingStepWrapper },
+    { id: 'success', component: SuccessStepWrapper },
+    { id: 'error', component: ErrorStepWrapper },
+  ], [message, actions]);
 
   useEffect(() => {
     if (state !== 'idle') {
@@ -17,86 +56,24 @@ export const LoadingScreen: React.FC = () => {
     }
   }, [state]);
 
-  const handleActionPress = (action: (typeof actions)[0]) => {
-    // First hide the sheet
-    actionSheetRef.current?.hide();
-    // Then execute the action after a small delay to ensure sheet is closed
-    setTimeout(() => {
-      action.onPress();
-    }, 100);
-  };
-
-  const renderIcon = () => {
-    switch (state) {
-      case 'success':
-        return <CheckCircle size={64} color="#10b981" />;
-      case 'error':
-        return <XCircle size={64} color="#ef4444" />;
-      default:
-        return null;
-    }
-  };
-
-  const renderContent = () => {
-    switch (state) {
-      case 'loading':
-        return (
-          <>
-            <ActivityIndicator size="large" color="#6366f1" />
-            {message && <Text className="text-gray-700 text-base text-center mt-4">{message}</Text>}
-          </>
-        );
-
-      case 'success':
-      case 'error':
-        return (
-          <>
-            {renderIcon()}
-            <Text
-              className={`text-lg font-semibold text-center mt-4 ${
-                state === 'success' ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {state === 'success' ? '¡Éxito!' : 'Error'}
-            </Text>
-            {message && (
-              <Text className="text-gray-700 text-base text-center mt-2 px-4">{message}</Text>
-            )}
-            {actions.length > 0 && (
-              <View className="mt-6 w-full px-6">
-                {actions.map((action, index) => (
-                  <Button
-                    key={index}
-                    variant={action.variant || 'solid'}
-                    onPress={() => handleActionPress(action)}
-                    className={index > 0 ? 'mt-3' : ''}
-                  >
-                    <ButtonText>{action.label}</ButtonText>
-                  </Button>
-                ))}
-              </View>
-            )}
-          </>
-        );
-
-      default:
-        return null;
-    }
-  };
-
   // Handle closing the sheet when hide is called
   const handleClose = () => {
     hide();
   };
 
+  // Don't render the ActionSheet when idle
+  if (state === 'idle') {
+    return null;
+  }
+
   return (
     <ActionSheet
-      id={'action'}
+      id={'loading-screen'}
       ref={actionSheetRef}
       containerStyle={{
         backgroundColor: 'white',
         borderRadius: 16,
-        padding: 32,
+        padding: 0,
         minWidth: 280,
         maxWidth: '90%',
         alignSelf: 'center',
@@ -116,7 +93,12 @@ export const LoadingScreen: React.FC = () => {
       drawUnderStatusBar
       onClose={handleClose}
     >
-      <View className="items-center">{renderContent()}</View>
+      <View className="min-h-[200px]">
+        <MultiScreen 
+          steps={steps} 
+          config={{ defaultStep: currentStep }}
+        />
+      </View>
     </ActionSheet>
   );
 };
