@@ -9,7 +9,8 @@ import { ContractRenewalDrawer } from '@/features/contracts/components/ContractR
 import { ContractFreezeSheet } from '@/features/contracts/components/ContractFreezeSheet';
 import { AssetPreviewSheet } from '@/features/assets/components/AssetPreviewSheet';
 import AssetSelectorSheet from '@/features/assets/components/AssetSelectorSheet';
-import type { Product, StockMovement, SearchSalesParams, SearchProductsParams, GetContractsParams, Contract, ProductCategory } from '@gymspace/sdk';
+import ClientSelectorSheet from '@/features/clients/components/ClientSelectorSheet';
+import type { Product, StockMovement, SearchSalesParams, SearchProductsParams, GetContractsParams, Contract, ProductCategory, Client } from '@gymspace/sdk';
 
 // Register the stock adjustment modal
 registerSheet('stock-adjustment-modal', StockAdjustmentModal);
@@ -40,6 +41,9 @@ registerSheet('asset-preview', AssetPreviewSheet);
 
 // Register the asset selector sheet
 registerSheet('asset-selector', AssetSelectorSheet);
+
+// Register the client selector sheet
+registerSheet('client-selector', ClientSelectorSheet);
 
 // Define the payload structure for TypeScript intellisense
 interface StockAdjustmentForm {
@@ -120,6 +124,14 @@ declare module 'react-native-actions-sheet' {
         onShare?: (assetId: string) => void;
         onDelete?: (assetId: string) => void;
         onClose?: () => void;
+      };
+    }>;
+    'client-selector': SheetDefinition<{
+      payload: {
+        mode?: 'select' | 'affiliate';
+        currentClientId?: string;
+        onSelect: (client: Client) => void;
+        onCancel?: () => void;
       };
     }>;
   }
