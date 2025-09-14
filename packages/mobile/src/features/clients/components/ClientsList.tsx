@@ -28,7 +28,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useDataSearch } from '@/hooks/useDataSearch';
-import { router } from 'expo-router';
+import { useSafeNavigation } from '@/hooks/useSafeNavigation';
 import {
   EditIcon,
   MoreHorizontalIcon,
@@ -99,12 +99,13 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
   );
 };
 
-export const ClientsList: React.FC = () => {
+const ClientsListComponent: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showActionsheet, setShowActionsheet] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<any>(null);
 
+  const { navigateWithinFeature } = useSafeNavigation();
   const { useClientsList, toggleStatus, isTogglingStatus } = useClientsController();
 
   // Fetch first 1000 clients for local filtering
@@ -129,11 +130,11 @@ export const ClientsList: React.FC = () => {
   });
 
   const handleClientPress = (clientId: string) => {
-    router.push(`/clients/${clientId}`);
+    navigateWithinFeature(`/clients/${clientId}`);
   };
 
   const handleAddClient = () => {
-    router.push('/clients/create');
+    navigateWithinFeature('/clients/create');
   };
 
   const handleActionPress = (client: any) => {
@@ -144,7 +145,7 @@ export const ClientsList: React.FC = () => {
   const handleEditClient = () => {
     setShowActionsheet(false);
     if (selectedClient) {
-      router.push(`/clients/${selectedClient.id}/edit`);
+      navigateWithinFeature(`/clients/${selectedClient.id}/edit`);
     }
   };
 
@@ -293,3 +294,5 @@ export const ClientsList: React.FC = () => {
     </View>
   );
 };
+
+export const ClientsList = React.memo(ClientsListComponent);

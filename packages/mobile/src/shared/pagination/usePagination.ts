@@ -149,6 +149,7 @@ export function usePagination<TData, TParams extends Record<string, any> = {}>(
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const allItemsRef = useRef<TData[]>([]);
   const lastPageRef = useRef(initialPage);
+  const loadingTimerRef = useRef<any>();
 
   // Build query key with pagination params
   const paginatedQueryKey = useMemo(
@@ -237,10 +238,36 @@ export function usePagination<TData, TParams extends Record<string, any> = {}>(
     if (strategy === 'infinite' && state.hasNextPage && !isLoadingMore && !query.isFetching) {
       setIsLoadingMore(true);
       setCurrentPage(prev => prev + 1);
-      // Wait for the query to complete
-      setTimeout(() => setIsLoadingMore(false), 100);
     }
   }, [strategy, state.hasNextPage, isLoadingMore, query.isFetching]);
+
+  // Handle isLoadingMore reset with cleanup
+  useEffect(() => {
+    if (isLoadingMore && !query.isFetching) {
+      loadingTimerRef.current = setTimeout(() => {
+        setIsLoadingMore(false);
+      }, 100);
+    }
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+    };
+  }, [isLoadingMore, query.isFetching]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Clear refs on unmount
+      allItemsRef.current = [];
+      lastPageRef.current = initialPage;
+      setIsLoadingMore(false);
+      // Clear timer if exists
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+    };
+  }, [initialPage]);
 
   const refresh = useCallback(async () => {
     allItemsRef.current = [];
