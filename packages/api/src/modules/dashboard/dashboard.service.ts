@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
-import { CacheService } from '../../core/cache/cache.service';
 import { RequestContext } from '../../common/services/request-context.service';
 import {
   DashboardStatsDto,
@@ -20,14 +19,11 @@ import {
   differenceInDays,
 } from 'date-fns';
 import { BusinessException } from '../../common/exceptions/business.exception';
-import { CACHE_TTL, ContractStatus } from '@gymspace/shared';
+import { ContractStatus } from '@gymspace/shared';
 
 @Injectable()
 export class DashboardService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly cacheService: CacheService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Helper method to get date range for queries
@@ -54,19 +50,14 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const cacheKey = this.getDashboardStatsKey(gymId);
+    const now = new Date();
+    const startOfCurrentMonth = startOfMonth(now);
+    const endOfCurrentMonth = endOfMonth(now);
+    const startOfToday = startOfDay(now);
+    const endOfToday = endOfDay(now);
 
-    return await this.cacheService.getOrSet(
-      cacheKey,
-      async () => {
-        const now = new Date();
-        const startOfCurrentMonth = startOfMonth(now);
-        const endOfCurrentMonth = endOfMonth(now);
-        const startOfToday = startOfDay(now);
-        const endOfToday = endOfDay(now);
-
-        // Execute all queries within a transaction for consistency
-        return await this.prisma.$transaction(async (tx) => {
+    // Execute all queries within a transaction for consistency
+    return await this.prisma.$transaction(async (tx) => {
           const [
             totalClients,
             activeClientsCount,
@@ -157,20 +148,17 @@ export class DashboardService {
             }),
           ]);
 
-          return {
-            totalClients,
-            activeClients: activeClientsCount,
-            totalContracts,
-            activeContracts: activeContractsCount,
-            monthlyRevenue: 0, // Removed from stats, use contracts-revenue endpoint instead
-            todayCheckIns: todayCheckInsCount,
-            expiringContractsCount,
-            newClientsThisMonth,
-          };
-        });
-      },
-      CACHE_TTL.REPORTS, // Cache for 5 minutes
-    );
+        return {
+          totalClients,
+          activeClients: activeClientsCount,
+          totalContracts,
+          activeContracts: activeContractsCount,
+          monthlyRevenue: 0, // Removed from stats, use contracts-revenue endpoint instead
+          todayCheckIns: todayCheckInsCount,
+          expiringContractsCount,
+          newClientsThisMonth,
+        };
+      });
   }
 
   async getContractsRevenue(
@@ -185,12 +173,7 @@ export class DashboardService {
 
     const { start, end } = this.getDateRange(startDate, endDate);
 
-    const cacheKey = `gym:${gymId}:dashboard:contracts-revenue:${start.toISOString()}:${end.toISOString()}`;
-
-    return await this.cacheService.getOrSet(
-      cacheKey,
-      async () => {
-        const result = await this.prisma.contract.aggregate({
+    const result = await this.prisma.contract.aggregate({
           _sum: {
             finalAmount: true,
           },
@@ -209,20 +192,17 @@ export class DashboardService {
           },
         });
 
-        const totalRevenue = Number(result._sum.finalAmount || 0);
-        const contractCount = result._count.id;
-        const averageRevenue = contractCount > 0 ? totalRevenue / contractCount : 0;
+    const totalRevenue = Number(result._sum.finalAmount || 0);
+    const contractCount = result._count.id;
+    const averageRevenue = contractCount > 0 ? totalRevenue / contractCount : 0;
 
-        return {
-          totalRevenue,
-          contractCount,
-          averageRevenue: Math.round(averageRevenue * 100) / 100,
-          startDate: start.toISOString(),
-          endDate: end.toISOString(),
-        };
-      },
-      CACHE_TTL.DASHBOARD,
-    );
+    return {
+      totalRevenue,
+      contractCount,
+      averageRevenue: Math.round(averageRevenue * 100) / 100,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+    };
   }
 
   async getSalesRevenue(
@@ -237,12 +217,7 @@ export class DashboardService {
 
     const { start, end } = this.getDateRange(startDate, endDate);
 
-    const cacheKey = `gym:${gymId}:dashboard:sales-revenue:${start.toISOString()}:${end.toISOString()}`;
-
-    return await this.cacheService.getOrSet(
-      cacheKey,
-      async () => {
-        const result = await this.prisma.sale.aggregate({
+    const result = await this.prisma.sale.aggregate({
           _sum: {
             total: true,
           },
@@ -259,20 +234,17 @@ export class DashboardService {
           },
         });
 
-        const totalRevenue = Number(result._sum.total || 0);
-        const salesCount = result._count.id;
-        const averageRevenue = salesCount > 0 ? totalRevenue / salesCount : 0;
+    const totalRevenue = Number(result._sum.total || 0);
+    const salesCount = result._count.id;
+    const averageRevenue = salesCount > 0 ? totalRevenue / salesCount : 0;
 
-        return {
-          totalRevenue,
-          salesCount,
-          averageRevenue: Math.round(averageRevenue * 100) / 100,
-          startDate: start.toISOString(),
-          endDate: end.toISOString(),
-        };
-      },
-      CACHE_TTL.DASHBOARD,
-    );
+    return {
+      totalRevenue,
+      salesCount,
+      averageRevenue: Math.round(averageRevenue * 100) / 100,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+    };
   }
 
   async getDebts(ctx: RequestContext, startDate?: string, endDate?: string): Promise<DebtsDto> {
@@ -283,13 +255,8 @@ export class DashboardService {
 
     const { start, end } = this.getDateRange(startDate, endDate);
 
-    const cacheKey = `gym:${gymId}:dashboard:debts:${start.toISOString()}:${end.toISOString()}`;
-
-    return await this.cacheService.getOrSet(
-      cacheKey,
-      async () => {
-        // Get unpaid sales within the date range
-        const unpaidSales = await this.prisma.sale.findMany({
+    // Get unpaid sales within the date range
+    const unpaidSales = await this.prisma.sale.findMany({
           where: {
             gymId,
             saleDate: {
@@ -305,26 +272,23 @@ export class DashboardService {
           },
         });
 
-        const totalDebt = unpaidSales.reduce((sum, sale) => sum + Number(sale.total), 0);
+    const totalDebt = unpaidSales.reduce((sum, sale) => sum + Number(sale.total), 0);
 
-        // Count unique customers with debts (excluding null customerIds)
-        const customerIds = unpaidSales
-          .filter((sale) => sale.customerId !== null)
-          .map((sale) => sale.customerId);
-        const uniqueClients = new Set(customerIds).size;
+    // Count unique customers with debts (excluding null customerIds)
+    const customerIds = unpaidSales
+      .filter((sale) => sale.customerId !== null)
+      .map((sale) => sale.customerId);
+    const uniqueClients = new Set(customerIds).size;
 
-        const averageDebt = uniqueClients > 0 ? totalDebt / uniqueClients : 0;
+    const averageDebt = uniqueClients > 0 ? totalDebt / uniqueClients : 0;
 
-        return {
-          totalDebt,
-          clientsWithDebt: uniqueClients,
-          averageDebt: Math.round(averageDebt * 100) / 100,
-          startDate: start.toISOString(),
-          endDate: end.toISOString(),
-        };
-      },
-      CACHE_TTL.DASHBOARD,
-    );
+    return {
+      totalDebt,
+      clientsWithDebt: uniqueClients,
+      averageDebt: Math.round(averageDebt * 100) / 100,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+    };
   }
 
   async getCheckIns(
@@ -344,12 +308,7 @@ export class DashboardService {
       () => endOfDay(new Date()),
     );
 
-    const cacheKey = `gym:${gymId}:dashboard:check-ins:${start.toISOString()}:${end.toISOString()}`;
-
-    return await this.cacheService.getOrSet(
-      cacheKey,
-      async () => {
-        const checkIns = await this.prisma.checkIn.findMany({
+    const checkIns = await this.prisma.checkIn.findMany({
           where: {
             gymId: {
               equals: gymId,
@@ -365,23 +324,19 @@ export class DashboardService {
           },
         });
 
-        const totalCheckIns = checkIns.length;
-        const uniqueClients = new Set(checkIns.map((c) => c.gymClientId)).size;
+    const totalCheckIns = checkIns.length;
+    const uniqueClients = new Set(checkIns.map((c) => c.gymClientId)).size;
 
-        const daysDiff = Math.max(1, differenceInDays(end, start) + 1);
-        const averagePerDay = totalCheckIns / daysDiff;
+    const daysDiff = Math.max(1, differenceInDays(end, start) + 1);
+    const averagePerDay = totalCheckIns / daysDiff;
 
-    
-        return {
-          totalCheckIns,
-          uniqueClients,
-          averagePerDay: Math.round(averagePerDay * 100) / 100,
-          startDate: start.toISOString(),
-          endDate: end.toISOString(),
-        };
-      },
-      0,
-    );
+    return {
+      totalCheckIns,
+      uniqueClients,
+      averagePerDay: Math.round(averagePerDay * 100) / 100,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+    };
   }
 
   async getNewClients(
@@ -396,12 +351,7 @@ export class DashboardService {
 
     const { start, end } = this.getDateRange(startDate, endDate);
 
-    const cacheKey = `gym:${gymId}:dashboard:new-clients:${start.toISOString()}:${end.toISOString()}`;
-
-    return await this.cacheService.getOrSet(
-      cacheKey,
-      async () => {
-        const newClientsCount = await this.prisma.gymClient.count({
+    const newClientsCount = await this.prisma.gymClient.count({
           where: {
             gymId,
             createdAt: {
@@ -412,18 +362,15 @@ export class DashboardService {
           },
         });
 
-        const daysDiff = Math.max(1, differenceInDays(end, start) + 1);
-        const averagePerDay = newClientsCount / daysDiff;
+    const daysDiff = Math.max(1, differenceInDays(end, start) + 1);
+    const averagePerDay = newClientsCount / daysDiff;
 
-        return {
-          totalNewClients: newClientsCount,
-          averagePerDay: Math.round(averagePerDay * 100) / 100,
-          startDate: start.toISOString(),
-          endDate: end.toISOString(),
-        };
-      },
-      CACHE_TTL.DASHBOARD,
-    );
+    return {
+      totalNewClients: newClientsCount,
+      averagePerDay: Math.round(averagePerDay * 100) / 100,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+    };
   }
 
   async getExpiringContracts(
@@ -446,14 +393,8 @@ export class DashboardService {
       () => addDays(now, 30),
     );
 
-    // Use caching for expiring contracts to reduce database load
-    const cacheKey = `gym:${gymId}:dashboard:expiring-contracts:${limit}:${start.toISOString()}:${end.toISOString()}`;
-
-    return await this.cacheService.getOrSet(
-      cacheKey,
-      async () => {
-        // Remove transaction and query directly for better performance
-        const expiringContracts = await this.prisma.contract.findMany({
+    // Query directly for better performance
+    const expiringContracts = await this.prisma.contract.findMany({
           where: {
             gymClient: {
               gymId,
@@ -474,25 +415,18 @@ export class DashboardService {
           },
         });
 
-        return expiringContracts.map((contract) => {
-          const daysRemaining = Math.ceil(
-            (contract.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-          );
-          return {
-            id: contract.id,
-            clientName: (contract as any).gymClient.name,
-            clientId: (contract as any).gymClient.id,
-            planName: (contract as any).gymMembershipPlan.name,
-            endDate: contract.endDate.toISOString(),
-            daysRemaining,
-          };
-        });
-      },
-      CACHE_TTL.DASHBOARD, // Use dashboard cache TTL (shorter than reports)
-    );
-  }
-
-  private getDashboardStatsKey(gymId: string): string {
-    return `gym:${gymId}:dashboard:stats`;
+    return expiringContracts.map((contract) => {
+      const daysRemaining = Math.ceil(
+        (contract.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      return {
+        id: contract.id,
+        clientName: (contract as any).gymClient.name,
+        clientId: (contract as any).gymClient.id,
+        planName: (contract as any).gymMembershipPlan.name,
+        endDate: contract.endDate.toISOString(),
+        daysRemaining,
+      };
+    });
   }
 }

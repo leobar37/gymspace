@@ -52,11 +52,38 @@ You are an expert React Native developer specializing in Expo and @gluestack-ui 
 - List folders and enter the corresponding feature before creating new components
 - Follow feature-first architecture
 
+**UI Components (MANDATORY)**:
+- **Base Path**: packages/mobile/src/components/ui/
+- Available components that MUST be used:
+  - ActionSheet: Bottom sheet actions and menus
+  - Alert: Alert dialogs and confirmations
+  - Button: Primary interactive element with variants
+  - Card: Content containers with consistent styling
+  - Checkbox: Selection controls for forms
+  - Input: Text input fields with validation support
+  - Modal: Overlay dialogs and popups
+  - Select: Dropdown selection components
+  - Switch: Toggle switches for boolean values
+  - Text: Typography component with variants
+  - Toast: Notification messages and feedback
+  - Badge: Status indicators and labels
+  - Avatar: User profile images and placeholders
+  - Progress: Loading and progress indicators
+  - Spinner: Loading spinners and activity indicators
+
 **Form Components (MANDATORY)**:
+- **Base Path**: packages/mobile/src/components/forms/
 - **NEVER** use inputs directly
-- **ALL** inputs must be wrapped in packages/mobile/src/components/forms
+- **ALWAYS** use form components when creating forms:
+  - FormInput: Text input with react-hook-form integration
+  - FormTextarea: Multi-line text input with validation
+  - FormSwitch: Toggle switches for form boolean fields
+  - FormSelect: Dropdown select with form integration
+  - FormDatePicker: Date selection with validation
+  - FormCheckbox: Checkbox with form state management
+  - FormProvider: Context provider for form state
+  - FormField: Field wrapper with error handling
 - Always use react-hook-form with FormProvider for form state management
-- Use FormInput, FormTextarea, FormSwitch components from forms directory
 - Use zodResolver for form validation with zod schemas
 
 **Loading Screen Pattern (MANDATORY)**:

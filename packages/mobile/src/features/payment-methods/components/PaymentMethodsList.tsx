@@ -25,7 +25,7 @@ import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useDataSearch } from '@/hooks/useDataSearch';
 import type { PaymentMethod } from '@gymspace/sdk';
 import {
   CreditCardIcon,
@@ -35,13 +35,12 @@ import {
   SearchIcon,
   TrashIcon,
 } from 'lucide-react-native';
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useMemo } from 'react';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { router } from 'expo-router';
 import { usePaymentMethodsController } from '../controllers/payment-methods.controller';
 import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { Fab, FabIcon } from '@/components/ui/fab';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface PaymentMethodCardProps {
   paymentMethod: PaymentMethod;
@@ -89,21 +88,37 @@ const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
 };
 
 export const PaymentMethodsList: React.FC = () => {
-  const [searchText, setSearchText] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
   const [showActionsheet, setShowActionsheet] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [paymentMethodToDelete, setPaymentMethodToDelete] = useState<PaymentMethod | null>(null);
   const [showPaymentMethodSelector, setShowPaymentMethodSelector] = useState(false);
-  const debouncedSearch = useDebounce(searchText, 300);
 
   const { usePaymentMethodsList, toggleStatus, deletePaymentMethod, isDeletingPaymentMethod } =
     usePaymentMethodsController();
+
+  // Load all payment methods at once (max 50)
   const { data, isLoading, refetch, isRefetching } = usePaymentMethodsList({
-    search: debouncedSearch,
+    search: '',
     enabledOnly: false,
     page: 1,
     limit: 50,
+  });
+
+  // Use local search for better performance
+  const {
+    searchInput,
+    setSearchInput,
+    filteredData,
+    hasSearch,
+  } = useDataSearch({
+    data: data?.data || [],
+    searchFields: (item: PaymentMethod) => [
+      item.name.toLowerCase(),
+      item.code.toLowerCase(),
+      item.description?.toLowerCase() || '',
+    ],
+    searchPlaceholder: 'Buscar por nombre o código...',
   });
 
   const handlePaymentMethodPress = (paymentMethodId: string) => {
@@ -170,9 +185,9 @@ export const PaymentMethodsList: React.FC = () => {
   const renderEmptyState = () => (
     <VStack className="flex-1 items-center justify-center p-8">
       <Text className="text-gray-500 text-center mb-4">
-        {searchText ? 'No se encontraron métodos de pago' : 'No hay métodos de pago registrados'}
+        {hasSearch ? 'No se encontraron métodos de pago' : 'No hay métodos de pago registrados'}
       </Text>
-      {!searchText && (
+      {!hasSearch && (
         <Button onPress={handleAddPaymentMethod} variant="solid">
           <ButtonText>Agregar primer método</ButtonText>
         </Button>
@@ -181,23 +196,20 @@ export const PaymentMethodsList: React.FC = () => {
   );
 
   return (
-    <SafeAreaView className='h-full'>
-      {/* Header */}
-      <View className="bg-white border-b border-gray-200">
-        {/* Search bar */}
-        <View className="px-4 pb-3 pt-2">
-          <Input className="bg-gray-50">
-            <InputSlot className="pl-3">
-              <InputIcon as={SearchIcon} className="text-gray-400" />
-            </InputSlot>
-            <InputField
-              placeholder="Buscar por nombre o código..."
-              value={searchText}
-              onChangeText={setSearchText}
-              autoCapitalize="none"
-            />
-          </Input>
-        </View>
+    <View className='flex-1 bg-gray-50'>
+      {/* Search bar */}
+      <View className="bg-white px-4 py-3 border-b border-gray-200">
+        <Input className="bg-gray-50">
+          <InputSlot className="pl-3">
+            <InputIcon as={SearchIcon} className="text-gray-400" />
+          </InputSlot>
+          <InputField
+            placeholder="Buscar por nombre o código..."
+            value={searchInput}
+            onChangeText={setSearchInput}
+            autoCapitalize="none"
+          />
+        </Input>
       </View>
 
       {/* Payment methods list */}
@@ -208,7 +220,7 @@ export const PaymentMethodsList: React.FC = () => {
         </VStack>
       ) : (
         <FlatList
-          data={data?.data || []}
+          data={filteredData}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <PaymentMethodCard
@@ -300,6 +312,6 @@ export const PaymentMethodsList: React.FC = () => {
           <FabIcon as={PlusIcon} />
         </Fab>
       )}
-    </SafeAreaView>
+    </View>
   );
 };

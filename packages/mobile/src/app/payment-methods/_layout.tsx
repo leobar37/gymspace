@@ -54,7 +54,7 @@ export default function PaymentMethodsLayout() {
       <Stack.Screen
         name="[id]/index"
         options={{
-          title: '',
+          title: 'Detalle del método',
           headerShown: true,
           animation: 'ios_from_right',
           headerLeft: () => (

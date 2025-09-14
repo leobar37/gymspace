@@ -31,6 +31,8 @@ export const ContractsRevenueWidget: React.FC = () => {
     );
   }
 
+  console.log("data", data);
+  
   return (
     <Card className="bg-white p-4">
       <View className="flex-row items-center justify-between mb-2">
@@ -38,15 +40,11 @@ export const ContractsRevenueWidget: React.FC = () => {
           <View className="bg-green-100 p-2 rounded-lg">
             <DollarSign size={20} className="text-green-600" />
           </View>
-          <Text className="text-sm font-medium text-gray-600">Ingresos Contratos</Text>
+          <Text className="text-sm font-medium text-gray-600">Contratos</Text>
         </View>
       </View>
-      <Text className="text-2xl font-bold text-gray-900">
-        {formatPrice(data?.total || 0)}
-      </Text>
-      <Text className="text-xs text-gray-500 mt-1">
-        {data?.count || 0} contratos
-      </Text>
+      <Text className="text-2xl font-bold text-gray-900">{formatPrice(data?.totalRevenue || 0)}</Text>
+      <Text className="text-xs text-gray-500 mt-1">{data?.contractCount || 0} contratos</Text>
     </Card>
   );
 };
@@ -85,12 +83,8 @@ export const SalesRevenueWidget: React.FC = () => {
           <Text className="text-sm font-medium text-gray-600">Ventas</Text>
         </View>
       </View>
-      <Text className="text-2xl font-bold text-gray-900">
-        {formatPrice(data?.total || 0)}
-      </Text>
-      <Text className="text-xs text-gray-500 mt-1">
-        {data?.count || 0} ventas
-      </Text>
+      <Text className="text-2xl font-bold text-gray-900">{formatPrice(data?.totalRevenue || 0)}</Text>
+      <Text className="text-xs text-gray-500 mt-1">{data?.salesCount || 0} ventas</Text>
     </Card>
   );
 };
