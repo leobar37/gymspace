@@ -4,7 +4,7 @@ import { FileTextIcon, HomeIcon, MenuIcon, UsersIcon, ShoppingCartIcon } from 'l
 import React from 'react';
 import { Platform } from 'react-native';
 
-export default function TabsLayout() {
+function TabsLayoutComponent() {
   return (
     <Tabs
       screenOptions={{
@@ -84,3 +84,5 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+export default React.memo(TabsLayoutComponent);

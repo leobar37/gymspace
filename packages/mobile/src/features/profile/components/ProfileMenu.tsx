@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { router } from 'expo-router';
+import { useSafeNavigation } from '@/hooks/useSafeNavigation';
 
 
 import {
@@ -62,9 +62,10 @@ const MenuItem: React.FC<MenuItemProps> = ({
   );
 };
 
-export const ProfileMenu: React.FC = () => {
+const ProfileMenuComponent: React.FC = () => {
   const { clearAuth } = useGymSdk();
   const { session, clearSession } = useCurrentSession();
+  const { navigateWithinFeature, resetAndNavigate } = useSafeNavigation();
 
   const user = session?.user;
   const gym = session?.gym;
@@ -74,11 +75,11 @@ export const ProfileMenu: React.FC = () => {
       // Clear all auth and session data
       await clearAuth();
       // Navigate to onboarding
-      router.replace('/(onboarding)');
+      resetAndNavigate('/(onboarding)');
     } catch (error) {
       console.error('Logout error:', error);
       // Even if clearing fails, navigate to login to prevent stuck state
-      router.replace('/(onboarding)');
+      resetAndNavigate('/(onboarding)');
     }
   };
 
@@ -92,13 +93,13 @@ export const ProfileMenu: React.FC = () => {
           icon: PackageIcon,
           title: 'Planes',
           subtitle: 'Gestiona planes de membresía',
-          onPress: () => router.push('/plans'),
+          onPress: () => navigateWithinFeature('/plans'),
         },
         {
           icon: TruckIcon,
           title: 'Proveedores',
           subtitle: 'Gestiona proveedores de productos',
-          onPress: () => router.push('/suppliers'),
+          onPress: () => navigateWithinFeature('/suppliers'),
         },
       ],
     },
@@ -132,7 +133,7 @@ export const ProfileMenu: React.FC = () => {
           icon: UserIcon,
           title: 'Mi Perfil',
           subtitle: 'Edita tu información personal',
-          onPress: () => router.push('/profile/edit'),
+          onPress: () => navigateWithinFeature('/profile/edit'),
         },
         ...(isOwner
           ? [
@@ -140,7 +141,7 @@ export const ProfileMenu: React.FC = () => {
                 icon: Building2Icon,
                 title: 'Mi Organización',
                 subtitle: 'Gestiona tu organización y gimnasios',
-                onPress: () => router.push('/gym/organization'),
+                onPress: () => navigateWithinFeature('/gym/organization'),
               },
             ]
           : []),
@@ -148,7 +149,7 @@ export const ProfileMenu: React.FC = () => {
           icon: BuildingIcon,
           title: 'Mi Gimnasio',
           subtitle: gym?.name || 'Configuración del gimnasio',
-          onPress: () => router.push('/gym/settings'),
+          onPress: () => navigateWithinFeature('/gym/settings'),
         },
       ],
     },
@@ -159,13 +160,13 @@ export const ProfileMenu: React.FC = () => {
           icon: CreditCardIcon,
           title: 'Plan y Facturación',
           subtitle: 'Gestiona tu suscripción',
-          onPress: () => router.push('/subscription'),
+          onPress: () => navigateWithinFeature('/subscription'),
         },
         {
           icon: WalletIcon,
           title: 'Métodos de Pago',
           subtitle: 'Tarjetas y formas de pago',
-          onPress: () => router.push('/payment-methods'),
+          onPress: () => navigateWithinFeature('/payment-methods'),
         },
       ],
     },
@@ -176,19 +177,19 @@ export const ProfileMenu: React.FC = () => {
           icon: BellIcon,
           title: 'Notificaciones',
           subtitle: 'Configura tus preferencias',
-          onPress: () => router.push('/settings/notifications'),
+          onPress: () => navigateWithinFeature('/settings/notifications'),
         },
         {
           icon: LockIcon,
           title: 'Seguridad',
           subtitle: 'Contraseña y acceso',
-          onPress: () => router.push('/settings/security'),
+          onPress: () => navigateWithinFeature('/settings/security'),
         },
         {
           icon: SettingsIcon,
           title: 'Preferencias',
           subtitle: 'Idioma y apariencia',
-          onPress: () => router.push('/settings/preferences'),
+          onPress: () => navigateWithinFeature('/settings/preferences'),
         },
       ],
     },
@@ -199,7 +200,7 @@ export const ProfileMenu: React.FC = () => {
           icon: HelpCircleIcon,
           title: 'Centro de Ayuda',
           subtitle: 'Guías y preguntas frecuentes',
-          onPress: () => router.push('/support'),
+          onPress: () => navigateWithinFeature('/support'),
         },
       ],
     },
@@ -260,3 +261,5 @@ export const ProfileMenu: React.FC = () => {
     </ScrollView>
   );
 };
+
+export const ProfileMenu = React.memo(ProfileMenuComponent);

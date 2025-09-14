@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { useSafeNavigation } from '@/hooks/useSafeNavigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { SheetManager } from 'react-native-actions-sheet';
@@ -33,9 +33,10 @@ import { useFormatPrice } from '@/config/ConfigContext';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useInfiniteScroll, InfiniteScrollList, PaginationControls } from '@/shared/pagination';
 
-export default function ContractsList() {
+function ContractsListComponent() {
   const formatPrice = useFormatPrice();
   const { sdk } = useGymSdk();
+  const { navigateWithinFeature, goBack } = useSafeNavigation();
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<GetContractsParams>({ page: 1, limit: 20 });
   const [paginationMode, setPaginationMode] = useState<'infinite' | 'standard'>('infinite');
@@ -118,8 +119,8 @@ export default function ContractsList() {
   }, [filters, handleFiltersChange]);
 
   const handleContractPress = useCallback((contractId: string) => {
-    router.push(`/contracts/${contractId}`);
-  }, []);
+    navigateWithinFeature(`/contracts/${contractId}`);
+  }, [navigateWithinFeature]);
 
   const getActiveFiltersCount = useCallback(() => {
     let count = 0;
@@ -280,7 +281,7 @@ export default function ContractsList() {
             <Button
               variant="solid"
               size="lg"
-              onPress={() => router.push('/contracts/create')}
+              onPress={() => navigateWithinFeature('/contracts/create')}
               className="mt-4"
             >
               <Icon as={FileTextIcon} className="w-5 h-5 mr-2" />
@@ -329,7 +330,7 @@ export default function ContractsList() {
       <SafeAreaView className="flex-1 bg-gray-50">
         <VStack className="flex-1 p-4">
           <HStack className="items-center mb-6">
-            <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-lg">
+            <Pressable onPress={() => goBack()} className="p-2 -ml-2 rounded-lg">
               <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
             </Pressable>
             <Text className="text-2xl font-bold text-gray-900 ml-2">Contratos</Text>
@@ -425,7 +426,7 @@ export default function ContractsList() {
         {/* Floating Action Button for New Contract */}
         <View className="absolute bottom-6 right-4">
           <Pressable
-            onPress={() => router.push('/contracts/create')}
+            onPress={() => navigateWithinFeature('/contracts/create')}
             className="bg-blue-600 rounded-full shadow-2xl active:bg-blue-700"
           >
             {contracts.length > 0 ? (
@@ -440,3 +441,6 @@ export default function ContractsList() {
     </SafeAreaView>
   );
 }
+
+const ContractsList = React.memo(ContractsListComponent);
+export default ContractsList;

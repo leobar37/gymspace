@@ -9,7 +9,7 @@ import { ContractsRevenueWidget, SalesRevenueWidget } from './widgets/RevenueWid
 import { DebtsWidget, CheckInsWidget, NewClientsWidget } from './widgets/MetricsWidget';
 import { DataPrefetch } from './DataPrefetch';
 
-export const Dashboard: React.FC = () => {
+const DashboardComponent: React.FC = () => {
   // Dashboard date range management
   const { setDateRange } = useDashboardDateRangeManager();
 
@@ -75,3 +75,5 @@ export const Dashboard: React.FC = () => {
     </View>
   );
 };
+
+export const Dashboard = React.memo(DashboardComponent);

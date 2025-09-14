@@ -4,6 +4,7 @@ import { CartProvider } from '@/contexts/CartContext';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter, useSegments } from 'expo-router';
+import { usePrefetchStore } from '@/stores/prefetch.store';
 
 import React, { useState } from 'react';
 import { Alert } from 'react-native';
@@ -33,6 +34,7 @@ export function AppProviders({ children }: AppProvidersProps) {
           try {
             router.replace('(onboarding)/login');
             queryClient.clear();
+            usePrefetchStore.getState().resetPrefetch();
           } catch (error) {
             console.log('error to login', error);
           }
@@ -84,6 +86,7 @@ export function AppProviders({ children }: AppProvidersProps) {
             if (error?.response?.status === 401 || error?.response?.status === 403) {
               // Clear all queries
               queryClient.clear();
+              usePrefetchStore.getState().resetPrefetch();
 
               // Show error message
               Alert.alert(
