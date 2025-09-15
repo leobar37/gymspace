@@ -51,7 +51,7 @@ export function SaleHistoryItem({ sale, onPress, showCustomer = true }: SaleHist
   const itemCount = sale._count?.saleItems || sale.saleItems?.length || 0;
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm">
+    <Card className="bg-white shadow-sm">
       <Pressable onPress={handlePress} className="p-4 active:bg-gray-50">
         <VStack space="sm">
           {/* Header Row - Date, Time, and Payment Status */}

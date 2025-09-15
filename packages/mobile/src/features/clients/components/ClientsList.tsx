@@ -241,7 +241,7 @@ const ClientsListComponent: React.FC = () => {
         isOpen={showActionsheet}
         onClose={() => setShowActionsheet(false)}
         snapPoints={[30]}
-      >
+      > modelo
         <ActionsheetBackdrop />
         <ActionsheetContent>
           <ActionsheetDragIndicatorWrapper>

@@ -3,38 +3,31 @@ import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { View } from '@/components/ui/view';
 import { VStack } from '@/components/ui/vstack';
 import { Input, InputField } from '@/components/ui/input';
-import { useFormatPrice } from '@/config/ConfigContext';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useInfiniteScroll, InfiniteScrollList, PaginationControls } from '@/shared/pagination';
+import { useInfiniteScroll, InfiniteScrollList } from '@/shared/pagination';
 import type { Sale, SearchSalesParams } from '@gymspace/sdk';
 import { router } from 'expo-router';
 import {
-  DollarSignIcon,
   InfoIcon,
   ShoppingCartIcon,
   SearchIcon,
   FilterIcon,
-  ListIcon,
-  InfinityIcon,
   PlusIcon,
 } from 'lucide-react-native';
-import { sum } from 'radash';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SheetManager } from 'react-native-actions-sheet';
+import { Fab } from '@/components/ui/fab';
 
 export default function SalesHistoryScreen() {
-  const formatPrice = useFormatPrice();
   const { sdk } = useGymSdk();
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<SearchSalesParams>({ page: 1, limit: 20 });
-  const [paginationMode, setPaginationMode] = useState<'infinite' | 'standard'>('infinite');
 
   // Use our new pagination hook
   const pagination = useInfiniteScroll({
@@ -60,23 +53,8 @@ export default function SalesHistoryScreen() {
     error,
     isFetching,
     refresh,
-    nextPage,
-    previousPage,
-    goToPage,
-    pageNumbers,
   } = pagination;
 
-  // Calculate stats from all loaded items
-  const salesStats = useMemo(() => {
-    if (!sales || sales.length === 0) {
-      return { totalAmount: 0, totalCount: 0 };
-    }
-    const totalAmount = sum(sales, (sale) => Number(sale.total) || 0);
-    return {
-      totalAmount: totalAmount || 0,
-      totalCount: state.total || sales.length,
-    };
-  }, [sales, state.total]);
 
   const handleFiltersChange = useCallback(
     (newFilters: SearchSalesParams) => {
@@ -118,55 +96,6 @@ export default function SalesHistoryScreen() {
     [handleSalePress],
   );
 
-  const renderListHeader = useCallback(
-    () => (
-      <VStack space="md" className="pb-4">
-        {/* Pagination Mode Toggle - Improved Size */}
-        <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <HStack className="items-center justify-between">
-            <VStack space="xs">
-              <Text className="text-base font-semibold text-gray-900">Modo de visualización</Text>
-              <Text className="text-sm text-gray-500">
-                {state.total > 0 ? `${state.total} ventas encontradas` : 'Sin resultados'}
-              </Text>
-            </VStack>
-
-            <Pressable
-              onPress={() =>
-                setPaginationMode((prev) => (prev === 'infinite' ? 'standard' : 'infinite'))
-              }
-              className="flex-row items-center px-4 py-2.5 bg-blue-50 rounded-lg border border-blue-200"
-            >
-              <Icon
-                as={paginationMode === 'infinite' ? InfinityIcon : ListIcon}
-                className="w-5 h-5 text-blue-600 mr-2"
-              />
-              <Text className="text-sm font-semibold text-blue-700">
-                {paginationMode === 'infinite' ? 'Scroll infinito' : 'Páginas'}
-              </Text>
-            </Pressable>
-          </HStack>
-        </View>
-
-        {/* Standard Pagination Controls (if enabled) - Improved Size */}
-        {paginationMode === 'standard' && state.totalPages > 1 && (
-          <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <PaginationControls
-              state={state}
-              onNextPage={nextPage}
-              onPreviousPage={previousPage}
-              onGoToPage={goToPage}
-              pageNumbers={pageNumbers}
-              isFetching={isFetching}
-              variant="full"
-              showInfo={true}
-            />
-          </View>
-        )}
-      </VStack>
-    ),
-    [paginationMode, state, nextPage, previousPage, goToPage, pageNumbers, isFetching],
-  );
 
   const renderEmptyState = useCallback(() => {
     const hasFilters = getActiveFiltersCount() > 0;
@@ -261,40 +190,10 @@ export default function SalesHistoryScreen() {
   return (
     <View className="flex-1 bg-gray-50" >
       <VStack className="flex-1">
-        {/* Fixed Header with Stats and Search - Improved Size */}
+        {/* Fixed Header with Search */}
         <View className="bg-white shadow-sm border-b border-gray-100">
           <VStack className="p-4" space="lg">
-            {/* Header */}
-            {/* Quick Stats - Larger Cards */}
-            <HStack space="md">
-              <View className="flex-1 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
-                <VStack space="xs">
-                  <HStack className="items-center" space="sm">
-                    <View className="w-10 h-10 bg-green-200 rounded-lg items-center justify-center">
-                      <Icon as={DollarSignIcon} className="w-6 h-6 text-green-700" />
-                    </View>
-                    <Text className="text-sm font-medium text-green-700">Total ventas</Text>
-                  </HStack>
-                  <Text className="text-2xl font-bold text-green-900">
-                    {formatPrice(salesStats.totalAmount)}
-                  </Text>
-                </VStack>
-              </View>
-
-              <View className="flex-1 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
-                <VStack space="xs">
-                  <HStack className="items-center" space="sm">
-                    <View className="w-10 h-10 bg-blue-200 rounded-lg items-center justify-center">
-                      <Icon as={ShoppingCartIcon} className="w-6 h-6 text-blue-700" />
-                    </View>
-                    <Text className="text-sm font-medium text-blue-700">Cantidad</Text>
-                  </HStack>
-                  <Text className="text-2xl font-bold text-blue-900">{salesStats.totalCount}</Text>
-                </VStack>
-              </View>
-            </HStack>
-
-            {/* Fixed Search Bar and Filters - Larger */}
+            {/* Search Bar and Filters */}
             <HStack space="md" className="items-center">
               <View className="flex-1">
                 <Input size="lg" className="bg-gray-50 border-gray-200">
@@ -346,7 +245,7 @@ export default function SalesHistoryScreen() {
         <InfiniteScrollList
           pagination={pagination}
           renderItem={renderSaleItem}
-          ListHeaderComponent={renderListHeader}
+          ListHeaderComponent={null}
           loadingComponent={renderLoadingState()}
           emptyComponent={renderEmptyState()}
           errorComponent={renderErrorState()}
@@ -362,23 +261,18 @@ export default function SalesHistoryScreen() {
             padding: 16,
             paddingBottom: 20,
           }}
-          ItemSeparatorComponent={() => <View className="h-3" />}
+          ItemSeparatorComponent={() => <View className="h-2" />}
         />
 
         {/* Floating Action Button for New Sale */}
-        <View className="absolute bottom-6 right-4">
-          <Pressable
-            onPress={() => router.push('/inventory/new-sale')}
-            className="bg-blue-600 rounded-full shadow-2xl active:bg-blue-700"
-          >
-            {sales.length > 0 ? (
-              // Compact FAB when there are sales
-              <View className="w-14 h-14 items-center justify-center">
-                <Icon as={PlusIcon} className="text-white w-7 h-7" />
-              </View>
-            ) : null}
-          </Pressable>
-        </View>
+        <Fab
+          onPress={() => router.push('/inventory/new-sale')}
+          placement="bottom right"
+          size="lg"
+          renderInPortal={false}
+        >
+          <Icon as={PlusIcon} className="text-white" />
+        </Fab>
       </VStack>
     </View>
   );
