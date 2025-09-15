@@ -9,7 +9,9 @@ const workspaceRoot = path.resolve(projectRoot);
 const config = getDefaultConfig(__dirname);
 
 // 1. Watch all files in the monorepo including node_modules
+// Merge with default watchFolders to avoid overriding Expo defaults
 config.watchFolders = [
+  ...config.watchFolders || [],
   workspaceRoot,
   path.resolve(projectRoot, 'node_modules'),
 ];
