@@ -9,7 +9,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { FormInput } from '@/components/forms/FormInput';
 import { useLoadingScreen } from '@/shared/loading-screen';
-import { toast } from '@/components/ui/toast';
 import { Spinner } from '@/components/ui/spinner';
 import { useGym, useUpdateGymSocialMedia } from '@/features/gyms/controllers/gyms.controller';
 
@@ -49,27 +48,28 @@ export default function EditGymSocialMediaScreen() {
   }, [gym, methods]);
 
   const onSubmit = async (data: GymSocialMediaData) => {
-    await execute({
+    const updatePromise = async () => {
+      const updateData: UpdateGymSocialMediaDto = {
+        facebook: data.facebook || undefined,
+        instagram: data.instagram || undefined,
+        whatsapp: data.whatsapp || undefined,
+      };
+
+      await updateGymSocialMediaMutation.mutateAsync({ id, data: updateData });
+      router.back();
+    };
+
+    await execute(updatePromise(), {
       action: 'Actualizando redes sociales...',
       successMessage: 'Redes sociales actualizadas exitosamente',
-      errorFormatter: (error) => error.message || 'Error al actualizar las redes sociales',
-      func: async () => {
-        const updateData: UpdateGymSocialMediaDto = {
-          facebook: data.facebook || undefined,
-          instagram: data.instagram || undefined,
-          whatsapp: data.whatsapp || undefined,
-        };
-
-        await updateGymSocialMediaMutation.mutateAsync({ id, data: updateData });
-        router.back();
-      },
+      errorFormatter: (error: any) => error.message || 'Error al actualizar las redes sociales',
     });
   };
 
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <Spinner size="lg" />
+        <Spinner size="large" />
       </View>
     );
   }

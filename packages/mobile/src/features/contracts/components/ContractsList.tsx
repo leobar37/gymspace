@@ -22,8 +22,6 @@ import {
   FileTextIcon,
   SearchIcon,
   FilterIcon,
-  ListIcon,
-  InfinityIcon,
   PlusIcon,
   InfoIcon,
 } from 'lucide-react-native';
@@ -31,7 +29,7 @@ import {
 import { ContractStatus, type GetContractsParams } from '@gymspace/sdk';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useInfiniteScroll, InfiniteScrollList, PaginationControls } from '@/shared/pagination';
+import { useInfiniteScroll, InfiniteScrollList } from '@/shared/pagination';
 
 function ContractsListComponent() {
   const formatPrice = useFormatPrice();
@@ -39,7 +37,6 @@ function ContractsListComponent() {
   const { navigateWithinFeature, goBack } = useSafeNavigation();
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<GetContractsParams>({ page: 1, limit: 20 });
-  const [paginationMode, setPaginationMode] = useState<'infinite' | 'standard'>('infinite');
 
   // Use pagination hook
   const pagination = useInfiniteScroll({
@@ -70,10 +67,6 @@ function ContractsListComponent() {
     error,
     isFetching,
     refresh,
-    nextPage,
-    previousPage,
-    goToPage,
-    pageNumbers,
   } = pagination;
 
   const getStatusBadge = (status: ContractStatus) => {
@@ -201,55 +194,7 @@ function ContractsListComponent() {
     [handleContractPress, formatPrice],
   );
 
-  const renderListHeader = useCallback(
-    () => (
-      <VStack space="md" className="pb-4">
-        {/* Pagination Mode Toggle */}
-        <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <HStack className="items-center justify-between">
-            <VStack space="xs">
-              <Text className="text-base font-semibold text-gray-900">Modo de visualización</Text>
-              <Text className="text-sm text-gray-500">
-                {state?.total > 0 ? `${state.total} contratos encontrados` : 'Sin resultados'}
-              </Text>
-            </VStack>
-
-            <Pressable
-              onPress={() =>
-                setPaginationMode((prev) => (prev === 'infinite' ? 'standard' : 'infinite'))
-              }
-              className="flex-row items-center px-4 py-2.5 bg-blue-50 rounded-lg border border-blue-200"
-            >
-              <Icon
-                as={paginationMode === 'infinite' ? InfinityIcon : ListIcon}
-                className="w-5 h-5 text-blue-600 mr-2"
-              />
-              <Text className="text-sm font-semibold text-blue-700">
-                {paginationMode === 'infinite' ? 'Scroll infinito' : 'Páginas'}
-              </Text>
-            </Pressable>
-          </HStack>
-        </View>
-
-        {/* Standard Pagination Controls (if enabled) */}
-        {paginationMode === 'standard' && state?.totalPages > 1 && (
-          <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <PaginationControls
-              state={state}
-              onNextPage={nextPage}
-              onPreviousPage={previousPage}
-              onGoToPage={goToPage}
-              pageNumbers={pageNumbers}
-              isFetching={isFetching}
-              variant="full"
-              showInfo={true}
-            />
-          </View>
-        )}
-      </VStack>
-    ),
-    [paginationMode, state, nextPage, previousPage, goToPage, pageNumbers, isFetching],
-  );
+  const renderListHeader = useCallback(() => null, []);
 
   const renderEmptyState = useCallback(() => {
     const hasFilters = getActiveFiltersCount() > 0;

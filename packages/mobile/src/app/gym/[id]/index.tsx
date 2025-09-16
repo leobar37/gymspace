@@ -64,195 +64,151 @@ export default function GymDetailScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-background-50">
-      <VStack space="lg" className="p-4">
+    <ScrollView className="flex-1 bg-gray-50">
+      <VStack space="lg" className="p-6">
         {/* Basic Information Section */}
-        <Card variant="elevated" size="md">
-          <VStack space="md">
-            <HStack className="justify-between items-start">
-              <Text size="lg" className="font-semibold text-typography-900">
-                Información Básica
+        <Box className="bg-white rounded-xl p-6 shadow-sm">
+          <HStack className="justify-between items-center mb-4">
+            <Text className="text-lg font-semibold text-gray-900">
+              Información Básica
+            </Text>
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => router.push(`/gym/${id}/edit-basic`)}
+            >
+              <Edit3 size={18} color="#6b7280" />
+            </Button>
+          </HStack>
+
+          <VStack space="md" className="space-y-4">
+            <VStack className="space-y-1">
+              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Nombre
               </Text>
-              <Button
-                variant="ghost"
-                size="sm"
-                onPress={() => router.push(`/gym/${id}/edit-basic`)}
-                className="p-1"
-              >
-                <Edit3 size={16} className="text-typography-500" />
-              </Button>
-            </HStack>
-            
-            <VStack space="md">
-              <HStack space="sm" className="items-start">
-                <Box className="w-8 justify-center items-center">
-                  <Text className="text-2xl">🏢</Text>
-                </Box>
-                <VStack space="xs" className="flex-1">
-                  <Text size="xs" className="text-typography-500">
-                    Nombre
-                  </Text>
-                  <Text size="sm" className="text-typography-900">
-                    {gym.name}
-                  </Text>
-                </VStack>
-              </HStack>
-
-              {gym.phone && (
-                <HStack space="sm" className="items-start">
-                  <Box className="w-8 justify-center items-center">
-                    <Phone size={20} className="text-typography-500" />
-                  </Box>
-                  <VStack space="xs" className="flex-1">
-                    <Text size="xs" className="text-typography-500">
-                      Teléfono
-                    </Text>
-                    <Text size="sm" className="text-typography-900">
-                      {gym.phone}
-                    </Text>
-                  </VStack>
-                </HStack>
-              )}
-
-              {gym.email && (
-                <HStack space="sm" className="items-start">
-                  <Box className="w-8 justify-center items-center">
-                    <Mail size={20} className="text-typography-500" />
-                  </Box>
-                  <VStack space="xs" className="flex-1">
-                    <Text size="xs" className="text-typography-500">
-                      Email
-                    </Text>
-                    <Text size="sm" className="text-typography-900">
-                      {gym.email}
-                    </Text>
-                  </VStack>
-                </HStack>
-              )}
-
-              {gym.address && (
-                <HStack space="sm" className="items-start">
-                  <Box className="w-8 justify-center items-center">
-                    <MapPin size={20} className="text-typography-500" />
-                  </Box>
-                  <VStack space="xs" className="flex-1">
-                    <Text size="xs" className="text-typography-500">
-                      Dirección
-                    </Text>
-                    <Text size="sm" className="text-typography-900">
-                      {gym.address}
-                    </Text>
-                  </VStack>
-                </HStack>
-              )}
-
-              {gym.capacity && (
-                <HStack space="sm" className="items-start">
-                  <Box className="w-8 justify-center items-center">
-                    <Users size={20} className="text-typography-500" />
-                  </Box>
-                  <VStack space="xs" className="flex-1">
-                    <Text size="xs" className="text-typography-500">
-                      Capacidad
-                    </Text>
-                    <Text size="sm" className="text-typography-900">
-                      {gym.capacity} personas
-                    </Text>
-                  </VStack>
-                </HStack>
-              )}
+              <Text className="text-base text-gray-900">
+                {gym.name}
+              </Text>
             </VStack>
+
+            {gym.phone && (
+              <VStack className="space-y-1">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Teléfono
+                </Text>
+                <Text className="text-base text-gray-900">
+                  {gym.phone}
+                </Text>
+              </VStack>
+            )}
+
+            {gym.email && (
+              <VStack className="space-y-1">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Email
+                </Text>
+                <Text className="text-base text-gray-900">
+                  {gym.email}
+                </Text>
+              </VStack>
+            )}
+
+            {gym.address && (
+              <VStack className="space-y-1">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Dirección
+                </Text>
+                <Text className="text-base text-gray-900">
+                  {gym.address}
+                </Text>
+              </VStack>
+            )}
+
+            {gym.capacity && (
+              <VStack className="space-y-1">
+                <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Capacidad
+                </Text>
+                <Text className="text-base text-gray-900">
+                  {gym.capacity} personas
+                </Text>
+              </VStack>
+            )}
           </VStack>
-        </Card>
+        </Box>
 
         {/* Schedule Section */}
-        <Card variant="elevated" size="md">
-          <VStack space="md">
-            <HStack className="justify-between items-start">
-              <Text size="lg" className="font-semibold text-typography-900">
-                Horario
-              </Text>
-              <Button
-                variant="ghost"
-                size="sm"
-                onPress={() => router.push(`/gym/${id}/edit-schedule`)}
-                className="p-1"
-              >
-                <Edit3 size={16} className="text-typography-500" />
-              </Button>
-            </HStack>
+        <Box className="bg-white rounded-xl p-6 shadow-sm">
+          <HStack className="justify-between items-center mb-4">
+            <Text className="text-lg font-semibold text-gray-900">
+              Horario
+            </Text>
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => router.push(`/gym/${id}/edit-schedule`)}
+            >
+              <Edit3 size={18} color="#6b7280" />
+            </Button>
+          </HStack>
 
-            <VStack space="xs">
-              {['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].map((day, index) => {
-                const dayKey = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][index];
-                const schedule = gym.schedule?.[dayKey as keyof typeof gym.schedule];
-                
-                return (
-                  <HStack key={day} className="justify-between items-center py-3 border-b border-outline-100">
-                    <Text size="sm" className="capitalize text-typography-900 font-medium">
-                      {day}
-                    </Text>
-                    <Text size="sm" className="text-typography-600">
-                      {formatScheduleDay(schedule)}
-                    </Text>
-                  </HStack>
-                );
-              })}
-            </VStack>
+          <VStack className="space-y-3">
+            {['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].map((day, index) => {
+              const dayKey = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][index];
+              const schedule = gym.schedule?.[dayKey as keyof typeof gym.schedule];
+
+              return (
+                <HStack key={day} className="justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                  <Text className="text-sm font-medium text-gray-900 capitalize">
+                    {day}
+                  </Text>
+                  <Text className="text-sm text-gray-600">
+                    {formatScheduleDay(schedule)}
+                  </Text>
+                </HStack>
+              );
+            })}
           </VStack>
-        </Card>
+        </Box>
 
         {/* Social Media Section */}
-        <Card variant="elevated" size="md">
-          <VStack space="md">
-            <HStack className="justify-between items-start">
-              <Text size="lg" className="font-semibold text-typography-900">
-                Redes Sociales
-              </Text>
-              <Button
-                variant="ghost"
-                size="sm"
-                onPress={() => router.push(`/gym/${id}/edit-social`)}
-                className="p-1"
-              >
-                <Edit3 size={16} className="text-typography-500" />
-              </Button>
-            </HStack>
+        <Box className="bg-white rounded-xl p-6 shadow-sm">
+          <HStack className="justify-between items-center mb-4">
+            <Text className="text-lg font-semibold text-gray-900">
+              Redes Sociales
+            </Text>
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={() => router.push(`/gym/${id}/edit-social`)}
+            >
+              <Edit3 size={18} color="#6b7280" />
+            </Button>
+          </HStack>
 
-            <VStack space="md">
-              {gym.socialMedia && Object.entries(gym.socialMedia).filter(([_, value]) => value).length > 0 ? (
-                <>
-                  {Object.entries(gym.socialMedia)
-                    .filter(([_, value]) => value)
-                    .map(([platform, value]) => {
-                      const Icon = getSocialMediaIcon(platform);
-                      return (
-                        <HStack key={platform} space="sm" className="items-start">
-                          <Box className="w-8 justify-center items-center">
-                            <Icon size={20} className="text-typography-500" />
-                          </Box>
-                          <VStack space="xs" className="flex-1">
-                            <Text size="xs" className="text-typography-500 capitalize">
-                              {platform}
-                            </Text>
-                            <Text size="sm" className="text-typography-900">
-                              {value as string}
-                            </Text>
-                          </VStack>
-                        </HStack>
-                      );
-                    })}
-                </>
-              ) : (
-                <Box className="py-4 items-center">
-                  <Text size="sm" className="text-typography-500 text-center">
-                    No hay redes sociales configuradas
-                  </Text>
-                </Box>
-              )}
+          {gym.socialMedia && Object.entries(gym.socialMedia).filter(([_, value]) => value).length > 0 ? (
+            <VStack className="space-y-4">
+              {Object.entries(gym.socialMedia)
+                .filter(([_, value]) => value)
+                .map(([platform, value]) => (
+                  <VStack key={platform} className="space-y-1">
+                    <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      {platform}
+                    </Text>
+                    <Text className="text-base text-gray-900">
+                      {value as string}
+                    </Text>
+                  </VStack>
+                ))}
             </VStack>
-          </VStack>
-        </Card>
+          ) : (
+            <Box className="py-8 items-center">
+              <Text className="text-sm text-gray-500 text-center">
+                No hay redes sociales configuradas
+              </Text>
+            </Box>
+          )}
+        </Box>
       </VStack>
     </ScrollView>
   );

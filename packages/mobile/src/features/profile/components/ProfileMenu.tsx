@@ -12,16 +12,12 @@ import { useSafeNavigation } from '@/hooks/useSafeNavigation';
 
 
 import {
-  BellIcon,
   Building2Icon,
   BuildingIcon,
   ChevronRightIcon,
   CreditCardIcon,
-  HelpCircleIcon,
-  LockIcon,
   LogOutIcon,
   PackageIcon,
-  SettingsIcon,
   TagIcon,
   TruckIcon,
   UserIcon,
@@ -64,7 +60,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
 
 const ProfileMenuComponent: React.FC = () => {
   const { clearAuth } = useGymSdk();
-  const { session, clearSession } = useCurrentSession();
+  const { session } = useCurrentSession();
   const { navigateWithinFeature, resetAndNavigate } = useSafeNavigation();
 
   const user = session?.user;
@@ -101,6 +97,12 @@ const ProfileMenuComponent: React.FC = () => {
           subtitle: 'Gestiona proveedores de productos',
           onPress: () => navigateWithinFeature('/suppliers'),
         },
+        {
+          icon: WalletIcon,
+          title: 'Métodos de Pago',
+          subtitle: 'Métodos de pago disponibles en el gimnasio',
+          onPress: () => navigateWithinFeature('/payment-methods'),
+        },
       ],
     },
     {
@@ -110,19 +112,19 @@ const ProfileMenuComponent: React.FC = () => {
           icon: PackageIcon,
           title: 'Productos',
           subtitle: 'Gestiona el inventario de productos',
-          onPress: () => router.push('/inventory/products'),
+          onPress: () => navigateWithinFeature('/inventory/products'),
         },
         {
           icon: WrenchIcon,
           title: 'Servicios',
           subtitle: 'Gestiona los servicios del gimnasio',
-          onPress: () => router.push('/inventory/services'),
+          onPress: () => navigateWithinFeature('/inventory/services'),
         },
         {
           icon: TagIcon,
           title: 'Categorías',
           subtitle: 'Organiza productos y servicios',
-          onPress: () => router.push('/inventory/categories'),
+          onPress: () => navigateWithinFeature('/inventory/categories'),
         },
       ],
     },
@@ -162,48 +164,44 @@ const ProfileMenuComponent: React.FC = () => {
           subtitle: 'Gestiona tu suscripción',
           onPress: () => navigateWithinFeature('/subscription'),
         },
-        {
-          icon: WalletIcon,
-          title: 'Métodos de Pago',
-          subtitle: 'Tarjetas y formas de pago',
-          onPress: () => navigateWithinFeature('/payment-methods'),
-        },
       ],
     },
-    {
-      title: 'Configuración',
-      items: [
-        {
-          icon: BellIcon,
-          title: 'Notificaciones',
-          subtitle: 'Configura tus preferencias',
-          onPress: () => navigateWithinFeature('/settings/notifications'),
-        },
-        {
-          icon: LockIcon,
-          title: 'Seguridad',
-          subtitle: 'Contraseña y acceso',
-          onPress: () => navigateWithinFeature('/settings/security'),
-        },
-        {
-          icon: SettingsIcon,
-          title: 'Preferencias',
-          subtitle: 'Idioma y apariencia',
-          onPress: () => navigateWithinFeature('/settings/preferences'),
-        },
-      ],
-    },
-    {
-      title: 'Soporte',
-      items: [
-        {
-          icon: HelpCircleIcon,
-          title: 'Centro de Ayuda',
-          subtitle: 'Guías y preguntas frecuentes',
-          onPress: () => navigateWithinFeature('/support'),
-        },
-      ],
-    },
+    // TODO: Implementar sección de configuración completa
+    // {
+    //   title: 'Configuración',
+    //   items: [
+    //     {
+    //       icon: BellIcon,
+    //       title: 'Notificaciones',
+    //       subtitle: 'Configura tus preferencias',
+    //       onPress: () => navigateWithinFeature('/settings/notifications'),
+    //     },
+    //     {
+    //       icon: LockIcon,
+    //       title: 'Seguridad',
+    //       subtitle: 'Contraseña y acceso',
+    //       onPress: () => navigateWithinFeature('/settings/security'),
+    //     },
+    //     {
+    //       icon: SettingsIcon,
+    //       title: 'Preferencias',
+    //       subtitle: 'Idioma y apariencia',
+    //       onPress: () => navigateWithinFeature('/settings/preferences'),
+    //     },
+    //   ],
+    // },
+    // TODO: Implementar centro de soporte
+    // {
+    //   title: 'Soporte',
+    //   items: [
+    //     {
+    //       icon: HelpCircleIcon,
+    //       title: 'Centro de Ayuda',
+    //       subtitle: 'Guías y preguntas frecuentes',
+    //       onPress: () => navigateWithinFeature('/support'),
+    //     },
+    //   ],
+    // },
   ];
 
   return (

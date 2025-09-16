@@ -20,8 +20,6 @@ export default function EditOrganizationScreen() {
 
   const { data: organizationData, isLoading: orgLoading } = useOrganization(organization?.id || '');
 
-  console.log('organization data:', organizationData);
-
   const isLoading = sessionLoading || orgLoading;
 
   const handleSuccess = () => {
@@ -29,9 +27,12 @@ export default function EditOrganizationScreen() {
     router.back();
   };
 
-  console.log("useOrganization", JSON.stringify({
-    organization,
-  }));
+  console.log(
+    'useOrganization',
+    JSON.stringify({
+      organization,
+    }),
+  );
 
   const handleCancel = () => {
     // Navigate back to organization screen
@@ -61,24 +62,6 @@ export default function EditOrganizationScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: 'Editar Nombre',
-          headerStyle: {
-            backgroundColor: '#ffffff',
-          },
-          headerTintColor: '#000000',
-          headerTitleStyle: {
-            fontWeight: '600',
-          },
-          headerLeft: () => (
-            <Pressable onPress={() => router.back()} className="p-2">
-              <Icon as={ChevronLeft} className="w-6 h-6 text-gray-700" />
-            </Pressable>
-          ),
-        }}
-      />
-
       <OrganizationUpdateForm
         organization={organizationData}
         onSuccess={handleSuccess}

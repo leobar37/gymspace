@@ -9,7 +9,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { FormInput } from '@/components/forms/FormInput';
 import { useLoadingScreen } from '@/shared/loading-screen';
-import { toast } from '@/components/ui/toast';
 import { Spinner } from '@/components/ui/spinner';
 import { useGym, useUpdateGym } from '@/features/gyms/controllers/gyms.controller';
 
@@ -47,29 +46,30 @@ export default function EditGymBasicInfoScreen() {
   }, [gym, methods]);
 
   const onSubmit = async (data: GymBasicInfoData) => {
-    await execute({
+    const updatePromise = async () => {
+      const updateData: UpdateGymDto = {
+        name: data.name,
+        phone: data.phone || undefined,
+        email: data.email || undefined,
+        address: data.address || undefined,
+        capacity: data.capacity || undefined,
+      };
+
+      await updateGymMutation.mutateAsync({ id, data: updateData });
+      router.back();
+    };
+
+    await execute(updatePromise(), {
       action: 'Actualizando información del gimnasio...',
       successMessage: 'Información actualizada exitosamente',
-      errorFormatter: (error) => error.message || 'Error al actualizar la información',
-      func: async () => {
-        const updateData: UpdateGymDto = {
-          name: data.name,
-          phone: data.phone || undefined,
-          email: data.email || undefined,
-          address: data.address || undefined,
-          capacity: data.capacity || undefined,
-        };
-
-        await updateGymMutation.mutateAsync({ id, data: updateData });
-        router.back();
-      },
+      errorFormatter: (error: any) => error.message || 'Error al actualizar la información',
     });
   };
 
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <Spinner size="lg" />
+        <Spinner size="large" />
       </View>
     );
   }
@@ -84,63 +84,70 @@ export default function EditGymBasicInfoScreen() {
 
   return (
     <FormProvider {...methods}>
-      <ScrollView className="flex-1 bg-white">
-        <View className="p-4 space-y-4">
-          <FormInput
-            name="name"
-            label="Nombre del Gimnasio"
-            placeholder="Ingrese el nombre del gimnasio"
-            autoCapitalize="words"
-          />
+      <ScrollView className="flex-1 bg-gray-50">
+        <View className="p-6">
+          {/* Form Fields Container */}
+          <View className="bg-white rounded-xl p-6 mb-6 shadow-sm">
+            <View className="space-y-6">
+              <FormInput
+                name="name"
+                label="Nombre del Gimnasio"
+                placeholder="Ingrese el nombre del gimnasio"
+                autoCapitalize="words"
+              />
 
-          <FormInput
-            name="phone"
-            label="Teléfono de Contacto"
-            placeholder="+1 234 567 8900"
-            keyboardType="phone-pad"
-          />
+              <FormInput
+                name="phone"
+                label="Teléfono de Contacto"
+                placeholder="+1 234 567 8900"
+                keyboardType="phone-pad"
+              />
 
-          <FormInput
-            name="email"
-            label="Email de Contacto"
-            placeholder="contacto@gimnasio.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+              <FormInput
+                name="email"
+                label="Email de Contacto"
+                placeholder="contacto@gimnasio.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
 
-          <FormInput
-            name="address"
-            label="Dirección"
-            placeholder="Calle 123, Ciudad"
-            multiline
-            numberOfLines={3}
-          />
+              <FormInput
+                name="address"
+                label="Dirección"
+                placeholder="Calle 123, Ciudad"
+                multiline
+                numberOfLines={3}
+              />
 
-          <FormInput
-            name="capacity"
-            label="Capacidad (personas)"
-            placeholder="100"
-            keyboardType="numeric"
-            transform={{
-              input: (value) => value?.toString() || '',
-              output: (value) => value ? parseInt(value, 10) : undefined,
-            }}
-          />
+              <FormInput
+                name="capacity"
+                label="Capacidad (personas)"
+                placeholder="100"
+                keyboardType="numeric"
+                transform={{
+                  input: (value) => value?.toString() || '',
+                  output: (value) => value ? parseInt(value, 10) : undefined,
+                }}
+              />
+            </View>
+          </View>
 
-          <View className="flex-row space-x-3 pt-4">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onPress={() => router.back()}
-            >
-              <Text>Cancelar</Text>
-            </Button>
+          {/* Action Buttons */}
+          <View className="space-y-3">
             <Button
               variant="solid"
-              className="flex-1"
+              size="lg"
               onPress={methods.handleSubmit(onSubmit)}
             >
               <Text>Guardar Cambios</Text>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              onPress={() => router.back()}
+            >
+              <Text>Cancelar</Text>
             </Button>
           </View>
         </View>

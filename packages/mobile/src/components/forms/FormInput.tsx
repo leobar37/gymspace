@@ -15,6 +15,10 @@ interface FormInputProps<TFieldValues extends FieldValues = FieldValues>
   description?: string;
   control?: UseControllerProps<TFieldValues>['control'];
   leftIcon?: ReactNode;
+  transform?: {
+    input: (value: any) => any;
+    output: (value: any) => any;
+  };
 }
 
 export function FormInput<TFieldValues extends FieldValues = FieldValues>({
@@ -26,6 +30,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>({
   label,
   description,
   leftIcon,
+  transform,
   ...props
 }: FormInputProps<TFieldValues>) {
   const formContext = useFormContext<TFieldValues>();
@@ -57,8 +62,11 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>({
           size="md"
         >
           <InputField
-            value={field.value || ''}
-            onChangeText={field.onChange}
+            value={transform?.input ? transform.input(field.value) : (field.value || '')}
+            onChangeText={(text) => {
+              const transformedValue = transform?.output ? transform.output(text) : text;
+              field.onChange(transformedValue);
+            }}
             onBlur={field.onBlur}
             placeholderClassName="text-gray-400"
             {...props}
