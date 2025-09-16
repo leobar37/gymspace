@@ -41,6 +41,8 @@ interface FormSelectProps<TFieldValues extends FieldValues = FieldValues>
   size?: 'sm' | 'md' | 'lg' | 'xl';
   variant?: 'outline' | 'underlined' | 'rounded';
   control?: UseControllerProps<TFieldValues>['control'];
+  className?: string;
+  width?: number | string;
 }
 
 export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
@@ -54,6 +56,8 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
   placeholder = 'Seleccionar opción',
   options,
   isDisabled = false,
+  className,
+  width,
 }: FormSelectProps<TFieldValues>) {
   const formContext = useFormContext<TFieldValues>();
   const { field, fieldState } = useController({
@@ -93,7 +97,7 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <>
-      <FormControl isInvalid={!!fieldState.error} isDisabled={isDisabled}>
+      <FormControl isInvalid={!!fieldState.error} isDisabled={isDisabled} className={className} style={width ? { width } : undefined}>
         <VStack className="gap-3">
           {label && <Text className="font-medium text-gray-900">{label}</Text>}
 
@@ -106,7 +110,7 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
           {/* Selector Button */}
           <Pressable onPress={() => setShowOptions(true)} disabled={isDisabled}>
             <Card className="border border-gray-300">
-              <View className="p-3 min-h-[48px] justify-center">
+              <View className="p-3 min-h-[52px] justify-center">
                 {getDisplayValue()}
               </View>
             </Card>

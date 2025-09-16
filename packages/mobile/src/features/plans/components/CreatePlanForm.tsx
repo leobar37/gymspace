@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
-import { View } from 'react-native';
-import { router } from 'expo-router';
-import { useForm, FormProvider } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
+import { FormInput } from '@/components/forms/FormInput';
+import { FormSelect } from '@/components/forms/FormSelect';
+import { FormSwitch } from '@/components/forms/FormSwitch';
+import { FormTextarea } from '@/components/forms/FormTextarea';
+import { Badge, BadgeIcon, BadgeText } from '@/components/ui/badge';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
-import { Badge, BadgeText, BadgeIcon } from '@/components/ui/badge';
+import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Input as GluestackInput, InputField } from '@/components/ui/input';
 import { Pressable } from '@/components/ui/pressable';
-import { FormInput } from '@/components/forms/FormInput';
-import { FormTextarea } from '@/components/forms/FormTextarea';
-import { FormSelect } from '@/components/forms/FormSelect';
-import { FormSwitch } from '@/components/forms/FormSwitch';
-import { PlusIcon, XIcon } from 'lucide-react-native';
-import { usePlansController, PlanFormData } from '../controllers/plans.controller';
-import { MembershipPlan } from '@gymspace/sdk';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { AssetSelector } from '@/features/assets/components/AssetSelector';
 import { useLoadingScreen } from '@/shared/loading-screen';
+import { MembershipPlan } from '@gymspace/sdk';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { router } from 'expo-router';
+import { PlusIcon, XIcon } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { FormProvider, useController, useForm } from 'react-hook-form';
+import { View } from 'react-native';
+import { z } from 'zod';
+import { PlanFormData, usePlansController } from '../controllers/plans.controller';
 
 // Schema validation
 const planSchema = z.object({
@@ -29,7 +29,7 @@ const planSchema = z.object({
   description: z.string().optional(),
   basePrice: z.coerce.number().min(0, 'El precio debe ser mayor a 0'),
   durationType: z.enum(['days', 'months']).default('months'),
-  durationValue: z.coerce.number().min(1, 'La duración debe ser al menos 1'),
+  durationValue: z.coerce.number().int().min(1, 'La duración debe ser al menos 1'),
   termsAndConditions: z.string().optional(),
   allowsCustomPricing: z.boolean().default(false),
   includesAdvisor: z.boolean().default(false),
@@ -76,6 +76,11 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
 
   const { handleSubmit } = form;
 
+  const durationController = useController({
+    name: 'durationValue',
+    control: form.control,
+  });
+
   const isSubmitting = isCreatingPlan || isUpdatingPlan;
 
   const onSubmit = async (data: PlanSchema) => {
@@ -95,68 +100,62 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
     };
 
     if (isEditing && planId) {
-      await execute(
-        updatePlan.mutateAsync({ id: planId, data: planData }),
-        {
-          action: 'Actualizando plan...',
-          successMessage: 'El plan se actualizó correctamente',
-          successActions: [
-            {
-              label: 'Ver plan',
-              onPress: () => {
-                router.replace(`/plans/${planId}`);
-              },
-              variant: 'solid',
+      await execute(updatePlan.mutateAsync({ id: planId, data: planData }), {
+        action: 'Actualizando plan...',
+        successMessage: 'El plan se actualizó correctamente',
+        successActions: [
+          {
+            label: 'Ver plan',
+            onPress: () => {
+              router.replace(`/plans/${planId}`);
             },
-            {
-              label: 'Ir al listado',
-              onPress: () => {
-                router.replace('/plans');
-              },
-              variant: 'outline',
-            },
-          ],
-          errorFormatter: (error) => {
-            if (error instanceof Error) {
-              return `Error al actualizar: ${error.message}`;
-            }
-            return 'No se pudo actualizar el plan';
+            variant: 'solid',
           },
-          hideOnSuccess: false,
-        }
-      );
+          {
+            label: 'Ir al listado',
+            onPress: () => {
+              router.replace('/plans');
+            },
+            variant: 'outline',
+          },
+        ],
+        errorFormatter: (error) => {
+          if (error instanceof Error) {
+            return `Error al actualizar: ${error.message}`;
+          }
+          return 'No se pudo actualizar el plan';
+        },
+        hideOnSuccess: false,
+      });
     } else {
-      await execute(
-        createPlan.mutateAsync(planData),
-        {
-          action: 'Creando plan...',
-          successMessage: `El plan "${data.name}" se creó correctamente`,
-          successActions: [
-            {
-              label: 'Ver planes',
-              onPress: () => {
-                router.replace('/plans');
-              },
-              variant: 'solid',
+      await execute(createPlan.mutateAsync(planData), {
+        action: 'Creando plan...',
+        successMessage: `El plan "${data.name}" se creó correctamente`,
+        successActions: [
+          {
+            label: 'Ver planes',
+            onPress: () => {
+              router.replace('/plans');
             },
-            {
-              label: 'Crear otro',
-              onPress: () => {
-                form.reset();
-                setFeatures([]);
-              },
-              variant: 'outline',
-            },
-          ],
-          errorFormatter: (error) => {
-            if (error instanceof Error) {
-              return `Error al crear: ${error.message}`;
-            }
-            return 'No se pudo crear el plan';
+            variant: 'solid',
           },
-          hideOnSuccess: false,
-        }
-      );
+          {
+            label: 'Crear otro',
+            onPress: () => {
+              form.reset();
+              setFeatures([]);
+            },
+            variant: 'outline',
+          },
+        ],
+        errorFormatter: (error) => {
+          if (error instanceof Error) {
+            return `Error al crear: ${error.message}`;
+          }
+          return 'No se pudo crear el plan';
+        },
+        hideOnSuccess: false,
+      });
     }
   };
 
@@ -171,18 +170,13 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
     setFeatures(features.filter((_, i) => i !== index));
   };
 
-
   return (
     <FormProvider {...form}>
       <VStack className="p-4 gap-4">
         <VStack className="gap-4">
           <Text className="text-lg font-semibold">Campos Requeridos</Text>
-          
-          <FormInput
-            name="name"
-            label="Nombre del plan *"
-            placeholder="Ej: Plan Básico"
-          />
+
+          <FormInput name="name" label="Nombre del plan *" placeholder="Ej: Plan Básico" />
 
           <FormInput
             name="basePrice"
@@ -193,16 +187,28 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
 
           <VStack className="gap-2">
             <Text className="font-medium text-gray-900">Duración *</Text>
-            <HStack className="gap-2 items-end">
-              <View className="flex-1">
-                <FormInput
-                  name="durationValue"
-                  label=""
-                  placeholder="Cantidad"
-                  keyboardType="number-pad"
-                />
-              </View>
-              <View className="flex-1">
+            <HStack className="gap-3 items-start">
+              <VStack className="flex-1">
+                <GluestackInput variant="rounded" size="md">
+                  <InputField
+                    value={Math.floor(Number(durationController.field.value) || 1).toString()}
+                    onChangeText={(text) => {
+                      const num = parseInt(text, 10);
+                      durationController.field.onChange(isNaN(num) ? 1 : Math.max(1, num));
+                    }}
+                    onBlur={durationController.field.onBlur}
+                    placeholder="Cantidad"
+                    keyboardType="number-pad"
+                    placeholderClassName="text-gray-400"
+                  />
+                </GluestackInput>
+                {durationController.fieldState.error && (
+                  <Text className="text-red-500 text-sm mt-1">
+                    {durationController.fieldState.error.message}
+                  </Text>
+                )}
+              </VStack>
+              <VStack className="w-32">
                 <FormSelect
                   name="durationType"
                   placeholder="Periodo"
@@ -211,7 +217,7 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
                     { label: 'Meses', value: 'months' },
                   ]}
                 />
-              </View>
+              </VStack>
             </HStack>
           </VStack>
         </VStack>
@@ -220,31 +226,24 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
 
         <VStack className="gap-4">
           <Text className="text-lg font-semibold">Campos Opcionales</Text>
-          
+
           <FormTextarea
             name="description"
             label="Descripción"
             placeholder="Describe las características del plan"
           />
 
-          <AssetSelector
-            name="assetsIds"
-            label="Imágenes del plan"
-            multi={true}
-            required={false}
-          />
+          <AssetSelector name="assetsIds" label="Imágenes del plan" multi={true} required={false} />
         </VStack>
 
         <Divider />
 
         <VStack className="gap-4">
           <Text className="text-lg font-semibold">Características</Text>
-          
+
           <VStack className="gap-2">
-            <Text className="text-sm font-medium text-gray-700">
-              Características incluidas
-            </Text>
-            
+            <Text className="text-sm font-medium text-gray-700">Características incluidas</Text>
+
             <HStack className="gap-2">
               <GluestackInput variant="rounded" size="md" className="flex-1">
                 <InputField
@@ -266,23 +265,19 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
                 <Badge key={index} action="muted" size="md">
                   <BadgeText>{feature}</BadgeText>
                   <Pressable onPress={() => removeFeature(index)}>
-                    <BadgeIcon
-                      as={XIcon}
-                      className="ml-1"
-                    />
+                    <BadgeIcon as={XIcon} className="ml-1" />
                   </Pressable>
                 </Badge>
               ))}
             </HStack>
           </VStack>
-
         </VStack>
 
         <Divider />
 
         <VStack className="gap-4">
           <Text className="text-lg font-semibold">Opciones adicionales</Text>
-          
+
           <FormSwitch
             name="allowsCustomPricing"
             label="Permitir precio personalizado"
@@ -319,11 +314,7 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
             className="w-full"
           >
             <ButtonText>
-              {isSubmitting
-                ? 'Guardando...'
-                : isEditing
-                ? 'Guardar cambios'
-                : 'Crear plan'}
+              {isSubmitting ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear plan'}
             </ButtonText>
           </Button>
           <Button

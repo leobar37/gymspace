@@ -28,7 +28,7 @@ import {
   AlertDialogBody,
 } from '@/components/ui/alert-dialog';
 import { Heading } from '@/components/ui/heading';
-import { useToast } from '@/components/ui/toast';
+import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 
 export default function CategoriesScreen() {
   const toast = useToast();
@@ -59,22 +59,24 @@ export default function CategoriesScreen() {
       toast.show({
         placement: "top",
         render: ({ id }) => (
-          <View className="bg-green-500 px-4 py-3 rounded-lg">
-            <Text className="text-white font-medium">
+          <Toast action="success" variant="solid">
+            <ToastTitle>Éxito</ToastTitle>
+            <ToastDescription>
               Categoría eliminada exitosamente
-            </Text>
-          </View>
+            </ToastDescription>
+          </Toast>
         ),
       });
     } catch (error) {
       toast.show({
         placement: "top",
         render: ({ id }) => (
-          <View className="bg-red-500 px-4 py-3 rounded-lg">
-            <Text className="text-white font-medium">
+          <Toast action="error" variant="solid">
+            <ToastTitle>Error</ToastTitle>
+            <ToastDescription>
               Error al eliminar la categoría
-            </Text>
-          </View>
+            </ToastDescription>
+          </Toast>
         ),
       });
     }

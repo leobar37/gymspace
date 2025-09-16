@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ScrollView, Alert } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,27 +12,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Icon } from '@/components/ui/icon';
 import { Box } from '@/components/ui/box';
 import {
-  Actionsheet,
-  ActionsheetBackdrop,
-  ActionsheetContent,
-  ActionsheetDragIndicatorWrapper,
-  ActionsheetDragIndicator,
-  ActionsheetItem,
-  ActionsheetItemText,
-} from '@/components/ui/actionsheet';
-import {
-  AlertDialog,
-  AlertDialogBackdrop,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogBody,
-  AlertDialogFooter,
-} from '@/components/ui/alert-dialog';
-import { Heading } from '@/components/ui/heading';
-import {
   MoreVerticalIcon,
-  EditIcon,
-  TrashIcon,
   CheckCircleIcon,
   XCircleIcon,
   UsersIcon,
@@ -41,6 +21,7 @@ import {
 import { usePlansController } from '@/features/plans';
 import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 import { useFormatPrice } from '@/config/ConfigContext';
+import { PlanActions } from '@/components/PlanActions';
 
 const PlanDetailSection: React.FC<{
   title: string;
@@ -88,83 +69,61 @@ export default function PlanDetailScreen() {
   const toast = useToast();
 
   const [showActionsheet, setShowActionsheet] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: plan, isLoading: isPlanLoading, error: planError } = usePlanDetail(planId);
   const { data: stats } = usePlanStats(planId);
 
   const isActive = plan?.status === 'active';
+  const activeContracts = stats?.activeContracts || 0;
 
-  const handleEdit = () => {
+  const handleOpenActions = useCallback(() => {
+    setShowActionsheet(true);
+  }, []);
+
+  const handleCloseActions = useCallback(() => {
     setShowActionsheet(false);
-    router.push(`/plans/${planId}/edit`);
-  };
+  }, []);
 
-  const handleToggleStatus = () => {
-    setShowActionsheet(false);
+  const handleUpdatePlan = useCallback((data: { id: string; data: { status: string } }) => {
+    const action = data.data.status === 'active' ? 'activar' : 'desactivar';
 
-    if (!plan) return;
-
-    const newStatus = isActive ? 'inactive' : 'active';
-    const action = isActive ? 'desactivar' : 'activar';
-
-    Alert.alert(
-      `¿${action.charAt(0).toUpperCase() + action.slice(1)} plan?`,
-      `¿Estás seguro de que deseas ${action} este plan?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          onPress: () => {
-            updatePlan.mutate(
-              { id: planId, data: { status: newStatus } },
-              {
-                onSuccess: () => {
-                  toast.show({
-                    placement: 'top',
-                    duration: 3000,
-                    render: ({ id }) => {
-                      return (
-                        <Toast nativeID={`toast-${id}`} action="success" variant="solid">
-                          <ToastTitle>Plan {action}do</ToastTitle>
-                          <ToastDescription>El plan se {action}ó correctamente</ToastDescription>
-                        </Toast>
-                      );
-                    },
-                  });
-                },
-                onError: (error: any) => {
-                  toast.show({
-                    placement: 'top',
-                    duration: 4000,
-                    render: ({ id }) => {
-                      return (
-                        <Toast nativeID={`toast-${id}`} action="error" variant="solid">
-                          <ToastTitle>Error al {action}</ToastTitle>
-                          <ToastDescription>
-                            {error instanceof Error
-                              ? error.message
-                              : `No se pudo ${action} el plan`}
-                          </ToastDescription>
-                        </Toast>
-                      );
-                    },
-                  });
-                },
-              },
+    updatePlan.mutate(data, {
+      onSuccess: () => {
+        toast.show({
+          placement: 'top',
+          duration: 3000,
+          render: ({ id }) => {
+            return (
+              <Toast nativeID={`toast-${id}`} action="success" variant="solid">
+                <ToastTitle>Plan {action === 'activar' ? 'activado' : 'desactivado'}</ToastTitle>
+                <ToastDescription>El plan se {action === 'activar' ? 'activó' : 'desactivó'} correctamente</ToastDescription>
+              </Toast>
             );
           },
-        },
-      ],
-    );
-  };
+        });
+      },
+      onError: (error: any) => {
+        toast.show({
+          placement: 'top',
+          duration: 4000,
+          render: ({ id }) => {
+            return (
+              <Toast nativeID={`toast-${id}`} action="error" variant="solid">
+                <ToastTitle>Error al {action}</ToastTitle>
+                <ToastDescription>
+                  {error instanceof Error
+                    ? error.message
+                    : `No se pudo ${action} el plan`}
+                </ToastDescription>
+              </Toast>
+            );
+          },
+        });
+      },
+    });
+  }, [updatePlan, toast]);
 
-  const handleDelete = () => {
-    setShowActionsheet(false);
-    setShowDeleteDialog(true);
-  };
-
-  const confirmDelete = () => {
+  const handleDeletePlan = useCallback((planId: string) => {
     deletePlan(planId, {
       onSuccess: () => {
         toast.show({
@@ -181,7 +140,7 @@ export default function PlanDetailScreen() {
         });
         router.replace('/plans');
       },
-      onError: (error) => {
+      onError: (error: any) => {
         toast.show({
           placement: 'top',
           duration: 4000,
@@ -198,8 +157,28 @@ export default function PlanDetailScreen() {
         });
       },
     });
-    setShowDeleteDialog(false);
-  };
+  }, [deletePlan, toast, router]);
+
+  const handleToggleStatus = useCallback(() => {
+    if (!plan) return;
+
+    const newStatus = isActive ? 'inactive' : 'active';
+    const action = isActive ? 'desactivar' : 'activar';
+
+    Alert.alert(
+      `¿${action.charAt(0).toUpperCase() + action.slice(1)} plan?`,
+      `¿Estás seguro de que deseas ${action} el plan "${plan.name}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Confirmar',
+          onPress: () => {
+            handleUpdatePlan({ id: planId, data: { status: newStatus } });
+          },
+        },
+      ],
+    );
+  }, [plan, isActive, planId, handleUpdatePlan]);
 
   if (isPlanLoading) {
     return (
@@ -225,7 +204,7 @@ export default function PlanDetailScreen() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <Button variant="link" onPress={() => setShowActionsheet(true)} size="sm">
+            <Button variant="link" onPress={handleOpenActions} size="sm">
               <Icon as={MoreVerticalIcon} className="text-gray-600" />
             </Button>
           ),
@@ -371,61 +350,17 @@ export default function PlanDetailScreen() {
           </VStack>
         </ScrollView>
 
-        {/* Action Sheet */}
-        <Actionsheet isOpen={showActionsheet} onClose={() => setShowActionsheet(false)}>
-          <ActionsheetBackdrop />
-          <ActionsheetContent>
-            <ActionsheetDragIndicatorWrapper>
-              <ActionsheetDragIndicator />
-            </ActionsheetDragIndicatorWrapper>
-            <ActionsheetItem onPress={handleEdit}>
-              <Icon as={EditIcon} className="text-gray-600 mr-3" />
-              <ActionsheetItemText>Editar plan</ActionsheetItemText>
-            </ActionsheetItem>
-            <ActionsheetItem onPress={handleToggleStatus}>
-              <Icon as={isActive ? XCircleIcon : CheckCircleIcon} className="text-gray-600 mr-3" />
-              <ActionsheetItemText>
-                {isActive ? 'Desactivar plan' : 'Activar plan'}
-              </ActionsheetItemText>
-            </ActionsheetItem>
-            <ActionsheetItem onPress={handleDelete}>
-              <Icon as={TrashIcon} className="text-red-600 mr-3" />
-              <ActionsheetItemText className="text-red-600">Eliminar plan</ActionsheetItemText>
-            </ActionsheetItem>
-          </ActionsheetContent>
-        </Actionsheet>
-
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog isOpen={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
-          <AlertDialogBackdrop />
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <Heading size="lg">Eliminar plan</Heading>
-            </AlertDialogHeader>
-            <AlertDialogBody>
-              <Text>
-                ¿Estás seguro de que deseas eliminar este plan? Esta acción no se puede deshacer.
-                {stats && stats.activeContracts > 0 && (
-                  <Text className="text-red-600 mt-2">
-                    Advertencia: Este plan tiene {stats.activeContracts} contratos activos.
-                  </Text>
-                )}
-              </Text>
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button variant="outline" onPress={() => setShowDeleteDialog(false)} className="mr-3">
-                <ButtonText>Cancelar</ButtonText>
-              </Button>
-              <Button
-                onPress={confirmDelete}
-                className="bg-red-600"
-                disabled={stats && stats.activeContracts > 0}
-              >
-                <ButtonText>Eliminar</ButtonText>
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Plan Actions Component */}
+        <PlanActions
+          planId={planId}
+          planName={plan?.name || ''}
+          isActive={isActive}
+          activeContracts={activeContracts}
+          isOpen={showActionsheet}
+          onClose={handleCloseActions}
+          onUpdatePlan={handleUpdatePlan}
+          onDeletePlan={handleDeletePlan}
+        />
       </SafeAreaView>
     </>
   );
