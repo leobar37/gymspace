@@ -4,14 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
-import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { CheckCircle } from 'lucide-react-native';
 
 import { Button, ButtonText } from '@/components/ui/button';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
-import { FormInput } from '@/components/forms/FormInput';
+import { FormPassword } from '@/components/forms/FormPassword';
 import { PasswordResetContainer } from '@/features/auth/components/PasswordResetContainer';
 import { usePasswordResetStore } from '@/features/auth/stores/passwordResetStore';
 import { PasswordResetLoading } from '@/features/auth/components/PasswordResetLoading';
@@ -40,8 +39,6 @@ export default function PasswordResetNewPasswordScreen() {
   const { resetToken, reset } = usePasswordResetStore();
   const { sdk } = useGymSdk();
   const toast = useToast();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
@@ -147,37 +144,17 @@ export default function PasswordResetNewPasswordScreen() {
           {/* Password requirements */}
 
           <VStack className="gap-4">
-            <View className="relative">
-              <FormInput
-                name="newPassword"
-                label="Nueva contraseña"
-                placeholder="••••••••"
-                secureTextEntry={!showPassword}
-                leftIcon={<Icon as={Lock} className="text-gray-500 w-5 h-5" />}
-              />
-              <Pressable
-                onPress={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-12"
-              >
-                <Icon as={showPassword ? EyeOff : Eye} className="text-gray-500 w-5 h-5" />
-              </Pressable>
-            </View>
+            <FormPassword
+              name="newPassword"
+              label="Nueva contraseña"
+              placeholder="••••••••"
+            />
 
-            <View className="relative">
-              <FormInput
-                name="confirmPassword"
-                label="Confirmar contraseña"
-                placeholder="••••••••"
-                secureTextEntry={!showConfirmPassword}
-                leftIcon={<Icon as={Lock} className="text-gray-500 w-5 h-5" />}
-              />
-              <Pressable
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-12"
-              >
-                <Icon as={showConfirmPassword ? EyeOff : Eye} className="text-gray-500 w-5 h-5" />
-              </Pressable>
-            </View>
+            <FormPassword
+              name="confirmPassword"
+              label="Confirmar contraseña"
+              placeholder="••••••••"
+            />
 
             <VStack className="gap-2 p-4 bg-gray-50 rounded-lg">
               <Text className="text-sm font-medium text-gray-700">La contraseña debe tener:</Text>

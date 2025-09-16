@@ -70,7 +70,7 @@ export class GymsService extends BaseGymService {
    */
   async updateGym(context: RequestContext, gymId: string, dto: UpdateGymDto): Promise<Gym> {
     const userId = context.getUserId();
-    
+
     // Verify gym exists and user has access using base service
     await this.validateGymOwnership(context, gymId);
 
@@ -105,9 +105,9 @@ export class GymsService extends BaseGymService {
   async getGym(context: RequestContext, gymId: string): Promise<Gym> {
     // First validate access using base service
     await this.validateGymOwnership(context, gymId);
-    
+
     const userId = context.getUserId();
-    
+
     // Then get full gym details
     const gym = await this.prismaService.gym.findFirst({
       where: {
@@ -273,7 +273,7 @@ export class GymsService extends BaseGymService {
    */
   async toggleGymStatus(context: RequestContext, gymId: string): Promise<Gym> {
     const userId = context.getUserId();
-    
+
     // Use base service to find gym with validation
     const gym = await this.findGymByIdWithOwnerValidation(context, gymId);
 
@@ -338,7 +338,6 @@ export class GymsService extends BaseGymService {
 
     return updated;
   }
-
 
   /**
    * Generate unique slug for gym

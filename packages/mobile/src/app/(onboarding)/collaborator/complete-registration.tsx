@@ -1,4 +1,4 @@
-import { FormInput, FormProvider, useForm, zodResolver } from '@/components/forms';
+import { FormInput, FormPassword, FormProvider, useForm, zodResolver } from '@/components/forms';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -141,19 +141,17 @@ export default function CompleteRegistrationScreen() {
                     autoComplete="tel"
                   />
 
-                  <FormInput
+                  <FormPassword
                     name="password"
                     label="Contraseña"
                     placeholder="Mínimo 8 caracteres"
-                    secureTextEntry
                     autoComplete="new-password"
                   />
 
-                  <FormInput
+                  <FormPassword
                     name="confirmPassword"
                     label="Confirmar contraseña"
                     placeholder="Repite tu contraseña"
-                    secureTextEntry
                     autoComplete="new-password"
                   />
                 </VStack>

@@ -6,36 +6,44 @@ import { IRequestContext } from '@gymspace/shared';
 
 export interface ContractFindOneOptions {
   include?: {
-    gymClient?: boolean | {
-      select?: {
-        id?: boolean;
-        name?: boolean;
-        email?: boolean;
-        phone?: boolean;
-      };
-    };
-    gymMembershipPlan?: boolean | {
-      select?: {
-        id?: boolean;
-        name?: boolean;
-        basePrice?: boolean;
-        durationMonths?: boolean;
-        durationDays?: boolean;
-      };
-    };
+    gymClient?:
+      | boolean
+      | {
+          select?: {
+            id?: boolean;
+            name?: boolean;
+            email?: boolean;
+            phone?: boolean;
+          };
+        };
+    gymMembershipPlan?:
+      | boolean
+      | {
+          select?: {
+            id?: boolean;
+            name?: boolean;
+            basePrice?: boolean;
+            durationMonths?: boolean;
+            durationDays?: boolean;
+          };
+        };
     paymentMethod?: boolean;
-    createdBy?: boolean | {
-      select?: {
-        id?: boolean;
-        email?: boolean;
-      };
-    };
-    gym?: boolean | {
-      select?: {
-        id?: boolean;
-        name?: boolean;
-      };
-    };
+    createdBy?:
+      | boolean
+      | {
+          select?: {
+            id?: boolean;
+            email?: boolean;
+          };
+        };
+    gym?:
+      | boolean
+      | {
+          select?: {
+            id?: boolean;
+            name?: boolean;
+          };
+        };
   };
 }
 
@@ -50,7 +58,7 @@ export class ContractBaseService {
   async findOne(
     context: IRequestContext,
     contractId: string,
-    options: ContractFindOneOptions = {}
+    options: ContractFindOneOptions = {},
   ): Promise<Contract> {
     const userId = context.getUserId();
     const prismaInclude: Prisma.ContractInclude = {};
@@ -136,12 +144,9 @@ export class ContractBaseService {
   /**
    * Check if contract exists and user has access through gym
    */
-  async validateContractExists(
-    context: IRequestContext,
-    contractId: string
-  ): Promise<void> {
+  async validateContractExists(context: IRequestContext, contractId: string): Promise<void> {
     const userId = context.getUserId();
-    
+
     const contract = await this.prismaService.contract.findFirst({
       where: {
         id: contractId,

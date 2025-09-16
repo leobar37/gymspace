@@ -139,8 +139,8 @@ export class ContractsService {
         gymMembershipPlan: true,
         renewals: {
           where: {
-            status: 'for_renew'
-          }
+            status: 'for_renew',
+          },
         },
         gymClient: {
           include: {
@@ -176,8 +176,8 @@ export class ContractsService {
     const startDate = dto.startDate
       ? new Date(dto.startDate)
       : dto.applyAtEndOfContract
-      ? new Date(existingContract.endDate || new Date())
-      : new Date(); // Start immediately if not specified
+        ? new Date(existingContract.endDate || new Date())
+        : new Date(); // Start immediately if not specified
 
     const endDate = new Date(startDate);
     if (existingContract.gymMembershipPlan.durationMonths) {
@@ -192,7 +192,7 @@ export class ContractsService {
     // Calculate price
     let finalPrice = dto.customPrice || Number(existingContract.gymMembershipPlan.basePrice);
     let discountAmount = null;
-    
+
     if (dto.discountPercentage) {
       discountAmount = Number(finalPrice) * (dto.discountPercentage / 100);
       finalPrice = Number(finalPrice) - discountAmount;
@@ -329,36 +329,36 @@ export class ContractsService {
 
     // Check if there are renewals that need to be adjusted
     const hasRenewals = contract.renewals && contract.renewals.length > 0;
-    
+
     if (hasRenewals) {
       // If there are renewals, we need to adjust their start dates
       const renewal = contract.renewals[0];
-      
+
       // Only adjust if renewal is set to start at contract end
       const renewalStartDate = dayjs(renewal.startDate);
       const contractEndDate = dayjs(contract.endDate);
-      
+
       // Check if renewal starts at or near contract end (within 1 day tolerance)
       const startsAtContractEnd = Math.abs(renewalStartDate.diff(contractEndDate, 'days')) <= 1;
-      
+
       if (startsAtContractEnd) {
         // Update renewal start date to match new contract end date
         const newRenewalStartDate = newEndDate.toDate();
         const renewalDuration = dayjs(renewal.endDate).diff(renewalStartDate, 'milliseconds');
         const newRenewalEndDate = newEndDate.add(renewalDuration, 'milliseconds').toDate();
-        
+
         await this.prismaService.contract.update({
           where: { id: renewal.id },
           data: {
             startDate: newRenewalStartDate,
             endDate: newRenewalEndDate,
-            notes: renewal.notes 
+            notes: renewal.notes
               ? `${renewal.notes}\n\nAdjusted due to parent contract freeze:\n- New start: ${dayjs(newRenewalStartDate).format('YYYY-MM-DD')}\n- New end: ${dayjs(newRenewalEndDate).format('YYYY-MM-DD')}`
               : `Adjusted due to parent contract freeze:\n- New start: ${dayjs(newRenewalStartDate).format('YYYY-MM-DD')}\n- New end: ${dayjs(newRenewalEndDate).format('YYYY-MM-DD')}`,
             updatedByUserId: userId,
           },
         });
-        
+
         this.logger.log(
           `Renewal contract ${renewal.id} adjusted: start date moved from ${renewalStartDate.format()} to ${dayjs(newRenewalStartDate).format()}`,
         );
@@ -419,7 +419,7 @@ export class ContractsService {
   ): Promise<Contract> {
     const userId = context.getUserId();
     const gymId = context.getGymId();
-    
+
     // Find contract with renewals
     const contract = await this.prismaService.contract.findFirst({
       where: {
@@ -454,7 +454,7 @@ export class ContractsService {
           where: { id: renewal.id },
           data: {
             status: 'cancelled',
-            notes: renewal.notes 
+            notes: renewal.notes
               ? `${renewal.notes}\n\nCancelled due to parent contract cancellation`
               : 'Cancelled due to parent contract cancellation',
             cancelledByUserId: userId,
@@ -462,8 +462,10 @@ export class ContractsService {
             updatedByUserId: userId,
           },
         });
-        
-        this.logger.log(`Renewal contract ${renewal.id} cancelled due to parent contract cancellation`);
+
+        this.logger.log(
+          `Renewal contract ${renewal.id} cancelled due to parent contract cancellation`,
+        );
       }
     }
 
@@ -476,8 +478,8 @@ export class ContractsService {
         notes:
           (contract.notes || '') +
           `\n\nCancellation:\n- Reason: ${reason}\n- Cancelled at: ${new Date().toISOString()}${
-            contract.renewals && contract.renewals.length > 0 
-              ? `\n- Renewals cancelled: ${contract.renewals.length}` 
+            contract.renewals && contract.renewals.length > 0
+              ? `\n- Renewals cancelled: ${contract.renewals.length}`
               : ''
           }`,
         cancelledByUserId: userId,
@@ -540,15 +542,15 @@ export class ContractsService {
         paymentMethod: true,
         renewals: {
           where: {
-            status: 'for_renew'
+            status: 'for_renew',
           },
           include: {
             gymMembershipPlan: true,
             paymentMethod: true,
           },
           orderBy: {
-            createdAt: 'desc'
-          }
+            createdAt: 'desc',
+          },
         },
         createdBy: {
           select: {

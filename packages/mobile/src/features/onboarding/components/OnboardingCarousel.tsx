@@ -36,9 +36,6 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
             isActive={index === currentIndex}
           />
         )}
-        panGestureHandlerProps={{
-          activeOffsetX: [-10, 10],
-        }}
       />
     </View>
   );

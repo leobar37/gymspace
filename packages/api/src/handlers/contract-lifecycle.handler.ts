@@ -8,7 +8,7 @@ import type { EventPayload } from 'inngest';
  * 1. Updates contracts approaching expiration to expiring_soon status
  * 2. Processes expired contracts and activates their renewals
  * 3. Reactivates frozen contracts when freeze period ends
- * 
+ *
  * Expected Output Structure:
  * {
  *   "success": true,
@@ -41,7 +41,7 @@ import type { EventPayload } from 'inngest';
  *     "total": 10
  *   }
  * }
- * 
+ *
  * To test this handler:
  * 1. Run: pnpm run cli seed:contracts:test (creates test scenarios)
  * 2. Run: pnpm run cli trigger:contract:lifecycle (execute handler manually)

@@ -1,3 +1,5 @@
+import { SubscriptionPlan } from './subscriptions';
+
 export interface RegisterOwnerDto {
   name: string;
   email: string;
@@ -79,26 +81,12 @@ export interface ResendResetCodeResponseDto {
   message: string;
 }
 
-
 export interface RegisterCollaboratorDto {
   invitationToken: string;
   name: string;
   phone: string;
   password: string;
 }
-
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  price: number;
-  billingFrequency: string;
-  maxGyms: number;
-  maxClientsPerGym: number;
-  maxUsersPerGym: number;
-  features: any;
-  description?: string;
-}
-
 
 export interface InvitationValidationResponse {
   valid: boolean;

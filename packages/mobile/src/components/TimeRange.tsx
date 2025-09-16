@@ -1,10 +1,13 @@
-import React, { useReducer, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Calendar, CalendarDays, CalendarRange, CalendarClock, X } from 'lucide-react-native';
-import ActionSheet, { ActionSheetRef } from 'react-native-actions-sheet';
-import dayjs from 'dayjs';
+import {
+  AnimatedTouchableOpacity,
+} from '@/components/ui/animated-touchable-opacity';
 import { cn } from '@/lib/utils';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import dayjs from 'dayjs';
+import { Calendar, CalendarClock, CalendarDays, CalendarRange, X } from 'lucide-react-native';
+import React, { useEffect, useReducer, useRef } from 'react';
+import { Platform, Text, View } from 'react-native';
+import ActionSheet, { ActionSheetRef } from 'react-native-actions-sheet';
 
 type TimeRangeOption = 'day' | 'week' | 'month' | 'custom';
 
@@ -34,34 +37,38 @@ type TimeRangeAction =
   | { type: 'SHOW_END_PICKER'; payload: boolean }
   | { type: 'UPDATE_DATE_RANGE'; payload: { start: Date; end: Date } };
 
-const calculateDateRange = (option: TimeRangeOption, customStart?: Date, customEnd?: Date): { start: Date; end: Date } => {
+const calculateDateRange = (
+  option: TimeRangeOption,
+  customStart?: Date,
+  customEnd?: Date,
+): { start: Date; end: Date } => {
   const now = dayjs();
-  
+
   switch (option) {
     case 'day':
-      return { 
-        start: now.startOf('day').toDate(), 
-        end: now.endOf('day').toDate() 
+      return {
+        start: now.startOf('day').toDate(),
+        end: now.endOf('day').toDate(),
       };
     case 'week':
-      return { 
-        start: now.subtract(7, 'day').startOf('day').toDate(), 
-        end: now.endOf('day').toDate() 
+      return {
+        start: now.subtract(7, 'day').startOf('day').toDate(),
+        end: now.endOf('day').toDate(),
       };
     case 'month':
-      return { 
-        start: now.subtract(30, 'day').startOf('day').toDate(), 
-        end: now.endOf('day').toDate() 
+      return {
+        start: now.subtract(30, 'day').startOf('day').toDate(),
+        end: now.endOf('day').toDate(),
       };
     case 'custom':
-      return { 
-        start: customStart || now.startOf('day').toDate(), 
-        end: customEnd || now.endOf('day').toDate() 
+      return {
+        start: customStart || now.startOf('day').toDate(),
+        end: customEnd || now.endOf('day').toDate(),
       };
     default:
-      return { 
-        start: now.startOf('day').toDate(), 
-        end: now.endOf('day').toDate() 
+      return {
+        start: now.startOf('day').toDate(),
+        end: now.endOf('day').toDate(),
       };
   }
 };
@@ -93,7 +100,8 @@ function timeRangeReducer(state: TimeRangeState, action: TimeRangeAction): TimeR
       return {
         ...state,
         customStartDate: action.payload,
-        currentStartDate: state.selectedOption === 'custom' ? action.payload : state.currentStartDate,
+        currentStartDate:
+          state.selectedOption === 'custom' ? action.payload : state.currentStartDate,
       };
     case 'SET_CUSTOM_END_DATE':
       return {
@@ -124,36 +132,45 @@ function timeRangeReducer(state: TimeRangeState, action: TimeRangeAction): TimeR
   }
 }
 
-export function TimeRange({ 
-  onRangeChange, 
-  className, 
+export function TimeRange({
+  onRangeChange,
+  className,
   hideLabel = false,
   labelText = 'Período de tiempo',
-  descriptionText = 'Selecciona el rango de fechas para ver las estadísticas'
+  descriptionText = 'Selecciona el rango de fechas para ver las estadísticas',
 }: TimeRangeProps) {
   const [state, dispatch] = useReducer(timeRangeReducer, initialState);
   const customRangeSheetRef = useRef<ActionSheetRef>(null);
 
   const options: { value: TimeRangeOption; label: string; icon: React.ReactNode }[] = [
-    { 
-      value: 'day', 
+    {
+      value: 'day',
       label: 'Día',
-      icon: <Calendar size={16} color={state.selectedOption === 'day' ? '#3b82f6' : '#6b7280'} />
+      icon: <Calendar size={16} color={state.selectedOption === 'day' ? '#3b82f6' : '#6b7280'} />,
     },
-    { 
-      value: 'week', 
+    {
+      value: 'week',
       label: 'Semana',
-      icon: <CalendarDays size={16} color={state.selectedOption === 'week' ? '#3b82f6' : '#6b7280'} />
+      icon: (
+        <CalendarDays size={16} color={state.selectedOption === 'week' ? '#3b82f6' : '#6b7280'} />
+      ),
     },
-    { 
-      value: 'month', 
+    {
+      value: 'month',
       label: 'Mes',
-      icon: <CalendarRange size={16} color={state.selectedOption === 'month' ? '#3b82f6' : '#6b7280'} />
+      icon: (
+        <CalendarRange size={16} color={state.selectedOption === 'month' ? '#3b82f6' : '#6b7280'} />
+      ),
     },
-    { 
-      value: 'custom', 
+    {
+      value: 'custom',
       label: 'Per..',
-      icon: <CalendarClock size={16} color={state.selectedOption === 'custom' ? '#3b82f6' : '#6b7280'} />
+      icon: (
+        <CalendarClock
+          size={16}
+          color={state.selectedOption === 'custom' ? '#3b82f6' : '#6b7280'}
+        />
+      ),
     },
   ];
 
@@ -219,9 +236,7 @@ export function TimeRange({
             <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
               {labelText}
             </Text>
-            <Text className="text-xs text-gray-400 dark:text-gray-500">
-              {descriptionText}
-            </Text>
+            <Text className="text-xs text-gray-400 dark:text-gray-500">{descriptionText}</Text>
           </View>
         )}
 
@@ -229,14 +244,14 @@ export function TimeRange({
         <View className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-1">
           <View className="flex-row">
             {options.map((option, index) => (
-              <TouchableOpacity
+              <AnimatedTouchableOpacity
                 key={option.value}
                 onPress={() => handleOptionSelect(option.value)}
                 className={cn(
                   'flex-1 py-2.5 px-2 rounded-lg transition-all',
                   state.selectedOption === option.value
                     ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                    : 'bg-transparent'
+                    : 'bg-transparent',
                 )}
                 style={{
                   marginRight: index < options.length - 1 ? 2 : 0,
@@ -249,13 +264,13 @@ export function TimeRange({
                       'text-xs font-semibold mt-1',
                       state.selectedOption === option.value
                         ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-600 dark:text-gray-400'
+                        : 'text-gray-600 dark:text-gray-400',
                     )}
                   >
                     {option.label}
                   </Text>
                 </View>
-              </TouchableOpacity>
+              </AnimatedTouchableOpacity>
             ))}
           </View>
         </View>
@@ -274,25 +289,21 @@ export function TimeRange({
         <View className="p-4">
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-gray-900">
-              Rango personalizado
-            </Text>
-            <TouchableOpacity
+            <Text className="text-lg font-bold text-gray-900">Rango personalizado</Text>
+            <AnimatedTouchableOpacity
               onPress={() => customRangeSheetRef.current?.hide()}
               className="p-2"
             >
               <X size={24} color="#6b7280" />
-            </TouchableOpacity>
+            </AnimatedTouchableOpacity>
           </View>
 
           {/* Date Pickers */}
           <View className="space-y-4">
             {/* Start Date */}
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">
-                Fecha inicial
-              </Text>
-              <TouchableOpacity
+              <Text className="text-sm font-medium text-gray-700 mb-2">Fecha inicial</Text>
+              <AnimatedTouchableOpacity
                 onPress={() => dispatch({ type: 'SHOW_START_PICKER', payload: true })}
                 className="bg-gray-50 rounded-lg p-4 flex-row items-center justify-between"
               >
@@ -303,15 +314,13 @@ export function TimeRange({
                   </Text>
                 </View>
                 <Text className="text-sm text-blue-600">Cambiar</Text>
-              </TouchableOpacity>
+              </AnimatedTouchableOpacity>
             </View>
 
             {/* End Date */}
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">
-                Fecha final
-              </Text>
-              <TouchableOpacity
+              <Text className="text-sm font-medium text-gray-700 mb-2">Fecha final</Text>
+              <AnimatedTouchableOpacity
                 onPress={() => dispatch({ type: 'SHOW_END_PICKER', payload: true })}
                 className="bg-gray-50 rounded-lg p-4 flex-row items-center justify-between"
               >
@@ -322,7 +331,7 @@ export function TimeRange({
                   </Text>
                 </View>
                 <Text className="text-sm text-blue-600">Cambiar</Text>
-              </TouchableOpacity>
+              </AnimatedTouchableOpacity>
             </View>
 
             {/* Summary */}
@@ -336,14 +345,12 @@ export function TimeRange({
             </View>
 
             {/* Apply Button */}
-            <TouchableOpacity
+            <AnimatedTouchableOpacity
               onPress={applyCustomRange}
               className="bg-blue-600 rounded-lg py-3 mt-2"
             >
-              <Text className="text-white text-center font-semibold">
-                Aplicar rango
-              </Text>
-            </TouchableOpacity>
+              <Text className="text-white text-center font-semibold">Aplicar rango</Text>
+            </AnimatedTouchableOpacity>
           </View>
 
           {/* Native Date Pickers */}

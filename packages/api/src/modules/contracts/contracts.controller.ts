@@ -1,16 +1,16 @@
 import { PERMISSIONS } from '@gymspace/shared';
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiSecurity,
-  ApiTags
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';
 import { ContractsService } from './contracts.service';
-import { CancelContractDto, CreateContractDto, FreezeContractDto, GetContractsDto, RenewContractDto } from './dto';
+import {
+  CancelContractDto,
+  CreateContractDto,
+  FreezeContractDto,
+  GetContractsDto,
+  RenewContractDto,
+} from './dto';
 
 @ApiTags('Contracts')
 @Controller('contracts')
@@ -80,10 +80,7 @@ export class ContractsController {
   @Allow(PERMISSIONS.CONTRACTS_READ)
   @ApiOperation({ summary: 'Get contracts for gym' })
   @ApiResponse({ status: 200, description: 'List of contracts' })
-  async getGymContracts(
-    @AppCtxt() ctx: RequestContext,
-    @Query() query: GetContractsDto,
-  ) {
+  async getGymContracts(@AppCtxt() ctx: RequestContext, @Query() query: GetContractsDto) {
     return await this.contractsService.getGymContracts(ctx, query);
   }
 

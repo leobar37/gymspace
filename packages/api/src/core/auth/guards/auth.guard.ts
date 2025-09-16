@@ -189,7 +189,7 @@ export class AuthGuard implements CanActivate {
         tokenValidation.user.id,
         gym?.id,
       );
-      
+
       // Store permissions (including SUPER_ADMIN if user has it)
       request.permissions = permissions;
 

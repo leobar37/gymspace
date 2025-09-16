@@ -6,9 +6,9 @@ import dayjs from 'dayjs';
 
 /**
  * Command to seed test contracts for lifecycle management testing
- * 
+ *
  * Usage: pnpm run cli seed:contracts:test
- * 
+ *
  * This command creates various test scenarios:
  * 1. Active contracts that should become expiring_soon (within 7 days)
  * 2. Contracts that should expire (past end date)
@@ -16,7 +16,7 @@ import dayjs from 'dayjs';
  * 4. Expired contracts with pending renewals (without payment)
  * 5. Frozen contracts that should be reactivated
  * 6. Frozen contracts that should remain frozen
- * 
+ *
  * After running this command, run the cron job manually to test all scenarios
  */
 @Injectable()
@@ -46,7 +46,7 @@ export class SeedContractsTestCommand extends CommandRunner {
       }
 
       const gymClient = await this.prismaService.gymClient.findFirst({
-        where: { 
+        where: {
           gymId: gym.id,
           deletedAt: null,
         },
@@ -58,7 +58,7 @@ export class SeedContractsTestCommand extends CommandRunner {
       }
 
       const membershipPlan = await this.prismaService.gymMembershipPlan.findFirst({
-        where: { 
+        where: {
           gymId: gym.id,
           deletedAt: null,
         },
@@ -70,7 +70,7 @@ export class SeedContractsTestCommand extends CommandRunner {
       }
 
       const paymentMethod = await this.prismaService.paymentMethod.findFirst({
-        where: { 
+        where: {
           deletedAt: null,
         },
       });
@@ -316,7 +316,6 @@ export class SeedContractsTestCommand extends CommandRunner {
       this.logger.log('\n📋 Expected output after running cron job:');
       this.logger.log(JSON.stringify(expectedOutput, null, 2));
       this.logger.log('\n🚀 Now run the cron job manually to test the lifecycle management');
-
     } catch (error) {
       this.logger.error('Failed to seed test contracts', error);
       throw error;

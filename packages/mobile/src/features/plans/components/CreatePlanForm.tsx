@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { View } from 'react-native';
 import { router } from 'expo-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -73,14 +74,9 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
     mode: 'onChange',
   });
 
-  const { control, handleSubmit } = form;
+  const { handleSubmit } = form;
 
   const isSubmitting = isCreatingPlan || isUpdatingPlan;
-
-  // Ensure form is properly initialized
-  if (!control) {
-    return null;
-  }
 
   const onSubmit = async (data: PlanSchema) => {
     const planData: PlanFormData = {
@@ -183,14 +179,12 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
           <Text className="text-lg font-semibold">Campos Requeridos</Text>
           
           <FormInput
-            control={control}
             name="name"
             label="Nombre del plan *"
             placeholder="Ej: Plan Básico"
           />
 
           <FormInput
-            control={control}
             name="basePrice"
             label="Precio *"
             placeholder="0.00"
@@ -199,28 +193,25 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
 
           <VStack className="gap-2">
             <Text className="font-medium text-gray-900">Duración *</Text>
-            <HStack className="gap-2">
-              <VStack className="flex-1">
-                <FormSelect
-                  control={control}
-                  name="durationType"
+            <HStack className="gap-2 items-end">
+              <View className="flex-1">
+                <FormInput
+                  name="durationValue"
                   label=""
-                  placeholder="Seleccionar"
+                  placeholder="Cantidad"
+                  keyboardType="number-pad"
+                />
+              </View>
+              <View className="flex-1">
+                <FormSelect
+                  name="durationType"
+                  placeholder="Periodo"
                   options={[
                     { label: 'Días', value: 'days' },
                     { label: 'Meses', value: 'months' },
                   ]}
                 />
-              </VStack>
-              <VStack className="flex-1">
-                <FormInput
-                  control={control}
-                  name="durationValue"
-                  label=""
-                  placeholder={form.watch('durationType') === 'days' ? 'Días' : 'Meses'}
-                  keyboardType="number-pad"
-                />
-              </VStack>
+              </View>
             </HStack>
           </VStack>
         </VStack>
@@ -231,7 +222,6 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
           <Text className="text-lg font-semibold">Campos Opcionales</Text>
           
           <FormTextarea
-            control={control}
             name="description"
             label="Descripción"
             placeholder="Describe las características del plan"
@@ -294,21 +284,18 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
           <Text className="text-lg font-semibold">Opciones adicionales</Text>
           
           <FormSwitch
-            control={control}
             name="allowsCustomPricing"
             label="Permitir precio personalizado"
             description="Los contratos pueden tener un precio diferente"
           />
 
           <FormSwitch
-            control={control}
             name="includesAdvisor"
             label="Incluye asesor"
             description="Los clientes tendrán acceso a un asesor personal"
           />
 
           <FormSwitch
-            control={control}
             name="showInCatalog"
             label="Mostrar en catálogo público"
             description="El plan será visible en tu página pública"
@@ -318,7 +305,6 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
         <Divider />
 
         <FormTextarea
-          control={control}
           name="termsAndConditions"
           label="Términos y condiciones"
           placeholder="Ingresa los términos y condiciones del plan"

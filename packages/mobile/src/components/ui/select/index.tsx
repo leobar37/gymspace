@@ -40,7 +40,7 @@ const selectIconStyle = tva({
       '2xs': 'h-3 w-3',
       'xs': 'h-3.5 w-3.5',
       'sm': 'h-4 w-4',
-      'md': 'h-[18px] w-[18px]',
+      'md': 'h-4 w-4',
       'lg': 'h-5 w-5',
       'xl': 'h-6 w-6',
     },
@@ -57,7 +57,7 @@ const selectTriggerStyle = tva({
     size: {
       xl: 'h-12',
       lg: 'h-11',
-      md: 'h-10',
+      md: 'h-12',
       sm: 'h-9',
     },
     variant: {

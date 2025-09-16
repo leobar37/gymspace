@@ -6,7 +6,6 @@ import {
   RegisterCollaboratorDto,
   RegisterOwnerDto,
   ResendVerificationDto,
-  SubscriptionPlan,
   VerifyEmailDto,
   ChangePasswordDto,
   ChangePasswordResponseDto,
@@ -19,6 +18,7 @@ import {
   ResendResetCodeDto,
   ResendResetCodeResponseDto,
 } from '../models/auth';
+import { SubscriptionPlan } from '../models/subscriptions';
 import { RequestOptions } from '../types';
 import { BaseResource } from './base';
 

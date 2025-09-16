@@ -17,9 +17,7 @@ export class ContractStatusHelper {
     const today = new Date();
     const sevenDaysFromNow = dayjs(today).add(7, 'days').toDate();
 
-    const baseWhere = gymId
-      ? { gymClient: { gymId }, deletedAt: null }
-      : { deletedAt: null };
+    const baseWhere = gymId ? { gymClient: { gymId }, deletedAt: null } : { deletedAt: null };
 
     const result = await this.prismaService.contract.updateMany({
       where: {
@@ -51,9 +49,7 @@ export class ContractStatusHelper {
     errors: Array<{ contractId: string; error: string }>;
   }> {
     const today = new Date();
-    const baseWhere = gymId
-      ? { gymClient: { gymId }, deletedAt: null }
-      : { deletedAt: null };
+    const baseWhere = gymId ? { gymClient: { gymId }, deletedAt: null } : { deletedAt: null };
 
     let expiredCount = 0;
     let renewalsActivated = 0;
@@ -145,13 +141,11 @@ export class ContractStatusHelper {
             },
           });
           renewalsActivated++;
-          
-          this.logger.log(
-            `Renewal ${renewal.id} activated for expired contract ${contract.id}`
-          );
+
+          this.logger.log(`Renewal ${renewal.id} activated for expired contract ${contract.id}`);
         } else if (renewal) {
           this.logger.log(
-            `Renewal ${renewal.id} for contract ${contract.id} not activated (no payment)`
+            `Renewal ${renewal.id} for contract ${contract.id} not activated (no payment)`,
           );
         }
       } catch (error) {
@@ -160,9 +154,7 @@ export class ContractStatusHelper {
           contractId: contract.id,
           error: `Failed to activate renewal: ${errorMessage}`,
         });
-        this.logger.error(
-          `Failed to process renewal for contract ${contract.id}: ${errorMessage}`
-        );
+        this.logger.error(`Failed to process renewal for contract ${contract.id}: ${errorMessage}`);
       }
     }
 
@@ -195,8 +187,8 @@ export class ContractStatusHelper {
 
     this.logger.log(
       `Contract status update completed in ${executionTime}ms. ` +
-      `Expiring Soon: ${expiringSoonCount}, Expired: ${expiredResult.expiredCount}, ` +
-      `Renewals Activated: ${expiredResult.renewalsActivated}`
+        `Expiring Soon: ${expiringSoonCount}, Expired: ${expiredResult.expiredCount}, ` +
+        `Renewals Activated: ${expiredResult.renewalsActivated}`,
     );
 
     if (expiredResult.errors.length > 0) {
@@ -261,9 +253,7 @@ export class ContractStatusHelper {
     warningDate.setDate(now.getDate() + CONTRACT_EXPIRATION_CONSTANTS.EXPIRING_SOON_DAYS);
 
     // Base where clause
-    const baseWhere = gymId
-      ? { gymClient: { gymId }, deletedAt: null }
-      : { deletedAt: null };
+    const baseWhere = gymId ? { gymClient: { gymId }, deletedAt: null } : { deletedAt: null };
 
     // Count contracts that should be marked as expiring_soon
     const expiringSoonCount = await this.prismaService.contract.count({
@@ -301,9 +291,7 @@ export class ContractStatusHelper {
    * Get contract status statistics for monitoring
    */
   async getContractStatusStats(gymId?: string) {
-    const baseWhere = gymId
-      ? { gymClient: { gymId }, deletedAt: null }
-      : { deletedAt: null };
+    const baseWhere = gymId ? { gymClient: { gymId }, deletedAt: null } : { deletedAt: null };
 
     const [activeCount, expiringSoonCount, expiredCount, totalCount] = await Promise.all([
       this.prismaService.contract.count({
@@ -350,9 +338,7 @@ export class ContractStatusHelper {
     errors: Array<{ contractId: string; error: string }>;
   }> {
     const today = new Date();
-    const baseWhere = gymId
-      ? { gymClient: { gymId }, deletedAt: null }
-      : { deletedAt: null };
+    const baseWhere = gymId ? { gymClient: { gymId }, deletedAt: null } : { deletedAt: null };
 
     // Find frozen contracts
     const frozenContracts = await this.prismaService.contract.findMany({
@@ -389,16 +375,12 @@ export class ContractStatusHelper {
             },
           });
           reactivatedCount++;
-          
-          this.logger.log(
-            `Contract ${contract.id} reactivated after freeze period ended`
-          );
+
+          this.logger.log(`Contract ${contract.id} reactivated after freeze period ended`);
         } else {
           // Contract is still frozen
           stillFrozenCount++;
-          this.logger.log(
-            `Contract ${contract.id} remains frozen until ${contract.freezeEndDate}`
-          );
+          this.logger.log(`Contract ${contract.id} remains frozen until ${contract.freezeEndDate}`);
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -406,14 +388,12 @@ export class ContractStatusHelper {
           contractId: contract.id,
           error: errorMessage,
         });
-        this.logger.error(
-          `Failed to process frozen contract ${contract.id}: ${errorMessage}`
-        );
+        this.logger.error(`Failed to process frozen contract ${contract.id}: ${errorMessage}`);
       }
     }
 
     this.logger.log(
-      `Frozen contracts processing completed: ${reactivatedCount} reactivated, ${stillFrozenCount} still frozen`
+      `Frozen contracts processing completed: ${reactivatedCount} reactivated, ${stillFrozenCount} still frozen`,
     );
 
     return {
@@ -430,7 +410,7 @@ export class ContractStatusHelper {
     executionTime: number;
   }> {
     const result = await this.updateContractStatuses();
-    
+
     return {
       expiringSoonCount: result.expiringSoonCount,
       expiredCount: result.expiredCount,

@@ -244,7 +244,10 @@ export class OnboardingService {
   /**
    * Update gym settings during onboarding
    */
-  async updateGymBasicInfo(context: IRequestContext, dto: { gymId: string } & Partial<UpdateGymDto>) {
+  async updateGymBasicInfo(
+    context: IRequestContext,
+    dto: { gymId: string } & Partial<UpdateGymDto>,
+  ) {
     // Use BaseGymService to verify gym ownership
     await this.baseGymService.validateGymOwnership(context as any, dto.gymId);
 
@@ -284,7 +287,11 @@ export class OnboardingService {
     await this.baseGymService.validateGymOwnership(context as any, gymId);
 
     // Update gym social media using GymsService
-    const updatedGym = await this.gymsService.updateGymSocialMedia(context as any, gymId, socialMedia);
+    const updatedGym = await this.gymsService.updateGymSocialMedia(
+      context as any,
+      gymId,
+      socialMedia,
+    );
 
     return {
       success: true,

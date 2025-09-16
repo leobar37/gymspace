@@ -34,9 +34,7 @@ export class StorageService implements OnModuleInit {
   private async ensureBucketExists(): Promise<void> {
     try {
       // Check if bucket exists by trying to list objects (limited to 1)
-      const { error } = await this.supabase.storage
-        .from(this.bucket)
-        .list('', { limit: 1 });
+      const { error } = await this.supabase.storage.from(this.bucket).list('', { limit: 1 });
 
       if (error && error.message.includes('not found')) {
         console.log(`Creating bucket "${this.bucket}"...`);
@@ -49,7 +47,7 @@ export class StorageService implements OnModuleInit {
           console.error(`Error creating bucket "${this.bucket}":`, createError);
           throw createError;
         }
-        
+
         console.log(`Bucket "${this.bucket}" created successfully`);
       } else if (error) {
         console.error(`Error checking bucket "${this.bucket}":`, error);
@@ -100,9 +98,7 @@ export class StorageService implements OnModuleInit {
       }
 
       // Get the public URL or signed URL for the uploaded file
-      const { data: urlData } = this.supabase.storage
-        .from(this.bucket)
-        .getPublicUrl(key);
+      const { data: urlData } = this.supabase.storage.from(this.bucket).getPublicUrl(key);
 
       // Return a response similar to S3 SDK for compatibility
       return {
@@ -123,9 +119,7 @@ export class StorageService implements OnModuleInit {
 
   async download(key: string): Promise<Readable> {
     try {
-      const { data, error } = await this.supabase.storage
-        .from(this.bucket)
-        .download(key);
+      const { data, error } = await this.supabase.storage.from(this.bucket).download(key);
 
       if (error) {
         console.error('Error downloading from Supabase Storage:', {
@@ -134,12 +128,12 @@ export class StorageService implements OnModuleInit {
           error: error.message,
           name: error.name,
         });
-        
+
         // Re-throw with more context
         if (error.message.includes('not found') || error.message.includes('does not exist')) {
           throw new Error(`File not found in storage: ${key}`);
         }
-        
+
         throw error;
       }
 
@@ -156,16 +150,14 @@ export class StorageService implements OnModuleInit {
         key,
         error: error.message,
       });
-      
+
       throw error;
     }
   }
 
   async delete(key: string): Promise<void> {
     try {
-      const { error } = await this.supabase.storage
-        .from(this.bucket)
-        .remove([key]);
+      const { error } = await this.supabase.storage.from(this.bucket).remove([key]);
 
       if (error) {
         // Supabase doesn't return an error when deleting a non-existent object,
@@ -228,7 +220,7 @@ export class StorageService implements OnModuleInit {
       const pathParts = key.split('/');
       const fileName = pathParts.pop(); // Get the filename
       const prefix = pathParts.length > 0 ? pathParts.join('/') + '/' : ''; // Get directory prefix
-      
+
       // List files in the specific directory
       const { data, error } = await this.supabase.storage
         .from(this.bucket)
@@ -245,7 +237,7 @@ export class StorageService implements OnModuleInit {
       }
 
       // Check if the exact filename exists in the results
-      return data.some(file => file.name === fileName);
+      return data.some((file) => file.name === fileName);
     } catch (error: any) {
       // Fallback: try to download a small portion to check existence
       try {
@@ -257,7 +249,7 @@ export class StorageService implements OnModuleInit {
               height: 1,
             },
           });
-        
+
         return !downloadError;
       } catch (fallbackError: any) {
         console.error('Error checking file existence:', {

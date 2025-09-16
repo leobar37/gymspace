@@ -5,11 +5,9 @@ import { IngestFunctionRegistry } from './registry';
  * Compose multiple handlers (functional style)
  * Follows functional composition patterns from Inngest best practices
  */
-export const composeHandlers = (
-  ...handlerCreators: HandlerCreator[]
-) => {
+export const composeHandlers = (...handlerCreators: HandlerCreator[]) => {
   return (handler: IngestFunctionHandler): InngestFunction[] => {
-    return handlerCreators.map(creator => creator(handler));
+    return handlerCreators.map((creator) => creator(handler));
   };
 };
 
@@ -20,7 +18,7 @@ export const registerHandlers = (
   handler: IngestFunctionHandler,
   ...handlerCreators: HandlerCreator[]
 ): InngestFunction[] => {
-  return handlerCreators.map(creator => creator(handler));
+  return handlerCreators.map((creator) => creator(handler));
 };
 
 /**

@@ -22,14 +22,14 @@ export class CheckInsService {
 
     // Use ClientsService to validate client and get active contract
     const client = await this.clientsService.validateClientBelongsToGym(context, dto.gymClientId);
-    
+
     if (client.status !== 'active') {
       throw new BusinessException('El cliente no está activo');
     }
 
     // Check if client has active contract using ClientsService
     const activeContract = await this.clientsService.getActiveContract(context, dto.gymClientId);
-    
+
     if (!activeContract) {
       throw new BusinessException(
         'El cliente no tiene un contrato activo o el contrato ha expirado',
@@ -193,10 +193,7 @@ export class CheckInsService {
   /**
    * Get check-in statistics for a gym
    */
-  async getGymCheckInStats(
-    context: IRequestContext,
-    period: 'day' | 'week' | 'month' = 'month',
-  ) {
+  async getGymCheckInStats(context: IRequestContext, period: 'day' | 'week' | 'month' = 'month') {
     const gymId = context.getGymId()!;
 
     const now = new Date();

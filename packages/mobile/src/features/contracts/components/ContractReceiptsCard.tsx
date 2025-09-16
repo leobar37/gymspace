@@ -9,7 +9,8 @@ import { GlobalFileModalById } from '@/features/files/components/GlobalFileModal
 import type { Contract } from '@gymspace/sdk';
 import { Eye } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
+import { AnimatedTouchableOpacity } from '@/components/ui/animated-touchable-opacity';
 interface ContractReceiptsCardProps {
   contract: Contract;
 }
@@ -53,7 +54,7 @@ export const ContractReceiptsCard: React.FC<ContractReceiptsCardProps> = ({ cont
                   <Text className="text-xs text-gray-500">Toca para ver en pantalla completa</Text>
                 </VStack>
               </HStack>
-              <TouchableOpacity
+              <AnimatedTouchableOpacity
                 onPress={() => {
                   console.log('lcilasas');
                   handleFilePress(fileId);
@@ -63,7 +64,7 @@ export const ContractReceiptsCard: React.FC<ContractReceiptsCardProps> = ({ cont
                 <View className="bg-blue-50 p-2 rounded-full">
                   <Icon as={Eye} size="sm" className="text-blue-600" />
                 </View>
-              </TouchableOpacity>
+              </AnimatedTouchableOpacity>
             </HStack>
           ))}
         </VStack>

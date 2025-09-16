@@ -8,7 +8,7 @@ export default ({ config }) => {
       orientation: 'portrait',
       icon: './assets/icon.png',
       userInterfaceStyle: 'light',
-      newArchEnabled: false,
+      newArchEnabled: true,
       scheme: 'gymspace',
       splash: {
         image: './assets/splash-icon.png',
@@ -28,6 +28,7 @@ export default ({ config }) => {
           backgroundColor: '#ffffff',
         },
         package: 'com.elena.gymspace',
+        versionCode: 4,
         permissions: [
           'android.permission.RECORD_AUDIO',
           'android.permission.READ_EXTERNAL_STORAGE',

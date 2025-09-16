@@ -1,4 +1,12 @@
-import { IsOptional, IsNumber, IsBoolean, IsString, IsArray, IsDateString, IsUUID } from 'class-validator';
+import {
+  IsOptional,
+  IsNumber,
+  IsBoolean,
+  IsString,
+  IsArray,
+  IsDateString,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RenewContractDto {
@@ -26,37 +34,37 @@ export class RenewContractDto {
   @IsNumber()
   customPrice?: number;
 
-  @ApiProperty({ 
-    example: true, 
-    description: 'Apply renewal at the end of current contract', 
-    required: false 
+  @ApiProperty({
+    example: true,
+    description: 'Apply renewal at the end of current contract',
+    required: false,
   })
   @IsOptional()
   @IsBoolean()
   applyAtEndOfContract?: boolean;
 
-  @ApiProperty({ 
-    example: 'Special discount notes', 
-    description: 'Notes for the renewal contract', 
-    required: false 
+  @ApiProperty({
+    example: 'Special discount notes',
+    description: 'Notes for the renewal contract',
+    required: false,
   })
   @IsOptional()
   @IsString()
   notes?: string;
 
-  @ApiProperty({ 
-    example: 'doc-123', 
-    description: 'Contract document ID', 
-    required: false 
+  @ApiProperty({
+    example: 'doc-123',
+    description: 'Contract document ID',
+    required: false,
   })
   @IsOptional()
   @IsString()
   contractDocumentId?: string;
 
-  @ApiProperty({ 
-    example: ['receipt-1', 'receipt-2'], 
-    description: 'Receipt IDs for the renewal', 
-    required: false 
+  @ApiProperty({
+    example: ['receipt-1', 'receipt-2'],
+    description: 'Receipt IDs for the renewal',
+    required: false,
   })
   @IsOptional()
   @IsArray()

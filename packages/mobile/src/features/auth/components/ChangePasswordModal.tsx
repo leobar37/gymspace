@@ -14,18 +14,15 @@ import { Text } from '@/components/ui/text';
 import { Heading } from '@/components/ui/heading';
 import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { 
-  LockIcon, 
-  EyeIcon, 
-  EyeOffIcon, 
+import {
   AlertCircleIcon,
-  CheckCircleIcon, 
-  XCircleIcon, 
-  XIcon 
+  CheckCircleIcon,
+  XCircleIcon,
+  XIcon
 } from 'lucide-react-native';
 import {
   FormProvider,
-  FormInput,
+  FormPassword,
   useForm,
   zodResolver,
 } from '@/components/forms';
@@ -36,7 +33,6 @@ import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useMutation } from '@tanstack/react-query';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
-import { Pressable } from 'react-native';
 
 // Password validation schema - matching backend requirements
 const passwordSchema = z
@@ -72,9 +68,6 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
   const toast = useToast();
   const { sdk } = useGymSdk();
   const { show: showLoading, hide: hideLoading } = useLoadingScreen();
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const methods = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
@@ -158,71 +151,26 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
               </Alert>
 
               {/* Current Password */}
-              <VStack className="gap-2">
-                <HStack className="items-center justify-between">
-                  <FormInput
-                    name="currentPassword"
-                    label="Contraseña Actual"
-                    placeholder="Ingresa tu contraseña actual"
-                    secureTextEntry={!showCurrentPassword}
-                    leftIcon={<Icon as={LockIcon} className="w-4 h-4 text-gray-500" />}
-                  />
-                  <Pressable
-                    onPress={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="ml-2"
-                  >
-                    <Icon
-                      as={showCurrentPassword ? EyeOffIcon : EyeIcon}
-                      className="w-5 h-5 text-gray-500"
-                    />
-                  </Pressable>
-                </HStack>
-              </VStack>
+              <FormPassword
+                name="currentPassword"
+                label="Contraseña Actual"
+                placeholder="Ingresa tu contraseña actual"
+              />
 
               {/* New Password */}
-              <VStack className="gap-2">
-                <HStack className="items-center justify-between">
-                  <FormInput
-                    name="newPassword"
-                    label="Nueva Contraseña"
-                    placeholder="Ingresa tu nueva contraseña"
-                    secureTextEntry={!showNewPassword}
-                    leftIcon={<Icon as={LockIcon} className="w-4 h-4 text-gray-500" />}
-                    description="Mínimo 8 caracteres, con mayúsculas, minúsculas y números"
-                  />
-                  <Pressable
-                    onPress={() => setShowNewPassword(!showNewPassword)}
-                    className="ml-2"
-                  >
-                    <Icon
-                      as={showNewPassword ? EyeOffIcon : EyeIcon}
-                      className="w-5 h-5 text-gray-500"
-                    />
-                  </Pressable>
-                </HStack>
-              </VStack>
+              <FormPassword
+                name="newPassword"
+                label="Nueva Contraseña"
+                placeholder="Ingresa tu nueva contraseña"
+                description="Mínimo 8 caracteres, con mayúsculas, minúsculas y números"
+              />
 
               {/* Confirm Password */}
-              <VStack className="gap-2">
-                <HStack className="items-center justify-between">
-                  <FormInput
-                    name="confirmPassword"
-                    label="Confirmar Nueva Contraseña"
-                    placeholder="Confirma tu nueva contraseña"
-                    secureTextEntry={!showConfirmPassword}
-                    leftIcon={<Icon as={LockIcon} className="w-4 h-4 text-gray-500" />}
-                  />
-                  <Pressable
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="ml-2"
-                  >
-                    <Icon
-                      as={showConfirmPassword ? EyeOffIcon : EyeIcon}
-                      className="w-5 h-5 text-gray-500"
-                    />
-                  </Pressable>
-                </HStack>
-              </VStack>
+              <FormPassword
+                name="confirmPassword"
+                label="Confirmar Nueva Contraseña"
+                placeholder="Confirma tu nueva contraseña"
+              />
 
               {/* Password Requirements */}
               <VStack className="gap-2 p-3 bg-gray-50 rounded-md">

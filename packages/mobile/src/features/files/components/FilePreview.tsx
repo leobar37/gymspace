@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, ActivityIndicator, Modal, TouchableOpacity, Pressable } from 'react-native';
+import { View, ActivityIndicator, Modal, Pressable } from 'react-native';
+import { AnimatedTouchableOpacity } from '@/components/ui/animated-touchable-opacity';
 import { Image } from 'expo-image';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -59,7 +60,7 @@ export function FilePreview({
 
   return (
     <>
-      <TouchableOpacity 
+      <AnimatedTouchableOpacity 
         className={className} 
         style={{ width, height }}
         onPress={handleImagePress}
@@ -87,7 +88,7 @@ export function FilePreview({
             setError(true);
           }}
         />
-      </TouchableOpacity>
+      </AnimatedTouchableOpacity>
 
       {/* Fullscreen Modal */}
       {fullscreenEnabled && (

@@ -10,16 +10,13 @@ import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
 import {
-  LockIcon,
-  EyeIcon,
-  EyeOffIcon,
   AlertCircleIcon,
   CheckCircleIcon,
   XCircleIcon,
 } from 'lucide-react-native';
 import {
   FormProvider,
-  FormInput,
+  FormPassword,
   useForm,
   zodResolver,
 } from '@/components/forms';
@@ -60,9 +57,6 @@ export default function ChangePasswordScreen() {
   const { sdk } = useGymSdk();
   const { show: showLoading, hide: hideLoading } = useLoadingScreen();
   const insets = useSafeAreaInsets();
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const methods = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
@@ -157,89 +151,38 @@ export default function ChangePasswordScreen() {
               <Card className="p-4">
                 <VStack className="gap-6">
                   {/* Current Password */}
-                  <VStack className="gap-2">
-                    <HStack className="items-center justify-between">
-                      <View className="flex-1">
-                        <FormInput
-                          name="currentPassword"
-                          label="Contraseña Actual"
-                          placeholder="Ingresa tu contraseña actual"
-                          secureTextEntry={!showCurrentPassword}
-                          leftIcon={<Icon as={LockIcon} className="w-4 h-4 text-gray-500" />}
-                          returnKeyType="next"
-                          onSubmitEditing={() => {
-                            // Focus next input
-                            methods.setFocus('newPassword');
-                          }}
-                        />
-                      </View>
-                      <Pressable
-                        onPress={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="ml-2 p-2"
-                      >
-                        <Icon
-                          as={showCurrentPassword ? EyeOffIcon : EyeIcon}
-                          className="w-5 h-5 text-gray-500"
-                        />
-                      </Pressable>
-                    </HStack>
-                  </VStack>
+                  <FormPassword
+                    name="currentPassword"
+                    label="Contraseña Actual"
+                    placeholder="Ingresa tu contraseña actual"
+                    returnKeyType="next"
+                    onSubmitEditing={() => {
+                      // Focus next input
+                      methods.setFocus('newPassword');
+                    }}
+                  />
 
                   {/* New Password */}
-                  <VStack className="gap-2">
-                    <HStack className="items-center justify-between">
-                      <View className="flex-1">
-                        <FormInput
-                          name="newPassword"
-                          label="Nueva Contraseña"
-                          placeholder="Ingresa tu nueva contraseña"
-                          secureTextEntry={!showNewPassword}
-                          leftIcon={<Icon as={LockIcon} className="w-4 h-4 text-gray-500" />}
-                          description="Mínimo 8 caracteres, con mayúsculas, minúsculas y números"
-                          returnKeyType="next"
-                          onSubmitEditing={() => {
-                            // Focus next input
-                            methods.setFocus('confirmPassword');
-                          }}
-                        />
-                      </View>
-                      <Pressable
-                        onPress={() => setShowNewPassword(!showNewPassword)}
-                        className="ml-2 p-2"
-                      >
-                        <Icon
-                          as={showNewPassword ? EyeOffIcon : EyeIcon}
-                          className="w-5 h-5 text-gray-500"
-                        />
-                      </Pressable>
-                    </HStack>
-                  </VStack>
+                  <FormPassword
+                    name="newPassword"
+                    label="Nueva Contraseña"
+                    placeholder="Ingresa tu nueva contraseña"
+                    description="Mínimo 8 caracteres, con mayúsculas, minúsculas y números"
+                    returnKeyType="next"
+                    onSubmitEditing={() => {
+                      // Focus next input
+                      methods.setFocus('confirmPassword');
+                    }}
+                  />
 
                   {/* Confirm Password */}
-                  <VStack className="gap-2">
-                    <HStack className="items-center justify-between">
-                      <View className="flex-1">
-                        <FormInput
-                          name="confirmPassword"
-                          label="Confirmar Nueva Contraseña"
-                          placeholder="Confirma tu nueva contraseña"
-                          secureTextEntry={!showConfirmPassword}
-                          leftIcon={<Icon as={LockIcon} className="w-4 h-4 text-gray-500" />}
-                          returnKeyType="done"
-                          onSubmitEditing={methods.handleSubmit(handleSubmit)}
-                        />
-                      </View>
-                      <Pressable
-                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="ml-2 p-2"
-                      >
-                        <Icon
-                          as={showConfirmPassword ? EyeOffIcon : EyeIcon}
-                          className="w-5 h-5 text-gray-500"
-                        />
-                      </Pressable>
-                    </HStack>
-                  </VStack>
+                  <FormPassword
+                    name="confirmPassword"
+                    label="Confirmar Nueva Contraseña"
+                    placeholder="Confirma tu nueva contraseña"
+                    returnKeyType="done"
+                    onSubmitEditing={methods.handleSubmit(handleSubmit)}
+                  />
                 </VStack>
               </Card>
 

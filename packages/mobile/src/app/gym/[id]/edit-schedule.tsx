@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, TouchableOpacity } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { AnimatedAnimatedTouchableOpacity } from '@/components/ui/animated-touchable-opacity';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -177,22 +178,22 @@ export default function EditGymScheduleScreen() {
                         className="flex-1"
                         maxLength={5}
                       />
-                      <TouchableOpacity
+                      <AnimatedTouchableOpacity
                         onPress={() => removeTimeSlot(key, index)}
                         className="p-2"
                       >
                         <X size={20} className="text-red-500" />
-                      </TouchableOpacity>
+                      </AnimatedTouchableOpacity>
                     </View>
                   ))}
 
-                  <TouchableOpacity
+                  <AnimatedTouchableOpacity
                     onPress={() => addTimeSlot(key)}
                     className="flex-row items-center justify-center py-2 border border-dashed border-gray-300 rounded"
                   >
                     <Plus size={16} className="text-gray-500 mr-1" />
                     <Text className="text-sm text-gray-500">Agregar horario</Text>
-                  </TouchableOpacity>
+                  </AnimatedTouchableOpacity>
                 </View>
               )}
             </View>

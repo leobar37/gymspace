@@ -13,13 +13,10 @@ import {
  * Create an event handler (functional style)
  * Follows Inngest best practices for function creation
  */
-export const createEventHandler = <
-  TEvent extends EventPayload = EventPayload,
-  TResult = unknown
->(
+export const createEventHandler = <TEvent extends EventPayload = EventPayload, TResult = unknown>(
   config: IngestFunctionConfig,
   eventName: string,
-  handler: IngestHandlerFunction<TEvent, TResult>
+  handler: IngestHandlerFunction<TEvent, TResult>,
 ): ((context: IngestFunctionHandler) => InngestFunction) => {
   return ({ ingestClient, injector }: IngestFunctionHandler): InngestFunction => {
     const logger = new Logger(`IngestFunction:${config.id}`);
@@ -58,12 +55,12 @@ export const createEventHandler = <
           });
           throw error;
         }
-      }
+      },
     );
 
     IngestFunctionRegistry.register(inngestFunction);
     logger.log(`Registered Inngest function: ${config.id}`);
-    
+
     return inngestFunction;
   };
 };
@@ -75,51 +72,47 @@ export const createEventHandler = <
 export const createCronHandler = <TResult = unknown>(
   config: IngestFunctionConfig,
   cron: string,
-  handler: IngestHandlerFunction<EventPayload, TResult>
+  handler: IngestHandlerFunction<EventPayload, TResult>,
 ): ((context: IngestFunctionHandler) => InngestFunction) => {
   return ({ ingestClient, injector }: IngestFunctionHandler): InngestFunction => {
     const logger = new Logger(`IngestFunction:${config.id}`);
 
-    const inngestFunction = ingestClient.createFunction(
-      config,
-      { cron },
-      async (context) => {
-        const handlerContext: IngestHandlerContext<EventPayload> = {
-          event: context.event,
-          step: context.step,
+    const inngestFunction = ingestClient.createFunction(config, { cron }, async (context) => {
+      const handlerContext: IngestHandlerContext<EventPayload> = {
+        event: context.event,
+        step: context.step,
+        runId: context.runId,
+        attempt: context.attempt,
+        injector,
+        logger,
+      };
+
+      try {
+        logger.debug(`Executing function ${config.id}`, {
           runId: context.runId,
           attempt: context.attempt,
-          injector,
-          logger,
-        };
+        });
 
-        try {
-          logger.debug(`Executing function ${config.id}`, {
-            runId: context.runId,
-            attempt: context.attempt,
-          });
+        const result = await handler(handlerContext);
 
-          const result = await handler(handlerContext);
+        logger.debug(`Function ${config.id} completed successfully`, {
+          runId: context.runId,
+        });
 
-          logger.debug(`Function ${config.id} completed successfully`, {
-            runId: context.runId,
-          });
-
-          return result;
-        } catch (error) {
-          logger.error(`Function ${config.id} failed`, {
-            runId: context.runId,
-            attempt: context.attempt,
-            error: error.message,
-          });
-          throw error;
-        }
+        return result;
+      } catch (error) {
+        logger.error(`Function ${config.id} failed`, {
+          runId: context.runId,
+          attempt: context.attempt,
+          error: error.message,
+        });
+        throw error;
       }
-    );
+    });
 
     IngestFunctionRegistry.register(inngestFunction);
     logger.log(`Registered Inngest function: ${config.id}`);
-    
+
     return inngestFunction;
   };
 };

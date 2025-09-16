@@ -6,7 +6,6 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
 import { Input, InputField, InputIcon } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Icon } from '@/components/ui/icon';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -20,7 +19,7 @@ import {
   ActionsheetDragIndicator,
   ActionsheetDragIndicatorWrapper,
   ActionsheetItem,
-  ActionsheetItemText
+  ActionsheetItemText,
 } from '@/components/ui/actionsheet';
 import {
   AlertDialog,
@@ -29,14 +28,14 @@ import {
   AlertDialogHeader,
   AlertDialogCloseButton,
   AlertDialogBody,
-  AlertDialogFooter
+  AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
-import { Heading } from '@/components/ui/heading';
 import { SearchIcon, PlusIcon, EditIcon, TrashIcon, XIcon } from 'lucide-react-native';
-import { usePlansController, SearchFilters } from '../controllers/plans.controller';
+import { usePlansController } from '../controllers/plans.controller';
 import { MembershipPlan } from '@gymspace/sdk';
 import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 import { useFormatPrice } from '@/config/ConfigContext';
+import { useDataSearch } from '@/hooks/useDataSearch';
 
 interface PlanItemProps {
   plan: MembershipPlan;
@@ -91,10 +90,10 @@ const PlanItem: React.FC<PlanItemProps> = ({ plan, onPress, onDelete }) => {
                   {formatPrice(plan.basePrice)}
                 </Text>
                 <Text className="text-xs text-gray-500">
-                  por {plan.durationDays
+                  por{' '}
+                  {plan.durationDays
                     ? `${plan.durationDays} ${plan.durationDays === 1 ? 'día' : 'días'}`
-                    : `${plan.durationMonths} ${plan.durationMonths === 1 ? 'mes' : 'meses'}`
-                  }
+                    : `${plan.durationMonths} ${plan.durationMonths === 1 ? 'mes' : 'meses'}`}
                 </Text>
               </VStack>
 
@@ -139,14 +138,15 @@ const PlanItem: React.FC<PlanItemProps> = ({ plan, onPress, onDelete }) => {
         <AlertDialogBackdrop />
         <AlertDialogContent>
           <AlertDialogHeader>
-            <Heading>Confirmar eliminación</Heading>
+            <Text className="text-lg font-semibold">Confirmar eliminación</Text>
             <AlertDialogCloseButton>
               <Icon as={XIcon} className="text-gray-500" />
             </AlertDialogCloseButton>
           </AlertDialogHeader>
           <AlertDialogBody>
             <Text>
-              ¿Estás seguro que deseas eliminar el plan "{plan.name}"? Esta acción no se puede deshacer.
+              ¿Estás seguro que deseas eliminar el plan "{plan.name}"? Esta acción no se puede
+              deshacer.
             </Text>
           </AlertDialogBody>
           <AlertDialogFooter>
@@ -165,9 +165,7 @@ const PlanItem: React.FC<PlanItemProps> = ({ plan, onPress, onDelete }) => {
 
 const EmptyState: React.FC = () => (
   <VStack className="flex-1 items-center justify-center p-8">
-    <Text className="text-gray-500 text-center mb-4">
-      No tienes planes de membresía creados
-    </Text>
+    <Text className="text-gray-500 text-center mb-4">No tienes planes de membresía creados</Text>
     <Button onPress={() => router.push('/plans/create')}>
       <ButtonText>Crear primer plan</ButtonText>
     </Button>
@@ -176,9 +174,7 @@ const EmptyState: React.FC = () => (
 
 const ErrorState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
   <VStack className="flex-1 items-center justify-center p-8">
-    <Text className="text-red-500 text-center mb-4">
-      Error al cargar los planes
-    </Text>
+    <Text className="text-red-500 text-center mb-4">Error al cargar los planes</Text>
     <Button onPress={onRetry}>
       <ButtonText>Reintentar</ButtonText>
     </Button>
@@ -187,72 +183,64 @@ const ErrorState: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
 
 export const PlansList: React.FC = () => {
   const { usePlansList, deletePlan } = usePlansController();
-  const [search, setSearch] = useState('');
-  const [showActiveOnly, setShowActiveOnly] = useState(false);
   const toast = useToast();
 
-  const filters: SearchFilters = {
-    activeOnly: showActiveOnly,
-  };
+  // Fetch all plans, no server filtering
+  const { data, isLoading, error, refetch } = usePlansList();
 
-  const { data, isLoading, error, refetch } = usePlansList(filters);
-
-  // Filter plans locally by search term
-  const filteredPlans = React.useMemo(() => {
-    if (!data) return [];
-    if (!search) return data;
-
-    const searchLower = search.toLowerCase();
-    return data.filter(plan =>
-      plan.name.toLowerCase().includes(searchLower) ||
-      (plan.description && plan.description.toLowerCase().includes(searchLower))
-    );
-  }, [data, search]);
+  // Implement local search with useDataSearch hook
+  const {
+    searchInput,
+    setSearchInput,
+    filteredData: filteredPlans,
+  } = useDataSearch({
+    data,
+    searchFields: (plan) => [plan.name, plan.description || '', ...(plan.features || [])],
+    searchPlaceholder: 'Buscar planes...',
+  });
 
   const handlePlanPress = useCallback((plan: MembershipPlan) => {
     router.push(`/plans/${plan.id}`);
   }, []);
 
-  const handleDeletePlan = useCallback((planId: string) => {
-    deletePlan(planId, {
-      onSuccess: () => {
-        toast.show({
-          placement: 'top',
-          duration: 3000,
-          render: ({ id }) => (
-            <Toast nativeID={`toast-${id}`} action="success" variant="solid">
-              <ToastTitle>Plan eliminado</ToastTitle>
-              <ToastDescription>
-                El plan ha sido eliminado correctamente
-              </ToastDescription>
-            </Toast>
-          ),
-        });
-      },
-      onError: () => {
-        toast.show({
-          placement: 'top',
-          duration: 4000,
-          render: ({ id }) => (
-            <Toast nativeID={`toast-${id}`} action="error" variant="solid">
-              <ToastTitle>Error</ToastTitle>
-              <ToastDescription>
-                No se pudo eliminar el plan
-              </ToastDescription>
-            </Toast>
-          ),
-        });
-      },
-    });
-  }, [deletePlan, toast]);
+  const handleDeletePlan = useCallback(
+    (planId: string) => {
+      deletePlan(planId, {
+        onSuccess: () => {
+          toast.show({
+            placement: 'top',
+            duration: 3000,
+            render: ({ id }) => (
+              <Toast nativeID={`toast-${id}`} action="success" variant="solid">
+                <ToastTitle>Plan eliminado</ToastTitle>
+                <ToastDescription>El plan ha sido eliminado correctamente</ToastDescription>
+              </Toast>
+            ),
+          });
+        },
+        onError: () => {
+          toast.show({
+            placement: 'top',
+            duration: 4000,
+            render: ({ id }) => (
+              <Toast nativeID={`toast-${id}`} action="error" variant="solid">
+                <ToastTitle>Error</ToastTitle>
+                <ToastDescription>No se pudo eliminar el plan</ToastDescription>
+              </Toast>
+            ),
+          });
+        },
+      });
+    },
+    [deletePlan, toast],
+  );
 
-  const renderPlanItem = useCallback(({ item }: { item: MembershipPlan }) => (
-    <PlanItem
-      plan={item}
-      onPress={() => handlePlanPress(item)}
-      onDelete={handleDeletePlan}
-    />
-  ), [handlePlanPress, handleDeletePlan]);
+  const renderPlanItem = useCallback(
+    ({ item }: { item: MembershipPlan }) => (
+      <PlanItem plan={item} onPress={() => handlePlanPress(item)} onDelete={handleDeletePlan} />
+    ),
+    [handlePlanPress, handleDeletePlan],
+  );
 
   if (isLoading) {
     return (
@@ -269,25 +257,16 @@ export const PlansList: React.FC = () => {
   return (
     <View className="flex-1 bg-gray-50">
       <VStack className="p-4 bg-white border-b border-gray-200">
-        <Input className="mb-3">
+        <Input>
           <InputIcon>
-            <Icon as={SearchIcon} className="text-black" />
+            <Icon as={SearchIcon} className='text-gray-500' />
           </InputIcon>
           <InputField
             placeholder="Buscar planes..."
-            value={search}
-            onChangeText={setSearch}
+            value={searchInput}
+            onChangeText={setSearchInput}
           />
         </Input>
-
-        <HStack className="items-center justify-between">
-          <Text className="text-sm text-gray-600">Mostrar solo activos</Text>
-          <Switch
-            size="sm"
-            value={showActiveOnly}
-            onValueChange={setShowActiveOnly}
-          />
-        </HStack>
       </VStack>
 
       <FlatList
@@ -301,10 +280,7 @@ export const PlansList: React.FC = () => {
       />
 
       {filteredPlans.length > 0 && (
-        <Fab
-          onPress={() => router.push('/plans/create')}
-          className='size-16'
-        >
+        <Fab onPress={() => router.push('/plans/create')} className="size-16">
           <FabIcon as={PlusIcon} />
         </Fab>
       )}

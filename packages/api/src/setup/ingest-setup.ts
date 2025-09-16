@@ -15,8 +15,7 @@ export async function setupIngestHandlers(
     // Get required services from NestJS container
     const ingestClient = app.get(IngestClient);
     const moduleRef = app.get(ModuleRef);
-    
-    
+
     // Create handler context
     const ingestHandler: IngestFunctionHandler = {
       ingestClient: ingestClient.inngest,
@@ -29,7 +28,7 @@ export async function setupIngestHandlers(
 
     // Get the raw Fastify instance
     const fastifyInstance = app.getHttpAdapter().getInstance();
-    
+
     // Register Inngest using the documented pattern
     fastifyInstance.route({
       method: ['GET', 'POST', 'PUT'],

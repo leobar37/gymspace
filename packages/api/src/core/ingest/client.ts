@@ -33,7 +33,6 @@ export class IngestClient {
   getClient(): Inngest {
     return this.client;
   }
-  
 
   /**
    * Get the raw Inngest client for typing compatibility

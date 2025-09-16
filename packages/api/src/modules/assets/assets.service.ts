@@ -172,7 +172,7 @@ export class AssetsService {
         filePath: asset.filePath,
         error: error.message,
       });
-      
+
       // Re-throw with context
       throw new Error(`Failed to download asset: ${error.message}`);
     }

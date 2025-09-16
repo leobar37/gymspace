@@ -3,6 +3,7 @@ import axios, {
   AxiosRequestConfig,
   AxiosError,
   InternalAxiosRequestConfig,
+  AxiosRequestHeaders,
 } from 'axios';
 import { GymSpaceConfig, RequestOptions } from './types';
 import {
@@ -92,9 +93,11 @@ export class ApiClient {
             
             if (newTokens) {
               // Update the original request with new token
-              originalRequest.headers = originalRequest.headers || {};
+              if (!originalRequest.headers) {
+                originalRequest.headers = {} as AxiosRequestHeaders;
+              }
               originalRequest.headers['Authorization'] = `Bearer ${newTokens.access_token}`;
-              
+
               // Retry the original request
               return this.axiosInstance(originalRequest);
             }

@@ -61,11 +61,7 @@ export class DashboardController {
     @AppCtxt() ctx: RequestContext,
     @Query() query: DateRangeQueryDto,
   ): Promise<ContractsRevenueDto> {
-    return await this.dashboardService.getContractsRevenue(
-      ctx,
-      query.startDate,
-      query.endDate,
-    );
+    return await this.dashboardService.getContractsRevenue(ctx, query.startDate, query.endDate);
   }
 
   @Get('sales-revenue')

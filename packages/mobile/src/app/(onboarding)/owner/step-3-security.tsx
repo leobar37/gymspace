@@ -3,6 +3,7 @@ import React from 'react';
 import { z } from 'zod';
 import {
   FormInput,
+  FormPassword,
   FormProvider,
   useForm,
   zodResolver
@@ -68,21 +69,19 @@ export default function OwnerSecurityInfoScreen() {
         {/* Form */}
         <FormProvider {...methods}>
           <VStack className="gap-6">
-            <FormInput
+            <FormPassword
               name="password"
               label="Contraseña"
               placeholder="Mínimo 8 caracteres"
-              secureTextEntry
               autoComplete="new-password"
               returnKeyType="next"
               autoFocus
             />
 
-            <FormInput
+            <FormPassword
               name="confirmPassword"
               label="Confirmar contraseña"
               placeholder="Repite tu contraseña"
-              secureTextEntry
               autoComplete="new-password"
               returnKeyType="done"
               onSubmitEditing={methods.handleSubmit(onSubmit)}

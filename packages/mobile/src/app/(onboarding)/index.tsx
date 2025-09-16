@@ -1,18 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import Animated, { 
-  FadeInUp, 
-  FadeInDown,
-} from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import AnimatedTouchableOpacity from '@/components/ui/animated-touchable-opacity';
 
 // Feature components
 import { AnimatedLogo } from '@/features/onboarding/components/AnimatedLogo';
@@ -37,7 +30,7 @@ export default function OnboardingScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      
+
       <SafeAreaView style={styles.safeArea}>
         {/* Logo */}
         <Animated.View entering={FadeInDown.delay(200).duration(600)}>
@@ -46,40 +39,31 @@ export default function OnboardingScreen() {
 
         {/* Carousel */}
         <View style={styles.carouselContainer}>
-          <OnboardingCarousel 
-            currentIndex={currentIndex}
-            onSlideChange={setCurrentIndex}
-          />
+          <OnboardingCarousel currentIndex={currentIndex} onSlideChange={setCurrentIndex} />
         </View>
 
         {/* Progress Indicator */}
         <Animated.View entering={FadeInUp.delay(400).duration(600)}>
-          <ProgressIndicator 
-            total={onboardingSlides.length}
-            currentIndex={currentIndex}
-          />
+          <ProgressIndicator total={onboardingSlides.length} currentIndex={currentIndex} />
         </Animated.View>
 
         {/* Action Buttons */}
-        <Animated.View 
-          entering={FadeInUp.delay(600).duration(600)}
-          style={styles.buttonsContainer}
-        >
-          <TouchableOpacity 
+        <Animated.View entering={FadeInUp.delay(600).duration(600)} style={styles.buttonsContainer}>
+          <AnimatedTouchableOpacity
             style={styles.primaryButton}
             onPress={handleLoginPress}
             activeOpacity={0.9}
           >
             <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
-          </TouchableOpacity>
+          </AnimatedTouchableOpacity>
 
-          <TouchableOpacity 
+          <AnimatedTouchableOpacity
             style={styles.secondaryButton}
             onPress={handleRegisterPress}
             activeOpacity={0.8}
           >
             <Text style={styles.secondaryButtonText}>Crear Cuenta</Text>
-          </TouchableOpacity>
+          </AnimatedTouchableOpacity>
         </Animated.View>
       </SafeAreaView>
     </View>

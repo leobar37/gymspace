@@ -18,13 +18,10 @@ export class EvaluationsService {
   /**
    * Create a new evaluation (CU-015)
    */
-  async createEvaluation(
-    context: RequestContext,
-    dto: CreateEvaluationDto,
-  ): Promise<Evaluation> {
+  async createEvaluation(context: RequestContext, dto: CreateEvaluationDto): Promise<Evaluation> {
     const gymId = context.getGymId()!;
     const userId = context.getUserId()!;
-    
+
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(context, gymId);
     if (!hasAccess) {
@@ -326,7 +323,7 @@ export class EvaluationsService {
   async getGymEvaluationStats(context: RequestContext) {
     const gymId = context.getGymId()!;
     const userId = context.getUserId()!;
-    
+
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(context, gymId);
     if (!hasAccess) {

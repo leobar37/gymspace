@@ -165,7 +165,7 @@ export class LeadsService {
   async searchLeads(context: RequestContext, dto: SearchLeadsDto) {
     const gymId = context.getGymId()!;
     const userId = context.getUserId()!;
-    
+
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(context, gymId);
     if (!hasAccess) {
@@ -244,7 +244,7 @@ export class LeadsService {
   async getLeadStats(context: RequestContext) {
     const gymId = context.getGymId()!;
     const userId = context.getUserId()!;
-    
+
     // Verify gym access
     const hasAccess = await this.gymsService.hasGymAccess(context, gymId);
     if (!hasAccess) {

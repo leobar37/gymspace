@@ -15,10 +15,10 @@ export class OrganizationsController {
   @Get('list')
   @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({ summary: 'List all organizations (SUPER_ADMIN only)' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'List of all organizations with owner and gyms',
-    type: [ListOrganizationsResponseDto]
+    type: [ListOrganizationsResponseDto],
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Super admin access required' })
   async listOrganizations(@AppCtxt() ctx: RequestContext): Promise<ListOrganizationsResponseDto[]> {

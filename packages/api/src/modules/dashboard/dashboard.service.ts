@@ -58,107 +58,107 @@ export class DashboardService {
 
     // Execute all queries within a transaction for consistency
     return await this.prisma.$transaction(async (tx) => {
-          const [
-            totalClients,
-            activeClientsCount,
-            totalContracts,
-            activeContractsCount,
-            todayCheckInsCount,
-            expiringContractsCount,
-            newClientsThisMonth,
-          ] = await Promise.all([
-            // Total clients
-            tx.gymClient.count({
-              where: {
-                gymId,
-                deletedAt: null,
-              },
-            }),
+      const [
+        totalClients,
+        activeClientsCount,
+        totalContracts,
+        activeContractsCount,
+        todayCheckInsCount,
+        expiringContractsCount,
+        newClientsThisMonth,
+      ] = await Promise.all([
+        // Total clients
+        tx.gymClient.count({
+          where: {
+            gymId,
+            deletedAt: null,
+          },
+        }),
 
-            // Active clients (with at least one active contract)
-            tx.gymClient.count({
-              where: {
-                gymId,
-                deletedAt: null,
-                contracts: {
-                  some: {
-                    status: 'active',
-                    deletedAt: null,
-                  },
-                },
-              },
-            }),
-
-            // Total contracts
-            tx.contract.count({
-              where: {
-                gymClient: {
-                  gymId,
-                },
-                deletedAt: null,
-              },
-            }),
-
-            // Active contracts
-            tx.contract.count({
-              where: {
-                gymClient: {
-                  gymId,
-                },
+        // Active clients (with at least one active contract)
+        tx.gymClient.count({
+          where: {
+            gymId,
+            deletedAt: null,
+            contracts: {
+              some: {
                 status: 'active',
                 deletedAt: null,
               },
-            }),
+            },
+          },
+        }),
 
-            // Today's check-ins
-            tx.checkIn.count({
-              where: {
-                gymClient: {
-                  gymId,
-                },
-                timestamp: {
-                  gte: startOfToday,
-                  lte: endOfToday,
-                },
-                deletedAt: null,
-              },
-            }),
+        // Total contracts
+        tx.contract.count({
+          where: {
+            gymClient: {
+              gymId,
+            },
+            deletedAt: null,
+          },
+        }),
 
-            // Contracts expiring in the next 30 days
-            tx.contract.count({
-              where: {
-                gymClient: {
-                  gymId,
-                },
-                status: ContractStatus.EXPIRING_SOON,
-                deletedAt: null,
-              },
-            }),
+        // Active contracts
+        tx.contract.count({
+          where: {
+            gymClient: {
+              gymId,
+            },
+            status: 'active',
+            deletedAt: null,
+          },
+        }),
 
-            // New clients this month
-            tx.gymClient.count({
-              where: {
-                gymId,
-                createdAt: {
-                  gte: startOfCurrentMonth,
-                  lte: endOfCurrentMonth,
-                },
-                deletedAt: null,
-              },
-            }),
-          ]);
+        // Today's check-ins
+        tx.checkIn.count({
+          where: {
+            gymClient: {
+              gymId,
+            },
+            timestamp: {
+              gte: startOfToday,
+              lte: endOfToday,
+            },
+            deletedAt: null,
+          },
+        }),
 
-        return {
-          totalClients,
-          activeClients: activeClientsCount,
-          totalContracts,
-          activeContracts: activeContractsCount,
-          monthlyRevenue: 0, // Removed from stats, use contracts-revenue endpoint instead
-          todayCheckIns: todayCheckInsCount,
-          expiringContractsCount,
-          newClientsThisMonth,
-        };
-      });
+        // Contracts expiring in the next 30 days
+        tx.contract.count({
+          where: {
+            gymClient: {
+              gymId,
+            },
+            status: ContractStatus.EXPIRING_SOON,
+            deletedAt: null,
+          },
+        }),
+
+        // New clients this month
+        tx.gymClient.count({
+          where: {
+            gymId,
+            createdAt: {
+              gte: startOfCurrentMonth,
+              lte: endOfCurrentMonth,
+            },
+            deletedAt: null,
+          },
+        }),
+      ]);
+
+      return {
+        totalClients,
+        activeClients: activeClientsCount,
+        totalContracts,
+        activeContracts: activeContractsCount,
+        monthlyRevenue: 0, // Removed from stats, use contracts-revenue endpoint instead
+        todayCheckIns: todayCheckInsCount,
+        expiringContractsCount,
+        newClientsThisMonth,
+      };
+    });
   }
 
   async getContractsRevenue(
@@ -174,23 +174,23 @@ export class DashboardService {
     const { start, end } = this.getDateRange(startDate, endDate);
 
     const result = await this.prisma.contract.aggregate({
-          _sum: {
-            finalAmount: true,
-          },
-          _count: {
-            id: true,
-          },
-          where: {
-            gymClient: {
-              gymId,
-            },
-            startDate: {
-              gte: start,
-              lte: end,
-            },
-            deletedAt: null,
-          },
-        });
+      _sum: {
+        finalAmount: true,
+      },
+      _count: {
+        id: true,
+      },
+      where: {
+        gymClient: {
+          gymId,
+        },
+        startDate: {
+          gte: start,
+          lte: end,
+        },
+        deletedAt: null,
+      },
+    });
 
     const totalRevenue = Number(result._sum.finalAmount || 0);
     const contractCount = result._count.id;
@@ -218,21 +218,21 @@ export class DashboardService {
     const { start, end } = this.getDateRange(startDate, endDate);
 
     const result = await this.prisma.sale.aggregate({
-          _sum: {
-            total: true,
-          },
-          _count: {
-            id: true,
-          },
-          where: {
-            gymId,
-            saleDate: {
-              gte: start,
-              lte: end,
-            },
-            deletedAt: null,
-          },
-        });
+      _sum: {
+        total: true,
+      },
+      _count: {
+        id: true,
+      },
+      where: {
+        gymId,
+        saleDate: {
+          gte: start,
+          lte: end,
+        },
+        deletedAt: null,
+      },
+    });
 
     const totalRevenue = Number(result._sum.total || 0);
     const salesCount = result._count.id;
@@ -257,20 +257,20 @@ export class DashboardService {
 
     // Get unpaid sales within the date range
     const unpaidSales = await this.prisma.sale.findMany({
-          where: {
-            gymId,
-            saleDate: {
-              gte: start,
-              lte: end,
-            },
-            paymentStatus: 'unpaid',
-            deletedAt: null,
-          },
-          select: {
-            total: true,
-            customerId: true,
-          },
-        });
+      where: {
+        gymId,
+        saleDate: {
+          gte: start,
+          lte: end,
+        },
+        paymentStatus: 'unpaid',
+        deletedAt: null,
+      },
+      select: {
+        total: true,
+        customerId: true,
+      },
+    });
 
     const totalDebt = unpaidSales.reduce((sum, sale) => sum + Number(sale.total), 0);
 
@@ -309,20 +309,20 @@ export class DashboardService {
     );
 
     const checkIns = await this.prisma.checkIn.findMany({
-          where: {
-            gymId: {
-              equals: gymId,
-            },
-            timestamp: {
-              gte: start,
-              lte: end,
-            },
-            deletedAt: null,
-          },
-          select: {
-            gymClientId: true,
-          },
-        });
+      where: {
+        gymId: {
+          equals: gymId,
+        },
+        timestamp: {
+          gte: start,
+          lte: end,
+        },
+        deletedAt: null,
+      },
+      select: {
+        gymClientId: true,
+      },
+    });
 
     const totalCheckIns = checkIns.length;
     const uniqueClients = new Set(checkIns.map((c) => c.gymClientId)).size;
@@ -352,15 +352,15 @@ export class DashboardService {
     const { start, end } = this.getDateRange(startDate, endDate);
 
     const newClientsCount = await this.prisma.gymClient.count({
-          where: {
-            gymId,
-            createdAt: {
-              gte: start,
-              lte: end,
-            },
-            deletedAt: null,
-          },
-        });
+      where: {
+        gymId,
+        createdAt: {
+          gte: start,
+          lte: end,
+        },
+        deletedAt: null,
+      },
+    });
 
     const daysDiff = Math.max(1, differenceInDays(end, start) + 1);
     const averagePerDay = newClientsCount / daysDiff;
@@ -395,25 +395,25 @@ export class DashboardService {
 
     // Query directly for better performance
     const expiringContracts = await this.prisma.contract.findMany({
-          where: {
-            gymClient: {
-              gymId,
-            },
-            endDate: {
-              gte: start,
-              lte: end,
-            },
-            deletedAt: null,
-          },
-          orderBy: {
-            endDate: 'asc', // Show soonest expiring first
-          },
-          take: limit,
-          include: {
-            gymClient: true,
-            gymMembershipPlan: true,
-          },
-        });
+      where: {
+        gymClient: {
+          gymId,
+        },
+        endDate: {
+          gte: start,
+          lte: end,
+        },
+        deletedAt: null,
+      },
+      orderBy: {
+        endDate: 'asc', // Show soonest expiring first
+      },
+      take: limit,
+      include: {
+        gymClient: true,
+        gymMembershipPlan: true,
+      },
+    });
 
     return expiringContracts.map((contract) => {
       const daysRemaining = Math.ceil(

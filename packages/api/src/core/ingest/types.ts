@@ -17,10 +17,9 @@ export interface IngestHandlerContext<TEvent extends EventPayload = EventPayload
 /**
  * Handler function type with NestJS container access
  */
-export type IngestHandlerFunction<
-  TEvent extends EventPayload = EventPayload,
-  TResult = unknown
-> = (context: IngestHandlerContext<TEvent>) => Promise<TResult>;
+export type IngestHandlerFunction<TEvent extends EventPayload = EventPayload, TResult = unknown> = (
+  context: IngestHandlerContext<TEvent>,
+) => Promise<TResult>;
 
 /**
  * Configuration for Inngest function
@@ -34,7 +33,28 @@ export interface IngestFunctionConfig {
     period: `${number}s` | `${number}m` | `${number}h` | `${number}d`;
     key?: string;
   };
-  retries?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20;
+  retries?:
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15
+    | 16
+    | 17
+    | 18
+    | 19
+    | 20;
 }
 
 /**

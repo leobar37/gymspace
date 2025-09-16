@@ -12,10 +12,7 @@ export class BaseGymService {
    * Find a gym by ID with owner validation
    * Validates that the gym exists and belongs to the user's organization
    */
-  async findGymByIdWithOwnerValidation(
-    context: RequestContext,
-    gymId: string,
-  ): Promise<Gym> {
+  async findGymByIdWithOwnerValidation(context: RequestContext, gymId: string): Promise<Gym> {
     const userId = context.getUserId();
 
     const gym = await this.prismaService.gym.findFirst({
@@ -38,10 +35,7 @@ export class BaseGymService {
    * Find a gym by ID with basic access validation
    * Validates that the gym exists and user has access (owner only for now)
    */
-  async findGymByIdWithAccess(
-    context: RequestContext,
-    gymId: string,
-  ): Promise<Gym> {
+  async findGymByIdWithAccess(context: RequestContext, gymId: string): Promise<Gym> {
     const userId = context.getUserId();
 
     const gym = await this.prismaService.gym.findFirst({
@@ -91,10 +85,7 @@ export class BaseGymService {
   /**
    * Check if user has access to a specific gym
    */
-  async hasGymAccess(
-    context: RequestContext,
-    gymId: string,
-  ): Promise<boolean> {
+  async hasGymAccess(context: RequestContext, gymId: string): Promise<boolean> {
     const userId = context.getUserId();
 
     const gym = await this.prismaService.gym.findFirst({
@@ -112,12 +103,9 @@ export class BaseGymService {
   /**
    * Validate gym belongs to the user's organization
    */
-  async validateGymOwnership(
-    context: RequestContext,
-    gymId: string,
-  ): Promise<void> {
+  async validateGymOwnership(context: RequestContext, gymId: string): Promise<void> {
     const hasAccess = await this.hasGymAccess(context, gymId);
-    
+
     if (!hasAccess) {
       throw new ResourceNotFoundException('Gym', gymId);
     }
