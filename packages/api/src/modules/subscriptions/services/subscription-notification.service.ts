@@ -66,7 +66,12 @@ export class SubscriptionNotificationService {
       // Send to all admins
       await Promise.all(
         adminEmails.map(email =>
-          this.emailService.sendTemplate(email, subject, template, templateData)
+          this.emailService.sendTemplate({
+            to: email,
+            subject,
+            template,
+            data: templateData,
+          })
         )
       );
 
@@ -128,7 +133,12 @@ export class SubscriptionNotificationService {
         dashboardUrl: this.getDashboardUrl(),
       };
 
-      await this.emailService.sendTemplate(recipientEmail, subject, template, templateData);
+      await this.emailService.sendTemplate({
+        to: recipientEmail,
+        subject,
+        template,
+        data: templateData,
+      });
 
       // Also notify the requester if different from owner
       if (request.requestedBy.email !== recipientEmail) {
@@ -137,12 +147,12 @@ export class SubscriptionNotificationService {
           recipientName: request.requestedBy.name,
         };
         
-        await this.emailService.sendTemplate(
-          request.requestedBy.email, 
-          subject, 
-          template, 
-          requesterData
-        );
+        await this.emailService.sendTemplate({
+          to: request.requestedBy.email,
+          subject,
+          template,
+          data: requesterData,
+        });
       }
 
       this.logger.log(`Request processing notification sent for ${requestId}`);
@@ -191,12 +201,12 @@ export class SubscriptionNotificationService {
         renewalUrl: `${this.getDashboardUrl()}/subscription/renew`,
       };
 
-      await this.emailService.sendTemplate(
-        organization.owner.email, 
-        subject, 
-        template, 
-        templateData
-      );
+      await this.emailService.sendTemplate({
+        to: organization.owner.email,
+        subject,
+        template,
+        data: templateData,
+      });
 
       this.logger.log(`Subscription expiration notification sent for ${organizationId}`);
     } catch (error) {
@@ -259,23 +269,9 @@ export class SubscriptionNotificationService {
    * Get admin email addresses
    */
   private async getAdminEmails(): Promise<string[]> {
-    // This assumes you have a way to identify admin users
-    // You might need to adjust this based on your role/permission system
-    const adminUsers = await this.prisma.user.findMany({
-      where: {
-        // Add your admin user criteria here
-        // For example, if you have a role-based system:
-        // roles: { some: { name: 'SUPER_ADMIN' } }
-        deletedAt: null,
-      },
-      select: {
-        email: true,
-      },
-      // Limit to avoid sending too many emails
-      take: 10,
-    });
-
-    return adminUsers.map(user => user.email);
+    // Super admins don't have users in the system, use support email or environment variable
+    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || 'soporte@theelena.me';
+    return [adminEmail];
   }
 
   /**

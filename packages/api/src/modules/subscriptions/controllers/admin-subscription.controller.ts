@@ -20,7 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { IRequestContext, PERMISSIONS, PaginatedResponse } from '@gymspace/shared';
 import { AppCtxt } from '../../../common/decorators/app-context.decorator';
-import { Admin } from '../../../common/decorators/admin.decorator';
+import { Allow } from '../../../common/decorators/allow.decorator';
 import { AdminSubscriptionService } from '../services/admin-subscription.service';
 import { SubscriptionAnalyticsService } from '../services/subscription-analytics.service';
 import {
@@ -53,7 +53,7 @@ export class AdminSubscriptionController {
   // Subscription Plans Management
 
   @Post('plans')
-  @Admin(PERMISSIONS.SUBSCRIPTION_PLANS_CREATE)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Create a new subscription plan',
     description: 'Create a new subscription plan with pricing and feature configuration',
@@ -79,7 +79,7 @@ export class AdminSubscriptionController {
   }
 
   @Get('plans')
-  @Admin(PERMISSIONS.SUBSCRIPTION_PLANS_READ)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Get all subscription plans',
     description: 'Retrieve all subscription plans with usage statistics',
@@ -94,7 +94,7 @@ export class AdminSubscriptionController {
   }
 
   @Get('plans/:planId')
-  @Admin(PERMISSIONS.SUBSCRIPTION_PLANS_READ)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Get subscription plan by ID',
     description: 'Retrieve a specific subscription plan with usage statistics',
@@ -120,7 +120,7 @@ export class AdminSubscriptionController {
   }
 
   @Put('plans/:planId')
-  @Admin(PERMISSIONS.SUBSCRIPTION_PLANS_UPDATE)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Update subscription plan',
     description: 'Update an existing subscription plan configuration',
@@ -152,7 +152,7 @@ export class AdminSubscriptionController {
   }
 
   @Delete('plans/:planId')
-  @Admin(PERMISSIONS.SUBSCRIPTION_PLANS_DELETE)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Delete subscription plan',
     description: 'Soft delete a subscription plan (only if not in use)',
@@ -184,7 +184,7 @@ export class AdminSubscriptionController {
   // Subscription Requests Management
 
   @Get('requests/pending')
-  @Admin(PERMISSIONS.SUBSCRIPTION_REQUESTS_READ)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Get pending subscription requests',
     description: 'Retrieve all pending subscription change requests',
@@ -199,7 +199,7 @@ export class AdminSubscriptionController {
   }
 
   @Post('requests/:requestId/process')
-  @Admin(PERMISSIONS.SUBSCRIPTION_REQUESTS_PROCESS)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Process subscription request',
     description: 'Approve, reject, or cancel a subscription change request',
@@ -233,7 +233,7 @@ export class AdminSubscriptionController {
   // Subscription Operations History
 
   @Get('operations')
-  @Admin(PERMISSIONS.SUBSCRIPTION_OPERATIONS_READ)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Get subscription operations history',
     description: 'Retrieve paginated history of all subscription operations',
@@ -264,7 +264,7 @@ export class AdminSubscriptionController {
   // Subscription Cancellations
 
   @Get('cancellations')
-  @Admin(PERMISSIONS.SUBSCRIPTION_CANCELLATIONS_READ)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Get subscription cancellations',
     description: 'Retrieve all subscription cancellation requests and their status',
@@ -332,7 +332,7 @@ export class AdminSubscriptionController {
   }
 
   @Get('analytics/requests')
-  @Admin(PERMISSIONS.SUBSCRIPTION_REQUESTS_READ)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Get subscription request analytics',
     description: 'Retrieve analytics on subscription requests including processing metrics',
@@ -351,7 +351,7 @@ export class AdminSubscriptionController {
   // Enhanced Request Management
 
   @Get('requests')
-  @Admin(PERMISSIONS.SUBSCRIPTION_REQUESTS_READ)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Get subscription requests with filtering',
     description: 'Retrieve subscription requests with advanced filtering and search capabilities',
@@ -367,7 +367,7 @@ export class AdminSubscriptionController {
   }
 
   @Put('requests/:requestId/process')
-  @Admin(PERMISSIONS.SUBSCRIPTION_REQUESTS_PROCESS)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Process subscription request with enhanced workflow',
     description: 'Process subscription request with email notifications and improved workflow tracking',
@@ -401,7 +401,7 @@ export class AdminSubscriptionController {
   // Subscription History
 
   @Get('organizations/:organizationId/subscription-history')
-  @Admin(PERMISSIONS.SUBSCRIPTION_OPERATIONS_READ)
+  @Allow(PERMISSIONS.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Get subscription history for organization',
     description: 'Retrieve complete subscription history for a specific organization',

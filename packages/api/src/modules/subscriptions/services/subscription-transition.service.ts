@@ -13,6 +13,7 @@ import {
 } from '@prisma/client';
 import { ProrationCalculationService, ProrationCalculation } from './proration-calculation.service';
 import { SubscriptionDateManagerService } from './subscription-date-manager.service';
+import { OrganizationsService } from '../../organizations/organizations.service';
 import Decimal from 'decimal.js';
 
 export interface SubscriptionTransitionResult {
@@ -66,6 +67,7 @@ export class SubscriptionTransitionService {
     private readonly auditLogger: AuditLoggerService,
     private readonly prorationService: ProrationCalculationService,
     private readonly dateManager: SubscriptionDateManagerService,
+    private readonly organizationsService: OrganizationsService,
   ) {}
 
   /**
@@ -175,7 +177,7 @@ export class SubscriptionTransitionService {
           startDate: effectiveDate,
           endDate: newEndDate,
           isActive: true,
-          createdByUserId: context.getUserId(),
+          createdByUserId: context.getUserIdOptional(),
         },
       });
 
@@ -186,12 +188,12 @@ export class SubscriptionTransitionService {
           fromSubscriptionPlanId: currentSubscription.subscriptionPlanId,
           toSubscriptionPlanId: renewalPlanId,
           operationType: 'renewal',
-          executedByUserId: context.getUserId(),
+          executedByUserId: context.getUserIdOptional(),
           effectiveDate,
           previousEndDate: currentSubscription.endDate,
           newEndDate,
           notes: `Renewal${renewalPlanId !== currentSubscription.subscriptionPlanId ? ' with plan change' : ''}`,
-          createdByUserId: context.getUserId(),
+          createdByUserId: context.getUserIdOptional(),
         },
       });
 
@@ -284,7 +286,7 @@ export class SubscriptionTransitionService {
           retentionDetails: options.retentionDetails,
           processedByUserId: context.getUserId(),
           processedAt: new Date(),
-          createdByUserId: context.getUserId(),
+          createdByUserId: context.getUserIdOptional(),
         },
       });
 
@@ -295,13 +297,13 @@ export class SubscriptionTransitionService {
           fromSubscriptionPlanId: currentSubscription.subscriptionPlanId,
           toSubscriptionPlanId: null,
           operationType: 'cancellation',
-          executedByUserId: context.getUserId(),
+          executedByUserId: context.getUserIdOptional(),
           effectiveDate: options.immediate ? effectiveDate : currentSubscription.endDate,
           previousEndDate: currentSubscription.endDate,
           newEndDate: options.immediate ? effectiveDate : currentSubscription.endDate,
           prorationAmount: refundAmount?.toNumber(),
           notes: `Cancellation: ${options.reason}${options.reasonDescription ? ' - ' + options.reasonDescription : ''}`,
-          createdByUserId: context.getUserId(),
+          createdByUserId: context.getUserIdOptional(),
         },
       });
 
@@ -402,7 +404,7 @@ export class SubscriptionTransitionService {
           startDate: effectiveDate,
           endDate: newEndDate,
           isActive: true,
-          createdByUserId: context.getUserId(),
+          createdByUserId: context.getUserIdOptional(),
         },
       });
 
@@ -413,13 +415,13 @@ export class SubscriptionTransitionService {
           fromSubscriptionPlanId: currentSubscription.subscriptionPlanId,
           toSubscriptionPlanId: options.newPlanId,
           operationType,
-          executedByUserId: context.getUserId(),
+          executedByUserId: context.getUserIdOptional(),
           effectiveDate,
           previousEndDate: currentSubscription.endDate,
           newEndDate,
           prorationAmount: proration?.netAmount.toNumber(),
           notes: proration?.description,
-          createdByUserId: context.getUserId(),
+          createdByUserId: context.getUserIdOptional(),
         },
       });
 
@@ -458,25 +460,9 @@ export class SubscriptionTransitionService {
   ): Promise<void> {
     const newPlan = await this.getSubscriptionPlan(newPlanId);
     
-    // Get current usage statistics
-    const [gymsCount, totalClients, totalCollaborators] = await Promise.all([
-      this.prisma.gym.count({
-        where: { organizationId, deletedAt: null },
-      }),
-      this.prisma.gymClient.count({
-        where: {
-          gym: { organizationId, deletedAt: null },
-          deletedAt: null,
-        },
-      }),
-      this.prisma.collaborator.count({
-        where: {
-          gym: { organizationId, deletedAt: null },
-          status: 'active',
-          deletedAt: null,
-        },
-      }),
-    ]);
+    // Get current usage statistics from organizations service
+    const { gymsCount, totalClients, totalCollaborators } = 
+      await this.organizationsService.getOrganizationUsageStats(organizationId);
 
     const violations: string[] = [];
 

@@ -58,6 +58,13 @@ export class RequestContext implements IRequestContext {
   }
 
   /**
+   * Get user ID if available (for super admin operations that might not have a user)
+   */
+  getUserIdOptional(): UUID | undefined {
+    return this._user?.id;
+  }
+
+  /**
    * Initialize context from request
    */
   fromRequest(request: FastifyRequest): RequestContext {

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CommonModule } from '../../common/common.module';
+import { OrganizationsModule } from '../organizations/organizations.module';
 import { SubscriptionsController } from './subscriptions.controller';
 import { SubscriptionsService } from './subscriptions.service';
 import { AdminSubscriptionController } from './controllers/admin-subscription.controller';
@@ -13,7 +14,7 @@ import { SubscriptionNotificationService } from './services/subscription-notific
 import { SubscriptionCacheService } from './services/subscription-cache.service';
 
 @Module({
-  imports: [CommonModule],
+  imports: [CommonModule, OrganizationsModule],
   controllers: [
     SubscriptionsController, 
     AdminSubscriptionController,

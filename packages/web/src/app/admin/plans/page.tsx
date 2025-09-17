@@ -35,6 +35,7 @@ import { CreatePlanModal } from '@/features/admin/subscriptions/components/Creat
 import { EditPlanModal } from '@/features/admin/subscriptions/components/EditPlanModal';
 import { useSubscriptionPlans } from '@/features/admin/subscriptions/hooks/useSubscriptionPlans';
 import { formatDate } from '@/lib/utils';
+import { formatPrice } from '@/lib/utils/currency';
 import { SubscriptionPlan } from '@/features/admin/subscriptions/types';
 
 export default function PlansPage() {
@@ -48,12 +49,6 @@ export default function PlansPage() {
     setEditModalOpen(true);
   };
 
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-    }).format(price);
-  };
 
   const getPlanTypeColor = (type: string) => {
     switch (type) {
@@ -213,7 +208,7 @@ export default function PlansPage() {
                     <TableCell>
                       {plan.pricing.map((price, index) => (
                         <div key={index} className="text-sm">
-                          {formatPrice(price.amount, price.currency)}
+                          {formatPrice(price.amount)}
                           {price.interval && ` / ${price.interval}`}
                         </div>
                       ))}

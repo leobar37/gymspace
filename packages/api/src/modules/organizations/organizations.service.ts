@@ -230,6 +230,36 @@ export class OrganizationsService {
   }
 
   /**
+   * Get organization usage statistics for validation
+   */
+  async getOrganizationUsageStats(organizationId: string) {
+    const [gymsCount, totalClients, totalCollaborators] = await Promise.all([
+      this.prismaService.gym.count({
+        where: { organizationId, deletedAt: null },
+      }),
+      this.prismaService.gymClient.count({
+        where: {
+          gym: { organizationId, deletedAt: null },
+          deletedAt: null,
+        },
+      }),
+      this.prismaService.collaborator.count({
+        where: {
+          gym: { organizationId, deletedAt: null },
+          status: 'active',
+          deletedAt: null,
+        },
+      }),
+    ]);
+
+    return {
+      gymsCount,
+      totalClients,
+      totalCollaborators,
+    };
+  }
+
+  /**
    * Check if organization can add more gyms
    */
   async canAddGym(_context: RequestContext, organizationId: string): Promise<boolean> {
