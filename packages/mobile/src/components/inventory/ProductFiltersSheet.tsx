@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import ActionSheet, { SheetProps, SheetManager } from 'react-native-actions-sheet';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { BottomSheetWrapper, SheetProps, SheetManager } from '@gymspace/sheet';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -10,21 +10,18 @@ import { Pressable } from '@/components/ui/pressable';
 import { View } from '@/components/ui/view';
 import {
   PackageIcon,
-  CheckIcon,
   XIcon,
   CheckCircleIcon,
   XCircleIcon,
-  AlertCircleIcon,
   DollarSignIcon,
   TagIcon,
 } from 'lucide-react-native';
-import type { SearchProductsParams, ProductStatus } from '@gymspace/sdk';
+import type { SearchProductsParams } from '@gymspace/sdk';
 
 const PRODUCT_STATUS_OPTIONS = [
   { key: 'all', label: 'Todos', value: undefined, icon: PackageIcon, color: 'gray' },
-  { key: 'ACTIVE', label: 'Activo', value: 'ACTIVE' as ProductStatus, icon: CheckCircleIcon, color: 'green' },
-  { key: 'INACTIVE', label: 'Inactivo', value: 'INACTIVE' as ProductStatus, icon: XCircleIcon, color: 'red' },
-  { key: 'LOW_STOCK', label: 'Stock Bajo', value: 'LOW_STOCK' as ProductStatus, icon: AlertCircleIcon, color: 'yellow' },
+  { key: 'active', label: 'Activo', value: 'active' as const, icon: CheckCircleIcon, color: 'green' },
+  { key: 'inactive', label: 'Inactivo', value: 'inactive' as const, icon: XCircleIcon, color: 'red' },
 ] as const;
 
 const STOCK_FILTERS = [
@@ -41,15 +38,18 @@ const PRICE_RANGES = [
   { key: 'premium', label: '> $100', min: 100, max: undefined },
 ] as const;
 
-export function ProductFiltersSheet({
-  sheetId,
-  payload,
-}: SheetProps<'product-filters'>) {
-  const { currentFilters, categories = [], onApplyFilters } = payload || {};
+interface ProductFiltersSheetProps extends SheetProps {
+  currentFilters?: SearchProductsParams;
+  categories?: { id: string; name: string }[];
+  onApplyFilters?: (filters: SearchProductsParams) => void;
+}
+
+export function ProductFiltersSheet(props: ProductFiltersSheetProps) {
+  const { currentFilters, categories = [], onApplyFilters } = props;
   const [tempFilters, setTempFilters] = useState<SearchProductsParams>(currentFilters || { page: 1, limit: 20 });
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>('all');
 
-  const handleStatusFilter = useCallback((status: ProductStatus | undefined) => {
+  const handleStatusFilter = useCallback((status: 'active' | 'inactive' | undefined) => {
     setTempFilters(prev => ({
       ...prev,
       status,
@@ -83,52 +83,64 @@ export function ProductFiltersSheet({
     }));
   }, []);
 
+  // Memoize cleared filters object to avoid recreating on every render
+  const clearedFilters = useMemo<SearchProductsParams>(() => ({
+    page: 1,
+    limit: currentFilters?.limit || 20,
+    status: undefined,
+    categoryId: undefined,
+    inStock: undefined,
+    minPrice: undefined,
+    maxPrice: undefined,
+  }), [currentFilters?.limit]);
+
   const handleClearFilters = useCallback(() => {
-    const clearedFilters: SearchProductsParams = {
-      page: 1,
-      limit: currentFilters?.limit || 20,
-      // Explicitly set filters to undefined to clear them
-      status: undefined,
-      categoryId: undefined,
-      inStock: undefined,
-      minPrice: undefined,
-      maxPrice: undefined,
-    };
-    
     setTempFilters(clearedFilters);
     setSelectedPriceRange('all');
-  }, [currentFilters?.limit]);
+  }, [clearedFilters]);
 
   const handleApplyFilters = useCallback(() => {
     onApplyFilters?.(tempFilters);
-    SheetManager.hide(sheetId);
-  }, [tempFilters, onApplyFilters, sheetId]);
+    SheetManager.hide('product-filters');
+  }, [tempFilters, onApplyFilters]);
 
   const handleCancel = useCallback(() => {
-    SheetManager.hide(sheetId);
-  }, [sheetId]);
+    SheetManager.hide('product-filters');
+  }, []);
 
-  const getActiveFiltersCount = () => {
+  // Reset temp filters when currentFilters change to prevent stale state
+  useEffect(() => {
+    if (currentFilters) {
+      setTempFilters(currentFilters);
+      // Update price range selection based on current filters
+      const currentRange = PRICE_RANGES.find(range =>
+        range.min === currentFilters.minPrice && range.max === currentFilters.maxPrice
+      );
+      setSelectedPriceRange(currentRange?.key || 'all');
+    }
+  }, [currentFilters]);
+
+  // Memoize active filters count
+  const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (tempFilters.status) count++;
     if (tempFilters.inStock !== undefined) count++;
     if (tempFilters.categoryId) count++;
     if (tempFilters.minPrice || tempFilters.maxPrice) count++;
     return count;
-  };
+  }, [tempFilters.status, tempFilters.inStock, tempFilters.categoryId, tempFilters.minPrice, tempFilters.maxPrice]);
 
-  const activeFiltersCount = getActiveFiltersCount();
-
-  const getStatusColor = (color: string) => {
+  // Memoize color utilities
+  const getStatusColor = useMemo(() => (color: string) => {
     switch (color) {
       case 'green': return 'text-green-600';
       case 'red': return 'text-red-600';
       case 'yellow': return 'text-yellow-600';
       default: return 'text-gray-600';
     }
-  };
+  }, []);
 
-  const getStatusBgColor = (color: string, isActive: boolean) => {
+  const getStatusBgColor = useMemo(() => (color: string, isActive: boolean) => {
     if (!isActive) return 'bg-white border-gray-200';
     switch (color) {
       case 'green': return 'bg-green-50 border-green-300';
@@ -136,15 +148,13 @@ export function ProductFiltersSheet({
       case 'yellow': return 'bg-yellow-50 border-yellow-300';
       default: return 'bg-gray-50 border-gray-300';
     }
-  };
+  }, []);
 
   return (
-    <ActionSheet
-      id={sheetId}
-      gestureEnabled
-      containerStyle={{
-        paddingBottom: 20,
-      }}
+    <BottomSheetWrapper
+      sheetId="product-filters"
+      scrollable
+      snapPoints={['85%']}
     >
       <VStack className="px-4 py-4">
         {/* Header */}
@@ -184,7 +194,7 @@ export function ProductFiltersSheet({
                       className={`w-5 h-5 mb-1 ${isActive ? getStatusColor(option.color) : 'text-gray-600'}`} 
                     />
                     <Text className={`text-xs text-center ${isActive ? 'font-medium' : ''} ${
-                      isActive ? getStatusColor(option.color).replace('text-', 'text-') : 'text-gray-700'
+                      isActive ? getStatusColor(option.color) : 'text-gray-700'
                     }`}>
                       {option.label}
                     </Text>
@@ -251,7 +261,7 @@ export function ProductFiltersSheet({
                   </HStack>
                 </View>
               </Pressable>
-              {categories.map((category: any) => {
+              {categories.map((category: { id: string; name: string }) => {
                 const isActive = tempFilters.categoryId === category.id;
                 return (
                   <Pressable
@@ -322,16 +332,8 @@ export function ProductFiltersSheet({
               onPress={() => {
                 handleClearFilters();
                 // Apply cleared filters immediately
-                onApplyFilters?.({
-                  page: 1,
-                  limit: currentFilters?.limit || 20,
-                  status: undefined,
-                  categoryId: undefined,
-                  inStock: undefined,
-                  minPrice: undefined,
-                  maxPrice: undefined,
-                });
-                SheetManager.hide(sheetId);
+                onApplyFilters?.(clearedFilters);
+                SheetManager.hide('product-filters');
               }}
               className="border-gray-300"
             >
@@ -359,6 +361,6 @@ export function ProductFiltersSheet({
           </HStack>
         </VStack>
       </VStack>
-    </ActionSheet>
+    </BottomSheetWrapper>
   );
 }

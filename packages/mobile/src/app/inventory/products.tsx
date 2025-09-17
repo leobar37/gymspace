@@ -2,7 +2,7 @@ import React, { useCallback, useState, useMemo } from 'react';
 import { Dimensions, View as RNView, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { SheetManager } from 'react-native-actions-sheet';
+import { SheetManager } from '@gymspace/sheet';
 
 import { ProductCard } from '@/components/inventory/ProductCard';
 import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import ActionSheet, { SheetProps, SheetManager } from 'react-native-actions-sheet';
+import { BottomSheetWrapper, SheetProps, SheetManager } from '@gymspace/sheet';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -37,11 +37,13 @@ const CONTRACT_STATUS_OPTIONS = [
   { key: 'cancelled', label: 'Cancelados', value: ContractStatus.CANCELLED, icon: XCircleIcon, color: 'gray' },
 ] as const;
 
-export function ContractsFiltersSheet({
-  sheetId,
-  payload,
-}: SheetProps<'contracts-filters'>) {
-  const { currentFilters, onApplyFilters } = payload || {};
+interface ContractsFiltersSheetProps extends SheetProps {
+  currentFilters?: GetContractsParams;
+  onApplyFilters?: (filters: GetContractsParams) => void;
+}
+
+export function ContractsFiltersSheet(props: ContractsFiltersSheetProps) {
+  const { currentFilters, onApplyFilters } = props;
   const [tempFilters, setTempFilters] = useState<GetContractsParams>(currentFilters || { page: 1, limit: 20 });
   const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
 
@@ -105,12 +107,12 @@ export function ContractsFiltersSheet({
 
   const handleApplyFilters = useCallback(() => {
     onApplyFilters?.(tempFilters);
-    SheetManager.hide(sheetId);
-  }, [tempFilters, onApplyFilters, sheetId]);
+    SheetManager.hide('contracts-filters');
+  }, [tempFilters, onApplyFilters]);
 
   const handleCancel = useCallback(() => {
-    SheetManager.hide(sheetId);
-  }, [sheetId]);
+    SheetManager.hide('contracts-filters');
+  }, []);
 
   const getActiveFiltersCount = () => {
     let count = 0;
@@ -143,12 +145,11 @@ export function ContractsFiltersSheet({
   };
 
   return (
-    <ActionSheet
-      id={sheetId}
-      gestureEnabled
-      containerStyle={{
-        paddingBottom: 20,
-      }}
+    <BottomSheetWrapper
+      sheetId="contracts-filters"
+      snapPoints={['75%']}
+      enablePanDownToClose
+      scrollable
     >
       <VStack className="px-4 py-4">
         {/* Header */}
@@ -269,6 +270,6 @@ export function ContractsFiltersSheet({
           </HStack>
         </VStack>
       </VStack>
-    </ActionSheet>
+    </BottomSheetWrapper>
   );
 }

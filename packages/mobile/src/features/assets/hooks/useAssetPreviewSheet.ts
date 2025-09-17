@@ -1,4 +1,4 @@
-import { SheetManager } from 'react-native-actions-sheet';
+import { SheetManager } from '@gymspace/sheet';
 
 interface ShowAssetPreviewOptions {
   assetId: string;

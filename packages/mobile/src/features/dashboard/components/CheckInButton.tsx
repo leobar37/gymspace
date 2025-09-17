@@ -16,11 +16,10 @@ import type { Client } from '@gymspace/sdk';
 import { CheckCircleIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import ActionSheet from 'react-native-actions-sheet';
-import { ActionSheetRef } from 'react-native-actions-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 export const CheckInButton: React.FC = () => {
-  const actionSheetRef = useRef<ActionSheetRef>(null);
+  const actionSheetRef = useRef<BottomSheetModal>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [notes, setNotes] = useState('');
 
@@ -135,11 +134,11 @@ export const CheckInButton: React.FC = () => {
 
   const openSheet = () => {
     resetForm();
-    actionSheetRef.current?.show();
+    actionSheetRef.current?.present();
   };
 
   const closeSheet = () => {
-    actionSheetRef.current?.hide();
+    actionSheetRef.current?.dismiss();
     resetForm();
   };
 

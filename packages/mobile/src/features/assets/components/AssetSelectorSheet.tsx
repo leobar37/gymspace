@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import ActionSheet, { SheetManager, SheetProps } from 'react-native-actions-sheet';
+import { BottomSheetWrapper, SheetManager, SheetProps } from '@gymspace/sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createMultiScreen, useMultiScreenContext } from '@/components/ui/multi-screen';
 import { Button } from '@/components/ui/button';
@@ -158,27 +158,29 @@ const assetSelectorFlow = createMultiScreen()
 
 const { Component } = assetSelectorFlow;
 // Main Sheet Component
-function AssetSelectorSheet(props: SheetProps<'asset-selector'>) {
-  const { sheetId, payload } = props;
+interface AssetSelectorSheetProps extends SheetProps {
+  payload?: AssetSelectorPayload;
+}
+
+function AssetSelectorSheet(props: AssetSelectorSheetProps) {
+  const { payload } = props;
 
   const insets = useSafeAreaInsets();
 
   return (
-    <ActionSheet
-      id={sheetId}
-      gestureEnabled
-      safeAreaInsets={insets}
-      drawUnderStatusBar
-      indicatorStyle={{
-        backgroundColor: '#D1D5DB',
-        width: 150,
-        height: 4,
-      }}
-      containerStyle={{
-        height: '100%',
+    <BottomSheetWrapper
+      sheetId="asset-selector"
+      snapPoints={['95%']}
+      enablePanDownToClose
+      backgroundStyle={{
         backgroundColor: 'white',
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
+      }}
+      handleIndicatorStyle={{
+        backgroundColor: '#D1D5DB',
+        width: 150,
+        height: 4,
       }}
     >
       <View
@@ -191,7 +193,7 @@ function AssetSelectorSheet(props: SheetProps<'asset-selector'>) {
           <Component />
         </PayloadContext.Provider>
       </View>
-    </ActionSheet>
+    </BottomSheetWrapper>
   );
 }
 

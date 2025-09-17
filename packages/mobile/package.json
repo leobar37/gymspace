@@ -76,7 +76,7 @@
     "react": "catalog:",
     "react-hook-form": "catalog:",
     "react-native": "0.81.4",
-    "@gymspace/action-sheet": "workspace:*",
+    "@gymspace/sheet": "workspace:*",
     "react-native-css-interop": "^0.1.22",
     "react-native-date-picker": "^5.0.13",
     "react-native-gesture-handler": "~2.28.0",

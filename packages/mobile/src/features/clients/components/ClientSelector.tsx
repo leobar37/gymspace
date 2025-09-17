@@ -15,7 +15,7 @@ import {
 import { Pressable } from '@/components/ui/pressable';
 import { Icon } from '@/components/ui/icon';
 import { ChevronDownIcon, XIcon } from 'lucide-react-native';
-import { SheetManager } from 'react-native-actions-sheet';
+import { SheetManager } from '@gymspace/sheet';
 import { useClientsController } from '../controllers/clients.controller';
 import type { Client } from '@gymspace/sdk';
 

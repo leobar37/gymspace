@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import ActionSheet, { SheetProps, SheetManager } from 'react-native-actions-sheet';
+import { BottomSheetWrapper, SheetProps, SheetManager } from '@gymspace/sheet';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -32,11 +32,13 @@ const PAYMENT_STATUS_OPTIONS = [
   { key: 'unpaid', label: 'Pendientes', value: 'unpaid' as const },
 ] as const;
 
-export function SalesFiltersSheet({
-  sheetId,
-  payload,
-}: SheetProps<'sales-filters'>) {
-  const { currentFilters, onApplyFilters } = payload || {};
+interface SalesFiltersSheetProps extends SheetProps {
+  currentFilters?: SearchSalesParams;
+  onApplyFilters?: (filters: SearchSalesParams) => void;
+}
+
+export function SalesFiltersSheet(props: SalesFiltersSheetProps) {
+  const { currentFilters, onApplyFilters } = props;
   const [tempFilters, setTempFilters] = useState<SearchSalesParams>(currentFilters || { page: 1, limit: 20 });
   const [selectedDateFilter, setSelectedDateFilter] = useState<string | null>(null);
 
@@ -89,12 +91,12 @@ export function SalesFiltersSheet({
 
   const handleApplyFilters = useCallback(() => {
     onApplyFilters?.(tempFilters);
-    SheetManager.hide(sheetId);
-  }, [tempFilters, onApplyFilters, sheetId]);
+    SheetManager.hide('sales-filters');
+  }, [tempFilters, onApplyFilters]);
 
   const handleCancel = useCallback(() => {
-    SheetManager.hide(sheetId);
-  }, [sheetId]);
+    SheetManager.hide('sales-filters');
+  }, []);
 
   const getActiveFiltersCount = () => {
     let count = 0;
@@ -106,12 +108,11 @@ export function SalesFiltersSheet({
   const activeFiltersCount = getActiveFiltersCount();
 
   return (
-    <ActionSheet
-      id={sheetId}
-      gestureEnabled
-      containerStyle={{
-        paddingBottom: 20,
-      }}
+    <BottomSheetWrapper
+      sheetId="sales-filters"
+      scrollable
+      snapPoints={['75%']}
+      enablePanDownToClose
     >
       <VStack className="px-4 py-4">
         {/* Header */}
@@ -231,6 +232,6 @@ export function SalesFiltersSheet({
           </HStack>
         </VStack>
       </VStack>
-    </ActionSheet>
+    </BottomSheetWrapper>
   );
 }

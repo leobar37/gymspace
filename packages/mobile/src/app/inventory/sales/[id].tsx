@@ -1,52 +1,61 @@
-import React from 'react';
-import { ScrollView, View } from 'react-native';
-import { Text } from '@/components/ui/text';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import { Alert as UIAlert, AlertIcon, AlertText } from '@/components/ui/alert';
-import { HStack } from '@/components/ui/hstack';
-import { VStack } from '@/components/ui/vstack';
-import { Icon } from '@/components/ui/icon';
+import { AlertIcon, AlertText, Alert as UIAlert } from '@/components/ui/alert';
 import { Badge, BadgeText } from '@/components/ui/badge';
+import { Button, ButtonText } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
-import { 
-  InfoIcon, 
-  CalendarIcon, 
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { useFormatPrice } from '@/config/ConfigContext';
+import { useSale, useUpdateSale } from '@/features/inventory/hooks/useSales';
+import { ScreenForm } from '@/shared/components/ScreenForm';
+import { useLoadingScreen } from '@/shared/loading-screen';
+import { SheetManager } from '@gymspace/sheet';
+import type { Client, Sale } from '@gymspace/sdk';
+import { useLocalSearchParams } from 'expo-router';
+import {
+  CalendarIcon,
   ClockIcon,
-  UserIcon,
-  UserPlusIcon,
   CreditCardIcon,
   FileTextIcon,
-  PackageIcon,
-  RefreshCwIcon
+  InfoIcon,
+  RefreshCwIcon,
+  UserIcon,
+  UserPlusIcon
 } from 'lucide-react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useSale, useUpdateSale } from '@/features/inventory/hooks/useSales';
-import { useFormatPrice } from '@/config/ConfigContext';
-import { useLoadingScreen } from '@/shared/loading-screen';
-import { ScreenForm } from '@/shared/components/ScreenForm';
-import { SheetManager } from 'react-native-actions-sheet';
-import type { Sale, Client } from '@gymspace/sdk';
+import React, { useCallback } from 'react';
+import { ScrollView, View } from 'react-native';
 
-// Helper function to format date
+// Helper functions to format date and time
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('es-PE', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).format(date);
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) throw new Error('Invalid date');
+    return new Intl.DateTimeFormat('es-PE', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    }).format(date);
+  } catch {
+    return 'Fecha inválida';
+  }
 };
 
-// Helper function to format time
 const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('es-PE', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  }).format(date);
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) throw new Error('Invalid date');
+    return new Intl.DateTimeFormat('es-PE', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).format(date);
+  } catch {
+    return 'Hora inválida';
+  }
 };
+
 
 // Date and Time Section
 const DateTimeSection: React.FC<{ sale: Sale }> = ({ sale }) => {
@@ -90,10 +99,7 @@ const PaymentStatusSection: React.FC<{ sale: Sale }> = ({ sale }) => {
         </HStack>
         {sale.paymentMethod && (
           <Text className="text-sm text-gray-600">
-            {sale.paymentMethod === 'cash' ? 'Efectivo' : 
-             sale.paymentMethod === 'card' ? 'Tarjeta' : 
-             sale.paymentMethod === 'transfer' ? 'Transferencia' : 
-             sale.paymentMethod}
+            {sale.paymentMethod?.name || 'Efectivo'}
           </Text>
         )}
       </HStack>
@@ -150,7 +156,7 @@ const CustomerSection: React.FC<{
 
 // Products Section
 const ProductsSection: React.FC<{ sale: Sale; formatPrice: (price: number) => string }> = ({ sale, formatPrice }) => {
-  if (!sale.items || sale.items.length === 0) {
+  if (!sale.saleItems || sale.saleItems.length === 0) {
     return null;
   }
 
@@ -162,30 +168,30 @@ const ProductsSection: React.FC<{ sale: Sale; formatPrice: (price: number) => st
         </Text>
         <Badge variant="outline" className="border-gray-300">
           <BadgeText className="text-gray-600">
-            {sale.items.length} {sale.items.length === 1 ? 'producto' : 'productos'}
+            {sale.saleItems.length} {sale.saleItems.length === 1 ? 'producto' : 'productos'}
           </BadgeText>
         </Badge>
       </HStack>
       
       <VStack className="gap-3">
-        {sale.items.map((item, index) => (
-          <View key={index} className="bg-gray-50 rounded-lg p-3">
+        {sale.saleItems.map((item, index) => (
+          <View key={`${item.productId}-${index}`} className="bg-gray-50 rounded-lg p-3">
             <HStack className="justify-between items-start">
               <VStack className="flex-1 gap-1">
                 <Text className="font-medium text-gray-900">
-                  {item.productName}
+                  {item.product?.name || 'Producto sin nombre'}
                 </Text>
                 <HStack className="gap-3">
                   <Text className="text-sm text-gray-600">
                     Cantidad: {item.quantity}
                   </Text>
                   <Text className="text-sm text-gray-600">
-                    {formatPrice(item.price)} c/u
+                    {formatPrice(item.unitPrice)} c/u
                   </Text>
                 </HStack>
               </VStack>
               <Text className="font-semibold text-gray-900">
-                {formatPrice(item.subtotal)}
+                {formatPrice(item.total)}
               </Text>
             </HStack>
           </View>
@@ -228,16 +234,16 @@ export default function SaleDetailScreen() {
   const { data: sale, isLoading, isError, error, refetch } = useSale(id);
   const { mutate: updateSale, isPending: isUpdating } = useUpdateSale();
 
-  const handleAffiliateClient = () => {
+
+  const handleAffiliateClient = useCallback(() => {
     if (!sale) return;
 
     SheetManager.show('client-selector', {
       mode: 'affiliate',
       currentClientId: sale.customerId,
       onSelect: async (client: Client) => {
-        await execute({
-          action: 'Afiliando cliente...',
-          fn: async () => {
+        await execute(
+          new Promise<void>((resolve, reject) => {
             updateSale(
               {
                 id: sale.id,
@@ -246,15 +252,28 @@ export default function SaleDetailScreen() {
               {
                 onSuccess: () => {
                   refetch();
+                  resolve();
+                },
+                onError: (error) => {
+                  reject(error);
                 },
               }
             );
-          },
-          successMessage: 'Cliente afiliado correctamente',
-        });
+          }),
+          {
+            action: 'Afiliando cliente...',
+            successMessage: 'Cliente afiliado correctamente',
+            errorFormatter: (error: any) => {
+              if (error instanceof Error) {
+                return error.message;
+              }
+              return 'Error al afiliar el cliente';
+            },
+          }
+        );
       },
     });
-  };
+  }, [sale, execute, updateSale, refetch]);
 
   if (!id) {
     return (

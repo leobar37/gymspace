@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { History, ChevronRight } from 'lucide-react-native';
-import { SheetManager } from 'react-native-actions-sheet';
+import { SheetManager } from '@gymspace/sheet';
 import { useProductStockMovements } from '../hooks';
 import type { Product } from '@gymspace/sdk';
 

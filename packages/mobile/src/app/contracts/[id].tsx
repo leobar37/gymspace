@@ -31,7 +31,7 @@ import { PauseIcon, RefreshCwIcon, XIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Alert, ScrollView } from 'react-native';
-import { SheetManager } from 'react-native-actions-sheet';
+import { SheetManager } from '@gymspace/sheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 

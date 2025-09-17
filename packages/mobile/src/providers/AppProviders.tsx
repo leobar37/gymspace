@@ -8,7 +8,7 @@ import { usePrefetchStore } from '@/stores/prefetch.store';
 
 import React, { useState } from 'react';
 import { Alert } from 'react-native';
-import { SheetProvider } from 'react-native-actions-sheet';
+import { SheetProvider } from '@gymspace/sheet';
 import { GymSdkProvider } from './GymSdkProvider';
 import { LoadingScreen } from '@/shared/loading-screen/LoadingScreen';
 import '@/sheets'; 

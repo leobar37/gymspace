@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { Icon } from '@/components/ui/icon';
 import { ImageIcon } from 'lucide-react-native';
-import { SheetManager } from 'react-native-actions-sheet';
+import { SheetManager } from '@gymspace/sheet';
 import { useAssetsByIds } from '../controllers/assets.controller';
 import { AssetPreview } from './AssetPreview';
 

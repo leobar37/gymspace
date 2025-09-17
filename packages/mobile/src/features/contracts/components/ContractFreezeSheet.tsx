@@ -16,8 +16,8 @@ import { router } from 'expo-router';
 import { X, Snowflake } from 'lucide-react-native';
 import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { ScrollView, View } from 'react-native';
-import ActionSheet, { SheetManager, SheetProps } from 'react-native-actions-sheet';
+import { View } from 'react-native';
+import { BottomSheetWrapper, SheetManager, SheetProps } from '@gymspace/sheet';
 import { z } from 'zod';
 
 const freezeSchema = z
@@ -39,19 +39,22 @@ const freezeSchema = z
 
 type FreezeFormData = z.infer<typeof freezeSchema>;
 
-export const ContractFreezeSheet: React.FC<SheetProps<'contract-freeze'>> = ({
-  sheetId,
-  payload,
-}) => {
+interface ContractFreezeSheetProps extends SheetProps {
+  contract?: any;
+  onSuccess?: () => void;
+}
+
+export const ContractFreezeSheet: React.FC<ContractFreezeSheetProps> = (props) => {
   const { execute } = useLoadingScreen();
   const { freezeContract, isFreezingContract } = useContractsController();
 
-  // Handle case where payload is not provided yet
-  if (!payload) {
+  const contract = props.contract;
+  const onSuccess = props.onSuccess;
+
+  // Handle case where contract is not provided yet
+  if (!contract) {
     return null;
   }
-
-  const { contract, onSuccess } = payload;
 
   const form = useForm<FreezeFormData>({
     resolver: zodResolver(freezeSchema),
@@ -92,7 +95,7 @@ export const ContractFreezeSheet: React.FC<SheetProps<'contract-freeze'>> = ({
               resolve(result);
               onSuccess?.();
               form.reset();
-              SheetManager.hide(sheetId);
+              SheetManager.hide('contract-freeze');
             },
             onError: reject,
           },
@@ -112,26 +115,22 @@ export const ContractFreezeSheet: React.FC<SheetProps<'contract-freeze'>> = ({
   };
 
   return (
-    <ActionSheet id={sheetId} gestureEnabled containerStyle={{ paddingBottom: 0 }}>
-      <View className="bg-white" style={{ height: 650 }}>
+    <BottomSheetWrapper sheetId="contract-freeze" scrollable snapPoints={['90%']}>
+      <View className="bg-white">
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
           <HStack className="gap-2 items-center">
             <Icon as={Snowflake} size="md" className="text-blue-600" />
             <Heading size="lg">Congelar Contrato</Heading>
           </HStack>
-          <Pressable onPress={() => SheetManager.hide(sheetId)} className="p-2">
+          <Pressable onPress={() => SheetManager.hide('contract-freeze')} className="p-2">
             <Icon as={X} size="md" className="text-gray-500" />
           </Pressable>
         </View>
 
         {/* Content */}
-        <ScrollView 
-          showsVerticalScrollIndicator={true}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          style={{ flex: 1 }}>
-          <FormProvider {...form}>
-            <VStack className="p-4 gap-4">
+        <FormProvider {...form}>
+          <VStack className="p-4 gap-4">
               {/* Info Box */}
               <Box className="bg-blue-50 p-4 rounded-xl border border-blue-200">
                 <HStack className="gap-2 mb-2">
@@ -229,34 +228,31 @@ export const ContractFreezeSheet: React.FC<SheetProps<'contract-freeze'>> = ({
                   </Text>
                 </Box>
               )}
-            </VStack>
-          </FormProvider>
-        </ScrollView>
 
-        {/* Footer Actions - Fixed at bottom */}
-        <View className="px-4 py-3 border-t border-gray-100 bg-white">
-          <HStack className="gap-3">
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex-1"
-              onPress={() => SheetManager.hide(sheetId)}
-            >
-              <ButtonText>Cancelar</ButtonText>
-            </Button>
-            <Button
-              size="lg"
-              className="flex-1"
-              onPress={form.handleSubmit(handleSubmit)}
-              isDisabled={isFreezingContract}
-            >
-              <Icon as={Snowflake} size="sm" className="mr-2" />
-              <ButtonText>Congelar</ButtonText>
-            </Button>
-          </HStack>
-        </View>
+            {/* Footer Actions */}
+            <HStack className="gap-3 mt-6">
+              <Button
+                variant="outline"
+                size="lg"
+                className="flex-1"
+                onPress={() => SheetManager.hide('contract-freeze')}
+              >
+                <ButtonText>Cancelar</ButtonText>
+              </Button>
+              <Button
+                size="lg"
+                className="flex-1"
+                onPress={form.handleSubmit(handleSubmit)}
+                isDisabled={isFreezingContract}
+              >
+                <Icon as={Snowflake} size="sm" className="mr-2" />
+                <ButtonText>Congelar</ButtonText>
+              </Button>
+            </HStack>
+          </VStack>
+        </FormProvider>
       </View>
-    </ActionSheet>
+    </BottomSheetWrapper>
   );
 };
 

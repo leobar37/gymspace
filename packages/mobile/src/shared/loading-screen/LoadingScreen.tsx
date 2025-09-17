@@ -4,11 +4,6 @@ import { LoadingStep, SuccessStep, ErrorStep } from './screens';
 import { useLoadingScreenState } from './hooks/useLoadingScreenState';
 import type { LoadingScreenStep } from './hooks/useLoadingScreenState';
 
-/**
- * LoadingScreenContent Component
- *
- * Renders the appropriate step content without recreating components
- */
 const LoadingScreenContent: React.FC<{
   step: LoadingScreenStep;
   message: string;
@@ -19,21 +14,9 @@ const LoadingScreenContent: React.FC<{
     case 'loading':
       return <LoadingStep message={message} />;
     case 'success':
-      return (
-        <SuccessStep
-          message={message}
-          actions={actions}
-          onActionPress={onActionPress}
-        />
-      );
+      return <SuccessStep message={message} actions={actions} onActionPress={onActionPress} />;
     case 'error':
-      return (
-        <ErrorStep
-          message={message}
-          actions={actions}
-          onActionPress={onActionPress}
-        />
-      );
+      return <ErrorStep message={message} actions={actions} onActionPress={onActionPress} />;
     default:
       return null;
   }
@@ -45,15 +28,8 @@ const LoadingScreenContent: React.FC<{
  * Stable ActionSheet wrapper with dynamic content rendering
  */
 export const LoadingScreen: React.FC = () => {
-  const {
-    isOpen,
-    currentStep,
-    state,
-    message,
-    actions,
-    handleActionPress,
-    handleClose,
-  } = useLoadingScreenState();
+  const { isOpen, currentStep, state, message, actions, handleActionPress, handleClose } =
+    useLoadingScreenState();
 
   // Don't render when idle
   if (state === 'idle') {

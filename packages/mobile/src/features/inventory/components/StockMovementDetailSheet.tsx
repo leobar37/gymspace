@@ -1,18 +1,14 @@
 import React from 'react';
-import { ScrollView } from 'react-native';
 import { View } from '@/components/ui/view';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { StockMovement } from '@gymspace/sdk';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
+import { BottomSheetWrapper, SheetManager, SheetProps } from '@gymspace/sheet';
 
-interface StockMovementDetailSheetProps {
-  sheetId: string;
-  payload?: {
-    movement: StockMovement;
-  };
+interface StockMovementDetailSheetProps extends SheetProps {
+  movement?: StockMovement;
 }
 
 const getMovementTypeLabel = (type: string) => {
@@ -53,18 +49,18 @@ const DetailRow = ({
 );
 
 export const StockMovementDetailSheet = (props: StockMovementDetailSheetProps) => {
-  const movement = props.payload?.movement;
+  const movement = props.movement;
   if (!movement) return null;
 
   const quantityColor = movement.quantity >= 0 ? 'text-green-600' : 'text-red-600';
   const quantitySign = movement.quantity >= 0 ? '+' : '';
 
   return (
-    <ActionSheet id={props.sheetId} gestureEnabled>
+    <BottomSheetWrapper sheetId="stock-movement-detail" snapPoints={['60%']}>
       <View className="p-4 pb-8">
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-xl font-semibold">Detalle del Movimiento</Text>
-          <Button variant="ghost" size="sm" onPress={() => SheetManager.hide(props.sheetId)}>
+          <Button variant="ghost" size="sm" onPress={() => SheetManager.hide('stock-movement-detail')}>
             <ButtonText>Cerrar</ButtonText>
           </Button>
         </View>
@@ -104,6 +100,6 @@ export const StockMovementDetailSheet = (props: StockMovementDetailSheetProps) =
           </View>
         )}
       </View>
-    </ActionSheet>
+    </BottomSheetWrapper>
   );
 };

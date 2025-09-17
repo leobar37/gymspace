@@ -4,7 +4,6 @@ import { createActionsheet } from '@gluestack-ui/actionsheet';
 import { tva } from '@gluestack-ui/nativewind-utils/tva';
 import type { VariantProps } from '@gluestack-ui/nativewind-utils';
 import { withStyleContext } from '@gluestack-ui/nativewind-utils/withStyleContext';
-// import { cssInterop } from 'react-native-css-interop'; // Removed due to type conflicts
 import {
   Pressable,
   View,

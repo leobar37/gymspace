@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ActivityIndicator, Pressable, Dimensions, ScrollView } from 'react-native';
-import ActionSheet, { SheetManager, SheetProps } from 'react-native-actions-sheet';
+import { BottomSheetWrapper, SheetManager, SheetProps, BottomSheetScrollView } from '@gymspace/sheet';
 import { Text } from '@/components/ui/text';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
@@ -12,7 +12,7 @@ import { useAsset } from '../controllers/assets.controller';
 import { formatShortDate } from '@/shared/utils/format';
 import { formatFileSize, formatFileType } from '../utils/formatters';
 
-interface AssetPreviewSheetPayload {
+interface AssetPreviewSheetProps extends SheetProps {
   assetId: string;
   onDownload?: (assetId: string) => void;
   onShare?: (assetId: string) => void;
@@ -20,11 +20,8 @@ interface AssetPreviewSheetPayload {
   onClose?: () => void;
 }
 
-export const AssetPreviewSheet: React.FC<SheetProps<'asset-preview'>> = ({
-  sheetId,
-  payload,
-}) => {
-  const { assetId, onDownload, onShare, onDelete, onClose } = (payload || {}) as AssetPreviewSheetPayload;
+export const AssetPreviewSheet: React.FC<AssetPreviewSheetProps> = (props) => {
+  const { assetId, onDownload, onShare, onDelete, onClose } = props;
   const { data: asset, isLoading, isError } = useAsset(assetId || '', !!assetId);
   
   const screenWidth = Dimensions.get('window').width;
@@ -32,7 +29,7 @@ export const AssetPreviewSheet: React.FC<SheetProps<'asset-preview'>> = ({
   const previewHeight = Math.min(screenHeight * 0.4, 400); // Max 400px or 40% of screen
 
   const handleClose = () => {
-    SheetManager.hide(sheetId as string);
+    SheetManager.hide('asset-preview');
     onClose?.();
   };
 
@@ -179,18 +176,19 @@ export const AssetPreviewSheet: React.FC<SheetProps<'asset-preview'>> = ({
   };
 
   return (
-    <ActionSheet
-      id={sheetId as string}
-      gestureEnabled
-      indicatorStyle={{
-        backgroundColor: '#D1D5DB',
-        width: 36,
-        height: 4,
-      }}
-      containerStyle={{
+    <BottomSheetWrapper
+      sheetId="asset-preview"
+      snapPoints={['80%', '95%']}
+      enablePanDownToClose
+      backgroundStyle={{
         backgroundColor: 'white',
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
+      }}
+      handleIndicatorStyle={{
+        backgroundColor: '#D1D5DB',
+        width: 36,
+        height: 4,
       }}
     >
       {/* Header */}
@@ -207,9 +205,9 @@ export const AssetPreviewSheet: React.FC<SheetProps<'asset-preview'>> = ({
       </HStack>
 
       {/* Content */}
-      <ScrollView className="pb-safe" showsVerticalScrollIndicator={false}>
+      <BottomSheetScrollView className="pb-safe" showsVerticalScrollIndicator={false}>
         {renderContent()}
-      </ScrollView>
-    </ActionSheet>
+      </BottomSheetScrollView>
+    </BottomSheetWrapper>
   );
 };

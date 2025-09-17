@@ -17,7 +17,7 @@ import {
 } from 'lucide-react-native';
 import React from 'react';
 import { useProductDetailStore } from '../stores/product-detail.store';
-import { SheetManager } from 'react-native-actions-sheet';
+import { SheetManager } from '@gymspace/sheet';
 
 
 interface StockAdjustmentProps {

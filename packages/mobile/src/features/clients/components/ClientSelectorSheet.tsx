@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, TextInput, ActivityIndicator, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
-import ActionSheet, { SheetManager, SheetProps } from 'react-native-actions-sheet';
+import { BottomSheetWrapper, SheetManager, SheetProps } from '@gymspace/sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createMultiScreen, useMultiScreenContext } from '@/components/ui/multi-screen';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -368,25 +368,28 @@ const clientSelectorFlow = createMultiScreen()
 const { Component } = clientSelectorFlow;
 
 // Main Sheet Component
-function ClientSelectorSheet(props: SheetProps<'client-selector'>) {
-  const { sheetId, payload } = props;
+interface ClientSelectorSheetProps extends SheetProps {
+  payload?: ClientSelectorPayload;
+}
+
+function ClientSelectorSheet(props: ClientSelectorSheetProps) {
+  const { payload } = props;
   const insets = useSafeAreaInsets();
 
   return (
-    <ActionSheet
-      id={sheetId}
-      safeAreaInsets={insets}
-      drawUnderStatusBar
-      indicatorStyle={{
-        backgroundColor: '#D1D5DB',
-        width: 100,
-        height: 4,
-      }}
-      containerStyle={{
-        height: '85%',
+    <BottomSheetWrapper
+      sheetId="client-selector"
+      snapPoints={['85%']}
+      enablePanDownToClose
+      backgroundStyle={{
         backgroundColor: 'white',
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
+      }}
+      handleIndicatorStyle={{
+        backgroundColor: '#D1D5DB',
+        width: 100,
+        height: 4,
       }}
     >
       <View
@@ -399,7 +402,7 @@ function ClientSelectorSheet(props: SheetProps<'client-selector'>) {
           <Component />
         </PayloadContext.Provider>
       </View>
-    </ActionSheet>
+    </BottomSheetWrapper>
   );
 }
 

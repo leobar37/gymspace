@@ -30,15 +30,20 @@ config.resolver.blockList = [
 // 3. Force Metro to resolve workspace packages correctly
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName.startsWith("@gymspace/")) {
-    const packageName = moduleName.replace("@gymspace/", "");
+    // Special case for action-sheet which is in the sheet folder
+    let packageName = moduleName.replace("@gymspace/", "");
+    if (packageName === "action-sheet") {
+      packageName = "sheet";
+    }
+
     const packagePath = path.resolve(projectRoot, "packages", packageName);
-    
+
     // Try to resolve the package
     try {
       const packageJson = require(path.join(packagePath, "package.json"));
       const main = packageJson.main || "index.js";
       const mainPath = path.resolve(packagePath, main);
-      
+
       // Check if the main file exists
       const fs = require("fs");
       if (fs.existsSync(mainPath)) {
@@ -54,7 +59,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       console.warn(`⚠️  Could not resolve workspace package ${moduleName}:`, e.message);
     }
   }
-  
+
   // Default resolution
   return context.resolveRequest(context, moduleName, platform);
 };

@@ -18,7 +18,7 @@ import {
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import ActionSheet, { SheetProps, ScrollView } from 'react-native-actions-sheet';
+import { BottomSheetWrapper, SheetProps, SheetManager } from '@gymspace/sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Form validation schema
@@ -40,7 +40,17 @@ interface StockAdjustmentPayload {
   onCancel: () => void;
 }
 
-export const StockAdjustmentModal: React.FC<SheetProps<'stock-adjustment-modal'>> = (props) => {
+interface StockAdjustmentModalProps extends SheetProps {
+  product?: Product;
+  stockAdjustment?: number;
+  newStock?: number;
+  wouldExceedMax?: boolean;
+  wouldGoBelowMin?: boolean;
+  onConfirm?: (data: StockAdjustmentForm) => Promise<void>;
+  onCancel?: () => void;
+}
+
+export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = (props) => {
   const insets = useSafeAreaInsets();
 
   const {
@@ -51,7 +61,7 @@ export const StockAdjustmentModal: React.FC<SheetProps<'stock-adjustment-modal'>
     wouldGoBelowMin,
     onConfirm,
     onCancel,
-  } = props.payload || ({} as StockAdjustmentPayload);
+  } = props;
 
   // Form for additional details
   const form = useForm<StockAdjustmentForm>({
@@ -76,23 +86,18 @@ export const StockAdjustmentModal: React.FC<SheetProps<'stock-adjustment-modal'>
     form.reset();
   };
 
-  if (!props.payload) {
+  if (!product) {
     return null;
   }
 
   return (
-    <ActionSheet
-      id={props.sheetId}
-      snapPoints={[100]}
-      initialSnapIndex={0}
-      headerAlwaysVisible
-      useBottomSafeAreaPadding
-      keyboardHandlerEnabled
-      enableGesturesInScrollView
-      gestureEnabled
-      closeOnPressBack
+    <BottomSheetWrapper
+      sheetId="stock-adjustment-modal"
+      snapPoints={['90%']}
+      enablePanDownToClose
+      scrollable
     >
-      <VStack className="bg-white rounded-t-3xl">
+      <VStack className="bg-white">
         {/* Header */}
         <VStack className="px-6 pt-6 pb-4 border-b border-gray-100">
           <HStack space="sm" className="items-center justify-between">
@@ -204,6 +209,6 @@ export const StockAdjustmentModal: React.FC<SheetProps<'stock-adjustment-modal'>
           </VStack>
         </VStack>
       </VStack>
-    </ActionSheet>
+    </BottomSheetWrapper>
   );
 };

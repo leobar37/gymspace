@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeNavigation } from '@/hooks/useSafeNavigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { SheetManager } from 'react-native-actions-sheet';
+import { SheetManager } from '@gymspace/sheet';
 
 import { View } from '@/components/ui/view';
 import { Text } from '@/components/ui/text';

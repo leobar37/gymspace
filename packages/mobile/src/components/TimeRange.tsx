@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { Calendar, CalendarClock, CalendarDays, CalendarRange, X } from 'lucide-react-native';
 import React, { useEffect, useReducer, useRef } from 'react';
 import { Platform, Text, View } from 'react-native';
-import ActionSheet, { ActionSheetRef } from 'react-native-actions-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 type TimeRangeOption = 'day' | 'week' | 'month' | 'custom';
 
@@ -140,7 +140,7 @@ export function TimeRange({
   descriptionText = 'Selecciona el rango de fechas para ver las estadísticas',
 }: TimeRangeProps) {
   const [state, dispatch] = useReducer(timeRangeReducer, initialState);
-  const customRangeSheetRef = useRef<ActionSheetRef>(null);
+  const customRangeSheetRef = useRef<BottomSheetModal>(null);
 
   const options: { value: TimeRangeOption; label: string; icon: React.ReactNode }[] = [
     {
@@ -190,7 +190,7 @@ export function TimeRange({
 
   const handleOptionSelect = (option: TimeRangeOption) => {
     if (option === 'custom') {
-      customRangeSheetRef.current?.show();
+      customRangeSheetRef.current?.present();
     } else {
       dispatch({ type: 'SELECT_OPTION', payload: option });
       const range = calculateDateRange(option);
@@ -198,7 +198,7 @@ export function TimeRange({
     }
   };
 
-  const handleCustomDateChange = (event: any, selectedDate?: Date, isStart: boolean) => {
+  const handleCustomDateChange = (_event: any, selectedDate: Date | undefined, isStart: boolean) => {
     if (Platform.OS === 'android') {
       dispatch({ type: 'SHOW_START_PICKER', payload: false });
       dispatch({ type: 'SHOW_END_PICKER', payload: false });
@@ -216,7 +216,7 @@ export function TimeRange({
   const applyCustomRange = () => {
     dispatch({ type: 'SELECT_OPTION', payload: 'custom' });
     onRangeChange?.(state.customStartDate, state.customEndDate);
-    customRangeSheetRef.current?.hide();
+    customRangeSheetRef.current?.dismiss();
   };
 
   const formatDate = (date: Date) => {
@@ -276,22 +276,19 @@ export function TimeRange({
         </View>
       </View>
 
-      {/* Custom Date Range ActionSheet */}
-      <ActionSheet
+      {/* Custom Date Range Sheet */}
+      <BottomSheetModal
         ref={customRangeSheetRef}
-        gestureEnabled
-        containerStyle={{
-          backgroundColor: '#fff',
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
+        snapPoints={['60%', '90%']}
+        enablePanDownToClose
+        backgroundStyle={{ backgroundColor: '#fff' }}
       >
         <View className="p-4">
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-lg font-bold text-gray-900">Rango personalizado</Text>
             <AnimatedTouchableOpacity
-              onPress={() => customRangeSheetRef.current?.hide()}
+              onPress={() => customRangeSheetRef.current?.dismiss()}
               className="p-2"
             >
               <X size={24} color="#6b7280" />
@@ -375,7 +372,7 @@ export function TimeRange({
             />
           )}
         </View>
-      </ActionSheet>
+      </BottomSheetModal>
     </>
   );
 }

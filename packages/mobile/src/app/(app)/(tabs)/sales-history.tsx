@@ -21,7 +21,7 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SheetManager } from 'react-native-actions-sheet';
+import { SheetManager } from '@gymspace/sheet';
 import { Fab } from '@/components/ui/fab';
 
 export default function SalesHistoryScreen() {

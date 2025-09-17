@@ -20,7 +20,7 @@ import { X } from 'lucide-react-native';
 import React from 'react';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { ScrollView, View } from 'react-native';
-import ActionSheet, { SheetManager, SheetProps } from 'react-native-actions-sheet';
+import { BottomSheetWrapper, SheetManager, SheetProps, BottomSheetScrollView } from '@gymspace/sheet';
 import { z } from 'zod';
 
 const renewalSchema = z.object({
@@ -33,20 +33,21 @@ const renewalSchema = z.object({
 
 type RenewalFormData = z.infer<typeof renewalSchema>;
 
-export const ContractRenewalDrawer: React.FC<SheetProps<'contract-renewal'>> = ({
-  sheetId,
-  payload,
-}) => {
+interface ContractRenewalDrawerProps extends SheetProps {
+  contract?: any;
+  onSuccess?: () => void;
+}
+
+export const ContractRenewalDrawer: React.FC<ContractRenewalDrawerProps> = (props) => {
+  const { contract, onSuccess } = props;
   const formatPrice = useFormatPrice();
   const { execute } = useLoadingScreen();
   const { renewContract, isRenewingContract } = useContractsController();
 
-  // Handle case where payload is not provided yet
-  if (!payload) {
+  // Handle case where contract is not provided yet
+  if (!contract) {
     return null;
   }
-
-  const { contract, onSuccess } = payload;
 
   const form = useForm<RenewalFormData>({
     resolver: zodResolver(renewalSchema),
@@ -91,7 +92,7 @@ export const ContractRenewalDrawer: React.FC<SheetProps<'contract-renewal'>> = (
               resolve(result);
               onSuccess?.();
               form.reset();
-              SheetManager.hide(sheetId);
+              SheetManager.hide('contract-renewal');
             },
             onError: reject,
           }
@@ -111,157 +112,156 @@ export const ContractRenewalDrawer: React.FC<SheetProps<'contract-renewal'>> = (
   };
 
   return (
-    <ActionSheet id={sheetId} gestureEnabled>
-      <View style={{ height: 600 }} className="bg-white">
-        {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
-          <Heading size="lg">Renovar Contrato</Heading>
-          <Pressable onPress={() => SheetManager.hide(sheetId)} className="p-2">
-            <Icon as={X} size="md" className="text-gray-500" />
-          </Pressable>
-        </View>
+    <BottomSheetWrapper
+      sheetId="contract-renewal"
+      snapPoints={['90%']}
+      enablePanDownToClose
+      scrollable
+    >
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
+        <Heading size="lg">Renovar Contrato</Heading>
+        <Pressable onPress={() => SheetManager.hide('contract-renewal')} className="p-2">
+          <Icon as={X} size="md" className="text-gray-500" />
+        </Pressable>
+      </View>
 
-        {/* Content */}
-        <ScrollView
-          style={{ maxHeight: 500, paddingBottom: 25 }}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        >
-          <FormProvider {...form}>
-            <VStack className="p-4 gap-4">
-              {/* Current contract info */}
-              <Box className="bg-blue-50 p-4 rounded-xl">
-                <Text className="font-semibold text-blue-900 mb-3">Contrato Actual</Text>
-                <VStack className="gap-2">
-                  <HStack className="justify-between">
-                    <Text className="text-sm text-blue-700">Plan:</Text>
-                    <Text className="text-sm font-medium text-blue-900">
-                      {contract.gymMembershipPlan?.name}
-                    </Text>
-                  </HStack>
-                  <HStack className="justify-between">
-                    <Text className="text-sm text-blue-700">Precio Base:</Text>
-                    <Text className="text-sm font-medium text-blue-900">
-                      {formatPrice(contract.gymMembershipPlan?.basePrice || 0)}
-                    </Text>
-                  </HStack>
-                  <HStack className="justify-between">
-                    <Text className="text-sm text-blue-700">Vence:</Text>
-                    <Text className="text-sm font-medium text-blue-900">
-                      {new Date(contract.endDate).toLocaleDateString()}
-                    </Text>
-                  </HStack>
-                </VStack>
-              </Box>
-
-              {/* Price configuration */}
+      {/* Content */}
+      <View className="flex-1 pb-6">
+        <FormProvider {...form}>
+          <VStack className="p-4 gap-4">
+            {/* Current contract info */}
+            <Box className="bg-blue-50 p-4 rounded-xl">
+              <Text className="font-semibold text-blue-900 mb-3">Contrato Actual</Text>
               <VStack className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700">Precio Personalizado</Text>
-                <Controller
-                  control={form.control}
-                  name="customPrice"
-                  render={({ field: { onChange, value } }) => (
-                    <Input size="lg" className="bg-gray-50">
-                      <InputField
-                        placeholder={`Base: ${formatPrice(contract.gymMembershipPlan?.basePrice || 0)}`}
-                        value={value?.toString() || ''}
-                        onChangeText={(text) => {
-                          const num = parseFloat(text);
-                          onChange(isNaN(num) ? null : num);
-                        }}
-                        keyboardType="numeric"
-                      />
-                    </Input>
-                  )}
-                />
-              </VStack>
-
-              {/* Discount configuration */}
-              <VStack className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700">Descuento (%)</Text>
-                <Controller
-                  control={form.control}
-                  name="discountPercentage"
-                  render={({ field: { onChange, value } }) => (
-                    <Input size="lg" className="bg-gray-50">
-                      <InputField
-                        placeholder="0-100"
-                        value={value?.toString() || ''}
-                        onChangeText={(text) => {
-                          const num = parseFloat(text);
-                          onChange(isNaN(num) ? null : num);
-                        }}
-                        keyboardType="numeric"
-                      />
-                    </Input>
-                  )}
-                />
-              </VStack>
-
-              {/* Final price display */}
-              <Box className="bg-green-50 p-4 rounded-xl border border-green-200">
-                <HStack className="justify-between items-center">
-                  <Text className="font-semibold text-green-900">Precio Final:</Text>
-                  <Text className="text-2xl font-bold text-green-600">
-                    {formatPrice(calculateFinalPrice())}
+                <HStack className="justify-between">
+                  <Text className="text-sm text-blue-700">Plan:</Text>
+                  <Text className="text-sm font-medium text-blue-900">
+                    {contract.gymMembershipPlan?.name}
                   </Text>
                 </HStack>
-              </Box>
-
-              {/* Start date configuration */}
-              <VStack className="gap-3">
-                <FormSwitch
-                  name="applyAtEndOfContract"
-                  label="Aplicar al finalizar contrato actual"
-                />
-                {applyAtEndOfContract && (
-                  <Text className="text-xs text-gray-500 -mt-2 ml-12">
-                    La renovación iniciará cuando termine el contrato actual
+                <HStack className="justify-between">
+                  <Text className="text-sm text-blue-700">Precio Base:</Text>
+                  <Text className="text-sm font-medium text-blue-900">
+                    {formatPrice(contract.gymMembershipPlan?.basePrice || 0)}
                   </Text>
-                )}
-
-                {!applyAtEndOfContract && (
-                  <FormDatePicker
-                    name="startDate"
-                    label="Fecha de inicio"
-                    placeholder="Seleccionar fecha"
-                    minimumDate={new Date()}
-                  />
-                )}
+                </HStack>
+                <HStack className="justify-between">
+                  <Text className="text-sm text-blue-700">Vence:</Text>
+                  <Text className="text-sm font-medium text-blue-900">
+                    {new Date(contract.endDate).toLocaleDateString()}
+                  </Text>
+                </HStack>
               </VStack>
+            </Box>
 
-              {/* Notes */}
-              <FormTextarea
-                name="notes"
-                label="Notas (opcional)"
-                placeholder="Notas adicionales sobre la renovación"
+            {/* Price configuration */}
+            <VStack className="gap-2">
+              <Text className="text-sm font-semibold text-gray-700">Precio Personalizado</Text>
+              <Controller
+                control={form.control}
+                name="customPrice"
+                render={({ field: { onChange, value } }) => (
+                  <Input size="lg" className="bg-gray-50">
+                    <InputField
+                      placeholder={`Base: ${formatPrice(contract.gymMembershipPlan?.basePrice || 0)}`}
+                      value={value?.toString() || ''}
+                      onChangeText={(text) => {
+                        const num = parseFloat(text);
+                        onChange(isNaN(num) ? null : num);
+                      }}
+                      keyboardType="numeric"
+                    />
+                  </Input>
+                )}
               />
+            </VStack>
 
-              {/* Show existing renewals warning */}
-              {contract.renewals && contract.renewals.length > 0 && (
-                <Box className="bg-amber-50 p-4 rounded-xl border border-amber-200">
-                  <HStack className="gap-2 mb-2">
-                    <Text className="text-amber-600">⚠️</Text>
-                    <Text className="font-semibold text-amber-900">Renovación Existente</Text>
-                  </HStack>
-                  <Text className="text-sm text-amber-700 mb-3">
-                    Ya existe una renovación programada para este contrato.
-                  </Text>
-                  {contract.renewals.map((renewal) => (
-                    <Box key={renewal.id} className="bg-white p-2 rounded-lg">
-                      <Text className="text-xs text-gray-600">
-                        Inicio: {new Date(renewal.startDate).toLocaleDateString()}
-                      </Text>
-                      <Text className="text-xs text-gray-600">
-                        Precio: {formatPrice(renewal.finalPrice || 0)}
-                      </Text>
-                    </Box>
-                  ))}
-                </Box>
+            {/* Discount configuration */}
+            <VStack className="gap-2">
+              <Text className="text-sm font-semibold text-gray-700">Descuento (%)</Text>
+              <Controller
+                control={form.control}
+                name="discountPercentage"
+                render={({ field: { onChange, value } }) => (
+                  <Input size="lg" className="bg-gray-50">
+                    <InputField
+                      placeholder="0-100"
+                      value={value?.toString() || ''}
+                      onChangeText={(text) => {
+                        const num = parseFloat(text);
+                        onChange(isNaN(num) ? null : num);
+                      }}
+                      keyboardType="numeric"
+                    />
+                  </Input>
+                )}
+              />
+            </VStack>
+
+            {/* Final price display */}
+            <Box className="bg-green-50 p-4 rounded-xl border border-green-200">
+              <HStack className="justify-between items-center">
+                <Text className="font-semibold text-green-900">Precio Final:</Text>
+                <Text className="text-2xl font-bold text-green-600">
+                  {formatPrice(calculateFinalPrice())}
+                </Text>
+              </HStack>
+            </Box>
+
+            {/* Start date configuration */}
+            <VStack className="gap-3">
+              <FormSwitch
+                name="applyAtEndOfContract"
+                label="Aplicar al finalizar contrato actual"
+              />
+              {applyAtEndOfContract && (
+                <Text className="text-xs text-gray-500 -mt-2 ml-12">
+                  La renovación iniciará cuando termine el contrato actual
+                </Text>
+              )}
+
+              {!applyAtEndOfContract && (
+                <FormDatePicker
+                  name="startDate"
+                  label="Fecha de inicio"
+                  placeholder="Seleccionar fecha"
+                  minimumDate={new Date()}
+                />
               )}
             </VStack>
-          </FormProvider>
-        </ScrollView>
+
+            {/* Notes */}
+            <FormTextarea
+              name="notes"
+              label="Notas (opcional)"
+              placeholder="Notas adicionales sobre la renovación"
+            />
+
+            {/* Show existing renewals warning */}
+            {contract.renewals && contract.renewals.length > 0 && (
+              <Box className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                <HStack className="gap-2 mb-2">
+                  <Text className="text-amber-600">⚠️</Text>
+                  <Text className="font-semibold text-amber-900">Renovación Existente</Text>
+                </HStack>
+                <Text className="text-sm text-amber-700 mb-3">
+                  Ya existe una renovación programada para este contrato.
+                </Text>
+                {contract.renewals.map((renewal) => (
+                  <Box key={renewal.id} className="bg-white p-2 rounded-lg">
+                    <Text className="text-xs text-gray-600">
+                      Inicio: {new Date(renewal.startDate).toLocaleDateString()}
+                    </Text>
+                    <Text className="text-xs text-gray-600">
+                      Precio: {formatPrice(renewal.finalPrice || 0)}
+                    </Text>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </VStack>
+        </FormProvider>
 
         {/* Footer Actions */}
         <View className="px-4 py-3 border-t border-gray-100 bg-white">
@@ -270,7 +270,7 @@ export const ContractRenewalDrawer: React.FC<SheetProps<'contract-renewal'>> = (
               variant="outline"
               size="lg"
               className="flex-1"
-              onPress={() => SheetManager.hide(sheetId)}
+              onPress={() => SheetManager.hide('contract-renewal')}
             >
               <ButtonText>Cancelar</ButtonText>
             </Button>
@@ -285,7 +285,7 @@ export const ContractRenewalDrawer: React.FC<SheetProps<'contract-renewal'>> = (
           </HStack>
         </View>
       </View>
-    </ActionSheet>
+    </BottomSheetWrapper>
   );
 };
 
