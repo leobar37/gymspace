@@ -97,6 +97,16 @@ export class RequestContext implements IRequestContext {
   }
 
   /**
+   * Create admin context for admin operations
+   */
+  createAdmin(user: IUser, permissions: Permission[]): RequestContext {
+    this._user = user;
+    this._permissions = permissions;
+    // Admin context doesn't have gym/organization specific context
+    return this;
+  }
+
+  /**
    * Create context for specific user (used in testing or system operations)
    */
   forUser(user: IUser, permissions: Permission[] = []): RequestContext {

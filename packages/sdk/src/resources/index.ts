@@ -20,3 +20,5 @@ export * from './suppliers';
 export * from './users';
 export * from './subscriptions';
 export * from './payment-methods';
+export * from './admin-subscriptions';
+export * from './subscription-operations';

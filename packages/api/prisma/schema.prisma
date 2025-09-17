@@ -1,927 +1,1067 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator dbml {
-    provider = "prisma-dbml-generator"
+  provider = "prisma-dbml-generator"
 }
 
 // Enums
 enum UserType {
-    owner
-    collaborator
+  owner
+  collaborator
 }
 
 enum SubscriptionStatus {
-    active
-    inactive
-    expired
-    paused
-    pending_upgrade
+  active
+  inactive
+  expired
+  paused
+  pending_upgrade
+}
+
+enum SubscriptionRequestStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+enum SubscriptionOperationType {
+  upgrade
+  downgrade
+  renewal
+  cancellation
+  activation
+}
+
+enum CancellationReason {
+  cost_too_high
+  feature_limitations
+  switching_providers
+  business_closure
+  technical_issues
+  poor_support
+  other
 }
 
 enum CollaboratorStatus {
-    pending
-    active
-    inactive
+  pending
+  active
+  inactive
 }
 
 enum InvitationStatus {
-    pending
-    accepted
-    expired
+  pending
+  accepted
+  expired
 }
 
 enum ClientStatus {
-    active
-    inactive
+  active
+  inactive
 }
 
 enum PlanStatus {
-    active
-    inactive
-    archived
+  active
+  inactive
+  archived
 }
 
 enum ContractStatus {
-    pending
-    active
-    expiring_soon
-    expired
-    frozen
-    cancelled
-    for_renew
+  pending
+  active
+  expiring_soon
+  expired
+  frozen
+  cancelled
+  for_renew
 }
 
 enum PaymentFrequency {
-    monthly
-    quarterly
-    annual
+  monthly
+  quarterly
+  annual
 }
 
 enum AssetStatus {
-    active
-    deleted
+  active
+  deleted
 }
 
 enum EvaluationType {
-    initial
-    progress
-    final
+  initial
+  progress
+  final
 }
 
 enum EvaluationStatus {
-    open
-    in_progress
-    completed
-    cancelled
+  open
+  in_progress
+  completed
+  cancelled
 }
 
 enum CommentType {
-    progress_note
-    phone_call
-    meeting
-    reminder
-    other
+  progress_note
+  phone_call
+  meeting
+  reminder
+  other
 }
 
 enum LeadStatus {
-    NEW
-    CONTACTED
-    INTERESTED
-    CONVERTED
-    LOST
+  NEW
+  CONTACTED
+  INTERESTED
+  CONVERTED
+  LOST
 }
 
 enum ProductStatus {
-    active
-    inactive
+  active
+  inactive
 }
 
 enum PaymentStatus {
-    paid
-    unpaid
+  paid
+  unpaid
 }
 
 enum DurationPeriod {
-    DAY
-    MONTH
+  DAY
+  MONTH
 }
 
 enum ProductType {
-    Product
-    Service
+  Product
+  Service
 }
 
 enum TrackInventory {
-    none
-    simple
-    advanced
-    capacity
+  none
+  simple
+  advanced
+  capacity
 }
 
 enum StockMovementType {
-    manual_entry
-    sale
-    return
-    adjustment
-    initial_stock
+  manual_entry
+  sale
+  return
+  adjustment
+  initial_stock
 }
 
 // Models
 model SubscriptionPlan {
-    id               String          @id @default(uuid())
-    name             String
-    price            Json
-    billingFrequency String          @map("billing_frequency")
-    duration         Int?
-    durationPeriod   DurationPeriod? @map("duration_period")
-    maxGyms          Int             @map("max_gyms")
-    maxClientsPerGym Int             @map("max_clients_per_gym")
-    maxUsersPerGym   Int             @map("max_users_per_gym")
-    features         Json
-    description      String?         @db.Text
-    isActive         Boolean         @default(true) @map("is_active")
-    createdByUserId  String?         @map("created_by_user_id")
-    updatedByUserId  String?         @map("updated_by_user_id")
-    createdAt        DateTime        @default(now()) @map("created_at")
-    updatedAt        DateTime        @updatedAt @map("updated_at")
-    deletedAt        DateTime?       @map("deleted_at")
+  id               String          @id @default(uuid())
+  name             String
+  price            Json
+  billingFrequency String          @map("billing_frequency")
+  duration         Int?
+  durationPeriod   DurationPeriod? @map("duration_period")
+  maxGyms          Int             @map("max_gyms")
+  maxClientsPerGym Int             @map("max_clients_per_gym")
+  maxUsersPerGym   Int             @map("max_users_per_gym")
+  features         Json
+  description      String?         @db.Text
+  isActive         Boolean         @default(true) @map("is_active")
+  isPublic         Boolean         @default(true) @map("is_public")
+  sortOrder        Int             @default(0) @map("sort_order")
+  createdByUserId  String?         @map("created_by_user_id")
+  updatedByUserId  String?         @map("updated_by_user_id")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  deletedAt        DateTime?       @map("deleted_at")
 
-    // Relations
-    createdBy                 User?                      @relation("SubscriptionPlanCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy                 User?                      @relation("SubscriptionPlanUpdatedBy", fields: [updatedByUserId], references: [id])
-    subscriptionOrganizations SubscriptionOrganization[]
+  // Relations
+  createdBy                  User?                      @relation("SubscriptionPlanCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy                  User?                      @relation("SubscriptionPlanUpdatedBy", fields: [updatedByUserId], references: [id])
+  subscriptionOrganizations  SubscriptionOrganization[]
+  subscriptionRequests       SubscriptionRequest[]
+  fromSubscriptionOperations SubscriptionOperation[]    @relation("SubscriptionOperationFromPlan")
+  toSubscriptionOperations   SubscriptionOperation[]    @relation("SubscriptionOperationToPlan")
 
-    @@map("subscription_plans")
+  @@map("subscription_plans")
 }
 
 model SubscriptionOrganization {
-    id                 String             @id @default(uuid())
-    organizationId     String             @map("organization_id")
-    subscriptionPlanId String             @map("subscription_plan_id")
-    status             SubscriptionStatus
-    startDate          DateTime           @map("start_date")
-    endDate            DateTime           @map("end_date")
-    isActive           Boolean            @default(true) @map("is_active")
-    metadata           Json?
-    createdByUserId    String             @map("created_by_user_id")
-    updatedByUserId    String?            @map("updated_by_user_id")
-    createdAt          DateTime           @default(now()) @map("created_at")
-    updatedAt          DateTime           @updatedAt @map("updated_at")
-    deletedAt          DateTime?          @map("deleted_at")
+  id                 String             @id @default(uuid())
+  organizationId     String             @map("organization_id")
+  subscriptionPlanId String             @map("subscription_plan_id")
+  status             SubscriptionStatus
+  startDate          DateTime           @map("start_date")
+  endDate            DateTime           @map("end_date")
+  isActive           Boolean            @default(true) @map("is_active")
+  cancellationId     String?            @map("cancellation_id")
+  metadata           Json?
+  createdByUserId    String             @map("created_by_user_id")
+  updatedByUserId    String?            @map("updated_by_user_id")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  deletedAt          DateTime?          @map("deleted_at")
 
-    // Relations
-    organization     Organization     @relation(fields: [organizationId], references: [id])
-    subscriptionPlan SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
-    createdBy        User             @relation("SubscriptionOrganizationCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy        User?            @relation("SubscriptionOrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
+  // Relations
+  organization     Organization              @relation(fields: [organizationId], references: [id])
+  subscriptionPlan SubscriptionPlan          @relation(fields: [subscriptionPlanId], references: [id])
+  createdBy        User                      @relation("SubscriptionOrganizationCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy        User?                     @relation("SubscriptionOrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
+  cancellation     SubscriptionCancellation?
 
-    @@unique([organizationId, isActive], name: "unique_active_subscription")
-    @@map("subscription_organizations")
+  @@unique([organizationId, isActive], name: "unique_active_subscription")
+  @@map("subscription_organizations")
+}
+
+model SubscriptionRequest {
+  id                 String                    @id @default(uuid())
+  organizationId     String                    @map("organization_id")
+  subscriptionPlanId String                    @map("subscription_plan_id")
+  requestedByUserId  String                    @map("requested_by_user_id")
+  status             SubscriptionRequestStatus @default(pending)
+  operationType      SubscriptionOperationType @map("operation_type")
+  requestedStartDate DateTime?                 @map("requested_start_date")
+  notes              String?                   @db.Text
+  adminNotes         String?                   @map("admin_notes") @db.Text
+  processedByUserId  String?                   @map("processed_by_user_id")
+  processedAt        DateTime?                 @map("processed_at")
+  metadata           Json?                     @default("{}")
+  createdByUserId    String                    @map("created_by_user_id")
+  updatedByUserId    String?                   @map("updated_by_user_id")
+  createdAt          DateTime                  @default(now()) @map("created_at")
+  updatedAt          DateTime                  @updatedAt @map("updated_at")
+  deletedAt          DateTime?                 @map("deleted_at")
+
+  // Relations
+  organization     Organization     @relation(fields: [organizationId], references: [id])
+  subscriptionPlan SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
+  requestedBy      User             @relation("SubscriptionRequestRequestedBy", fields: [requestedByUserId], references: [id])
+  processedBy      User?            @relation("SubscriptionRequestProcessedBy", fields: [processedByUserId], references: [id])
+  createdBy        User             @relation("SubscriptionRequestCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy        User?            @relation("SubscriptionRequestUpdatedBy", fields: [updatedByUserId], references: [id])
+
+  @@map("subscription_requests")
+}
+
+model SubscriptionOperation {
+  id                     String                    @id @default(uuid())
+  organizationId         String                    @map("organization_id")
+  fromSubscriptionPlanId String?                   @map("from_subscription_plan_id")
+  toSubscriptionPlanId   String?                   @map("to_subscription_plan_id")
+  operationType          SubscriptionOperationType @map("operation_type")
+  executedByUserId       String                    @map("executed_by_user_id")
+  effectiveDate          DateTime                  @map("effective_date")
+  previousEndDate        DateTime?                 @map("previous_end_date")
+  newEndDate             DateTime?                 @map("new_end_date")
+  prorationAmount        Decimal?                  @map("proration_amount") @db.Decimal(10, 2)
+  notes                  String?                   @db.Text
+  subscriptionRequestId  String?                   @map("subscription_request_id")
+  metadata               Json?                     @default("{}")
+  createdByUserId        String                    @map("created_by_user_id")
+  updatedByUserId        String?                   @map("updated_by_user_id")
+  createdAt              DateTime                  @default(now()) @map("created_at")
+  updatedAt              DateTime                  @updatedAt @map("updated_at")
+  deletedAt              DateTime?                 @map("deleted_at")
+
+  // Relations
+  organization         Organization      @relation(fields: [organizationId], references: [id])
+  fromSubscriptionPlan SubscriptionPlan? @relation("SubscriptionOperationFromPlan", fields: [fromSubscriptionPlanId], references: [id])
+  toSubscriptionPlan   SubscriptionPlan? @relation("SubscriptionOperationToPlan", fields: [toSubscriptionPlanId], references: [id])
+  executedBy           User              @relation("SubscriptionOperationExecutedBy", fields: [executedByUserId], references: [id])
+  createdBy            User              @relation("SubscriptionOperationCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy            User?             @relation("SubscriptionOperationUpdatedBy", fields: [updatedByUserId], references: [id])
+
+  @@map("subscription_operations")
+}
+
+model SubscriptionCancellation {
+  id                         String             @id @default(uuid())
+  organizationId             String             @map("organization_id")
+  subscriptionOrganizationId String             @unique @map("subscription_organization_id")
+  requestedByUserId          String             @map("requested_by_user_id")
+  reason                     CancellationReason
+  reasonDescription          String?            @map("reason_description") @db.Text
+  effectiveDate              DateTime           @map("effective_date")
+  refundAmount               Decimal?           @map("refund_amount") @db.Decimal(10, 2)
+  retentionOffered           Boolean            @default(false) @map("retention_offered")
+  retentionDetails           String?            @map("retention_details") @db.Text
+  processedByUserId          String?            @map("processed_by_user_id")
+  processedAt                DateTime?          @map("processed_at")
+  metadata                   Json?              @default("{}")
+  createdByUserId            String             @map("created_by_user_id")
+  updatedByUserId            String?            @map("updated_by_user_id")
+  createdAt                  DateTime           @default(now()) @map("created_at")
+  updatedAt                  DateTime           @updatedAt @map("updated_at")
+  deletedAt                  DateTime?          @map("deleted_at")
+
+  // Relations
+  organization             Organization             @relation(fields: [organizationId], references: [id])
+  subscriptionOrganization SubscriptionOrganization @relation(fields: [subscriptionOrganizationId], references: [id])
+  requestedBy              User                     @relation("SubscriptionCancellationRequestedBy", fields: [requestedByUserId], references: [id])
+  processedBy              User?                    @relation("SubscriptionCancellationProcessedBy", fields: [processedByUserId], references: [id])
+  createdBy                User                     @relation("SubscriptionCancellationCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy                User?                    @relation("SubscriptionCancellationUpdatedBy", fields: [updatedByUserId], references: [id])
+
+  @@map("subscription_cancellations")
 }
 
 model User {
-    id                        String    @id @default(uuid())
-    email                     String    @unique
-    password                  String? // Optional - auth handled by Supabase
-    name                      String
-    phone                     String?
-    birthDate                 DateTime? @map("birth_date") // Date of birth for profile
-    userType                  UserType  @map("user_type")
-    emailVerifiedAt           DateTime? @map("email_verified_at")
-    verificationCode          String?   @map("verification_code")
-    verificationCodeExpiresAt DateTime? @map("verification_code_expires_at")
-    createdByUserId           String?   @map("created_by_user_id")
-    updatedByUserId           String?   @map("updated_by_user_id")
-    createdAt                 DateTime  @default(now()) @map("created_at")
-    updatedAt                 DateTime  @updatedAt @map("updated_at")
-    deletedAt                 DateTime? @map("deleted_at")
+  id                        String    @id @default(uuid())
+  email                     String    @unique
+  password                  String? // Optional - auth handled by Supabase
+  name                      String
+  phone                     String?
+  birthDate                 DateTime? @map("birth_date") // Date of birth for profile
+  userType                  UserType  @map("user_type")
+  emailVerifiedAt           DateTime? @map("email_verified_at")
+  verificationCode          String?   @map("verification_code")
+  verificationCodeExpiresAt DateTime? @map("verification_code_expires_at")
+  createdByUserId           String?   @map("created_by_user_id")
+  updatedByUserId           String?   @map("updated_by_user_id")
+  createdAt                 DateTime  @default(now()) @map("created_at")
+  updatedAt                 DateTime  @updatedAt @map("updated_at")
+  deletedAt                 DateTime? @map("deleted_at")
 
-    // Relations
-    createdBy    User?  @relation("UserCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy    User?  @relation("UserUpdatedBy", fields: [updatedByUserId], references: [id])
-    createdUsers User[] @relation("UserCreatedBy")
-    updatedUsers User[] @relation("UserUpdatedBy")
+  // Relations
+  createdBy    User?  @relation("UserCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy    User?  @relation("UserUpdatedBy", fields: [updatedByUserId], references: [id])
+  createdUsers User[] @relation("UserCreatedBy")
+  updatedUsers User[] @relation("UserUpdatedBy")
 
-    ownedOrganizations  Organization[]
-    collaborators       Collaborator[]
-    invitationsSent     Invitation[]   @relation("InvitationSentBy")
-    invitationsAccepted Invitation[]   @relation("InvitationAcceptedBy")
+  ownedOrganizations  Organization[]
+  collaborators       Collaborator[]
+  invitationsSent     Invitation[]   @relation("InvitationSentBy")
+  invitationsAccepted Invitation[]   @relation("InvitationAcceptedBy")
 
-    // Audit relations
-    createdSubscriptionPlans         SubscriptionPlan[]         @relation("SubscriptionPlanCreatedBy")
-    updatedSubscriptionPlans         SubscriptionPlan[]         @relation("SubscriptionPlanUpdatedBy")
-    createdSubscriptionOrganizations SubscriptionOrganization[] @relation("SubscriptionOrganizationCreatedBy")
-    updatedSubscriptionOrganizations SubscriptionOrganization[] @relation("SubscriptionOrganizationUpdatedBy")
-    createdOrganizations             Organization[]             @relation("OrganizationCreatedBy")
-    updatedOrganizations             Organization[]             @relation("OrganizationUpdatedBy")
-    createdGyms                      Gym[]                      @relation("GymCreatedBy")
-    updatedGyms                      Gym[]                      @relation("GymUpdatedBy")
-    createdRoles                     Role[]                     @relation("RoleCreatedBy")
-    updatedRoles                     Role[]                     @relation("RoleUpdatedBy")
-    createdCollaborators             Collaborator[]             @relation("CollaboratorCreatedBy")
-    updatedCollaborators             Collaborator[]             @relation("CollaboratorUpdatedBy")
-    createdInvitations               Invitation[]               @relation("InvitationCreatedBy")
-    updatedInvitations               Invitation[]               @relation("InvitationUpdatedBy")
-    createdGymClients                GymClient[]                @relation("GymClientCreatedBy")
-    updatedGymClients                GymClient[]                @relation("GymClientUpdatedBy")
-    createdGymMembershipPlans        GymMembershipPlan[]        @relation("GymMembershipPlanCreatedBy")
-    updatedGymMembershipPlans        GymMembershipPlan[]        @relation("GymMembershipPlanUpdatedBy")
-    createdContracts                 Contract[]                 @relation("ContractCreatedBy")
-    updatedContracts                 Contract[]                 @relation("ContractUpdatedBy")
-    approvedContracts                Contract[]                 @relation("ContractApprovedBy")
-    cancelledContracts               Contract[]                 @relation("ContractCancelledBy")
-    uploadedAssets                   Asset[]                    @relation("AssetUploadedBy")
-    createdAssets                    Asset[]                    @relation("AssetCreatedBy")
-    updatedAssets                    Asset[]                    @relation("AssetUpdatedBy")
-    files                            File[]                     @relation("UserFiles")
-    registeredCheckIns               CheckIn[]                  @relation("CheckInRegisteredBy")
-    createdCheckIns                  CheckIn[]                  @relation("CheckInCreatedBy")
-    updatedCheckIns                  CheckIn[]                  @relation("CheckInUpdatedBy")
-    createdEvaluations               Evaluation[]               @relation("EvaluationCreatedBy")
-    updatedEvaluations               Evaluation[]               @relation("EvaluationUpdatedBy")
-    completedEvaluations             Evaluation[]               @relation("EvaluationCompletedBy")
-    createdEvaluationComments        EvaluationComment[]        @relation("EvaluationCommentCreatedBy")
-    updatedEvaluationComments        EvaluationComment[]        @relation("EvaluationCommentUpdatedBy")
-    assignedLeads                    Lead[]                     @relation("LeadAssignedTo")
-    createdLeads                     Lead[]                     @relation("LeadCreatedBy")
-    updatedLeads                     Lead[]                     @relation("LeadUpdatedBy")
-    createdProductCategories         ProductCategory[]          @relation("ProductCategoryCreatedBy")
-    updatedProductCategories         ProductCategory[]          @relation("ProductCategoryUpdatedBy")
-    createdProducts                  Product[]                  @relation("ProductCreatedBy")
-    updatedProducts                  Product[]                  @relation("ProductUpdatedBy")
-    createdSuppliers                 Supplier[]                 @relation("SupplierCreatedBy")
-    updatedSuppliers                 Supplier[]                 @relation("SupplierUpdatedBy")
-    createdSales                     Sale[]                     @relation("SaleCreatedBy")
-    updatedSales                     Sale[]                     @relation("SaleUpdatedBy")
-    createdSaleItems                 SaleItem[]                 @relation("SaleItemCreatedBy")
-    updatedSaleItems                 SaleItem[]                 @relation("SaleItemUpdatedBy")
-    createdStockMovements            StockMovement[]            @relation("StockMovementCreatedBy")
-    createdPaymentMethods            PaymentMethod[]            @relation("PaymentMethodCreatedBy")
-    updatedPaymentMethods            PaymentMethod[]            @relation("PaymentMethodUpdatedBy")
+  // Audit relations
+  createdSubscriptionPlans         SubscriptionPlan[]         @relation("SubscriptionPlanCreatedBy")
+  updatedSubscriptionPlans         SubscriptionPlan[]         @relation("SubscriptionPlanUpdatedBy")
+  createdSubscriptionOrganizations SubscriptionOrganization[] @relation("SubscriptionOrganizationCreatedBy")
+  updatedSubscriptionOrganizations SubscriptionOrganization[] @relation("SubscriptionOrganizationUpdatedBy")
+  createdOrganizations             Organization[]             @relation("OrganizationCreatedBy")
+  updatedOrganizations             Organization[]             @relation("OrganizationUpdatedBy")
+  createdGyms                      Gym[]                      @relation("GymCreatedBy")
+  updatedGyms                      Gym[]                      @relation("GymUpdatedBy")
+  createdRoles                     Role[]                     @relation("RoleCreatedBy")
+  updatedRoles                     Role[]                     @relation("RoleUpdatedBy")
+  createdCollaborators             Collaborator[]             @relation("CollaboratorCreatedBy")
+  updatedCollaborators             Collaborator[]             @relation("CollaboratorUpdatedBy")
+  createdInvitations               Invitation[]               @relation("InvitationCreatedBy")
+  updatedInvitations               Invitation[]               @relation("InvitationUpdatedBy")
+  createdGymClients                GymClient[]                @relation("GymClientCreatedBy")
+  updatedGymClients                GymClient[]                @relation("GymClientUpdatedBy")
+  createdGymMembershipPlans        GymMembershipPlan[]        @relation("GymMembershipPlanCreatedBy")
+  updatedGymMembershipPlans        GymMembershipPlan[]        @relation("GymMembershipPlanUpdatedBy")
+  createdContracts                 Contract[]                 @relation("ContractCreatedBy")
+  updatedContracts                 Contract[]                 @relation("ContractUpdatedBy")
+  approvedContracts                Contract[]                 @relation("ContractApprovedBy")
+  cancelledContracts               Contract[]                 @relation("ContractCancelledBy")
+  uploadedAssets                   Asset[]                    @relation("AssetUploadedBy")
+  createdAssets                    Asset[]                    @relation("AssetCreatedBy")
+  updatedAssets                    Asset[]                    @relation("AssetUpdatedBy")
+  files                            File[]                     @relation("UserFiles")
+  registeredCheckIns               CheckIn[]                  @relation("CheckInRegisteredBy")
+  createdCheckIns                  CheckIn[]                  @relation("CheckInCreatedBy")
+  updatedCheckIns                  CheckIn[]                  @relation("CheckInUpdatedBy")
+  createdEvaluations               Evaluation[]               @relation("EvaluationCreatedBy")
+  updatedEvaluations               Evaluation[]               @relation("EvaluationUpdatedBy")
+  completedEvaluations             Evaluation[]               @relation("EvaluationCompletedBy")
+  createdEvaluationComments        EvaluationComment[]        @relation("EvaluationCommentCreatedBy")
+  updatedEvaluationComments        EvaluationComment[]        @relation("EvaluationCommentUpdatedBy")
+  assignedLeads                    Lead[]                     @relation("LeadAssignedTo")
+  createdLeads                     Lead[]                     @relation("LeadCreatedBy")
+  updatedLeads                     Lead[]                     @relation("LeadUpdatedBy")
+  createdProductCategories         ProductCategory[]          @relation("ProductCategoryCreatedBy")
+  updatedProductCategories         ProductCategory[]          @relation("ProductCategoryUpdatedBy")
+  createdProducts                  Product[]                  @relation("ProductCreatedBy")
+  updatedProducts                  Product[]                  @relation("ProductUpdatedBy")
+  createdSuppliers                 Supplier[]                 @relation("SupplierCreatedBy")
+  updatedSuppliers                 Supplier[]                 @relation("SupplierUpdatedBy")
+  createdSales                     Sale[]                     @relation("SaleCreatedBy")
+  updatedSales                     Sale[]                     @relation("SaleUpdatedBy")
+  createdSaleItems                 SaleItem[]                 @relation("SaleItemCreatedBy")
+  updatedSaleItems                 SaleItem[]                 @relation("SaleItemUpdatedBy")
+  createdStockMovements            StockMovement[]            @relation("StockMovementCreatedBy")
+  createdPaymentMethods            PaymentMethod[]            @relation("PaymentMethodCreatedBy")
+  updatedPaymentMethods            PaymentMethod[]            @relation("PaymentMethodUpdatedBy")
 
-    @@map("users")
+  // Subscription management relations
+  requestedSubscriptionRequests      SubscriptionRequest[]      @relation("SubscriptionRequestRequestedBy")
+  processedSubscriptionRequests      SubscriptionRequest[]      @relation("SubscriptionRequestProcessedBy")
+  createdSubscriptionRequests        SubscriptionRequest[]      @relation("SubscriptionRequestCreatedBy")
+  updatedSubscriptionRequests        SubscriptionRequest[]      @relation("SubscriptionRequestUpdatedBy")
+  executedSubscriptionOperations     SubscriptionOperation[]    @relation("SubscriptionOperationExecutedBy")
+  createdSubscriptionOperations      SubscriptionOperation[]    @relation("SubscriptionOperationCreatedBy")
+  updatedSubscriptionOperations      SubscriptionOperation[]    @relation("SubscriptionOperationUpdatedBy")
+  requestedSubscriptionCancellations SubscriptionCancellation[] @relation("SubscriptionCancellationRequestedBy")
+  processedSubscriptionCancellations SubscriptionCancellation[] @relation("SubscriptionCancellationProcessedBy")
+  createdSubscriptionCancellations   SubscriptionCancellation[] @relation("SubscriptionCancellationCreatedBy")
+  updatedSubscriptionCancellations   SubscriptionCancellation[] @relation("SubscriptionCancellationUpdatedBy")
+
+  @@map("users")
 }
 
 model Organization {
-    id               String    @id @default(uuid())
-    ownerUserId      String    @map("owner_user_id")
-    name             String
-    organizationCode String    @unique @map("organization_code")
-    hasUsedFreeTrial Boolean   @default(false) @map("has_used_free_trial")
-    country          String
-    currency         String
-    timezone         String
-    settings         Json?
-    createdByUserId  String    @map("created_by_user_id")
-    updatedByUserId  String?   @map("updated_by_user_id")
-    createdAt        DateTime  @default(now()) @map("created_at")
-    updatedAt        DateTime  @updatedAt @map("updated_at")
-    deletedAt        DateTime? @map("deleted_at")
+  id               String    @id @default(uuid())
+  ownerUserId      String    @map("owner_user_id")
+  name             String
+  organizationCode String    @unique @map("organization_code")
+  hasUsedFreeTrial Boolean   @default(false) @map("has_used_free_trial")
+  country          String
+  currency         String
+  timezone         String
+  settings         Json?
+  createdByUserId  String    @map("created_by_user_id")
+  updatedByUserId  String?   @map("updated_by_user_id")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
 
-    // Relations
-    owner                     User                       @relation(fields: [ownerUserId], references: [id])
-    createdBy                 User                       @relation("OrganizationCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy                 User?                      @relation("OrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
-    gyms                      Gym[]
-    subscriptionOrganizations SubscriptionOrganization[]
-    paymentMethods            PaymentMethod[]
+  // Relations
+  owner                     User                       @relation(fields: [ownerUserId], references: [id])
+  createdBy                 User                       @relation("OrganizationCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy                 User?                      @relation("OrganizationUpdatedBy", fields: [updatedByUserId], references: [id])
+  gyms                      Gym[]
+  subscriptionOrganizations SubscriptionOrganization[]
+  subscriptionRequests      SubscriptionRequest[]
+  subscriptionOperations    SubscriptionOperation[]
+  subscriptionCancellations SubscriptionCancellation[]
+  paymentMethods            PaymentMethod[]
 
-    @@map("organizations")
+  @@map("organizations")
 }
 
 model Gym {
-    id             String  @id @default(uuid())
-    organizationId String  @map("organization_id")
-    name           String
-    slug           String  @unique
-    address        String? @db.Text
-    city           String?
-    state          String?
-    postalCode     String? @map("postal_code")
-    latitude       Float?
-    longitude      Float?
-    description    String? @db.Text
-    phone          String?
-    email          String?
-    capacity       Int?
-    schedule       Json?   @map("schedule")
-    socialMedia    Json?   @map("social_media")
-    amenities      Json?
-    settings       Json?
-    isActive       Boolean @default(true) @map("is_active")
-    gymCode        String  @unique @map("gym_code")
+  id             String  @id @default(uuid())
+  organizationId String  @map("organization_id")
+  name           String
+  slug           String  @unique
+  address        String? @db.Text
+  city           String?
+  state          String?
+  postalCode     String? @map("postal_code")
+  latitude       Float?
+  longitude      Float?
+  description    String? @db.Text
+  phone          String?
+  email          String?
+  capacity       Int?
+  schedule       Json?   @map("schedule")
+  socialMedia    Json?   @map("social_media")
+  amenities      Json?
+  settings       Json?
+  isActive       Boolean @default(true) @map("is_active")
+  gymCode        String  @unique @map("gym_code")
 
-    // Asset fields as simple text IDs
-    profilePhotoId String? @map("profile_photo_id")
-    coverPhotoId   String? @map("cover_photo_id")
+  // Asset fields as simple text IDs
+  profilePhotoId String? @map("profile_photo_id")
+  coverPhotoId   String? @map("cover_photo_id")
 
-    evaluationStructure Json? @map("evaluation_structure")
+  evaluationStructure Json? @map("evaluation_structure")
 
-    // Public catalog fields
-    catalogVisibility  Boolean @default(false) @map("catalog_visibility")
-    catalogDescription String? @map("catalog_description") @db.Text
-    catalogImages      Json?   @map("catalog_images") // Array of asset IDs
-    catalogFeatured    Boolean @default(false) @map("catalog_featured")
-    catalogPriority    Int     @default(0) @map("catalog_priority")
+  // Public catalog fields
+  catalogVisibility  Boolean @default(false) @map("catalog_visibility")
+  catalogDescription String? @map("catalog_description") @db.Text
+  catalogImages      Json?   @map("catalog_images") // Array of asset IDs
+  catalogFeatured    Boolean @default(false) @map("catalog_featured")
+  catalogPriority    Int     @default(0) @map("catalog_priority")
 
-    createdByUserId String    @map("created_by_user_id")
-    updatedByUserId String?   @map("updated_by_user_id")
-    createdAt       DateTime  @default(now()) @map("created_at")
-    updatedAt       DateTime  @updatedAt @map("updated_at")
-    deletedAt       DateTime? @map("deleted_at")
+  createdByUserId String    @map("created_by_user_id")
+  updatedByUserId String?   @map("updated_by_user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
-    // Relations
-    organization Organization @relation(fields: [organizationId], references: [id])
-    createdBy    User         @relation("GymCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy    User?        @relation("GymUpdatedBy", fields: [updatedByUserId], references: [id])
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id])
+  createdBy    User         @relation("GymCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy    User?        @relation("GymUpdatedBy", fields: [updatedByUserId], references: [id])
 
-    collaborators     Collaborator[]
-    invitations       Invitation[]
-    gymClients        GymClient[]
-    membershipPlans   GymMembershipPlan[]
-    checkIns          CheckIn[]
-    evaluations       Evaluation[]
-    contracts         Contract[]
-    leads             Lead[]
-    assets            Asset[]
-    productCategories ProductCategory[]
-    products          Product[]
-    suppliers         Supplier[]
-    sales             Sale[]
-    stockMovements    StockMovement[]
+  collaborators     Collaborator[]
+  invitations       Invitation[]
+  gymClients        GymClient[]
+  membershipPlans   GymMembershipPlan[]
+  checkIns          CheckIn[]
+  evaluations       Evaluation[]
+  contracts         Contract[]
+  leads             Lead[]
+  assets            Asset[]
+  productCategories ProductCategory[]
+  products          Product[]
+  suppliers         Supplier[]
+  sales             Sale[]
+  stockMovements    StockMovement[]
 
-    @@map("gyms")
+  @@map("gyms")
 }
 
 model PaymentMethod {
-    id              String    @id @default(uuid())
-    organizationId  String    @map("organization_id")
-    name            String
-    description     String?   @db.Text
-    code            String
-    enabled         Boolean   @default(true)
-    metadata        Json?
-    createdByUserId String    @map("created_by_user_id")
-    updatedByUserId String?   @map("updated_by_user_id")
-    createdAt       DateTime  @default(now()) @map("created_at")
-    updatedAt       DateTime  @updatedAt @map("updated_at")
-    deletedAt       DateTime? @map("deleted_at")
+  id              String    @id @default(uuid())
+  organizationId  String    @map("organization_id")
+  name            String
+  description     String?   @db.Text
+  code            String
+  enabled         Boolean   @default(true)
+  metadata        Json?
+  createdByUserId String    @map("created_by_user_id")
+  updatedByUserId String?   @map("updated_by_user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
-    // Relations
-    organization Organization @relation(fields: [organizationId], references: [id])
-    createdBy    User         @relation("PaymentMethodCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy    User?        @relation("PaymentMethodUpdatedBy", fields: [updatedByUserId], references: [id])
-    sales        Sale[]
-    contracts    Contract[]
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id])
+  createdBy    User         @relation("PaymentMethodCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy    User?        @relation("PaymentMethodUpdatedBy", fields: [updatedByUserId], references: [id])
+  sales        Sale[]
+  contracts    Contract[]
 
-    @@unique([code, organizationId])
-    @@map("payment_methods")
+  @@unique([code, organizationId])
+  @@map("payment_methods")
 }
 
 model Role {
-    id                   String    @id @default(uuid())
-    name                 String
-    permissions          Json
-    description          String?   @db.Text
-    canManageEvaluations Boolean   @default(false) @map("can_manage_evaluations")
-    createdByUserId      String?   @map("created_by_user_id")
-    updatedByUserId      String?   @map("updated_by_user_id")
-    createdAt            DateTime  @default(now()) @map("created_at")
-    updatedAt            DateTime  @updatedAt @map("updated_at")
-    deletedAt            DateTime? @map("deleted_at")
+  id                   String    @id @default(uuid())
+  name                 String
+  permissions          Json
+  description          String?   @db.Text
+  canManageEvaluations Boolean   @default(false) @map("can_manage_evaluations")
+  createdByUserId      String?   @map("created_by_user_id")
+  updatedByUserId      String?   @map("updated_by_user_id")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  deletedAt            DateTime? @map("deleted_at")
 
-    // Relations
-    createdBy     User?          @relation("RoleCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy     User?          @relation("RoleUpdatedBy", fields: [updatedByUserId], references: [id])
-    collaborators Collaborator[]
-    invitations   Invitation[]
+  // Relations
+  createdBy     User?          @relation("RoleCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy     User?          @relation("RoleUpdatedBy", fields: [updatedByUserId], references: [id])
+  collaborators Collaborator[]
+  invitations   Invitation[]
 
-    @@map("roles")
+  @@map("roles")
 }
 
 model Collaborator {
-    id           String             @id @default(uuid())
-    userId       String             @map("user_id")
-    gymId        String             @map("gym_id")
-    roleId       String             @map("role_id")
-    status       CollaboratorStatus
-    hiredDate    DateTime?          @map("hired_date")
-    invitationId String?            @map("invitation_id")
+  id           String             @id @default(uuid())
+  userId       String             @map("user_id")
+  gymId        String             @map("gym_id")
+  roleId       String             @map("role_id")
+  status       CollaboratorStatus
+  hiredDate    DateTime?          @map("hired_date")
+  invitationId String?            @map("invitation_id")
 
-    // Asset fields as simple text IDs
-    profilePhotoId String? @map("profile_photo_id")
-    coverPhotoId   String? @map("cover_photo_id")
+  // Asset fields as simple text IDs
+  profilePhotoId String? @map("profile_photo_id")
+  coverPhotoId   String? @map("cover_photo_id")
 
-    description     String?   @db.Text
-    specialties     Json?
-    createdByUserId String    @map("created_by_user_id")
-    updatedByUserId String?   @map("updated_by_user_id")
-    createdAt       DateTime  @default(now()) @map("created_at")
-    updatedAt       DateTime  @updatedAt @map("updated_at")
-    deletedAt       DateTime? @map("deleted_at")
+  description     String?   @db.Text
+  specialties     Json?
+  createdByUserId String    @map("created_by_user_id")
+  updatedByUserId String?   @map("updated_by_user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
-    // Relations
-    user       User        @relation(fields: [userId], references: [id])
-    gym        Gym         @relation(fields: [gymId], references: [id])
-    role       Role        @relation(fields: [roleId], references: [id])
-    invitation Invitation? @relation(fields: [invitationId], references: [id])
-    createdBy  User        @relation("CollaboratorCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy  User?       @relation("CollaboratorUpdatedBy", fields: [updatedByUserId], references: [id])
+  // Relations
+  user       User        @relation(fields: [userId], references: [id])
+  gym        Gym         @relation(fields: [gymId], references: [id])
+  role       Role        @relation(fields: [roleId], references: [id])
+  invitation Invitation? @relation(fields: [invitationId], references: [id])
+  createdBy  User        @relation("CollaboratorCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy  User?       @relation("CollaboratorUpdatedBy", fields: [updatedByUserId], references: [id])
 
-    advisedEvaluations Evaluation[]
+  advisedEvaluations Evaluation[]
 
-    @@map("collaborators")
+  @@map("collaborators")
 }
 
 model Invitation {
-    id               String           @id @default(uuid())
-    gymId            String           @map("gym_id")
-    email            String
-    roleId           String           @map("role_id")
-    token            String           @unique
-    status           InvitationStatus
-    invitedByUserId  String           @map("invited_by_user_id")
-    expiresAt        DateTime         @map("expires_at")
-    acceptedByUserId String?          @map("accepted_by_user_id")
-    acceptedAt       DateTime?        @map("accepted_at")
-    createdByUserId  String           @map("created_by_user_id")
-    updatedByUserId  String?          @map("updated_by_user_id")
-    createdAt        DateTime         @default(now()) @map("created_at")
-    updatedAt        DateTime         @updatedAt @map("updated_at")
-    deletedAt        DateTime?        @map("deleted_at")
+  id               String           @id @default(uuid())
+  gymId            String           @map("gym_id")
+  email            String
+  roleId           String           @map("role_id")
+  token            String           @unique
+  status           InvitationStatus
+  invitedByUserId  String           @map("invited_by_user_id")
+  expiresAt        DateTime         @map("expires_at")
+  acceptedByUserId String?          @map("accepted_by_user_id")
+  acceptedAt       DateTime?        @map("accepted_at")
+  createdByUserId  String           @map("created_by_user_id")
+  updatedByUserId  String?          @map("updated_by_user_id")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  deletedAt        DateTime?        @map("deleted_at")
 
-    // Relations
-    gym           Gym            @relation(fields: [gymId], references: [id])
-    role          Role           @relation(fields: [roleId], references: [id])
-    invitedBy     User           @relation("InvitationSentBy", fields: [invitedByUserId], references: [id])
-    acceptedBy    User?          @relation("InvitationAcceptedBy", fields: [acceptedByUserId], references: [id])
-    createdBy     User           @relation("InvitationCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy     User?          @relation("InvitationUpdatedBy", fields: [updatedByUserId], references: [id])
-    collaborators Collaborator[]
+  // Relations
+  gym           Gym            @relation(fields: [gymId], references: [id])
+  role          Role           @relation(fields: [roleId], references: [id])
+  invitedBy     User           @relation("InvitationSentBy", fields: [invitedByUserId], references: [id])
+  acceptedBy    User?          @relation("InvitationAcceptedBy", fields: [acceptedByUserId], references: [id])
+  createdBy     User           @relation("InvitationCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy     User?          @relation("InvitationUpdatedBy", fields: [updatedByUserId], references: [id])
+  collaborators Collaborator[]
 
-    @@map("invitations")
+  @@map("invitations")
 }
 
 model GymClient {
-    id            String       @id @default(uuid())
-    gymId         String       @map("gym_id")
-    clientNumber  String       @map("client_number")
-    name          String
-    birthDate     DateTime?    @map("birth_date")
-    documentValue String?      @map("document_value")
-    documentType  String?      @map("document_type")
-    phone         String?
-    email         String?
-    status        ClientStatus
+  id            String       @id @default(uuid())
+  gymId         String       @map("gym_id")
+  clientNumber  String       @map("client_number")
+  name          String
+  birthDate     DateTime?    @map("birth_date")
+  documentValue String?      @map("document_value")
+  documentType  String?      @map("document_type")
+  phone         String?
+  email         String?
+  status        ClientStatus
 
-    // Asset fields as simple text IDs
-    profilePhotoId       String? @map("profile_photo_id")
-    documentFrontPhotoId String? @map("document_front_photo_id")
-    documentBackPhotoId  String? @map("document_back_photo_id")
+  // Asset fields as simple text IDs
+  profilePhotoId       String? @map("profile_photo_id")
+  documentFrontPhotoId String? @map("document_front_photo_id")
+  documentBackPhotoId  String? @map("document_back_photo_id")
 
-    emergencyContactName  String?   @map("emergency_contact_name")
-    emergencyContactPhone String?   @map("emergency_contact_phone")
-    medicalConditions     String?   @map("medical_conditions") @db.Text
-    notes                 String?   @db.Text
-    metadata              Json?     @default("{}") // Additional flexible data storage
-    createdByUserId       String    @map("created_by_user_id")
-    updatedByUserId       String?   @map("updated_by_user_id")
-    createdAt             DateTime  @default(now()) @map("created_at")
-    updatedAt             DateTime  @updatedAt @map("updated_at")
-    deletedAt             DateTime? @map("deleted_at")
+  emergencyContactName  String?   @map("emergency_contact_name")
+  emergencyContactPhone String?   @map("emergency_contact_phone")
+  medicalConditions     String?   @map("medical_conditions") @db.Text
+  notes                 String?   @db.Text
+  metadata              Json?     @default("{}") // Additional flexible data storage
+  createdByUserId       String    @map("created_by_user_id")
+  updatedByUserId       String?   @map("updated_by_user_id")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  deletedAt             DateTime? @map("deleted_at")
 
-    // Relations
-    gym       Gym   @relation(fields: [gymId], references: [id])
-    createdBy User  @relation("GymClientCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User? @relation("GymClientUpdatedBy", fields: [updatedByUserId], references: [id])
+  // Relations
+  gym       Gym   @relation(fields: [gymId], references: [id])
+  createdBy User  @relation("GymClientCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy User? @relation("GymClientUpdatedBy", fields: [updatedByUserId], references: [id])
 
-    contracts      Contract[]
-    checkIns       CheckIn[]
-    evaluations    Evaluation[]
-    convertedLeads Lead[]
-    sales          Sale[]
+  contracts      Contract[]
+  checkIns       CheckIn[]
+  evaluations    Evaluation[]
+  convertedLeads Lead[]
+  sales          Sale[]
 
-    @@unique([gymId, clientNumber])
-    @@unique([gymId, documentValue])
-    @@map("gym_clients")
+  @@unique([gymId, clientNumber])
+  @@unique([gymId, documentValue])
+  @@map("gym_clients")
 }
 
 model GymMembershipPlan {
-    id                  String     @id @default(uuid())
-    gymId               String     @map("gym_id")
-    name                String
-    basePrice           Decimal    @map("base_price") @db.Decimal(10, 2)
-    durationMonths      Int?       @map("duration_months")
-    durationDays        Int?       @map("duration_days")
-    description         String?    @db.Text
-    features            Json?
-    termsAndConditions  String?    @map("terms_and_conditions") @db.Text
-    allowsCustomPricing Boolean    @default(false) @map("allows_custom_pricing")
-    maxEvaluations      Int        @default(0) @map("max_evaluations")
-    includesAdvisor     Boolean    @default(false) @map("includes_advisor")
-    showInCatalog       Boolean    @default(false) @map("show_in_catalog")
-    assetsIds           String[]   @default([]) @map("assets_ids")
-    status              PlanStatus
-    createdByUserId     String     @map("created_by_user_id")
-    updatedByUserId     String?    @map("updated_by_user_id")
-    createdAt           DateTime   @default(now()) @map("created_at")
-    updatedAt           DateTime   @updatedAt @map("updated_at")
-    deletedAt           DateTime?  @map("deleted_at")
+  id                  String     @id @default(uuid())
+  gymId               String     @map("gym_id")
+  name                String
+  basePrice           Decimal    @map("base_price") @db.Decimal(10, 2)
+  durationMonths      Int?       @map("duration_months")
+  durationDays        Int?       @map("duration_days")
+  description         String?    @db.Text
+  features            Json?
+  termsAndConditions  String?    @map("terms_and_conditions") @db.Text
+  allowsCustomPricing Boolean    @default(false) @map("allows_custom_pricing")
+  maxEvaluations      Int        @default(0) @map("max_evaluations")
+  includesAdvisor     Boolean    @default(false) @map("includes_advisor")
+  showInCatalog       Boolean    @default(false) @map("show_in_catalog")
+  assetsIds           String[]   @default([]) @map("assets_ids")
+  status              PlanStatus
+  createdByUserId     String     @map("created_by_user_id")
+  updatedByUserId     String?    @map("updated_by_user_id")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+  deletedAt           DateTime?  @map("deleted_at")
 
-    // Relations
-    gym       Gym        @relation(fields: [gymId], references: [id])
-    createdBy User       @relation("GymMembershipPlanCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User?      @relation("GymMembershipPlanUpdatedBy", fields: [updatedByUserId], references: [id])
-    contracts Contract[]
+  // Relations
+  gym       Gym        @relation(fields: [gymId], references: [id])
+  createdBy User       @relation("GymMembershipPlanCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy User?      @relation("GymMembershipPlanUpdatedBy", fields: [updatedByUserId], references: [id])
+  contracts Contract[]
 
-    @@map("gym_membership_plans")
+  @@map("gym_membership_plans")
 }
 
 model Contract {
-    id                  String           @id @default(uuid())
-    gymClientId         String           @map("gym_client_id")
-    gymMembershipPlanId String           @map("gym_membership_plan_id")
-    paymentMethodId     String           @map("payment_method_id")
-    parentId            String?          @map("parent_id") // Reference to parent contract for renewals
-    startDate           DateTime         @map("start_date")
-    endDate             DateTime         @map("end_date")
-    basePrice           Decimal          @map("base_price") @db.Decimal(10, 2)
-    customPrice         Decimal?         @map("custom_price") @db.Decimal(10, 2)
-    finalAmount         Decimal          @map("final_amount") @db.Decimal(10, 2)
-    currency            String
-    discountPercentage  Decimal?         @map("discount_percentage") @db.Decimal(5, 2)
-    discountAmount      Decimal?         @map("discount_amount") @db.Decimal(10, 2)
-    status              ContractStatus
-    paymentFrequency    PaymentFrequency @map("payment_frequency")
-    notes               String?          @db.Text
-    termsAndConditions  String?          @map("terms_and_conditions") @db.Text
+  id                  String           @id @default(uuid())
+  gymClientId         String           @map("gym_client_id")
+  gymMembershipPlanId String           @map("gym_membership_plan_id")
+  paymentMethodId     String           @map("payment_method_id")
+  parentId            String?          @map("parent_id") // Reference to parent contract for renewals
+  startDate           DateTime         @map("start_date")
+  endDate             DateTime         @map("end_date")
+  basePrice           Decimal          @map("base_price") @db.Decimal(10, 2)
+  customPrice         Decimal?         @map("custom_price") @db.Decimal(10, 2)
+  finalAmount         Decimal          @map("final_amount") @db.Decimal(10, 2)
+  currency            String
+  discountPercentage  Decimal?         @map("discount_percentage") @db.Decimal(5, 2)
+  discountAmount      Decimal?         @map("discount_amount") @db.Decimal(10, 2)
+  status              ContractStatus
+  paymentFrequency    PaymentFrequency @map("payment_frequency")
+  notes               String?          @db.Text
+  termsAndConditions  String?          @map("terms_and_conditions") @db.Text
 
-    // freezeStartDate
-    freezeStartDate DateTime? @map("freeze_start_date")
-    freezeEndDate   DateTime? @map("freeze_end_date")
+  // freezeStartDate
+  freezeStartDate DateTime? @map("freeze_start_date")
+  freezeEndDate   DateTime? @map("freeze_end_date")
 
-    // Asset fields as simple text IDs
-    contractDocumentId String?  @map("contract_document_id")
-    paymentReceiptIds  Json?    @map("payment_receipt_ids") // Array of asset IDs
-    receiptIds         String[] @default([]) @map("receipt_ids")
-    
-    metadata            Json?    @default("{}") // Additional flexible data storage
+  // Asset fields as simple text IDs
+  contractDocumentId String?  @map("contract_document_id")
+  paymentReceiptIds  Json?    @map("payment_receipt_ids") // Array of asset IDs
+  receiptIds         String[] @default([]) @map("receipt_ids")
 
-    createdByUserId   String    @map("created_by_user_id")
-    updatedByUserId   String?   @map("updated_by_user_id")
-    approvedByUserId  String?   @map("approved_by_user_id")
-    approvedAt        DateTime? @map("approved_at")
-    cancelledByUserId String?   @map("cancelled_by_user_id")
-    cancelledAt       DateTime? @map("cancelled_at")
-    createdAt         DateTime  @default(now()) @map("created_at")
-    updatedAt         DateTime  @updatedAt @map("updated_at")
-    deletedAt         DateTime? @map("deleted_at")
+  metadata Json? @default("{}") // Additional flexible data storage
 
-    // Relations
-    gymClient         GymClient         @relation(fields: [gymClientId], references: [id])
-    gymMembershipPlan GymMembershipPlan @relation(fields: [gymMembershipPlanId], references: [id])
-    paymentMethod     PaymentMethod     @relation(fields: [paymentMethodId], references: [id])
-    parent            Contract?         @relation("ContractRenewal", fields: [parentId], references: [id])
-    renewals          Contract[]        @relation("ContractRenewal")
-    createdBy         User              @relation("ContractCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy         User?             @relation("ContractUpdatedBy", fields: [updatedByUserId], references: [id])
-    approvedBy        User?             @relation("ContractApprovedBy", fields: [approvedByUserId], references: [id])
-    cancelledBy       User?             @relation("ContractCancelledBy", fields: [cancelledByUserId], references: [id])
+  createdByUserId   String    @map("created_by_user_id")
+  updatedByUserId   String?   @map("updated_by_user_id")
+  approvedByUserId  String?   @map("approved_by_user_id")
+  approvedAt        DateTime? @map("approved_at")
+  cancelledByUserId String?   @map("cancelled_by_user_id")
+  cancelledAt       DateTime? @map("cancelled_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
 
-    Gym   Gym?    @relation(fields: [gymId], references: [id])
-    gymId String?
+  // Relations
+  gymClient         GymClient         @relation(fields: [gymClientId], references: [id])
+  gymMembershipPlan GymMembershipPlan @relation(fields: [gymMembershipPlanId], references: [id])
+  paymentMethod     PaymentMethod     @relation(fields: [paymentMethodId], references: [id])
+  parent            Contract?         @relation("ContractRenewal", fields: [parentId], references: [id])
+  renewals          Contract[]        @relation("ContractRenewal")
+  createdBy         User              @relation("ContractCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy         User?             @relation("ContractUpdatedBy", fields: [updatedByUserId], references: [id])
+  approvedBy        User?             @relation("ContractApprovedBy", fields: [approvedByUserId], references: [id])
+  cancelledBy       User?             @relation("ContractCancelledBy", fields: [cancelledByUserId], references: [id])
 
-    @@map("contracts")
+  Gym   Gym?    @relation(fields: [gymId], references: [id])
+  gymId String?
+
+  @@map("contracts")
 }
 
 // Simplified Asset model - no entity relationships
 model Asset {
-    id               String      @id @default(uuid())
-    filename         String
-    originalName     String      @map("original_name")
-    filePath         String      @map("file_path")
-    fileSize         Int         @map("file_size")
-    mimeType         String      @map("mime_type")
-    gymId            String      @map("gym_id")
-    uploadedByUserId String      @map("uploaded_by_user_id")
-    metadata         Json?
-    status           AssetStatus
-    description      String?     @db.Text
-    isHide           Boolean     @default(false) @map("is_hide")
-    createdByUserId  String      @map("created_by_user_id")
-    updatedByUserId  String?     @map("updated_by_user_id")
-    createdAt        DateTime    @default(now()) @map("created_at")
-    updatedAt        DateTime    @updatedAt @map("updated_at")
-    deletedAt        DateTime?   @map("deleted_at")
+  id               String      @id @default(uuid())
+  filename         String
+  originalName     String      @map("original_name")
+  filePath         String      @map("file_path")
+  fileSize         Int         @map("file_size")
+  mimeType         String      @map("mime_type")
+  gymId            String      @map("gym_id")
+  uploadedByUserId String      @map("uploaded_by_user_id")
+  metadata         Json?
+  status           AssetStatus
+  description      String?     @db.Text
+  isHide           Boolean     @default(false) @map("is_hide")
+  createdByUserId  String      @map("created_by_user_id")
+  updatedByUserId  String?     @map("updated_by_user_id")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+  deletedAt        DateTime?   @map("deleted_at")
 
-    // Relations
-    gym        Gym   @relation(fields: [gymId], references: [id])
-    uploadedBy User  @relation("AssetUploadedBy", fields: [uploadedByUserId], references: [id])
-    createdBy  User  @relation("AssetCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy  User? @relation("AssetUpdatedBy", fields: [updatedByUserId], references: [id])
+  // Relations
+  gym        Gym   @relation(fields: [gymId], references: [id])
+  uploadedBy User  @relation("AssetUploadedBy", fields: [uploadedByUserId], references: [id])
+  createdBy  User  @relation("AssetCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy  User? @relation("AssetUpdatedBy", fields: [updatedByUserId], references: [id])
 
-    @@map("assets")
+  @@map("assets")
 }
 
 model File {
-    id           String    @id @default(uuid())
-    filename     String
-    originalName String    @map("original_name")
-    filePath     String    @map("file_path")
-    fileSize     Int       @map("file_size")
-    mimeType     String    @map("mime_type")
-    userId       String    @map("user_id")
-    metadata     Json?
-    status       String    @default("active")
-    description  String?   @db.Text
-    createdAt    DateTime  @default(now()) @map("created_at")
-    updatedAt    DateTime  @updatedAt @map("updated_at")
-    deletedAt    DateTime? @map("deleted_at")
+  id           String    @id @default(uuid())
+  filename     String
+  originalName String    @map("original_name")
+  filePath     String    @map("file_path")
+  fileSize     Int       @map("file_size")
+  mimeType     String    @map("mime_type")
+  userId       String    @map("user_id")
+  metadata     Json?
+  status       String    @default("active")
+  description  String?   @db.Text
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
 
-    // Relations
-    user User @relation("UserFiles", fields: [userId], references: [id])
+  // Relations
+  user User @relation("UserFiles", fields: [userId], references: [id])
 
-    @@map("files")
+  @@map("files")
 }
 
 model CheckIn {
-    id                 String    @id @default(uuid())
-    gymClientId        String    @map("gym_client_id")
-    gymId              String    @map("gym_id")
-    timestamp          DateTime  @default(now())
-    registeredByUserId String    @map("registered_by_user_id")
-    notes              String?   @db.Text
-    createdByUserId    String    @map("created_by_user_id")
-    updatedByUserId    String?   @map("updated_by_user_id")
-    createdAt          DateTime  @default(now()) @map("created_at")
-    updatedAt          DateTime  @updatedAt @map("updated_at")
-    deletedAt          DateTime? @map("deleted_at")
+  id                 String    @id @default(uuid())
+  gymClientId        String    @map("gym_client_id")
+  gymId              String    @map("gym_id")
+  timestamp          DateTime  @default(now())
+  registeredByUserId String    @map("registered_by_user_id")
+  notes              String?   @db.Text
+  createdByUserId    String    @map("created_by_user_id")
+  updatedByUserId    String?   @map("updated_by_user_id")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  deletedAt          DateTime? @map("deleted_at")
 
-    // Relations
-    gymClient    GymClient @relation(fields: [gymClientId], references: [id])
-    gym          Gym       @relation(fields: [gymId], references: [id])
-    registeredBy User      @relation("CheckInRegisteredBy", fields: [registeredByUserId], references: [id])
-    createdBy    User      @relation("CheckInCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy    User?     @relation("CheckInUpdatedBy", fields: [updatedByUserId], references: [id])
+  // Relations
+  gymClient    GymClient @relation(fields: [gymClientId], references: [id])
+  gym          Gym       @relation(fields: [gymId], references: [id])
+  registeredBy User      @relation("CheckInRegisteredBy", fields: [registeredByUserId], references: [id])
+  createdBy    User      @relation("CheckInCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy    User?     @relation("CheckInUpdatedBy", fields: [updatedByUserId], references: [id])
 
-    @@map("check_ins")
+  @@map("check_ins")
 }
 
 model Evaluation {
-    id                 String           @id @default(uuid())
-    gymClientId        String           @map("gym_client_id")
-    advisorId          String?          @map("advisor_id")
-    evaluationType     EvaluationType   @map("evaluation_type")
-    status             EvaluationStatus
-    durationDays       Int              @map("duration_days")
-    plannedEndDate     DateTime         @map("planned_end_date")
-    actualEndDate      DateTime?        @map("actual_end_date")
-    initialData        Json?            @map("initial_data")
-    finalData          Json?            @map("final_data")
-    progressPercentage Decimal?         @map("progress_percentage") @db.Decimal(5, 2)
-    goals              String?          @db.Text
-    resultsSummary     String?          @map("results_summary") @db.Text
+  id                 String           @id @default(uuid())
+  gymClientId        String           @map("gym_client_id")
+  advisorId          String?          @map("advisor_id")
+  evaluationType     EvaluationType   @map("evaluation_type")
+  status             EvaluationStatus
+  durationDays       Int              @map("duration_days")
+  plannedEndDate     DateTime         @map("planned_end_date")
+  actualEndDate      DateTime?        @map("actual_end_date")
+  initialData        Json?            @map("initial_data")
+  finalData          Json?            @map("final_data")
+  progressPercentage Decimal?         @map("progress_percentage") @db.Decimal(5, 2)
+  goals              String?          @db.Text
+  resultsSummary     String?          @map("results_summary") @db.Text
 
-    // Asset fields as simple text IDs
-    initialPhotoIds  Json? @map("initial_photo_ids") // Array of asset IDs
-    progressPhotoIds Json? @map("progress_photo_ids") // Array of asset IDs
-    finalPhotoIds    Json? @map("final_photo_ids") // Array of asset IDs
-    documentIds      Json? @map("document_ids") // Array of asset IDs
+  // Asset fields as simple text IDs
+  initialPhotoIds  Json? @map("initial_photo_ids") // Array of asset IDs
+  progressPhotoIds Json? @map("progress_photo_ids") // Array of asset IDs
+  finalPhotoIds    Json? @map("final_photo_ids") // Array of asset IDs
+  documentIds      Json? @map("document_ids") // Array of asset IDs
 
-    createdByUserId   String    @map("created_by_user_id")
-    updatedByUserId   String?   @map("updated_by_user_id")
-    completedByUserId String?   @map("completed_by_user_id")
-    createdAt         DateTime  @default(now()) @map("created_at")
-    updatedAt         DateTime  @updatedAt @map("updated_at")
-    deletedAt         DateTime? @map("deleted_at")
+  createdByUserId   String    @map("created_by_user_id")
+  updatedByUserId   String?   @map("updated_by_user_id")
+  completedByUserId String?   @map("completed_by_user_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
 
-    // Relations
-    gymClient   GymClient     @relation(fields: [gymClientId], references: [id])
-    advisor     Collaborator? @relation(fields: [advisorId], references: [id])
-    createdBy   User          @relation("EvaluationCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy   User?         @relation("EvaluationUpdatedBy", fields: [updatedByUserId], references: [id])
-    completedBy User?         @relation("EvaluationCompletedBy", fields: [completedByUserId], references: [id])
+  // Relations
+  gymClient   GymClient     @relation(fields: [gymClientId], references: [id])
+  advisor     Collaborator? @relation(fields: [advisorId], references: [id])
+  createdBy   User          @relation("EvaluationCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy   User?         @relation("EvaluationUpdatedBy", fields: [updatedByUserId], references: [id])
+  completedBy User?         @relation("EvaluationCompletedBy", fields: [completedByUserId], references: [id])
 
-    evaluationComments EvaluationComment[]
-    Gym                Gym?                @relation(fields: [gymId], references: [id])
-    gymId              String?
+  evaluationComments EvaluationComment[]
+  Gym                Gym?                @relation(fields: [gymId], references: [id])
+  gymId              String?
 
-    @@map("evaluations")
+  @@map("evaluations")
 }
 
 model EvaluationComment {
-    id           String      @id @default(uuid())
-    evaluationId String      @map("evaluation_id")
-    commentType  CommentType @map("comment_type")
-    comment      String      @db.Text
-    isPrivate    Boolean     @default(false) @map("is_private")
+  id           String      @id @default(uuid())
+  evaluationId String      @map("evaluation_id")
+  commentType  CommentType @map("comment_type")
+  comment      String      @db.Text
+  isPrivate    Boolean     @default(false) @map("is_private")
 
-    // Asset fields as simple text IDs
-    attachmentIds Json? @map("attachment_ids") // Array of asset IDs
+  // Asset fields as simple text IDs
+  attachmentIds Json? @map("attachment_ids") // Array of asset IDs
 
-    createdByUserId String    @map("created_by_user_id")
-    updatedByUserId String?   @map("updated_by_user_id")
-    createdAt       DateTime  @default(now()) @map("created_at")
-    updatedAt       DateTime  @updatedAt @map("updated_at")
-    deletedAt       DateTime? @map("deleted_at")
+  createdByUserId String    @map("created_by_user_id")
+  updatedByUserId String?   @map("updated_by_user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
-    // Relations
-    evaluation Evaluation @relation(fields: [evaluationId], references: [id])
-    createdBy  User       @relation("EvaluationCommentCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy  User?      @relation("EvaluationCommentUpdatedBy", fields: [updatedByUserId], references: [id])
+  // Relations
+  evaluation Evaluation @relation(fields: [evaluationId], references: [id])
+  createdBy  User       @relation("EvaluationCommentCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy  User?      @relation("EvaluationCommentUpdatedBy", fields: [updatedByUserId], references: [id])
 
-    @@map("evaluation_comments")
+  @@map("evaluation_comments")
 }
 
 model Lead {
-    id                  String     @id @default(uuid())
-    gymId               String     @map("gym_id")
-    name                String
-    email               String
-    phone               String
-    message             String?    @db.Text
-    source              String?
-    status              LeadStatus @default(NEW)
-    metadata            Json?
-    assignedToUserId    String?    @map("assigned_to_user_id")
-    notes               String?    @db.Text
-    assetId             String?    @map("asset_id")
-    assetIds            String[]   @default([]) @map("asset_ids")
-    convertedToClientId String?    @map("converted_to_client_id")
-    convertedAt         DateTime?  @map("converted_at")
-    createdByUserId     String?    @map("created_by_user_id")
-    updatedByUserId     String?    @map("updated_by_user_id")
-    createdAt           DateTime   @default(now()) @map("created_at")
-    updatedAt           DateTime   @updatedAt @map("updated_at")
-    deletedAt           DateTime?  @map("deleted_at")
+  id                  String     @id @default(uuid())
+  gymId               String     @map("gym_id")
+  name                String
+  email               String
+  phone               String
+  message             String?    @db.Text
+  source              String?
+  status              LeadStatus @default(NEW)
+  metadata            Json?
+  assignedToUserId    String?    @map("assigned_to_user_id")
+  notes               String?    @db.Text
+  assetId             String?    @map("asset_id")
+  assetIds            String[]   @default([]) @map("asset_ids")
+  convertedToClientId String?    @map("converted_to_client_id")
+  convertedAt         DateTime?  @map("converted_at")
+  createdByUserId     String?    @map("created_by_user_id")
+  updatedByUserId     String?    @map("updated_by_user_id")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+  deletedAt           DateTime?  @map("deleted_at")
 
-    // Relations
-    gym               Gym        @relation(fields: [gymId], references: [id])
-    assignedTo        User?      @relation("LeadAssignedTo", fields: [assignedToUserId], references: [id])
-    convertedToClient GymClient? @relation(fields: [convertedToClientId], references: [id])
-    createdBy         User?      @relation("LeadCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy         User?      @relation("LeadUpdatedBy", fields: [updatedByUserId], references: [id])
+  // Relations
+  gym               Gym        @relation(fields: [gymId], references: [id])
+  assignedTo        User?      @relation("LeadAssignedTo", fields: [assignedToUserId], references: [id])
+  convertedToClient GymClient? @relation(fields: [convertedToClientId], references: [id])
+  createdBy         User?      @relation("LeadCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy         User?      @relation("LeadUpdatedBy", fields: [updatedByUserId], references: [id])
 
-    @@map("leads")
+  @@map("leads")
 }
 
 // Inventory and Point of Sale Models
 
 model ProductCategory {
-    id              String    @id @default(uuid())
-    gymId           String    @map("gym_id")
-    name            String
-    description     String?   @db.Text
-    color           String?
-    createdByUserId String    @map("created_by_user_id")
-    updatedByUserId String?   @map("updated_by_user_id")
-    createdAt       DateTime  @default(now()) @map("created_at")
-    updatedAt       DateTime  @updatedAt @map("updated_at")
-    deletedAt       DateTime? @map("deleted_at")
+  id              String    @id @default(uuid())
+  gymId           String    @map("gym_id")
+  name            String
+  description     String?   @db.Text
+  color           String?
+  createdByUserId String    @map("created_by_user_id")
+  updatedByUserId String?   @map("updated_by_user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
-    // Relations
-    gym       Gym       @relation(fields: [gymId], references: [id])
-    createdBy User      @relation("ProductCategoryCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User?     @relation("ProductCategoryUpdatedBy", fields: [updatedByUserId], references: [id])
-    products  Product[]
+  // Relations
+  gym       Gym       @relation(fields: [gymId], references: [id])
+  createdBy User      @relation("ProductCategoryCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy User?     @relation("ProductCategoryUpdatedBy", fields: [updatedByUserId], references: [id])
+  products  Product[]
 
-    @@map("product_categories")
+  @@map("product_categories")
 }
 
 model Product {
-    id              String         @id @default(uuid())
-    gymId           String         @map("gym_id")
-    categoryId      String?        @map("category_id")
-    name            String
-    description     String?        @db.Text
-    price           Decimal        @db.Decimal(10, 2)
-    stock           Int?           @map("stock") // Made optional for services
-    minStock        Int?           @map("min_stock") // Optional minimum stock level
-    maxStock        Int?           @map("max_stock") // Optional maximum stock level
-    imageId         String?        @map("image_id") // Asset ID
-    status          ProductStatus  @default(active)
-    type            ProductType    @default(Product) @map("type")
-    trackInventory  TrackInventory @default(simple) @map("track_inventory")
-    createdByUserId String         @map("created_by_user_id")
-    updatedByUserId String?        @map("updated_by_user_id")
-    createdAt       DateTime       @default(now()) @map("created_at")
-    updatedAt       DateTime       @updatedAt @map("updated_at")
-    deletedAt       DateTime?      @map("deleted_at")
+  id              String         @id @default(uuid())
+  gymId           String         @map("gym_id")
+  categoryId      String?        @map("category_id")
+  name            String
+  description     String?        @db.Text
+  price           Decimal        @db.Decimal(10, 2)
+  stock           Int?           @map("stock") // Made optional for services
+  minStock        Int?           @map("min_stock") // Optional minimum stock level
+  maxStock        Int?           @map("max_stock") // Optional maximum stock level
+  imageId         String?        @map("image_id") // Asset ID
+  status          ProductStatus  @default(active)
+  type            ProductType    @default(Product) @map("type")
+  trackInventory  TrackInventory @default(simple) @map("track_inventory")
+  createdByUserId String         @map("created_by_user_id")
+  updatedByUserId String?        @map("updated_by_user_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  deletedAt       DateTime?      @map("deleted_at")
 
-    // Relations
-    gym       Gym              @relation(fields: [gymId], references: [id])
-    category  ProductCategory? @relation(fields: [categoryId], references: [id])
-    createdBy User             @relation("ProductCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User?            @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id])
-    saleItems SaleItem[]
+  // Relations
+  gym       Gym              @relation(fields: [gymId], references: [id])
+  category  ProductCategory? @relation(fields: [categoryId], references: [id])
+  createdBy User             @relation("ProductCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy User?            @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id])
+  saleItems SaleItem[]
 
-    stockMovements StockMovement[]
+  stockMovements StockMovement[]
 
-    @@map("products")
+  @@map("products")
 }
 
 model StockMovement {
-    id              String            @id @default(uuid())
-    productId       String            @map("product_id")
-    gymId           String            @map("gym_id")
-    type            StockMovementType
-    quantity        Int
-    previousStock   Int?              @map("previous_stock")
-    newStock        Int?              @map("new_stock")
-    notes           String?           @db.Text
-    supplierId      String?           @map("supplier_id")
-    fileId          String?           @map("file_id") // For receipts/documents
-    createdByUserId String            @map("created_by_user_id")
-    createdAt       DateTime          @default(now()) @map("created_at")
-    // Relations
-    product         Product           @relation(fields: [productId], references: [id])
-    gym             Gym               @relation(fields: [gymId], references: [id])
-    supplier        Supplier?         @relation(fields: [supplierId], references: [id])
-    createdBy       User              @relation("StockMovementCreatedBy", fields: [createdByUserId], references: [id])
+  id              String            @id @default(uuid())
+  productId       String            @map("product_id")
+  gymId           String            @map("gym_id")
+  type            StockMovementType
+  quantity        Int
+  previousStock   Int?              @map("previous_stock")
+  newStock        Int?              @map("new_stock")
+  notes           String?           @db.Text
+  supplierId      String?           @map("supplier_id")
+  fileId          String?           @map("file_id") // For receipts/documents
+  createdByUserId String            @map("created_by_user_id")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  // Relations
+  product         Product           @relation(fields: [productId], references: [id])
+  gym             Gym               @relation(fields: [gymId], references: [id])
+  supplier        Supplier?         @relation(fields: [supplierId], references: [id])
+  createdBy       User              @relation("StockMovementCreatedBy", fields: [createdByUserId], references: [id])
 
-    @@map("stock_movements")
+  @@map("stock_movements")
 }
 
 model Supplier {
-    id              String    @id @default(uuid())
-    gymId           String    @map("gym_id")
-    name            String
-    contactInfo     String?   @map("contact_info") @db.Text
-    phone           String?
-    email           String?
-    address         String?   @db.Text
-    createdByUserId String    @map("created_by_user_id")
-    updatedByUserId String?   @map("updated_by_user_id")
-    createdAt       DateTime  @default(now()) @map("created_at")
-    updatedAt       DateTime  @updatedAt @map("updated_at")
-    deletedAt       DateTime? @map("deleted_at")
+  id              String    @id @default(uuid())
+  gymId           String    @map("gym_id")
+  name            String
+  contactInfo     String?   @map("contact_info") @db.Text
+  phone           String?
+  email           String?
+  address         String?   @db.Text
+  createdByUserId String    @map("created_by_user_id")
+  updatedByUserId String?   @map("updated_by_user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
-    // Relations
-    gym            Gym             @relation(fields: [gymId], references: [id])
-    createdBy      User            @relation("SupplierCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy      User?           @relation("SupplierUpdatedBy", fields: [updatedByUserId], references: [id])
-    stockMovements StockMovement[]
+  // Relations
+  gym            Gym             @relation(fields: [gymId], references: [id])
+  createdBy      User            @relation("SupplierCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy      User?           @relation("SupplierUpdatedBy", fields: [updatedByUserId], references: [id])
+  stockMovements StockMovement[]
 
-    @@map("suppliers")
+  @@map("suppliers")
 }
 
 model Sale {
-    id              String        @id @default(uuid())
-    gymId           String        @map("gym_id")
-    customerId      String?       @map("customer_id")
-    saleNumber      String        @map("sale_number")
-    total           Decimal       @db.Decimal(10, 2)
-    paymentStatus   PaymentStatus @default(unpaid) @map("payment_status")
-    paymentMethodId String?       @map("payment_method_id")
-    saleDate        DateTime      @default(now()) @map("sale_date")
-    customerName    String?       @map("customer_name")
-    notes           String?       @db.Text
-    fileIds         String[]      @map("file_ids")
-    metadata        Json?         @default("{}") // Additional flexible data storage
-    createdByUserId String        @map("created_by_user_id")
-    updatedByUserId String?       @map("updated_by_user_id")
-    createdAt       DateTime      @default(now()) @map("created_at")
-    updatedAt       DateTime      @updatedAt @map("updated_at")
-    deletedAt       DateTime?     @map("deleted_at")
+  id              String        @id @default(uuid())
+  gymId           String        @map("gym_id")
+  customerId      String?       @map("customer_id")
+  saleNumber      String        @map("sale_number")
+  total           Decimal       @db.Decimal(10, 2)
+  paymentStatus   PaymentStatus @default(unpaid) @map("payment_status")
+  paymentMethodId String?       @map("payment_method_id")
+  saleDate        DateTime      @default(now()) @map("sale_date")
+  customerName    String?       @map("customer_name")
+  notes           String?       @db.Text
+  fileIds         String[]      @map("file_ids")
+  metadata        Json?         @default("{}") // Additional flexible data storage
+  createdByUserId String        @map("created_by_user_id")
+  updatedByUserId String?       @map("updated_by_user_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  deletedAt       DateTime?     @map("deleted_at")
 
-    // Relations
-    gym           Gym            @relation(fields: [gymId], references: [id])
-    createdBy     User           @relation("SaleCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy     User?          @relation("SaleUpdatedBy", fields: [updatedByUserId], references: [id])
-    paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
-    customer      GymClient?     @relation(fields: [customerId], references: [id])
-    saleItems     SaleItem[]
+  // Relations
+  gym           Gym            @relation(fields: [gymId], references: [id])
+  createdBy     User           @relation("SaleCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy     User?          @relation("SaleUpdatedBy", fields: [updatedByUserId], references: [id])
+  paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  customer      GymClient?     @relation(fields: [customerId], references: [id])
+  saleItems     SaleItem[]
 
-    @@unique([gymId, saleNumber])
-    @@map("sales")
+  @@unique([gymId, saleNumber])
+  @@map("sales")
 }
 
 model SaleItem {
-    id              String    @id @default(uuid())
-    saleId          String    @map("sale_id")
-    productId       String    @map("product_id")
-    quantity        Int
-    unitPrice       Decimal   @map("unit_price") @db.Decimal(10, 2)
-    total           Decimal   @db.Decimal(10, 2)
-    metadata        Json?     @default("{}") // Additional flexible data storage
-    createdByUserId String    @map("created_by_user_id")
-    updatedByUserId String?   @map("updated_by_user_id")
-    createdAt       DateTime  @default(now()) @map("created_at")
-    updatedAt       DateTime  @updatedAt @map("updated_at")
-    deletedAt       DateTime? @map("deleted_at")
+  id              String    @id @default(uuid())
+  saleId          String    @map("sale_id")
+  productId       String    @map("product_id")
+  quantity        Int
+  unitPrice       Decimal   @map("unit_price") @db.Decimal(10, 2)
+  total           Decimal   @db.Decimal(10, 2)
+  metadata        Json?     @default("{}") // Additional flexible data storage
+  createdByUserId String    @map("created_by_user_id")
+  updatedByUserId String?   @map("updated_by_user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
-    // Relations
-    sale      Sale    @relation(fields: [saleId], references: [id])
-    product   Product @relation(fields: [productId], references: [id])
-    createdBy User    @relation("SaleItemCreatedBy", fields: [createdByUserId], references: [id])
-    updatedBy User?   @relation("SaleItemUpdatedBy", fields: [updatedByUserId], references: [id])
+  // Relations
+  sale      Sale    @relation(fields: [saleId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+  createdBy User    @relation("SaleItemCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy User?   @relation("SaleItemUpdatedBy", fields: [updatedByUserId], references: [id])
 
-    @@map("sale_items")
+  @@map("sale_items")
 }
