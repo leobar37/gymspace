@@ -1,0 +1,24 @@
+import { BottomSheetWrapper } from '@gymspace/sheet';
+import { createMultiScreen } from '@/components/ui/multi-screen/builder';
+import React from 'react';
+import { ClientListScreen } from './ClientListScreen';
+import { CheckInRegistrationScreen } from './CheckInRegistrationScreen';
+
+// Create the multi-screen flow
+const checkInFlow = createMultiScreen()
+  .addStep('client-list', ClientListScreen)
+  .addStep('registration', CheckInRegistrationScreen)
+  .build();
+const { Component } = checkInFlow;
+export const CheckInSheet: React.FC = () => {
+  return (
+    <BottomSheetWrapper
+      sheetId="check-in"
+      snapPoints={['70%', '90%']}
+      enablePanDownToClose
+      scrollable
+    >
+      <Component />
+    </BottomSheetWrapper>
+  );
+};

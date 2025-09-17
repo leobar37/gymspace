@@ -14,7 +14,7 @@ import {
   ClockIcon,
   FileTextIcon 
 } from 'lucide-react-native';
-import { useCheckInsController } from '@/controllers/check-ins.controller';
+import { useCheckInsController } from '@/features/dashboard/controllers/check-ins.controller';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 

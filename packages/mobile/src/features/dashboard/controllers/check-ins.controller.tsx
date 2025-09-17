@@ -5,8 +5,8 @@ import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/t
 import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { dashboardKeys } from '@/features/dashboard/controllers/dashboard.controller';
 import { clientsKeys } from '@/features/clients/controllers/clients.controller';
-import { 
-  CreateCheckInDto, 
+import {
+  CreateCheckInDto,
   SearchCheckInsParams,
   CurrentlyInGymResponse,
   ClientCheckInHistory
@@ -45,14 +45,14 @@ export const useCheckInsController = () => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.checkIns] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.currentlyInGym] });
-      queryClient.invalidateQueries({ 
-        queryKey: [QUERY_KEYS.clientHistory, data.gymClientId] 
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.clientHistory, data.gymClientId]
       });
-      
+
       // Invalidate dashboard stats (check-in counts, recent activity)
       queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
       queryClient.invalidateQueries({ queryKey: dashboardKeys.recentActivity() });
-      
+
       // Invalidate client stats to refresh the client's check-in data
       queryClient.invalidateQueries({ queryKey: clientsKeys.stats(data.gymClientId) });
     },
@@ -158,13 +158,13 @@ export const useCheckInsController = () => {
     // Mutations
     createCheckIn,
     deleteCheckIn,
-    
+
     // Queries
     useCheckInsList,
     useCurrentlyInGym,
     useClientCheckInHistory,
     useCheckInStats,
-    
+
     // Utils
     invalidateCheckIns: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.checkIns] });
@@ -176,7 +176,7 @@ export const useCheckInsController = () => {
 // Hook for managing check-in form state
 export const useCheckInForm = () => {
   const { createCheckIn } = useCheckInsController();
-  
+
   const handleCheckIn = async (clientId: string, notes?: string) => {
     await createCheckIn.mutateAsync({
       gymClientId: clientId,

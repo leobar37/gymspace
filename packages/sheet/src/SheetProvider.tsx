@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useRef, useCallback } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider, BottomSheetModal } from '@gorhom/bottom-sheet';
 import type { SheetProviderProps, SheetContextType, SheetConfig } from './types';
 
@@ -52,12 +51,10 @@ export function SheetProvider({ children }: SheetProviderProps) {
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <SheetContext.Provider value={contextValue}>
-          {children}
-        </SheetContext.Provider>
-      </BottomSheetModalProvider>
-    </GestureHandlerRootView>
+    <BottomSheetModalProvider>
+      <SheetContext.Provider value={contextValue}>
+        {children}
+      </SheetContext.Provider>
+    </BottomSheetModalProvider>
   );
 }

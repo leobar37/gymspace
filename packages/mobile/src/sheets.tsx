@@ -10,6 +10,7 @@ import { ContractFreezeSheet } from '@/features/contracts/components/ContractFre
 import { AssetPreviewSheet } from '@/features/assets/components/AssetPreviewSheet';
 import AssetSelectorSheet from '@/features/assets/components/AssetSelectorSheet';
 import ClientSelectorSheet from '@/features/clients/components/ClientSelectorSheet';
+import { CheckInSheet } from '@/features/dashboard/components/CheckInSheet';
 import type { Product, StockMovement, SearchSalesParams, SearchProductsParams, GetContractsParams, Contract, ProductCategory, Client } from '@gymspace/sdk';
 
 // Register the stock adjustment modal
@@ -44,6 +45,9 @@ SheetManager.register('asset-selector', AssetSelectorSheet);
 
 // Register the client selector sheet
 SheetManager.register('client-selector', ClientSelectorSheet);
+
+// Register the check-in sheet
+SheetManager.register('check-in', CheckInSheet);
 
 // Define the payload structure for TypeScript intellisense
 interface StockAdjustmentForm {

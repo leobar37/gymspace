@@ -22,7 +22,7 @@ catalog:
   '@types/react': ^19.1.9
   '@types/react-dom': ^19.1.9
 
-  # React ecosystem - SHARED VERSIONS (React 19 for all)
+  # React ecosystem - SHARED VERSIONS (React 19.1.0 for all)
   react: 19.1.0
   react-dom: 19.1.0
 
@@ -38,8 +38,18 @@ catalog:
 pnpm:
   overrides:
     zod: ^3.22.4
-    # React 19 for all packages
+    # React 19.1.0 for all packages (Expo SDK 54 requirement)
     react: 19.1.0
     react-dom: 19.1.0
     "@types/react": ^19.1.9
     "@types/react-dom": ^19.1.9
+  peerDependencyRules:
+    allowedVersions:
+      # Allow React 19 for older libraries that don't officially support it yet
+      "@react-aria/checkbox>react": "19"
+      "next>react": "19"
+      "next>react-dom": "19"
+      "lucide-react>react": "19"
+      "@expo/webpack-config>expo": "54"
+    ignoreMissing:
+      - "@types/inquirer"
