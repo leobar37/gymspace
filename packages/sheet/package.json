@@ -1,0 +1,47 @@
+{
+  "name": "@gymspace/action-sheet",
+  "version": "0.9.7",
+  "description": "A Cross Platform(Android & iOS) ActionSheet with a robust and flexible api, native performance and zero dependency code for react native. Create anything you want inside ActionSheet.",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ammarahm-ed/react-native-actions-sheet.git"
+  },
+  "keywords": [
+    "bottom-animated",
+    "react-native",
+    "javascript",
+    "actionsheet",
+    "android",
+    "ios",
+    "action-sheet",
+    "bottom-sheet",
+    "bottom-drawer",
+    "dialog",
+    "picker",
+    "modal",
+    "drawer",
+    "raw-bottom-sheet",
+    "bottom-app-bar",
+    "react-native-action-sheet",
+    "react",
+    "native",
+    "action",
+    "sheet",
+    "bottom",
+    "sheet"
+  ],
+  "author": "ammarahm-ed",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ammarahm-ed/react-native-actions-sheet/issues/"
+  },
+  "homepage": "https://github.com/ammarahm-ed/react-native-actions-sheet",
+  "peerDependencies": {
+    "react-native": "0.81.4",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-safe-area-context": "^5.6.1"
+  },
+  "private": true
+}

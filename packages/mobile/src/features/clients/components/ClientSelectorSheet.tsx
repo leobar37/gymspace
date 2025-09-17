@@ -375,7 +375,6 @@ function ClientSelectorSheet(props: SheetProps<'client-selector'>) {
   return (
     <ActionSheet
       id={sheetId}
-      gestureEnabled
       safeAreaInsets={insets}
       drawUnderStatusBar
       indicatorStyle={{
