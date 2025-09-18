@@ -43,6 +43,11 @@ pnpm:
     react-dom: 19.1.0
     "@types/react": ^19.1.9
     "@types/react-dom": ^19.1.9
+    # NativeWind and CSS Interop compatibility fix
+    nativewind: 4.2.1
+    react-native-css-interop: 0.1.18
+    "@gluestack-ui/nativewind-utils>nativewind": 4.2.1
+    "@legendapp/motion>nativewind": 4.2.1
   peerDependencyRules:
     allowedVersions:
       # Allow React 19 for older libraries that don't officially support it yet

@@ -1,15 +1,15 @@
 'use client';
 import React from 'react';
-import { createButton } from '@gluestack-ui/button';
-import { tva } from '@gluestack-ui/nativewind-utils/tva';
+import { createButton } from '@gluestack-ui/core/button/creator';
+import { tva } from '@gluestack-ui/utils/nativewind-utils';
 import {
   withStyleContext,
   useStyleContext,
-} from '@gluestack-ui/nativewind-utils/withStyleContext';
+} from '@gluestack-ui/utils/nativewind-utils';
 import { cssInterop } from 'nativewind';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import type { VariantProps } from '@gluestack-ui/nativewind-utils';
-import { PrimitiveIcon, UIIcon } from '@gluestack-ui/icon';
+import type { VariantProps } from 'tailwind-variants';
+import { PrimitiveIcon, UIIcon } from '@gluestack-ui/core/icon/creator';
 
 const SCOPE = 'BUTTON';
 
@@ -37,34 +37,33 @@ cssInterop(PrimitiveIcon, {
 });
 
 const buttonStyle = tva({
-  base: 'group/button rounded-lg flex-row items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 data-[disabled=true]:opacity-40 gap-2',
+  base: 'group/button rounded bg-primary-500 flex-row items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 data-[disabled=true]:opacity-40 gap-2',
   variants: {
     action: {
       primary:
-        'bg-primary-500 data-[hover=true]:bg-primary-600 data-[active=true]:bg-primary-700 data-[focus-visible=true]:web:ring-indicator-info',
+        'bg-primary-500 data-[hover=true]:bg-primary-600 data-[active=true]:bg-primary-700 border-primary-300 data-[hover=true]:border-primary-400 data-[active=true]:border-primary-500 data-[focus-visible=true]:web:ring-indicator-info',
       secondary:
-        'bg-secondary-500 data-[hover=true]:bg-secondary-600 data-[active=true]:bg-secondary-700 data-[focus-visible=true]:web:ring-indicator-info',
+        'bg-secondary-500 border-secondary-300 data-[hover=true]:bg-secondary-600 data-[hover=true]:border-secondary-400 data-[active=true]:bg-secondary-700 data-[active=true]:border-secondary-700 data-[focus-visible=true]:web:ring-indicator-info',
       positive:
-        'bg-success-500 data-[hover=true]:bg-success-600 data-[active=true]:bg-success-700 data-[focus-visible=true]:web:ring-indicator-info',
+        'bg-success-500 border-success-300 data-[hover=true]:bg-success-600 data-[hover=true]:border-success-400 data-[active=true]:bg-success-700 data-[active=true]:border-success-500 data-[focus-visible=true]:web:ring-indicator-info',
       negative:
-        'bg-error-500 data-[hover=true]:bg-error-600 data-[active=true]:bg-error-700 data-[focus-visible=true]:web:ring-indicator-info',
+        'bg-error-500 border-error-300 data-[hover=true]:bg-error-600 data-[hover=true]:border-error-400 data-[active=true]:bg-error-700 data-[active=true]:border-error-500 data-[focus-visible=true]:web:ring-indicator-info',
       default:
         'bg-transparent data-[hover=true]:bg-background-50 data-[active=true]:bg-transparent',
     },
     variant: {
       link: 'px-0',
       outline:
-        'bg-transparent border border-outline-200 data-[hover=true]:border-outline-300 data-[active=true]:bg-transparent',
-      solid: 'border border-transparent',
-      ghost: 'bg-transparent data-[hover=true]:bg-background-100 data-[active=true]:bg-background-200',
+        'bg-transparent border data-[hover=true]:bg-background-50 data-[active=true]:bg-transparent',
+      solid: '',
     },
 
     size: {
-      xs: 'px-3.5 h-9',
-      sm: 'px-4 h-10',
-      md: 'px-5 h-11',
-      lg: 'px-6 h-12',
-      xl: 'px-7 h-14',
+      xs: 'px-3.5 h-8',
+      sm: 'px-4 h-9',
+      md: 'px-5 h-10',
+      lg: 'px-6 h-11',
+      xl: 'px-7 h-12',
     },
   },
   compoundVariants: [
@@ -137,7 +136,6 @@ const buttonTextStyle = tva({
       outline: '',
       solid:
         'text-typography-0 data-[hover=true]:text-typography-0 data-[active=true]:text-typography-0',
-      ghost: 'text-typography-600 data-[hover=true]:text-typography-700 data-[active=true]:text-typography-800',
     },
     size: {
       xs: 'text-xs',
@@ -207,7 +205,6 @@ const buttonIconStyle = tva({
       outline: '',
       solid:
         'text-typography-0 data-[hover=true]:text-typography-0 data-[active=true]:text-typography-0',
-      ghost: 'text-typography-600 data-[hover=true]:text-typography-700 data-[active=true]:text-typography-800',
     },
     size: {
       xs: 'h-3.5 w-3.5',
@@ -288,29 +285,31 @@ type IButtonProps = Omit<
   VariantProps<typeof buttonStyle> & { className?: string };
 
 const Button = React.forwardRef<
-  React.ComponentRef<typeof UIButton>,
+  React.ElementRef<typeof UIButton>,
   IButtonProps
->(function Button(
-  { className, variant = 'solid', size = 'md', action = 'primary', ...props },
-  ref
-) {
-  return (
-    <UIButton
-      ref={ref}
-      {...props}
-      className={buttonStyle({ variant, size, action, class: className })}
-      context={{ variant, size, action }}
-    />
-  );
-});
+>(
+  (
+    { className, variant = 'solid', size = 'md', action = 'primary', ...props },
+    ref
+  ) => {
+    return (
+      <UIButton
+        ref={ref}
+        {...props}
+        className={buttonStyle({ variant, size, action, class: className })}
+        context={{ variant, size, action }}
+      />
+    );
+  }
+);
 
 type IButtonTextProps = React.ComponentPropsWithoutRef<typeof UIButton.Text> &
   VariantProps<typeof buttonTextStyle> & { className?: string };
 
 const ButtonText = React.forwardRef<
-  React.ComponentRef<typeof UIButton.Text>,
+  React.ElementRef<typeof UIButton.Text>,
   IButtonTextProps
->(function ButtonText({ className, variant, size, action, ...props }, ref) {
+>(({ className, variant, size, action, ...props }, ref) => {
   const {
     variant: parentVariant,
     size: parentSize,
@@ -327,9 +326,14 @@ const ButtonText = React.forwardRef<
           size: parentSize,
           action: parentAction,
         },
-        variant,
+        variant: variant as 'link' | 'outline' | 'solid' | undefined,
         size,
-        action,
+        action: action as
+          | 'primary'
+          | 'secondary'
+          | 'positive'
+          | 'negative'
+          | undefined,
         class: className,
       })}
     />
@@ -347,9 +351,9 @@ type IButtonIcon = React.ComponentPropsWithoutRef<typeof UIButton.Icon> &
   };
 
 const ButtonIcon = React.forwardRef<
-  React.ComponentRef<typeof UIButton.Icon>,
+  React.ElementRef<typeof UIButton.Icon>,
   IButtonIcon
->(function ButtonIcon({ className, size, ...props }, ref) {
+>(({ className, size, ...props }, ref) => {
   const {
     variant: parentVariant,
     size: parentSize,
@@ -398,31 +402,33 @@ type IButtonGroupProps = React.ComponentPropsWithoutRef<typeof UIButton.Group> &
   VariantProps<typeof buttonGroupStyle>;
 
 const ButtonGroup = React.forwardRef<
-  React.ComponentRef<typeof UIButton.Group>,
+  React.ElementRef<typeof UIButton.Group>,
   IButtonGroupProps
->(function ButtonGroup(
-  {
-    className,
-    space = 'md',
-    isAttached = false,
-    flexDirection = 'column',
-    ...props
-  },
-  ref
-) {
-  return (
-    <UIButton.Group
-      className={buttonGroupStyle({
-        class: className,
-        space,
-        isAttached,
-        flexDirection,
-      })}
-      {...props}
-      ref={ref}
-    />
-  );
-});
+>(
+  (
+    {
+      className,
+      space = 'md',
+      isAttached = false,
+      flexDirection = 'column',
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <UIButton.Group
+        className={buttonGroupStyle({
+          class: className,
+          space,
+          isAttached: isAttached as boolean,
+          flexDirection: flexDirection as any,
+        })}
+        {...props}
+        ref={ref}
+      />
+    );
+  }
+);
 
 Button.displayName = 'Button';
 ButtonText.displayName = 'ButtonText';
