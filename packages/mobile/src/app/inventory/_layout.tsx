@@ -1,7 +1,6 @@
-import { Stack } from 'expo-router';
-import React from 'react';
-import { useRouter } from 'expo-router';
 import { BackButton } from '@/shared/components';
+import { Stack, useRouter } from 'expo-router';
+import React from 'react';
 
 export default function InventoryLayout() {
   const router = useRouter();
@@ -30,16 +29,16 @@ export default function InventoryLayout() {
       <Stack.Screen
         name="new-sale"
         options={{
-          title: "Nueva Venta",
-          headerLeft: () => (
-            <BackButton label="" onPress={() => router.push('/sales-history')} />
-          ),
+          title: 'Nueva Venta',
+          headerLeft: () => <BackButton label="" onPress={() => router.push('/sales-history')} />,
         }}
       />
       <Stack.Screen
         name="categories"
         options={{
           headerShown: true,
+          title: 'Categorías',
+          headerLeft: () => <BackButton label="" />,
         }}
       />
       <Stack.Screen
@@ -47,12 +46,14 @@ export default function InventoryLayout() {
         options={{
           title: 'Nueva Categoría',
           headerBackTitle: 'Volver',
+          headerLeft: () => <BackButton label="" />,
         }}
       />
       <Stack.Screen
         name="categories/[id]/edit"
         options={{
           title: 'Editar Categoría',
+          headerLeft: () => <BackButton label="" />,
         }}
       />
       <Stack.Screen
@@ -73,6 +74,7 @@ export default function InventoryLayout() {
           headerShown: true,
           title: 'Nuevo Producto',
           headerBackTitle: 'Volver',
+          headerLeft: () => <BackButton label="" />,
         }}
       />
       <Stack.Screen
@@ -81,6 +83,7 @@ export default function InventoryLayout() {
           headerShown: true,
           title: 'Nuevo Servicio',
           headerBackTitle: 'Volver',
+          headerLeft: () => <BackButton label="" />,
         }}
       />
       <Stack.Screen
@@ -101,6 +104,7 @@ export default function InventoryLayout() {
           headerShown: true,
           title: '',
           headerBackTitle: '',
+          headerLeft: () => <BackButton label="" />,
         }}
       />
       <Stack.Screen

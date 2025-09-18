@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   View,
 } from 'react-native';
@@ -15,6 +14,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import { Text } from '@/components/ui/text';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface PasswordResetContainerProps {
   children: React.ReactNode;

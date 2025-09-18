@@ -88,23 +88,38 @@ export function SessionProvider({ children }: SessionProviderProps) {
           AsyncStorage.getItem(STORAGE_KEYS.CURRENT_GYM_ID),
         ]);
         
-        // Check if token is expired
-        if (storedExpiry && Date.now() > parseInt(storedExpiry, 10)) {
-          // Token expired, clear everything
-          await clearAuth();
-        } else if (storedToken) {
-          setAccessToken(storedToken);
-          setRefreshToken(storedRefresh);
-          setCurrentGymIdState(storedGymId);
+        // Check if token exists and is not expired
+        if (storedToken) {
+          // Check if token is expired (only if expiry is set)
+          const isExpired = storedExpiry && Date.now() > parseInt(storedExpiry, 10);
           
-          // Sync with SDK
-          if (storedRefresh) {
-            sdk.setTokens(storedToken, storedRefresh);
+          if (isExpired) {
+            // Token expired, clear storage but don't clear state yet
+            // Let the session query handle the 401 and clear properly
+            console.log('Token expired, will be refreshed on session query');
+            await Promise.all([
+              AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN),
+              AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN),
+              AsyncStorage.removeItem(STORAGE_KEYS.EXPIRES_AT),
+              AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_GYM_ID),
+            ]);
           } else {
-            sdk.setAuthToken(storedToken);
-          }
-          if (storedGymId) {
-            sdk.setGymId(storedGymId);
+            // Token is valid, restore session
+            setAccessToken(storedToken);
+            setRefreshToken(storedRefresh);
+            setCurrentGymIdState(storedGymId);
+            
+            // Sync with SDK
+            if (storedRefresh) {
+              sdk.setTokens(storedToken, storedRefresh);
+            } else {
+              sdk.setAuthToken(storedToken);
+            }
+            if (storedGymId) {
+              sdk.setGymId(storedGymId);
+            }
+            
+            console.log('Session restored from storage');
           }
         }
       } catch (error) {
@@ -115,7 +130,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     };
     
     loadStoredAuth();
-  }, []);
+  }, [sdk]);
   
   // Store tokens
   const storeTokens = useCallback(async (tokenData: TokenData): Promise<boolean> => {
@@ -128,9 +143,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
         promises.push(AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokenData.refreshToken));
       }
       
-      if (tokenData.expiresAt) {
-        promises.push(AsyncStorage.setItem(STORAGE_KEYS.EXPIRES_AT, tokenData.expiresAt.toString()));
-      }
+      // If no expiresAt is provided, set a default expiration of 30 days
+      const expirationTime = tokenData.expiresAt || Date.now() + (30 * 24 * 60 * 60 * 1000);
+      promises.push(AsyncStorage.setItem(STORAGE_KEYS.EXPIRES_AT, expirationTime.toString()));
       
       await Promise.all(promises);
       
@@ -144,6 +159,8 @@ export function SessionProvider({ children }: SessionProviderProps) {
       } else {
         sdk.setAuthToken(tokenData.accessToken);
       }
+      
+      console.log('Tokens stored successfully with expiration:', new Date(expirationTime).toISOString());
       
       return true;
     } catch (error) {
@@ -199,6 +216,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
   
   // Sync SDK auth state whenever tokens change
   useEffect(() => {
+    // Only sync if we're not in the initial loading state
+    if (isLoading) return;
+    
     if (accessToken) {
       if (refreshToken) {
         sdk.setTokens(accessToken, refreshToken);
@@ -206,13 +226,14 @@ export function SessionProvider({ children }: SessionProviderProps) {
         sdk.setAuthToken(accessToken);
       }
     } else {
+      // Don't clear SDK auth if we're still loading
       sdk.clearAuth();
     }
     
     if (currentGymId) {
       sdk.setGymId(currentGymId);
     }
-  }, [sdk, accessToken, refreshToken, currentGymId]);
+  }, [sdk, accessToken, refreshToken, currentGymId, isLoading]);
   
   // Session query
   const sessionQuery = useQuery<CurrentSessionResponse>({
@@ -238,9 +259,14 @@ export function SessionProvider({ children }: SessionProviderProps) {
       } catch (error: any) {
         console.error('Session fetch error:', error);
         
-        if (error.status === 401 || error.message?.includes('Unauthorized')) {
-          console.log('Auth error, clearing tokens');
-          await clearAuth();
+        // Only clear auth if we get a 401 and we're not in the initial loading phase
+        // This prevents clearing auth on app restart when the SDK might not be ready
+        if ((error.status === 401 || error.message?.includes('Unauthorized')) && !isLoading) {
+          console.log('Auth error detected, will clear tokens');
+          // Use a timeout to ensure this doesn't interfere with initial load
+          setTimeout(() => {
+            clearAuth();
+          }, 100);
         }
         
         throw error;

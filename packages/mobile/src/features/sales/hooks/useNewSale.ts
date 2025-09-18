@@ -11,6 +11,9 @@ export const useNewSale = () => {
   // Get form methods
   const { getValues, reset: resetForm, setValue, watch } = useFormContext<SaleDetailsFormData>();
   
+  // Get context data
+  const context = useNewSaleContext();
+  
   // Get all store states and actions separately
   const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
@@ -33,9 +36,6 @@ export const useNewSale = () => {
   const resetUI = useSaleUIStore((state) => state.reset);
   const lastSelectedProductId = useSaleUIStore((state) => state.lastSelectedProductId);
   const setLastSelectedProduct = useSaleUIStore((state) => state.setLastSelectedProduct);
-  
-  // Get context data
-  const context = useNewSaleContext();
   
   // Composite action: Toggle item in cart
   const addItemToCart = useCallback((product: Product) => {

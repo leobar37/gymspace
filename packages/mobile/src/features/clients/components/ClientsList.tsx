@@ -23,18 +23,17 @@ import { Card } from '@/components/ui/card';
 import { Fab } from '@/components/ui/fab';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useDataSearch } from '@/hooks/useDataSearch';
 import { useSafeNavigation } from '@/hooks/useSafeNavigation';
+import { InputSearch } from '@/shared/input-search';
 import {
   EditIcon,
   MoreHorizontalIcon,
   PhoneIcon,
   PlusIcon,
-  SearchIcon,
   TrashIcon,
   UserPlusIcon,
 } from 'lucide-react-native';
@@ -54,7 +53,7 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
   const isActive = client.status === 'active';
 
   return (
-    <Card className="mb-3 p-4">
+    <Card className="p-4">
       <HStack className="items-center justify-between">
         <Pressable onPress={onPress} className="flex-1">
           <HStack className="items-center gap-3 flex-1">
@@ -186,17 +185,11 @@ const ClientsListComponent: React.FC = () => {
     <View className="flex-1 bg-gray-50">
       {/* Search bar */}
       <View className="px-4 py-3 bg-white border-b border-gray-200">
-        <Input className="-gray-50">
-          <InputSlot className="pl-3">
-            <InputIcon as={SearchIcon} className="text-gray-400" />
-          </InputSlot>
-          <InputField
-            placeholder="Buscar..."
-            value={searchInput}
-            onChangeText={setSearchInput}
-            autoCapitalize="none"
-          />
-        </Input>
+        <InputSearch
+          value={searchInput}
+          onChangeText={setSearchInput}
+          placeholder="Buscar..."
+        />
       </View>
 
       {/* Clients list */}
@@ -208,6 +201,7 @@ const ClientsListComponent: React.FC = () => {
       ) : (
         <FlatList
           data={filteredData}
+          className='-mt-3'
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <ClientCard
@@ -232,7 +226,7 @@ const ClientsListComponent: React.FC = () => {
           placement="bottom right"
           onPress={handleAddClient}
         >
-          <Icon as={PlusIcon} />
+          <Icon as={PlusIcon}  />
         </Fab>
       )}
 

@@ -12,13 +12,7 @@ import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useInfiniteScroll, InfiniteScrollList } from '@/shared/pagination';
 import type { Sale, SearchSalesParams } from '@gymspace/sdk';
 import { router } from 'expo-router';
-import {
-  InfoIcon,
-  ShoppingCartIcon,
-  SearchIcon,
-  FilterIcon,
-  PlusIcon,
-} from 'lucide-react-native';
+import { InfoIcon, ShoppingCartIcon, SearchIcon, FilterIcon, PlusIcon } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SheetManager } from '@gymspace/sheet';
@@ -46,15 +40,7 @@ export default function SalesHistoryScreen() {
     prefetchNextPage: true,
   });
 
-  const {
-    allItems: sales,
-    state,
-    isLoading,
-    error,
-    isFetching,
-    refresh,
-  } = pagination;
-
+  const { allItems: sales, state, isLoading, error, isFetching, refresh } = pagination;
 
   const handleFiltersChange = useCallback(
     (newFilters: SearchSalesParams) => {
@@ -95,7 +81,6 @@ export default function SalesHistoryScreen() {
     ),
     [handleSalePress],
   );
-
 
   const renderEmptyState = useCallback(() => {
     const hasFilters = getActiveFiltersCount() > 0;
@@ -188,7 +173,7 @@ export default function SalesHistoryScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50" >
+    <View className="flex-1 bg-gray-50">
       <VStack className="flex-1">
         {/* Fixed Header with Search */}
         <View className="bg-white shadow-sm border-b border-gray-100">
@@ -265,12 +250,7 @@ export default function SalesHistoryScreen() {
         />
 
         {/* Floating Action Button for New Sale */}
-        <Fab
-          onPress={() => router.push('/inventory/new-sale')}
-          placement="bottom right"
-          size="lg"
-          renderInPortal={false}
-        >
+        <Fab onPress={() => router.push('/inventory/new-sale')} placement="bottom right" size="lg">
           <Icon as={PlusIcon} className="text-white" />
         </Fab>
       </VStack>

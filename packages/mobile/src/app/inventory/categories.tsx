@@ -7,6 +7,8 @@ import { Text } from '@/components/ui/text';
 import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
+
+
 import { 
   PlusIcon, 
   TagIcon,
@@ -29,6 +31,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Heading } from '@/components/ui/heading';
 import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
+import { Fab, FabIcon } from '@/components/ui/fab';
 
 export default function CategoriesScreen() {
   const toast = useToast();
@@ -141,20 +144,7 @@ export default function CategoriesScreen() {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView showsVerticalScrollIndicator={false}>
-        <VStack space="md" className="p-4">
-          {/* Header with Back Button */}
-          <HStack className="items-center mb-2">
-            <Pressable
-              onPress={() => router.back()}
-              className="p-2 -ml-2 rounded-lg"
-            >
-              <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
-            </Pressable>
-            <Text className="text-xl font-bold text-gray-900 ml-2">
-              Categorías de Productos
-            </Text>
-          </HStack>
-
+        <VStack space="sm" className='-mt-4'>
           {categoriesList.length === 0 ? (
             <Card className="p-8">
               <VStack space="md" className="items-center">
@@ -224,20 +214,10 @@ export default function CategoriesScreen() {
         </VStack>
       </ScrollView>
 
-      {/* Floating Action Button */}
-      <Pressable
-        onPress={handleAddCategory}
-        className="absolute bottom-6 right-6 bg-blue-600 rounded-full p-4 active:bg-blue-700"
-        style={{
-          elevation: 5,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-        }}
-      >
-        <Icon as={PlusIcon} className="w-6 h-6 text-white" />
-      </Pressable>
+      {/* Floating Action Button replaced with Fab component */}
+      <Fab placement="bottom right" onPress={handleAddCategory} className="bg-blue-600 active:bg-blue-700">
+        <FabIcon as={PlusIcon} className="text-white w-6 h-6" />
+      </Fab>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

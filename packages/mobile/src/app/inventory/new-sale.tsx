@@ -1,5 +1,4 @@
 import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ScreenForm } from '@/shared/components/ScreenForm';
@@ -12,7 +11,9 @@ import {
   SaleTotalFooter,
   ItemSelectionModal,
 } from '@/features/sales/components';
-
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { View } from 'react-native';
 // Inner component that uses the hook
 function NewSaleContent() {
   const { hasItems, itemCount } = useNewSale();
@@ -20,20 +21,14 @@ function NewSaleContent() {
   return (
     <>
       <ScreenForm
-        useSafeArea={true}
+        useSafeArea={false}
         showBackButton={false}
         showFixedFooter={hasItems}
         footerContent={hasItems && <SaleTotalFooter />}
       >
-        <VStack space="md" className="pb-16 ">
+        <VStack space="md" className="pb-16">
           {/* Cart Items */}
-          <VStack space="sm">
-            <Text className="text-lg font-semibold text-gray-900">
-              Items{hasItems ? ` (${itemCount})` : ''}
-            </Text>
-            {hasItems ? <CartItemList /> : <EmptyCart />}
-          </VStack>
-
+          <View>{hasItems ? <CartItemList /> : <EmptyCart />}</View>
           {/* Sale Details Form */}
           {hasItems && <SaleDetailsForm />}
         </VStack>
@@ -49,7 +44,11 @@ function NewSaleContent() {
 export default function NewSaleScreen() {
   return (
     <NewSaleProvider>
-      <NewSaleContent />
+      <GestureHandlerRootView>
+        <BottomSheetModalProvider>
+          <NewSaleContent />
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
     </NewSaleProvider>
   );
 }

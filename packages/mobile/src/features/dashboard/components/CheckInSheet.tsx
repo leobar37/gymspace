@@ -9,8 +9,10 @@ const checkInFlow = createMultiScreen()
   .addStep('client-list', ClientListScreen)
   .addStep('registration', CheckInRegistrationScreen)
   .build();
-const { Component } = checkInFlow;
+
 export const CheckInSheet: React.FC = () => {
+  const { Component } = checkInFlow;
+
   return (
     <BottomSheetWrapper
       sheetId="check-in"

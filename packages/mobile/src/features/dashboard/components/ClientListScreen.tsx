@@ -1,8 +1,5 @@
-import { Button, ButtonText } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { Input, InputField } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -10,15 +7,16 @@ import { useClientsController } from '@/features/clients/controllers/clients.con
 import { useDataSearch } from '@/hooks/useDataSearch';
 import { useLoadingScreenStore } from '@/shared/loading-screen';
 import { useMultiScreenContext } from '@/components/ui/multi-screen';
+import { InputSearch } from '@/shared/input-search';
+import { ClientCard } from '@/shared/components/ClientCard';
 import type { Client } from '@gymspace/sdk';
-import { CheckCircleIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react-native';
+import { XIcon, UsersIcon } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { useCheckIn } from '../contexts/CheckInContext';
+import { SheetManager } from '@gymspace/sheet';
 
 export const ClientListScreen: React.FC = () => {
   const { router } = useMultiScreenContext();
-  const { selectClient, canClientCheckIn } = useCheckIn();
 
   // Get clients using the proper controller with limit 1000
   const { useClientsList } = useClientsController();
@@ -39,6 +37,48 @@ export const ClientListScreen: React.FC = () => {
     searchPlaceholder: 'Buscar por nombre, email o número de cliente...',
   });
 
+  // Display all clients by default, or filtered results when searching
+  const displayClients = searchInput.length > 0 ? filteredData : clients;
+
+  // Helper function to check if client can check in
+  const canClientCheckIn = (client: Client): { canCheckIn: boolean; reason?: string } => {
+    // Check if client is active
+    if (client.status !== 'active') {
+      return {
+        canCheckIn: false,
+        reason: 'Cliente inactivo',
+      };
+    }
+
+    // Check if client has active contracts
+    if (!client.contracts || client.contracts.length === 0) {
+      return {
+        canCheckIn: false,
+        reason: 'Sin membresía activa',
+      };
+    }
+
+    // Check if any contract is valid
+    const now = new Date();
+    const hasValidContract = client.contracts.some((contract) => {
+      if (contract.status !== 'active') return false;
+
+      const startDate = new Date(contract.startDate);
+      const endDate = new Date(contract.endDate);
+
+      return now >= startDate && now <= endDate;
+    });
+
+    if (!hasValidContract) {
+      return {
+        canCheckIn: false,
+        reason: 'Membresía expirada',
+      };
+    }
+
+    return { canCheckIn: true };
+  };
+
   const handleSelectClient = (client: Client) => {
     const checkInStatus = canClientCheckIn(client);
 
@@ -57,14 +97,13 @@ export const ClientListScreen: React.FC = () => {
       return;
     }
 
-    // Select client in context and navigate to registration screen
-    selectClient(client);
-    router.navigate('registration');
+    // Navigate to registration screen with selected client
+    router.navigate('registration', { props: { client } });
   };
 
   const handleClose = () => {
     clearSearch();
-    router.navigate('close'); // This will close the sheet
+    SheetManager.hide('check-in');
   };
 
   return (
@@ -87,94 +126,50 @@ export const ClientListScreen: React.FC = () => {
       >
         <VStack className="gap-6">
           {/* Search Input */}
-          <VStack className="gap-2">
-            <Text className="text-sm font-medium text-gray-700">Buscar Cliente</Text>
-            <View className="relative">
-              <Input variant="outline" size="md">
-                <Icon
-                  as={SearchIcon}
-                  className="absolute left-3 top-3 w-5 h-5 text-gray-400 z-10"
-                />
-                <InputField
-                  placeholder="Buscar por nombre, email o número de cliente..."
-                  value={searchInput}
-                  onChangeText={setSearchInput}
-                  className="pl-10"
-                />
-              </Input>
-            </View>
-          </VStack>
+          <InputSearch
+            value={searchInput}
+            onChangeText={setSearchInput}
+            placeholder="Buscar por nombre, email o número..."
+            onClear={clearSearch}
+          />
 
-          {/* Search Results */}
-          {searchInput.length > 0 && (
-            <VStack className="gap-2">
-              {isLoading ? (
-                <HStack className="items-center justify-center py-4">
-                  <Spinner className="text-blue-600" />
-                  <Text className="ml-2 text-gray-600">Cargando clientes...</Text>
-                </HStack>
-              ) : filteredData && filteredData.length > 0 ? (
-                <VStack className="gap-2">
-                  {filteredData.slice(0, 10).map((client) => {
-                    const fullName = client.name || 'Sin nombre';
-                    const checkInStatus = canClientCheckIn(client);
+          {/* Client List */}
+          {isLoading ? (
+            <HStack className="items-center justify-center py-8">
+              <Spinner className="text-blue-600" />
+              <Text className="ml-2 text-gray-600">Cargando clientes...</Text>
+            </HStack>
+          ) : displayClients && displayClients.length > 0 ? (
+            <VStack>
+              <Text className="text-sm text-gray-500 mb-2">
+                {searchInput.length > 0
+                  ? `${displayClients.length} cliente${displayClients.length !== 1 ? 's' : ''} encontrado${displayClients.length !== 1 ? 's' : ''}`
+                  : `${displayClients.length} cliente${displayClients.length !== 1 ? 's' : ''} activo${displayClients.length !== 1 ? 's' : ''}`
+                }
+              </Text>
+              {displayClients.map((client) => {
+                const checkInStatus = canClientCheckIn(client);
 
-                    return (
-                      <Pressable
-                        key={client.id}
-                        onPress={() => handleSelectClient(client)}
-                        disabled={!checkInStatus.canCheckIn}
-                      >
-                        <Card
-                          className={`p-3 ${
-                            checkInStatus.canCheckIn
-                              ? 'bg-white hover:bg-gray-50'
-                              : 'bg-gray-50 opacity-60'
-                          }`}
-                        >
-                          <HStack className="items-center gap-3">
-                            <View className="w-10 h-10 bg-gray-200 rounded-full items-center justify-center">
-                              <Icon as={UserIcon} className="w-5 h-5 text-gray-600" />
-                            </View>
-                            <VStack className="flex-1">
-                              <Text className="font-medium text-gray-900">{fullName}</Text>
-                              {client.email && (
-                                <Text className="text-xs text-gray-500">{client.email}</Text>
-                              )}
-                              {client.clientNumber && (
-                                <Text className="text-xs text-gray-400">
-                                  #{client.clientNumber}
-                                </Text>
-                              )}
-                              {!checkInStatus.canCheckIn && (
-                                <Text className="text-xs text-red-600 mt-1">
-                                  {checkInStatus.reason}
-                                </Text>
-                              )}
-                            </VStack>
-                            {checkInStatus.canCheckIn && (
-                              <Icon as={CheckCircleIcon} className="w-5 h-5 text-green-600" />
-                            )}
-                          </HStack>
-                        </Card>
-                      </Pressable>
-                    );
-                  })}
-                </VStack>
-              ) : (
-                <Text className="text-center text-gray-500 py-4">
-                  No se encontraron clientes
-                </Text>
-              )}
+                return (
+                  <ClientCard
+                    key={client.id}
+                    client={client}
+                    onPress={handleSelectClient}
+                    showCheckInStatus={true}
+                    canCheckIn={checkInStatus.canCheckIn}
+                    checkInReason={checkInStatus.reason}
+                  />
+                );
+              })}
             </VStack>
-          )}
-
-          {/* Instructions when no search */}
-          {searchInput.length === 0 && (
+          ) : (
             <VStack className="items-center justify-center py-8">
-              <Icon as={SearchIcon} className="w-12 h-12 text-gray-300 mb-4" />
+              <Icon as={UsersIcon} className="w-12 h-12 text-gray-300 mb-4" />
               <Text className="text-gray-500 text-center">
-                Escribe el nombre, email o número del cliente para comenzar la búsqueda
+                {searchInput.length > 0 
+                  ? 'No se encontraron clientes con esos criterios'
+                  : 'No hay clientes activos en el gimnasio'
+                }
               </Text>
             </VStack>
           )}

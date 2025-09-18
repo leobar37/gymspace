@@ -41,7 +41,7 @@ export const QuantityControlFooter: React.FC<QuantityControlFooterProps> = ({ pr
   };
 
   return (
-    <View className="border-t border-gray-200 bg-white p-3">
+    <View className="bg-white p-3">
       <HStack space="sm" className="items-center">
         {/* Product Image */}
         <View className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden items-center justify-center">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { Pressable } from 'react-native';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
@@ -17,33 +17,35 @@ interface SelectableServiceCardProps {
   onPress?: (service: Product) => void;
   isSelected: boolean;
   selectedQuantity: number;
+  isLastSelected?: boolean;
 }
 
-export const SelectableServiceCard: React.FC<SelectableServiceCardProps> = ({
+export const SelectableServiceCard: React.FC<SelectableServiceCardProps> = memo(({
   service,
   onPress,
   isSelected,
   selectedQuantity,
+  isLastSelected = false,
 }) => {
   const formatPrice = useFormatPrice();
   const isInactive = service.status === 'inactive';
 
-  const handlePress = () => {
-    if (!isInactive) {
-      onPress?.(service);
+  const handlePress = useCallback(() => {
+    if (!isInactive && onPress) {
+      onPress(service);
     }
-  };
+  }, [isInactive, onPress, service]);
 
   return (
-    <Card className={`overflow-hidden p-3 ${isSelected ? 'border-2 border-blue-500 bg-blue-50' : ''} ${isInactive ? 'opacity-60' : ''}`}>
+    <Card className={`overflow-hidden p-3 ${isLastSelected ? 'border-2 border-blue-500' : ''} ${isSelected && !isLastSelected ? 'bg-blue-50' : ''} ${isInactive ? 'opacity-60' : ''}`}>
       <Pressable
         onPress={handlePress}
         className="active:opacity-70"
         disabled={isInactive}
       >
         <VStack space="xs">
-          {/* Selection Indicator */}
-          {isSelected && (
+          {/* Selection Indicator - Show badge only when item has quantity > 0 */}
+          {selectedQuantity > 0 && (
             <View className="absolute top-0 right-0 z-10">
               <Badge size="sm" className="bg-blue-500">
                 <HStack space="xs" className="items-center">
@@ -80,10 +82,10 @@ export const SelectableServiceCard: React.FC<SelectableServiceCardProps> = ({
               {formatPrice(service.price)}
             </Text>
 
-            {/* Duration if available */}
-            {service.durationMinutes && (
+            {/* Service type indicator */}
+            {service.type === 'Service' && (
               <Text className="text-xs text-gray-600">
-                Duración: {service.durationMinutes} min
+                Servicio
               </Text>
             )}
 
@@ -98,4 +100,6 @@ export const SelectableServiceCard: React.FC<SelectableServiceCardProps> = ({
       </Pressable>
     </Card>
   );
-};
+});
+
+SelectableServiceCard.displayName = 'SelectableServiceCard';

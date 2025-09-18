@@ -7,25 +7,54 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useMultiScreenContext } from '@/components/ui/multi-screen';
 import { ArrowLeftIcon, CheckCircleIcon, UserIcon } from 'lucide-react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { useCheckIn } from '../contexts/CheckInContext';
+import { useCheckInForm } from '@/features/dashboard/controllers/check-ins.controller';
+import { useLoadingScreen } from '@/shared/loading-screen';
+import type { Client } from '@gymspace/sdk';
+import { SheetManager } from '@gymspace/sheet';
 
 export const CheckInRegistrationScreen: React.FC = () => {
   const { router } = useMultiScreenContext();
-  const {
-    selectedClient,
-    notes,
-    setNotes,
-    handleCreateCheckIn,
-    resetForm,
-  } = useCheckIn();
+  const selectedClient = router.props?.client as Client | undefined;
+  const [notes, setNotes] = useState('');
+  const { handleCheckIn } = useCheckInForm();
+  const { execute } = useLoadingScreen();
 
   const handleSubmitCheckIn = async () => {
-    await handleCreateCheckIn();
-    // After successful check-in, go back to client selection
-    resetForm();
-    router.navigate('client-list');
+    if (!selectedClient) return;
+
+    await execute(
+      handleCheckIn(selectedClient.id, notes.trim() || undefined),
+      {
+        action: 'Registrando check-in...',
+        successMessage: `Check-in registrado exitosamente para ${selectedClient.name}`,
+        errorFormatter: (error) => {
+          if (error instanceof Error) {
+            return error.message;
+          }
+          return 'Error al registrar check-in';
+        },
+        successActions: [
+          {
+            label: 'Nuevo Check-in',
+            onPress: () => {
+              setNotes('');
+              router.navigate('client-list');
+            },
+            variant: 'solid',
+          },
+          {
+            label: 'Cerrar',
+            onPress: () => {
+              SheetManager.hide('check-in');
+            },
+            variant: 'outline',
+          },
+        ],
+        hideOnSuccess: false,
+      }
+    );
   };
 
   const handleGoBack = () => {
@@ -76,7 +105,7 @@ export const CheckInRegistrationScreen: React.FC = () => {
                   )}
                   {selectedClient.clientNumber && (
                     <Text className="text-sm text-gray-500">
-                      #{selectedClient.clientNumber}
+                      {selectedClient.clientNumber}
                     </Text>
                   )}
                 </VStack>

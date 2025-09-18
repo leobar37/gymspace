@@ -58,7 +58,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>({
         )}
 
         <GluestackInput
-          variant="rounded"
+          variant="outline"
           size="md"
         >
           <InputField

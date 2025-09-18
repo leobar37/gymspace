@@ -219,3 +219,7 @@ eas build --profile production --platform all
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+## to build
+
+eas build --platform android --profile preview --local

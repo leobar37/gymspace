@@ -7,6 +7,7 @@ import { Text } from '@/components/ui/text';
 import { SelectableProductCard } from './SelectableProductCard';
 import { SelectableServiceCard } from './SelectableServiceCard';
 import { PackageIcon, WrenchIcon } from 'lucide-react-native';
+import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import type { Product } from '@gymspace/sdk';
 import type { ItemTab } from '../../types';
 import { useNewSale } from '../../hooks/useNewSale';
@@ -16,15 +17,17 @@ interface ItemGridProps {
   type: ItemTab;
   loading: boolean;
   onItemPress: (item: Product) => void;
+  isInBottomSheet?: boolean;
 }
 
-export const ItemGrid: React.FC<ItemGridProps> = ({ items, type, loading, onItemPress }) => {
-  const { isInCart, getItemQuantity } = useNewSale();
+export const ItemGrid: React.FC<ItemGridProps> = ({ items, type, loading, onItemPress, isInBottomSheet = true }) => {
+  const { isInCart, getItemQuantity, lastSelectedProductId } = useNewSale();
   
   const renderProductCard = useCallback(
     ({ item }: { item: Product }) => {
       const inCart = isInCart(item.id);
       const quantity = getItemQuantity(item.id);
+      const isLastSelected = item.id === lastSelectedProductId;
       
       return (
         <View className="w-1/2 p-1">
@@ -33,17 +36,19 @@ export const ItemGrid: React.FC<ItemGridProps> = ({ items, type, loading, onItem
             onPress={onItemPress}
             isSelected={inCart}
             selectedQuantity={quantity}
+            isLastSelected={isLastSelected}
           />
         </View>
       );
     },
-    [onItemPress, isInCart, getItemQuantity]
+    [onItemPress, isInCart, getItemQuantity, lastSelectedProductId]
   );
 
   const renderServiceCard = useCallback(
     ({ item }: { item: Product }) => {
       const inCart = isInCart(item.id);
       const quantity = getItemQuantity(item.id);
+      const isLastSelected = item.id === lastSelectedProductId;
       
       return (
         <View className="w-1/2 p-1">
@@ -52,11 +57,12 @@ export const ItemGrid: React.FC<ItemGridProps> = ({ items, type, loading, onItem
             onPress={onItemPress}
             isSelected={inCart}
             selectedQuantity={quantity}
+            isLastSelected={isLastSelected}
           />
         </View>
       );
     },
-    [onItemPress, isInCart, getItemQuantity]
+    [onItemPress, isInCart, getItemQuantity, lastSelectedProductId]
   );
 
   if (loading) {
@@ -82,8 +88,10 @@ export const ItemGrid: React.FC<ItemGridProps> = ({ items, type, loading, onItem
     </View>
   );
 
+  const ListComponent = isInBottomSheet ? BottomSheetFlatList : FlatList;
+
   return (
-    <FlatList
+    <ListComponent
       data={items}
       renderItem={type === 'products' ? renderProductCard : renderServiceCard}
       keyExtractor={(item) => item.id}

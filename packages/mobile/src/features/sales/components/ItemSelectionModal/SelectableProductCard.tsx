@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { Pressable } from 'react-native';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
@@ -17,34 +17,36 @@ interface SelectableProductCardProps {
   onPress?: (product: Product) => void;
   isSelected: boolean;
   selectedQuantity: number;
+  isLastSelected?: boolean;
 }
 
-export const SelectableProductCard: React.FC<SelectableProductCardProps> = ({
+export const SelectableProductCard: React.FC<SelectableProductCardProps> = memo(({
   product,
   onPress,
   isSelected,
   selectedQuantity,
+  isLastSelected = false,
 }) => {
   const formatPrice = useFormatPrice();
   const isLowStock = product.stock !== null && product.stock <= 10;
   const isOutOfStock = product.stock !== null && product.stock <= 0;
 
-  const handlePress = () => {
-    if (!isOutOfStock) {
-      onPress?.(product);
+  const handlePress = useCallback(() => {
+    if (!isOutOfStock && onPress) {
+      onPress(product);
     }
-  };
+  }, [isOutOfStock, onPress, product]);
 
   return (
-    <Card className={`overflow-hidden p-3 ${isSelected ? 'border-2 border-blue-500 bg-blue-50' : ''} ${isOutOfStock ? 'opacity-60' : ''}`}>
+    <Card className={`overflow-hidden p-3 ${isLastSelected ? 'border-2 border-blue-500' : ''} ${isSelected && !isLastSelected ? 'bg-blue-50' : ''} ${isOutOfStock ? 'opacity-60' : ''}`}>
       <Pressable
         onPress={handlePress}
         className="active:opacity-70"
         disabled={isOutOfStock}
       >
         <VStack space="xs">
-          {/* Selection Indicator */}
-          {isSelected && (
+          {/* Selection Indicator - Show badge only when item has quantity > 0 */}
+          {selectedQuantity > 0 && (
             <View className="absolute top-0 right-0 z-10">
               <Badge size="sm" className="bg-blue-500">
                 <HStack space="xs" className="items-center">
@@ -117,4 +119,6 @@ export const SelectableProductCard: React.FC<SelectableProductCardProps> = ({
       </Pressable>
     </Card>
   );
-};
+});
+
+SelectableProductCard.displayName = 'SelectableProductCard';
