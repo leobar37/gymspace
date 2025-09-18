@@ -20,7 +20,7 @@ interface SelectableServiceCardProps {
   isLastSelected?: boolean;
 }
 
-export const SelectableServiceCard: React.FC<SelectableServiceCardProps> = memo(({
+const SelectableServiceCardComponent: React.FC<SelectableServiceCardProps> = ({
   service,
   onPress,
   isSelected,
@@ -37,7 +37,7 @@ export const SelectableServiceCard: React.FC<SelectableServiceCardProps> = memo(
   }, [isInactive, onPress, service]);
 
   return (
-    <Card className={`overflow-hidden p-3 ${isLastSelected ? 'border-2 border-blue-500' : ''} ${isSelected && !isLastSelected ? 'bg-blue-50' : ''} ${isInactive ? 'opacity-60' : ''}`}>
+    <Card className={`overflow-hidden p-3 border-2 ${isLastSelected ? 'border-blue-500' : 'border-transparent'} ${isSelected && !isLastSelected ? 'bg-blue-50 border-blue-200' : ''} ${isInactive ? 'opacity-60' : ''}`}>
       <Pressable
         onPress={handlePress}
         className="active:opacity-70"
@@ -100,6 +100,7 @@ export const SelectableServiceCard: React.FC<SelectableServiceCardProps> = memo(
       </Pressable>
     </Card>
   );
-});
+};
 
+export const SelectableServiceCard = memo(SelectableServiceCardComponent);
 SelectableServiceCard.displayName = 'SelectableServiceCard';

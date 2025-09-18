@@ -1,9 +1,8 @@
-import { BottomSheetWrapper } from '@gymspace/sheet';
 import { createMultiScreen } from '@/components/ui/multi-screen/builder';
+import { BottomSheetWrapper } from '@gymspace/sheet';
 import React from 'react';
-import { ClientListScreen } from './ClientListScreen';
 import { CheckInRegistrationScreen } from './CheckInRegistrationScreen';
-
+import { ClientListScreen } from './ClientListScreen';
 // Create the multi-screen flow
 const checkInFlow = createMultiScreen()
   .addStep('client-list', ClientListScreen)

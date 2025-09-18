@@ -242,44 +242,40 @@ export function SessionProvider({ children }: SessionProviderProps) {
       if (!accessToken) {
         throw new Error('No auth token available');
       }
-      
+
       try {
         console.log('Fetching current session with token:', accessToken ? 'Token present' : 'No token');
         const response = await sdk.auth.getCurrentSession();
         console.log('Session fetched successfully', response);
-        
+
         setSession(response);
-        
+
         // Update gym ID if changed
         if (response.gym && response.gym.id !== currentGymId) {
           await setCurrentGymId(response.gym.id);
         }
-        
+
         return response;
       } catch (error: any) {
         console.error('Session fetch error:', error);
-        
-        // Only clear auth if we get a 401 and we're not in the initial loading phase
-        // This prevents clearing auth on app restart when the SDK might not be ready
-        if ((error.status === 401 || error.message?.includes('Unauthorized')) && !isLoading) {
-          console.log('Auth error detected, will clear tokens');
+
+        // Clear auth if we get a 401 (invalid token)
+        if ((error.status === 401 || error.message?.includes('Unauthorized'))) {
+          console.log('Auth error detected, clearing tokens');
           // Use a timeout to ensure this doesn't interfere with initial load
           setTimeout(() => {
             clearAuth();
           }, 100);
         }
-        
+
         throw error;
       }
     },
-    enabled: !!accessToken && !isLoading && !isOnAuthRoute,
+    enabled: !!accessToken && !isLoading,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.status === 403) {
-        return false;
-      }
-      if (isOnAuthRoute) {
         return false;
       }
       return failureCount < 2;

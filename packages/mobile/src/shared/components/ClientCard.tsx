@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Pressable } from 'react-native';
 import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
-import { VStack } from '@/components/ui/vstack';
-import { Text } from '@/components/ui/text';
 import { Icon } from '@/components/ui/icon';
-import { UserIcon, CheckCircleIcon, PhoneIcon } from 'lucide-react-native';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import type { Client } from '@gymspace/sdk';
+import { CheckCircleIcon, PhoneIcon } from 'lucide-react-native';
+import React from 'react';
+import { Pressable, View } from 'react-native';
 
 interface ClientCardProps {
   client: Client;
@@ -28,7 +28,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({
   variant = 'default',
 }) => {
   const fullName = client.name || 'Sin nombre';
-  
+
   // Get initials for avatar
   const getInitials = (name: string) => {
     const parts = name.split(' ').filter(Boolean);
@@ -41,13 +41,19 @@ export const ClientCard: React.FC<ClientCardProps> = ({
   const avatarSize = variant === 'compact' ? 'w-9 h-9' : 'w-10 h-10';
   const avatarTextSize = variant === 'compact' ? 'text-xs' : 'text-sm';
 
+  const handlePress = () => {
+    if (onPress) {
+      onPress(client);
+    }
+  };
+
   return (
-    <Pressable onPress={() => onPress?.(client)} disabled={disabled || (!canCheckIn && showCheckInStatus)}>
-      <Card
-        className={`p-3 ${
-          showCheckInStatus && !canCheckIn ? 'bg-gray-50 opacity-60' : 'bg-white'
-        } ${!disabled && canCheckIn ? 'active:bg-gray-50' : ''}`}
-      >
+    <Card
+      className={`p-3 ${
+        showCheckInStatus && !canCheckIn ? 'bg-gray-50 opacity-60' : 'bg-white'
+      } ${!disabled ? 'active:bg-gray-50' : ''}`}
+    >
+      <Pressable onPressIn={handlePress}>
         <HStack className="items-center gap-3">
           {/* Avatar with initials */}
           <View className={`${avatarSize} bg-blue-100 rounded-full items-center justify-center`}>
@@ -59,12 +65,11 @@ export const ClientCard: React.FC<ClientCardProps> = ({
             <Text className="font-medium text-gray-900" numberOfLines={1}>
               {fullName}
             </Text>
-            
             {/* Document and phone in same line with smaller font */}
-            <HStack className="items-center gap-2">
-              {client.documentNumber && (
-                <Text className="text-[11px] text-gray-500" numberOfLines={1}>
-                  {client.documentType || 'CI'} {client.documentNumber}
+            <VStack className="items-start gap-2">
+              {client.documentValue && (
+                <Text className="text-[11px] text-gray-500 uppercase">
+                  {client.documentType || 'CI'} {client.documentValue}
                 </Text>
               )}
               {client.phone && (
@@ -75,13 +80,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({
                   </Text>
                 </HStack>
               )}
-            </HStack>
-
-            {/* Client number if exists */}
-            {client.clientNumber && (
-              <Text className="text-[10px] text-gray-400">#{client.clientNumber}</Text>
-            )}
-
+            </VStack>
             {/* Check-in status message */}
             {showCheckInStatus && !canCheckIn && checkInReason && (
               <Text className="text-xs text-red-600 mt-1">{checkInReason}</Text>
@@ -98,7 +97,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({
             <Text className="text-[10px] font-medium text-green-600 uppercase">Activo</Text>
           )}
         </HStack>
-      </Card>
-    </Pressable>
+      </Pressable>
+    </Card>
   );
 };

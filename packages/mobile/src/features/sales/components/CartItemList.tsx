@@ -9,9 +9,11 @@ export const CartItemList: React.FC = () => {
   const { items, updateQuantity, removeItem } = useNewSale();
 
   const renderCartItem = useCallback(
-    ({ item }: { item: CartItemType }) => (
+    ({ item, index }: { item: CartItemType; index: number }) => (
       <CartItem
         item={item}
+        compact
+        hideDivider={index === items.length - 1}
         onQuantityChange={(quantity) => updateQuantity(item.product.id, quantity)}
         onRemove={() => removeItem(item.product.id)}
       />
@@ -25,7 +27,8 @@ export const CartItemList: React.FC = () => {
       renderItem={renderCartItem}
       keyExtractor={(item) => item.product.id}
       scrollEnabled={false}
-      ItemSeparatorComponent={() => <View className="h-1" />}
+      // Eliminamos separador vertical grande; el divider inferior de cada item hace el trabajo.
+      ItemSeparatorComponent={() => <View />}
     />
   );
 };

@@ -133,7 +133,7 @@ export const ItemSelectionModal: React.FC = () => {
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      snapPoints={['25%', '100%']}
+      snapPoints={['100%']}
       index={1}
       enablePanDownToClose
       backdropComponent={renderBackdrop}

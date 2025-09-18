@@ -20,7 +20,7 @@ interface SelectableProductCardProps {
   isLastSelected?: boolean;
 }
 
-export const SelectableProductCard: React.FC<SelectableProductCardProps> = memo(({
+const SelectableProductCardComponent: React.FC<SelectableProductCardProps> = ({
   product,
   onPress,
   isSelected,
@@ -38,7 +38,7 @@ export const SelectableProductCard: React.FC<SelectableProductCardProps> = memo(
   }, [isOutOfStock, onPress, product]);
 
   return (
-    <Card className={`overflow-hidden p-3 ${isLastSelected ? 'border-2 border-blue-500' : ''} ${isSelected && !isLastSelected ? 'bg-blue-50' : ''} ${isOutOfStock ? 'opacity-60' : ''}`}>
+    <Card className={`overflow-hidden p-3 border-2 ${isLastSelected ? 'border-blue-500' : 'border-transparent'} ${isSelected && !isLastSelected ? 'bg-blue-50 border-blue-200' : ''} ${isOutOfStock ? 'opacity-60' : ''}`}>
       <Pressable
         onPress={handlePress}
         className="active:opacity-70"
@@ -119,6 +119,7 @@ export const SelectableProductCard: React.FC<SelectableProductCardProps> = memo(
       </Pressable>
     </Card>
   );
-});
+};
 
+export const SelectableProductCard = memo(SelectableProductCardComponent);
 SelectableProductCard.displayName = 'SelectableProductCard';

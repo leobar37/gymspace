@@ -16,74 +16,100 @@ interface CartItemProps {
   item: CartItemType;
   onQuantityChange: (quantity: number) => void;
   onRemove: () => void;
+  compact?: boolean; // compact layout with reduced padding
+  hideDivider?: boolean; // hide bottom divider (e.g. last item)
+  showImage?: boolean; // allow hiding image to save space
+  lowStockThreshold?: number; // threshold to show low stock badge
 }
 
-export function CartItem({ item, onQuantityChange, onRemove }: CartItemProps) {
+export function CartItem({
+  item,
+  onQuantityChange,
+  onRemove,
+  compact = false,
+  hideDivider = false,
+  showImage = true,
+  lowStockThreshold = 10,
+}: CartItemProps) {
   const formatPrice = useFormatPrice();
   const { product, quantity, total } = item;
 
+  // Clases para modo normal vs compacto
+  const paddingClass = compact ? 'px-3 py-2.5' : 'p-4';
+  const imageSizeWrapper = compact ? 'w-11 h-11' : 'w-14 h-14';
+  const nameTextClass = compact ? 'text-[13px]' : 'text-sm';
+  const unitPriceTextClass = compact ? 'text-[11px]' : 'text-xs';
+  const totalTextClass = compact ? 'text-[15px]' : 'text-base';
+
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm">
-      <HStack space="md" className="p-4">
-        {/* Product Image */}
-        <View className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden items-center justify-center">
-          {product.imageId ? (
-            <AssetPreview
-              assetId={product.imageId}
-              size="small"
-              resizeMode="cover"
-              showLoading={false}
-            />
-          ) : (
-            <Icon as={PackageIcon} className="w-8 h-8 text-gray-400" />
-          )}
-        </View>
+    <View className={`bg-white ${hideDivider ? '' : 'border-b border-b-gray-100'} ${compact ? '' : ''}`}>
+      <HStack space={compact ? 'sm' : 'md'} className={`${paddingClass} items-center`}>
+        {showImage && (
+          <View className={`${imageSizeWrapper} bg-gray-100 rounded-md overflow-hidden items-center justify-center`}>
+            {product.imageId ? (
+              <AssetPreview
+                assetId={product.imageId}
+                size="small"
+                width={56}
+                height={56}
+                resizeMode="cover"
+                showLoading={false}
+              />
+            ) : (
+              <Icon as={PackageIcon} className="w-6 h-6 text-gray-400" />
+            )}
+          </View>
+        )}
 
         {/* Product Info & Controls */}
         <VStack className="flex-1" space="xs">
           {/* Product Name & Price */}
           <HStack className="justify-between items-start">
-            <VStack className="flex-1 mr-2">
-              <Text className="text-gray-900 font-medium text-sm" numberOfLines={2}>
+            <VStack className="flex-1 mr-1">
+              <Text className={`text-gray-900 font-semibold ${nameTextClass}`} numberOfLines={2}>
                 {product.name}
-              </Text>
-              <Text className="text-gray-600 text-xs">
-                {formatPrice(product.price)} c/u
               </Text>
             </VStack>
             
             {/* Remove Button */}
             <Pressable
               onPress={onRemove}
-              className="w-8 h-8 items-center justify-center rounded-full bg-red-50 active:bg-red-100"
+              hitSlop={8}
+              className={`items-center justify-center rounded-full ${compact ? 'w-7 h-7' : 'w-8 h-8'} active:bg-red-50`}
             >
-              <Icon as={TrashIcon} className="w-4 h-4 text-red-600" />
+              <Icon as={TrashIcon} className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-red-500`} />
             </Pressable>
           </HStack>
 
           {/* Quantity Controls & Total */}
-          <HStack className="justify-between items-center">
+          <HStack className="justify-between items-center mt-1.5">
             <QuantitySelector
               quantity={quantity}
               onQuantityChange={onQuantityChange}
               min={1}
               max={product.stock || 999}
-              size="sm"
+              size={compact ? 'sm' : 'sm'}
             />
-            
-            <Text className="text-gray-900 font-semibold">
-              {formatPrice(total)}
-            </Text>
+            <VStack className="items-end" space="0">
+              <Text className={`text-gray-900 font-semibold ${totalTextClass}`} style={{ fontVariant: ['tabular-nums'] }}>
+                {formatPrice(total)}
+              </Text>
+              <Text className={`text-gray-500 ${unitPriceTextClass}`} style={{ fontVariant: ['tabular-nums'] }}>
+                {formatPrice(product.price)} c/u
+              </Text>
+            </VStack>
           </HStack>
 
           {/* Stock Warning */}
-          {product.stock && product.stock < 10 && (
-            <Text className="text-orange-600 text-xs">
-              Solo quedan {product.stock} en stock
-            </Text>
+          {product.stock && product.stock <= lowStockThreshold && (
+            <View className="mt-1">
+              <Text className="px-2 py-[2px] bg-orange-50 text-orange-600 rounded-full text-[10px] font-medium">
+                Stock: {product.stock}
+              </Text>
+            </View>
           )}
         </VStack>
       </HStack>
-    </Card>
+    </View>
   );
 }

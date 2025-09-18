@@ -31,7 +31,7 @@ export const SaleTotalFooter: React.FC = () => {
           label: 'Volver al inicio',
           onPress: () => {
             resetSale();
-            router.push('/(app)');
+            router.push('/(app)/(tabs)/sales-history');
           },
           variant: 'outline',
         },

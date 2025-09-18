@@ -68,10 +68,9 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, onPress, onActionPress 
 
             <VStack className="flex-1">
               <Text className="font-semibold text-gray-900">{client.name}</Text>
-              <Text className="text-sm text-gray-600">{client.clientNumber}</Text>
               {client.phone && (
                 <HStack className="items-center gap-1 mt-1">
-                  <Icon as={PhoneIcon} />
+                  <Icon as={PhoneIcon} className='text-gray-500' />
                   <Text className="text-sm text-gray-500">{client.phone}</Text>
                 </HStack>
               )}

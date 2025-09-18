@@ -1,17 +1,16 @@
-import { SheetManager } from '@gymspace/sheet';
-import { StockAdjustmentModal } from '@/features/inventory/components/StockAdjustmentModal';
-import { StockMovementDetailSheet } from '@/features/inventory/components/StockMovementDetailSheet';
-import { StockMovementsSheet } from '@/features/inventory/components/StockMovementsSheet';
-import { SalesFiltersSheet } from '@/components/inventory/SalesFiltersSheet';
 import { ProductFiltersSheet } from '@/components/inventory/ProductFiltersSheet';
-import { ContractsFiltersSheet } from '@/features/contracts/components/ContractsFiltersSheet';
-import { ContractRenewalDrawer } from '@/features/contracts/components/ContractRenewalDrawer';
-import { ContractFreezeSheet } from '@/features/contracts/components/ContractFreezeSheet';
+import { SalesFiltersSheet } from '@/components/inventory/SalesFiltersSheet';
 import { AssetPreviewSheet } from '@/features/assets/components/AssetPreviewSheet';
 import AssetSelectorSheet from '@/features/assets/components/AssetSelectorSheet';
 import ClientSelectorSheet from '@/features/clients/components/ClientSelectorSheet';
+import { ContractFreezeSheet } from '@/features/contracts/components/ContractFreezeSheet';
+import { ContractRenewalDrawer } from '@/features/contracts/components/ContractRenewalDrawer';
+import { ContractsFiltersSheet } from '@/features/contracts/components/ContractsFiltersSheet';
 import { CheckInSheet } from '@/features/dashboard/components/CheckInSheet';
-import type { Product, StockMovement, SearchSalesParams, SearchProductsParams, GetContractsParams, Contract, ProductCategory, Client } from '@gymspace/sdk';
+import { StockAdjustmentModal } from '@/features/inventory/components/StockAdjustmentModal';
+import { StockMovementDetailSheet } from '@/features/inventory/components/StockMovementDetailSheet';
+import { StockMovementsSheet } from '@/features/inventory/components/StockMovementsSheet';
+import { SheetManager } from '@gymspace/sheet';
 
 // Register the stock adjustment modal
 SheetManager.register('stock-adjustment-modal', StockAdjustmentModal);
@@ -56,14 +55,5 @@ interface StockAdjustmentForm {
   fileId?: string;
 }
 
-interface StockAdjustmentPayload {
-  product: Product;
-  stockAdjustment: number;
-  newStock: number;
-  wouldExceedMax: boolean;
-  wouldGoBelowMin: boolean;
-  onConfirm: (data: StockAdjustmentForm) => Promise<void>;
-  onCancel: () => void;
-}
 
-export {};
+export { };
