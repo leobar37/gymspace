@@ -221,18 +221,13 @@ const FormControlLabelAstrick = React.forwardRef<
 >(function FormControlLabelAstrick({ className, ...props }, ref) {
   const { size: parentSize } = useStyleContext(SCOPE);
 
-  const astrickStyle = React.useMemo(
-    () => formControlLabelAstrickStyle({
-      parentVariants: { size: parentSize },
-      class: className,
-    }),
-    [parentSize, className]
-  );
-
   return (
     <Text
       ref={ref}
-      className={astrickStyle}
+      className={formControlLabelAstrickStyle({
+        parentVariants: { size: parentSize },
+        class: className,
+      })}
       {...props}
     />
   );
@@ -306,19 +301,13 @@ const FormControlErrorText = React.forwardRef<
   IFormControlErrorTextProps
 >(function FormControlErrorText({ className, size, ...props }, ref) {
   const { size: parentSize } = useStyleContext(SCOPE);
-
-  const errorStyle = React.useMemo(
-    () => formControlErrorTextStyle({
-      parentVariants: { size: parentSize },
-      size,
-      class: className,
-    }),
-    [parentSize, size, className]
-  );
-
   return (
     <UIFormControl.Error.Text
-      className={errorStyle}
+      className={formControlErrorTextStyle({
+        parentVariants: { size: parentSize },
+        size,
+        class: className,
+      })}
       ref={ref}
       {...props}
     />
@@ -399,18 +388,13 @@ const FormControlLabelText = React.forwardRef<
 >(function FormControlLabelText({ className, size, ...props }, ref) {
   const { size: parentSize } = useStyleContext(SCOPE);
 
-  const labelStyle = React.useMemo(
-    () => formControlLabelTextStyle({
-      parentVariants: { size: parentSize },
-      size,
-      class: className,
-    }),
-    [parentSize, size, className]
-  );
-
   return (
     <UIFormControl.Label.Text
-      className={labelStyle}
+      className={formControlLabelTextStyle({
+        parentVariants: { size: parentSize },
+        size,
+        class: className,
+      })}
       ref={ref}
       {...props}
     />
@@ -448,18 +432,13 @@ const FormControlHelperText = React.forwardRef<
 >(function FormControlHelperText({ className, size, ...props }, ref) {
   const { size: parentSize } = useStyleContext(SCOPE);
 
-  const helperStyle = React.useMemo(
-    () => formControlHelperTextStyle({
-      parentVariants: { size: parentSize },
-      size,
-      class: className,
-    }),
-    [parentSize, size, className]
-  );
-
   return (
     <UIFormControl.Helper.Text
-      className={helperStyle}
+      className={formControlHelperTextStyle({
+        parentVariants: { size: parentSize },
+        size,
+        class: className,
+      })}
       ref={ref}
       {...props}
     />
