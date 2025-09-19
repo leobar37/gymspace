@@ -8,17 +8,26 @@ import { useDashboardDateRangeManager } from '../hooks/useDashboardWidgets';
 import { ContractsRevenueWidget, SalesRevenueWidget } from './widgets/RevenueWidget';
 import { DebtsWidget, CheckInsWidget, NewClientsWidget } from './widgets/MetricsWidget';
 import { DataPrefetch } from './DataPrefetch';
+import { useQueryClient } from '@tanstack/react-query';
 
 const DashboardComponent: React.FC = () => {
   // Dashboard date range management
   const { setDateRange } = useDashboardDateRangeManager();
+  const queryClient = useQueryClient();
 
   const [refreshing, setRefreshing] = React.useState(false);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    // React Query will handle the actual refresh through invalidation
-    setRefreshing(false);
+    try {
+      // Invalidate all dashboard queries to trigger fresh data fetch
+      await queryClient.invalidateQueries({
+        queryKey: ['dashboard'],
+        exact: false
+      });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleRangeChange = (startDate: Date, endDate: Date) => {

@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import React from 'react';
+import { BackButton } from '@/shared/components/BackButton';
 
 export default function ClientsLayout() {
   return (
@@ -27,6 +28,7 @@ export default function ClientsLayout() {
         name="create"
         options={{
           title: 'Nuevo Cliente',
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen
@@ -39,6 +41,7 @@ export default function ClientsLayout() {
         name="[id]/edit"
         options={{
           title: 'Editar Cliente',
+          headerLeft: () => <BackButton />,
         }}
       />
     </Stack>

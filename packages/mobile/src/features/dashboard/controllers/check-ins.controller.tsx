@@ -38,7 +38,7 @@ export const useCheckInsController = () => {
         duration: 3000,
         render: ({ id }) => (
           <Toast nativeID={`toast-${id}`} action="success" variant="solid">
-            <ToastTitle>Check-in registered successfully</ToastTitle>
+            <ToastTitle>Check-in registrado exitosamente</ToastTitle>
           </Toast>
         ),
       });

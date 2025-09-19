@@ -2,18 +2,17 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { Textarea, TextareaInput } from '@/components/ui/textarea';
-import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
 import { useMultiScreenContext } from '@/components/ui/multi-screen';
-import { ArrowLeftIcon, CheckCircleIcon, UserIcon } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/components/ui/text';
+import { Textarea, TextareaInput } from '@/components/ui/textarea';
+import { VStack } from '@/components/ui/vstack';
 import { useCheckInForm } from '@/features/dashboard/controllers/check-ins.controller';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import type { Client } from '@gymspace/sdk';
 import { SheetManager } from '@gymspace/sheet';
-import { BottomSheetFooter } from '@gorhom/bottom-sheet';
+import { ArrowLeftIcon, CheckCircleIcon, UserIcon } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 
 export const CheckInRegistrationScreen: React.FC = () => {
   const { router } = useMultiScreenContext();
@@ -127,7 +126,7 @@ export const CheckInRegistrationScreen: React.FC = () => {
       </ScrollView>
 
       {/* Action Buttons */}
-      <BottomSheetFooter>
+      <View className="border-t border-gray-200">
         <View className="p-6 border-t border-gray-200 bg-white">
           <HStack className="gap-3">
             <Button variant="outline" size="md" className="flex-1" onPress={handleGoBack}>
@@ -139,7 +138,7 @@ export const CheckInRegistrationScreen: React.FC = () => {
             </Button>
           </HStack>
         </View>
-      </BottomSheetFooter>
+      </View>
     </View>
   );
 };

@@ -285,10 +285,29 @@ export class SalesService {
       await this.validatePaymentMethod(organizationId, dto.paymentMethodId);
     }
 
+    // If customerId is being updated, get the customer name
+    let updateData = { ...dto };
+    if (dto.customerId && dto.customerId !== sale.customerId) {
+      const customer = await this.prisma.gymClient.findFirst({
+        where: {
+          id: dto.customerId,
+          gymId,
+          deletedAt: null,
+        },
+        select: {
+          name: true,
+        },
+      });
+
+      if (customer) {
+        updateData.customerName = customer.name;
+      }
+    }
+
     return this.prisma.sale.update({
       where: { id: saleId },
       data: {
-        ...dto,
+        ...updateData,
         updatedByUserId: userId,
       },
       include: {

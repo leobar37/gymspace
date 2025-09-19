@@ -20,6 +20,7 @@ import {
 } from 'date-fns';
 import { BusinessException } from '../../common/exceptions/business.exception';
 import { ContractStatus } from '@gymspace/shared';
+import { TimezoneUtil } from '../../common/utils/timezone.util';
 
 @Injectable()
 export class DashboardService {
@@ -27,21 +28,22 @@ export class DashboardService {
 
   /**
    * Helper method to get date range for queries
+   * @param context - Request context containing timezone information
    * @param startDate - Optional start date string
    * @param endDate - Optional end date string
    * @param defaultStartFn - Function to get default start date
    * @param defaultEndFn - Function to get default end date
-   * @returns Object with start and end Date objects
+   * @returns Object with start and end Date objects in UTC
    */
   private getDateRange(
+    context: RequestContext,
     startDate?: string,
     endDate?: string,
-    defaultStartFn: () => Date = () => startOfMonth(new Date()),
-    defaultEndFn: () => Date = () => endOfMonth(new Date()),
+    defaultStartFn: (now: Date) => Date = (now) => startOfMonth(now),
+    defaultEndFn: (now: Date) => Date = (now) => endOfMonth(now),
   ): { start: Date; end: Date } {
-    const start = startDate ? new Date(startDate) : defaultStartFn();
-    const end = endDate ? new Date(endDate) : defaultEndFn();
-    return { start, end };
+    const timezone = context.getTimezone();
+    return TimezoneUtil.getDateRange(startDate, endDate, timezone, defaultStartFn, defaultEndFn);
   }
 
   async getDashboardStats(ctx: RequestContext): Promise<DashboardStatsDto> {
@@ -50,11 +52,12 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const now = new Date();
-    const startOfCurrentMonth = startOfMonth(now);
-    const endOfCurrentMonth = endOfMonth(now);
-    const startOfToday = startOfDay(now);
-    const endOfToday = endOfDay(now);
+    const timezone = ctx.getTimezone();
+    const nowInTimezone = TimezoneUtil.nowInTimezone(timezone);
+    const startOfCurrentMonth = TimezoneUtil.startOfMonthUtc(nowInTimezone, timezone);
+    const endOfCurrentMonth = TimezoneUtil.endOfMonthUtc(nowInTimezone, timezone);
+    const startOfToday = TimezoneUtil.startOfDayUtc(nowInTimezone, timezone);
+    const endOfToday = TimezoneUtil.endOfDayUtc(nowInTimezone, timezone);
 
     // Execute all queries within a transaction for consistency
     return await this.prisma.$transaction(async (tx) => {
@@ -171,7 +174,7 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const { start, end } = this.getDateRange(startDate, endDate);
+    const { start, end } = this.getDateRange(ctx, startDate, endDate);
 
     const result = await this.prisma.contract.aggregate({
       _sum: {
@@ -215,7 +218,7 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const { start, end } = this.getDateRange(startDate, endDate);
+    const { start, end } = this.getDateRange(ctx, startDate, endDate);
 
     const result = await this.prisma.sale.aggregate({
       _sum: {
@@ -253,7 +256,7 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const { start, end } = this.getDateRange(startDate, endDate);
+    const { start, end } = this.getDateRange(ctx, startDate, endDate);
 
     // Get unpaid sales within the date range
     const unpaidSales = await this.prisma.sale.findMany({
@@ -302,10 +305,11 @@ export class DashboardService {
     }
 
     const { start, end } = this.getDateRange(
+      ctx,
       startDate,
       endDate,
-      () => startOfDay(new Date()),
-      () => endOfDay(new Date()),
+      (now) => startOfDay(now),
+      (now) => endOfDay(now),
     );
 
     const checkIns = await this.prisma.checkIn.findMany({
@@ -349,7 +353,7 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const { start, end } = this.getDateRange(startDate, endDate);
+    const { start, end } = this.getDateRange(ctx, startDate, endDate);
 
     const newClientsCount = await this.prisma.gymClient.count({
       where: {
@@ -384,13 +388,15 @@ export class DashboardService {
       throw new BusinessException('Gym context is required');
     }
 
-    const now = new Date();
+    const timezone = ctx.getTimezone();
+    const nowInTimezone = TimezoneUtil.nowInTimezone(timezone);
 
     const { start, end } = this.getDateRange(
+      ctx,
       startDate,
       endDate,
-      () => now,
-      () => addDays(now, 30),
+      (now) => now,
+      (now) => addDays(now, 30),
     );
 
     // Query directly for better performance
@@ -417,7 +423,7 @@ export class DashboardService {
 
     return expiringContracts.map((contract) => {
       const daysRemaining = Math.ceil(
-        (contract.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        (contract.endDate.getTime() - nowInTimezone.getTime()) / (1000 * 60 * 60 * 24),
       );
       return {
         id: contract.id,

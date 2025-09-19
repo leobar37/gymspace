@@ -1,14 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { transformPaginatedResponse, type TransformedPaginatedResponse } from '@/utils/pagination';
-import type { PaymentStatus } from '@/types/inventory';
-import type { 
-  Sale, 
+import type {
+  Sale,
   CreateSaleDto,
   UpdateSaleDto,
-  SaleItem,
   SearchSalesParams,
-  PaginatedResponseDto,
   CustomerSalesReport
 } from '@gymspace/sdk';
 
@@ -22,7 +19,7 @@ export const saleKeys = {
   today: () => [...saleKeys.all, 'today'] as const,
 };
 
-export interface UseSalesOptions extends SearchSalesParams {
+export interface UseSalesOptions extends Partial<SearchSalesParams> {
   enabled?: boolean;
   staleTime?: number;
   gcTime?: number;
@@ -34,8 +31,16 @@ export function useSales(options: UseSalesOptions = {}) {
     enabled = true,
     staleTime = 2 * 60 * 1000, // 2 minutes for sales data
     gcTime = 10 * 60 * 1000, // 10 minutes
-    ...searchParams
+    page = 1,
+    limit = 20,
+    ...restParams
   } = options;
+
+  const searchParams: SearchSalesParams = {
+    page,
+    limit,
+    ...restParams
+  };
 
   return useQuery({
     queryKey: saleKeys.list(searchParams),
@@ -79,6 +84,7 @@ export function useTodaySales(options: { enabled?: boolean } = {}) {
       const result = await sdk.sales.searchSales({
         startDate: today.toISOString(),
         endDate: tomorrow.toISOString(),
+        page: 1,
         limit: 1000, // Get all sales for today
       });
       return result.data;
@@ -119,10 +125,13 @@ export function useUpdateSale() {
         saleKeys.detail(updatedSale.id),
         updatedSale
       );
-      
+
       // Invalidate lists to refetch updated data
       queryClient.invalidateQueries({ queryKey: saleKeys.lists() });
       queryClient.invalidateQueries({ queryKey: saleKeys.today() });
+
+      // If client was affiliated, invalidate client lists
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
     },
   });
 }

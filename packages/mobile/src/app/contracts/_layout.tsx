@@ -1,9 +1,23 @@
 import { Stack } from 'expo-router';
 import React from 'react';
+import { BackButton } from '@/shared/components/BackButton';
 
 export default function ContractsLayout() {
   return (
-    <Stack screenOptions={{}}>
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#ffffff',
+        },
+        headerTitleStyle: {
+          fontSize: 18,
+          fontWeight: '600',
+        },
+        headerTintColor: '#374151',
+        animation: 'slide_from_right',
+        headerBackTitle: ' ',
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{
@@ -20,18 +34,21 @@ export default function ContractsLayout() {
         name="[id]"
         options={{
           title: 'Detalle del Contrato',
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen
         name="[id]/edit"
         options={{
           title: 'Editar Contrato',
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen
         name="[id]/renew"
         options={{
           title: 'Renovar Contrato',
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen

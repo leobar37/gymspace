@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, FlatList, RefreshControl } from 'react-native';
+import { View, FlatList, RefreshControl, StyleSheet } from 'react-native';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
@@ -45,9 +46,6 @@ export interface ClientsListProps {
     plural: string;
     noResults: string;
   };
-
-  // Style customization
-  cardVariant?: 'minimal' | 'complete' | 'default' | 'compact';
 }
 
 interface ClientListItemProps {
@@ -57,7 +55,7 @@ interface ClientListItemProps {
   canSelect?: boolean;
   selectReason?: string;
   showCheckInStatus?: boolean;
-  cardVariant?: 'minimal' | 'complete' | 'default' | 'compact';
+  isSheet?: boolean;
 }
 
 const ClientListItem: React.FC<ClientListItemProps> = ({
@@ -67,7 +65,7 @@ const ClientListItem: React.FC<ClientListItemProps> = ({
   canSelect = true,
   selectReason,
   showCheckInStatus = false,
-  cardVariant = 'default'
+  isSheet = false
 }) => {
   return (
     <ClientCard
@@ -78,7 +76,7 @@ const ClientListItem: React.FC<ClientListItemProps> = ({
       showCheckInStatus={showCheckInStatus}
       canCheckIn={canSelect}
       checkInReason={selectReason}
-      variant={cardVariant}
+      variant={isSheet ? 'complete' : 'default'}
     />
   );
 };
@@ -95,8 +93,7 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
   onAddClient,
   showCheckInStatus = false,
   isSheet = false,
-  resultsMessage,
-  cardVariant = 'default'
+  resultsMessage
 }) => {
   const { useClientsList } = useClientsController();
 
@@ -182,7 +179,24 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
         canSelect={filterResult.canSelect}
         selectReason={filterResult.reason}
         showCheckInStatus={showCheckInStatus}
-        cardVariant={cardVariant}
+        isSheet={isSheet}
+      />
+    );
+  };
+
+  const renderItem = (client: Client) => {
+    const filterResult = filterFunction ? filterFunction(client) : { canSelect: true };
+
+    return (
+      <ClientListItem
+        key={client.id}
+        client={client}
+        onPress={handleClientPress}
+        onAction={onClientAction}
+        canSelect={filterResult.canSelect}
+        selectReason={filterResult.reason}
+        showCheckInStatus={showCheckInStatus}
+        isSheet={isSheet}
       />
     );
   };
@@ -246,6 +260,17 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
     );
   }
 
+  // Render for sheet mode (BottomSheetScrollView)
+  if (isSheet) {
+    return (
+      <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
+        <ListHeader />
+        {displayClients.length === 0 ? renderEmptyState() : displayClients.map(renderItem)}
+      </BottomSheetScrollView>
+    );
+  }
+
+  // Render for normal mode (FlatList)
   return (
     <FlatList
       data={displayClients}
@@ -267,3 +292,10 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
     />
   );
 };
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    flexGrow: 1,
+    padding: 16,
+  },
+});

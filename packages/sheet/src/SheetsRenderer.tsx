@@ -17,8 +17,9 @@ export function SheetsRenderer() {
   // Subscribe to props changes to re-render components with updated props
   React.useEffect(() => {
     const unsubscribe = SheetManager.addListener(forceUpdate);
-    return unsubscribe;
+    return unsubscribe as any;
   }, []);
+
 
   return (
     <>

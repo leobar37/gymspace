@@ -93,6 +93,7 @@ export interface IRequestContext {
   getGymId(): UUID | undefined;
   getOrganizationId(): UUID | undefined;
   getUserId(): UUID;
+  getTimezone(): string;
 }
 
 // Type aliases for convenience

@@ -87,10 +87,9 @@ const ClientsListComponent: React.FC = () => {
         onClientSelect={handleClientPress}
         onClientAction={handleClientAction}
         activeOnly={false}
-        searchPlaceholder="Buscar por nombre, email, teléfono o documento..."
+        searchPlaceholder="Buscar..."
         showAddButton={false} // We'll use FAB instead
         isSheet={false}
-        cardVariant="complete"
         emptyMessage="No hay clientes registrados"
       />
 

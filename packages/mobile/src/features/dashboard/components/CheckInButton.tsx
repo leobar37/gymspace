@@ -1,9 +1,8 @@
 import { Icon } from '@/components/ui/icon';
+import { SheetManager } from '@gymspace/sheet';
 import { CheckCircleIcon } from 'lucide-react-native';
 import React from 'react';
 import { Pressable } from 'react-native';
-import { CheckInSheet } from './CheckInSheet';
-import { SheetManager } from '@gymspace/sheet';
 
 export const CheckInButton: React.FC = () => {
   return (
@@ -22,9 +21,6 @@ export const CheckInButton: React.FC = () => {
       >
         <Icon as={CheckCircleIcon} className="w-7 h-7 text-white" />
       </Pressable>
-
-      {/* Check-in Sheet */}
-      <CheckInSheet />
     </>
   );
 };

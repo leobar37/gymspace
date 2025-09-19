@@ -74,19 +74,22 @@ const ClientListScreen: React.FC = () => {
   const payload = React.useContext(PayloadContext);
   const { router } = useMultiScreenContext();
 
-  const handleSelectClient = useCallback((client: Client) => {
-        console.log("Client selected:", payload);
+  const handleSelectClient = useCallback(
+    (client: Client) => {
+      console.log('Client selected:', payload);
 
-    if (payload?.mode === 'affiliate' || payload?.mode === 'select') {
-      if (payload.onSelect) {
-        console.log('Calling onSelect callback');
-        payload.onSelect(client);
-      } else {
-        console.error('onSelect callback is not defined!');
+      if (payload?.mode === 'affiliate' || payload?.mode === 'select') {
+        if (payload.onSelect) {
+          console.log('Calling onSelect callback');
+          payload.onSelect(client);
+        } else {
+          console.error('onSelect callback is not defined!');
+        }
+        SheetManager.hide('client-selector');
       }
-      SheetManager.hide('client-selector');
-    }
-  }, [payload]);
+    },
+    [payload],
+  );
 
   const handleClose = useCallback(() => {
     payload?.onCancel?.();
@@ -138,16 +141,19 @@ const QuickCreateClientScreen: React.FC = () => {
   // Create validation schema
   const schema = z.object({
     name: z.string().min(1, 'El nombre es requerido'),
-    documentValue: z.string().optional().refine(
-      (value) => {
-        if (!value || value.trim() === '') return true; // Optional field
-        const validation = validateDocument(defaultDocumentType, value);
-        return validation.isValid;
-      },
-      {
-        message: 'Documento inválido',
-      }
-    ),
+    documentValue: z
+      .string()
+      .optional()
+      .refine(
+        (value) => {
+          if (!value || value.trim() === '') return true; // Optional field
+          const validation = validateDocument(defaultDocumentType, value);
+          return validation.isValid;
+        },
+        {
+          message: 'Documento inválido',
+        },
+      ),
     documentType: z.string().default(defaultDocumentType),
     phone: z.string().optional(),
   });
@@ -203,7 +209,7 @@ const QuickCreateClientScreen: React.FC = () => {
   });
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
@@ -212,12 +218,13 @@ const QuickCreateClientScreen: React.FC = () => {
         subtitle="Información básica"
         onClose={handleClose}
       />
-      
+
       <FormProvider {...form}>
         <View className="flex-1 px-4 py-4">
           <VStack className="gap-4">
             <Text className="text-sm text-gray-600">
-              Ingrese los datos básicos del cliente. El documento y teléfono son opcionales. Podrá completar más información después.
+              Ingrese los datos básicos del cliente. El documento y teléfono son opcionales. Podrá
+              completar más información después.
             </Text>
 
             <FormInput
@@ -246,19 +253,15 @@ const QuickCreateClientScreen: React.FC = () => {
 
           <View className="mt-auto pt-4">
             <HStack className="gap-3">
-              <Button 
-                variant="outline" 
-                size="md" 
-                onPress={() => router.goBack()} 
+              <Button
+                variant="outline"
+                size="md"
+                onPress={() => router.goBack()}
                 className="flex-1"
               >
                 <ButtonText>Cancelar</ButtonText>
               </Button>
-              <Button 
-                size="md" 
-                onPress={onSubmit} 
-                className="flex-1"
-              >
+              <Button size="md" onPress={onSubmit} className="flex-1">
                 <ButtonText>Crear Cliente</ButtonText>
               </Button>
             </HStack>
@@ -283,8 +286,7 @@ interface ClientSelectorSheetProps extends SheetProps, ClientSelectorPayload {}
 function ClientSelectorSheet(props: ClientSelectorSheetProps) {
   const insets = useSafeAreaInsets();
 
-console.log("prosp", props);
-
+  console.log('prosp', props);
 
   return (
     <BottomSheetWrapper

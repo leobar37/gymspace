@@ -57,6 +57,10 @@ export class RequestContext implements IRequestContext {
     return this._user.id;
   }
 
+  getTimezone(): string {
+    return this._organization?.timezone  || 'America/Lima';
+  }
+
   /**
    * Initialize context from request
    */
