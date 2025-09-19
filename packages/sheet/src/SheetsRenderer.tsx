@@ -6,7 +6,9 @@ import { SheetManager } from './SheetManager';
  * This component should be placed once in the app tree
  */
 export function SheetsRenderer() {
-  const [registeredSheets, setRegisteredSheets] = React.useState<Array<{ id: string; Component: React.ComponentType<any> }>>([]);
+  const [registeredSheets, setRegisteredSheets] = React.useState<
+    Array<{ id: string; Component: React.ComponentType<any> }>
+  >([]);
   const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
 
   React.useEffect(() => {
@@ -20,6 +22,16 @@ export function SheetsRenderer() {
     return unsubscribe as any;
   }, []);
 
+  console.log(
+    'render',
+    JSON.stringify(
+      {
+        keys: registeredSheets.map((d) => d.id),
+      },
+      null,
+      2,
+    ),
+  );
 
   return (
     <>

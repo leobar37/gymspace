@@ -1,3 +1,5 @@
+import { BackButton } from '@/shared/components';
+import { InputSearch } from '@/shared/input-search';
 import React, { useCallback, useState, useMemo } from 'react';
 import { Dimensions, View as RNView, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,7 +14,6 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { View } from '@/components/ui/view';
 import { VStack } from '@/components/ui/vstack';
-import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
@@ -25,11 +26,9 @@ import {
 } from '@/features/products/hooks/useProducts';
 import type { Product } from '@gymspace/sdk';
 import {
-  ChevronLeftIcon,
   InfoIcon,
   PackageIcon,
   PlusIcon,
-  SearchIcon,
   FilterIcon,
 } from 'lucide-react-native';
 
@@ -79,9 +78,7 @@ const ProductSearchHeader: React.FC<ProductSearchHeaderProps> = ({
             style={{ height: HEADER_HEIGHT }}
           >
             <HStack className="items-center flex-1">
-              <Pressable onPress={() => router.back()} className="p-2 -ml-2">
-                <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
-              </Pressable>
+              <BackButton label="" />
               <Text className="text-xl font-semibold text-gray-900 ml-2">Productos</Text>
             </HStack>
           </HStack>
@@ -93,18 +90,15 @@ const ProductSearchHeader: React.FC<ProductSearchHeaderProps> = ({
             space="sm"
           >
             <View className="flex-1">
-              <Input size="md" variant="outline">
-                <InputSlot className="pl-3">
-                  <InputIcon as={SearchIcon} className="text-gray-500" />
-                </InputSlot>
-                <InputField
-                  placeholder="Buscar productos..."
-                  value={searchInput}
-                  onChangeText={onSearchInputChange}
-                  onSubmitEditing={onSearch}
-                  returnKeyType="search"
-                />
-              </Input>
+              <InputSearch
+                value={searchInput}
+                onChangeText={onSearchInputChange}
+                placeholder="Buscar productos..."
+                onClear={() => {
+                  onSearchInputChange('');
+                  onSearch();
+                }}
+              />
             </View>
             <Pressable
               onPress={onShowFilters}

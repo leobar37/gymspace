@@ -60,14 +60,9 @@ function ContractsListComponent() {
     prefetchNextPage: true,
   });
 
-  const {
-    allItems: contracts = [],
-    state,
-    isLoading,
-    error,
-    isFetching,
-    refresh,
-  } = pagination;
+  const { allItems: contracts = [], state, isLoading, error, isFetching, refresh } = pagination;
+
+  console.log('allItems', contracts);
 
   const getStatusBadge = (status: ContractStatus) => {
     switch (status) {
@@ -111,9 +106,12 @@ function ContractsListComponent() {
     });
   }, [filters, handleFiltersChange]);
 
-  const handleContractPress = useCallback((contractId: string) => {
-    navigateWithinFeature(`/contracts/${contractId}`);
-  }, [navigateWithinFeature]);
+  const handleContractPress = useCallback(
+    (contractId: string) => {
+      navigateWithinFeature(`/contracts/${contractId}`);
+    },
+    [navigateWithinFeature],
+  );
 
   const getActiveFiltersCount = useCallback(() => {
     let count = 0;
@@ -131,7 +129,7 @@ function ContractsListComponent() {
       return (
         <Pressable
           onPress={() => handleContractPress(item.id)}
-          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-3"
+          className="bg-white p-3 rounded-xl shadow-sm"
         >
           <HStack className="justify-between items-start mb-2">
             <VStack className="flex-1">
@@ -193,8 +191,6 @@ function ContractsListComponent() {
     },
     [handleContractPress, formatPrice],
   );
-
-  const renderListHeader = useCallback(() => null, []);
 
   const renderEmptyState = useCallback(() => {
     const hasFilters = getActiveFiltersCount() > 0;
@@ -349,7 +345,6 @@ function ContractsListComponent() {
         <InfiniteScrollList
           pagination={pagination}
           renderItem={renderContractItem}
-          ListHeaderComponent={renderListHeader}
           loadingComponent={renderLoadingState()}
           emptyComponent={renderEmptyState()}
           errorComponent={renderErrorState()}
@@ -368,7 +363,6 @@ function ContractsListComponent() {
           ItemSeparatorComponent={() => <View className="h-3" />}
         />
 
-        {/* Floating Action Button for New Contract */}
         <View className="absolute bottom-6 right-4">
           <Pressable
             onPress={() => navigateWithinFeature('/contracts/create')}

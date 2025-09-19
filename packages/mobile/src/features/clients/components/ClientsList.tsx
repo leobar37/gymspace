@@ -82,7 +82,7 @@ const ClientsListComponent: React.FC = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 px-3">
       <ClientsListGeneric
         onClientSelect={handleClientPress}
         onClientAction={handleClientAction}

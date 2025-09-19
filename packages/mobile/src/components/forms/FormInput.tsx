@@ -59,7 +59,7 @@ export function FormInput<TFieldValues extends FieldValues = FieldValues>({
 
         <GluestackInput
           variant="outline"
-          size="md"
+          size="lg"
         >
           <InputField
             value={transform?.input ? transform.input(field.value) : (field.value || '')}

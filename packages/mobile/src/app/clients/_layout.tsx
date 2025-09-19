@@ -21,7 +21,7 @@ export default function ClientsLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerShown: false,
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen
@@ -34,7 +34,8 @@ export default function ClientsLayout() {
       <Stack.Screen
         name="[id]"
         options={{
-          headerShown: false,
+          title: '',
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen

@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { 
-  createDeployCommand, 
-  createPublishCommand, 
+import {
+  createDeployCommand,
+  createPublishCommand,
   createSyncCommand,
-  createDeployApiCommand 
+  createDeployApiCommand,
+  createLocalApkCommand
 } from './commands/index.js';
 
 /**
@@ -23,6 +24,7 @@ program.addCommand(createDeployCommand());
 program.addCommand(createPublishCommand());
 program.addCommand(createSyncCommand());
 program.addCommand(createDeployApiCommand());
+program.addCommand(createLocalApkCommand());
 
 // Parse command line arguments
 program.parse(process.argv);

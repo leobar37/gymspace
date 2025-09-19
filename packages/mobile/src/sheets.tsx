@@ -48,12 +48,15 @@ SheetManager.register('client-selector', ClientSelectorSheet);
 // Register the check-in sheet
 SheetManager.register('check-in', CheckInSheet);
 
-// Define the payload structure for TypeScript intellisense
-interface StockAdjustmentForm {
-  notes?: string;
-  supplierId?: string;
-  fileId?: string;
-}
+console.log(
+  'load sheets',
+  JSON.stringify(
+    {
+      keys: Array.from(SheetManager.sheets.keys()),
+    },
+    null,
+    3,
+  ),
+);
 
-
-export { };
+export {};

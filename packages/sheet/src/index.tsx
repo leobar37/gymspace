@@ -33,7 +33,6 @@ export {
   BottomSheetHandle,
   BottomSheetFooter,
   useBottomSheetModal,
-  useBottomSheetDynamicSnapPoints,
 } from '@gorhom/bottom-sheet';
 
 // Re-export types from @gorhom/bottom-sheet

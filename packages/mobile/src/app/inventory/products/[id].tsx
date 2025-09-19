@@ -1,14 +1,14 @@
 import React from 'react';
 import { Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { VStack } from '@/components/ui/vstack';
 import { View } from '@/components/ui/view';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert as UIAlert, AlertIcon, AlertText } from '@/components/ui/alert';
-import { InfoIcon } from 'lucide-react-native';
+import { EditIcon, InfoIcon, TrashIcon } from 'lucide-react-native';
 
 // Hooks
 import {
@@ -20,7 +20,6 @@ import { useProductDetailStore } from '@/features/inventory/stores/product-detai
 
 // Components
 import { ProductForm } from '@/components/inventory/ProductForm';
-import { ProductHeader } from '@/features/inventory/components/ProductHeader';
 import { ProductImage } from '@/features/inventory/components/ProductImage';
 import { ProductInfo } from '@/features/inventory/components/ProductInfo';
 import { ProductStats } from '@/features/inventory/components/ProductStats';
@@ -28,6 +27,10 @@ import { StockAdjustment } from '@/features/inventory/components/StockAdjustment
 import { StockMovementsSection } from '@/features/inventory/components/StockMovementsSection';
 
 import type { UpdateProductDto } from '@gymspace/sdk';
+import { BackButton } from '@/shared/components/BackButton';
+import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
+import { Icon } from '@/components/ui/icon';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -110,7 +113,9 @@ export default function ProductDetailScreen() {
   // Calculate product status
   const isInactive = product.status === 'inactive';
   const isOutOfStock = product.stock === 0;
-  const isLowStock = product.minStock ? product.stock > 0 && product.stock <= product.minStock : product.stock > 0 && product.stock <= 10;
+  const isLowStock = product.minStock
+    ? product.stock > 0 && product.stock <= product.minStock
+    : product.stock > 0 && product.stock <= 10;
 
   // Edit mode
   if (isEditing) {
@@ -134,7 +139,29 @@ export default function ProductDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false} className="bg-white">
         <VStack className="px-3 py-4">
           {/* Header with actions */}
-          <ProductHeader onEdit={() => setIsEditing(true)} onDelete={handleDelete} />
+          <Stack.Screen
+            options={{
+              title: '',
+              headerLeft: () => <BackButton label="" />,
+              headerRight: () => {
+                return (
+                  <HStack space="md" className="items-center">
+                    <Pressable
+                      onPress={() => {
+                        setIsEditing(true);
+                      }}
+                      className="p-2"
+                    >
+                      <Icon as={EditIcon} className="w-5 h-5 text-gray-700" />
+                    </Pressable>
+                    <Pressable onPress={handleDelete} className="p-2">
+                      <Icon as={TrashIcon} className="w-5 h-5 text-red-600" />
+                    </Pressable>
+                  </HStack>
+                );
+              },
+            }}
+          />
 
           {/* Product Image */}
           <View className="mt-4">
@@ -166,13 +193,13 @@ export default function ProductDetailScreen() {
           <View className="mb-6">
             <StockAdjustment product={product} isLowStock={isLowStock} />
           </View>
-          
+
           {/* Separator */}
           <View className="h-px bg-gray-200 mx-2 mb-6" />
 
           {/* Stock Movements */}
           <StockMovementsSection product={product} />
-          
+
           {/* Bottom padding */}
           <View className="h-8" />
         </VStack>

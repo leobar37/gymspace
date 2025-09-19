@@ -81,11 +81,11 @@ export const ClientCard: React.FC<ClientCardProps> = ({
 
   return (
     <Card
-      className={`p-3 ${
+      className={`p-3 py-5 ${
         showCheckInStatus && !canCheckIn ? 'bg-gray-50 opacity-60' : 'bg-white'
       } ${!disabled ? 'active:bg-gray-50' : ''}`}
     >
-      <Pressable onPressIn={handlePress}>
+      <Pressable onPress={handlePress}>
         <HStack className="items-center gap-3">
           {/* Avatar with initials */}
           <View className={`${avatarSize} bg-blue-100 rounded-full items-center justify-center`}>
@@ -136,49 +136,58 @@ export const ClientCard: React.FC<ClientCardProps> = ({
 
                 {/* Status badges stack */}
                 <VStack className="items-end gap-1">
-                  {/* Status badge */}
-                  <Badge
-                    variant={client.status === 'active' ? 'solid' : 'outline'}
-                    action={client.status === 'active' ? 'success' : 'muted'}
-                    className="px-2 py-1"
-                  >
-                    <BadgeText className="text-xs font-medium">
-                      {client.status === 'active' ? 'ACTIVO' : 'INACTIVO'}
-                    </BadgeText>
-                  </Badge>
-
-                  {/* Active plan badge */}
-                  {client.contracts && client.contracts.length > 0 && client.status === 'active' && (
-                    <Badge variant="outline" action="info" className="px-2 py-1">
-                      <BadgeText className="text-xs font-medium">PLAN ACTIVO</BadgeText>
+                  {/* Show status badge only if no active plan, or if client is inactive */}
+                  {(!client.contracts || client.contracts.length === 0 || client.status !== 'active') && (
+                    <Badge
+                      variant={client.status === 'active' ? 'solid' : 'outline'}
+                      action={client.status === 'active' ? 'success' : 'muted'}
+                      className="px-2 py-1"
+                    >
+                      <BadgeText className="text-xs font-medium">
+                        {client.status === 'active' ? 'ACTIVO' : 'INACTIVO'}
+                      </BadgeText>
                     </Badge>
                   )}
+
+                  {/* Active plan badge - only show if client has active contracts */}
+                  {client.contracts &&
+                    client.contracts.length > 0 &&
+                    client.status === 'active' && (
+                      <Badge variant="outline" action="info" className="px-2 py-1">
+                        <BadgeText className="text-xs font-medium">PLAN ACTIVO</BadgeText>
+                      </Badge>
+                    )}
                 </VStack>
               </>
             )}
 
             {/* Standard management mode - less optimized */}
             {variant !== 'complete' && onAction && (
-              <HStack className="items-center gap-2">
-                <Badge variant="solid" action={client.status === 'active' ? 'success' : 'muted'}>
-                  <BadgeText className="text-xs">{client.status === 'active' ? 'Activo' : 'Inactivo'}</BadgeText>
-                </Badge>
-                <Pressable onPress={() => onAction(client)} className="p-1">
-                  <Icon as={MoreHorizontalIcon} className="text-gray-500" size="sm" />
-                </Pressable>
-              </HStack>
+              <VStack className="items-end gap-1">
+                {/* Show status badge only if no active plan, or if client is inactive */}
+                {(!client.contracts || client.contracts.length === 0 || client.status !== 'active') && (
+                  <Badge variant="solid" action={client.status === 'active' ? 'success' : 'muted'}>
+                    <BadgeText className="text-xs">
+                      {client.status === 'active' ? 'Activo' : 'Inactivo'}
+                    </BadgeText>
+                  </Badge>
+                )}
+
+                {/* Show active contracts badge for non-complete variants */}
+                {client.contracts && client.contracts.length > 0 && client.status === 'active' && (
+                  <Badge variant="outline" action="info">
+                    <BadgeText className="text-xs">Plan activo</BadgeText>
+                  </Badge>
+                )}
+              </VStack>
             )}
 
             {/* Active status badge for non-management modes */}
-            {!showCheckInStatus && !onAction && client.status === 'active' && (
+            {!showCheckInStatus &&
+             !onAction &&
+             client.status === 'active' &&
+             (!client.contracts || client.contracts.length === 0) && (
               <Text className="text-[10px] font-medium text-green-600 uppercase">Activo</Text>
-            )}
-
-            {/* Show active contracts badge for non-complete variants */}
-            {variant !== 'complete' && onAction && client.contracts && client.contracts.length > 0 && (
-              <Badge variant="outline" action="info">
-                <BadgeText className="text-xs">Plan activo</BadgeText>
-              </Badge>
             )}
           </VStack>
         </HStack>

@@ -1,6 +1,4 @@
 import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
-import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -17,10 +15,9 @@ import {
 } from '@/features/clients/components/ClientTabNavigation';
 import { useClientsController } from '@/features/clients/controllers/clients.controller';
 import { useFile } from '@/features/files/controllers/files.controller';
-import { router, useLocalSearchParams } from 'expo-router';
-import { ChevronLeftIcon, MoreHorizontalIcon } from 'lucide-react-native';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ClientDetailScreen() {
@@ -50,7 +47,7 @@ export default function ClientDetailScreen() {
       if (error?.response?.data?.code === 'CANNOT_DEACTIVATE_CLIENT_WITH_ACTIVE_CONTRACTS') {
         setStatusError(
           error.response.data.message ||
-          'No se puede desactivar el cliente porque tiene contratos activos.',
+            'No se puede desactivar el cliente porque tiene contratos activos.',
         );
       } else {
         setStatusError('Ocurrió un error al cambiar el estado del cliente.');
@@ -82,15 +79,13 @@ export default function ClientDetailScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <View  className="flex-1 bg-gray-50">
       <Header
         clientName={client?.name}
         onBack={() => router.back()}
         onMore={() => setShowActionsheet(true)}
       />
-
       <ClientTabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-
       <ScrollView className="flex-1">
         <VStack className="px-4 pb-4 pt-2 gap-4">
           {activeTab === 'info' && (
@@ -104,7 +99,7 @@ export default function ClientDetailScreen() {
           )}
           {activeTab === 'checkins' && <ClientCheckInsSection clientId={id} />}
           {activeTab === 'stats' && (
-            <ClientStatisticsSection clientId={id} stats={stats} isLoading={false} />
+            <ClientStatisticsSection  stats={stats} isLoading={false} />
           )}
         </VStack>
       </ScrollView>
@@ -124,7 +119,7 @@ export default function ClientDetailScreen() {
         isToggling={isTogglingStatus}
         error={statusError}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -152,22 +147,12 @@ interface HeaderProps {
   onMore: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ clientName, onBack, onMore }) => (
-  <View className="bg-white border-b border-gray-200">
-    <HStack className="items-center justify-between px-4 py-3">
-      <HStack className="items-center flex-1">
-        <Pressable onPress={onBack} className="p-2 -ml-2">
-          <Icon as={ChevronLeftIcon} size="xl" className="text-black" />
-        </Pressable>
-        <Text className="text-lg font-semibold ml-2" numberOfLines={1}>
-          {clientName || 'Cliente'}
-        </Text>
-      </HStack>
-      <Pressable onPress={onMore} className="p-2">
-        <Icon as={MoreHorizontalIcon} />
-      </Pressable>
-    </HStack>
-  </View>
+const Header: React.FC<HeaderProps> = ({ clientName }) => (
+  <Stack.Screen
+    options={{
+      title: clientName || 'Cliente',
+    }}
+  />
 );
 
 interface InfoTabProps {
@@ -196,7 +181,9 @@ const InfoTab: React.FC<InfoTabProps> = ({
         action={client.status === 'active' ? 'negative' : 'positive'}
         disabled={isTogglingStatus}
       >
-        <ButtonText>{client.status === 'active' ? 'Desactivar Cliente' : 'Activar Cliente'}</ButtonText>
+        <ButtonText>
+          {client.status === 'active' ? 'Desactivar Cliente' : 'Activar Cliente'}
+        </ButtonText>
       </Button>
     </VStack>
   </>

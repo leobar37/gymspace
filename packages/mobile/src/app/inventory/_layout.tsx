@@ -24,8 +24,19 @@ export default function InventoryLayout() {
         name="products"
         options={{
           headerShown: false,
+          headerLeft: () => <BackButton label="" />,
         }}
       />
+
+      <Stack.Screen
+        name="products/[id]"
+        options={{
+          title: '',
+          animation: 'fade_from_bottom',
+          headerLeft: () => <BackButton label="" />,
+        }}
+      />
+
       <Stack.Screen
         name="new-sale"
         options={{
@@ -60,14 +71,10 @@ export default function InventoryLayout() {
         name="sales/[id]"
         options={{
           headerShown: false,
+          headerLeft: () => <BackButton label="" />,
         }}
       />
-      <Stack.Screen
-        name="products/[id]"
-        options={{
-          headerShown: false,
-        }}
-      />
+
       <Stack.Screen
         name="products/new"
         options={{
@@ -104,6 +111,13 @@ export default function InventoryLayout() {
           headerShown: true,
           title: '',
           headerBackTitle: '',
+          headerLeft: () => <BackButton label="" />,
+        }}
+      />
+
+      <Stack.Screen
+        options={{
+          title: '',
           headerLeft: () => <BackButton label="" />,
         }}
       />

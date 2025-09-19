@@ -1,10 +1,10 @@
 import type { RefObject } from 'react';
-import type { BottomSheetModal, BottomSheetModalProps } from '@gorhom/bottom-sheet';
+import type { BottomSheetModal, BottomSheetModalProps} from '@gorhom/bottom-sheet';
 import type { SheetManagerType } from './types';
 
 class SheetManagerClass implements SheetManagerType {
   private static instance: SheetManagerClass;
-  private sheets = new Map<string, React.ComponentType<any>>();
+  public sheets = new Map<string, React.ComponentType<any>>();
   private options = new Map<string, Partial<BottomSheetModalProps>>();
   private refs = new Map<string, RefObject<BottomSheetModal>>();
   private activeProps = new Map<string, any>();

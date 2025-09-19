@@ -23,7 +23,7 @@ export const ClientTabNavigation: React.FC<ClientTabNavigationProps> = ({
   ];
 
   return (
-    <View className="bg-white border-b border-gray-200">
+    <View>
       <HStack className="px-4">
         {tabs.map((tab) => (
           <Pressable
@@ -36,9 +36,7 @@ export const ClientTabNavigation: React.FC<ClientTabNavigationProps> = ({
             <HStack className="items-center justify-center gap-2">
               <Icon
                 as={tab.icon}
-                className={`w-4 h-4 ${
-                  activeTab === tab.id ? 'text-blue-600' : 'text-gray-500'
-                }`}
+                className={`w-4 h-4 ${activeTab === tab.id ? 'text-blue-600' : 'text-gray-500'}`}
               />
               <Text
                 className={`font-medium ${

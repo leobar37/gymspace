@@ -4,10 +4,9 @@ import { CartProvider } from '@/contexts/CartContext';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter, useSegments } from 'expo-router';
-
 import { LoadingScreen } from '@/shared/loading-screen/LoadingScreen';
-import '@/sheets';
-import { SheetProvider, SheetsRenderer } from '@gymspace/sheet';
+import { SheetManager, SheetProvider, SheetsRenderer } from '@gymspace/sheet';
+import '../sheets';
 import React, { useState } from 'react';
 import { Alert } from 'react-native';
 import { GymSdkProvider } from './GymSdkProvider';
@@ -77,8 +76,6 @@ export function AppProviders({ children }: AppProvidersProps) {
           retry: 0,
           // Global mutation error handling
           onError: (error: any) => {
-            console.log('error-funny', error);
-
             // Check for authentication errors in mutations
             if (error?.response?.status === 401 || error?.response?.status === 403) {
               // Show error message
@@ -106,6 +103,8 @@ export function AppProviders({ children }: AppProvidersProps) {
       },
     });
   });
+
+  console.log('items', SheetManager.sheets.values());
 
   return (
     <QueryClientProvider client={queryClient}>

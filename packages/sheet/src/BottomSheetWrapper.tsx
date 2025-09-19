@@ -33,6 +33,8 @@ export const BottomSheetWrapper = React.memo<BottomSheetWrapperProps>(({
 }: BottomSheetWrapperProps) => {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
+  console.log("sheetId", sheetId);
+  
   // Default snap points if not provided
   const snapPoints = useMemo(() => {
     if (propSnapPoints) return propSnapPoints;
@@ -46,12 +48,14 @@ export const BottomSheetWrapper = React.memo<BottomSheetWrapperProps>(({
     if (sheetId) {
       // Register the ref immediately, even if current is null
       // The ref will be updated when the component mounts
-      SheetManager.setRef(sheetId, bottomSheetRef);
+      console.log("Registering sheet with id:", sheetId);
+      
+      SheetManager.setRef(sheetId, bottomSheetRef as any);
 
       // Clean up ref on unmount to prevent memory leak
       return () => {
         isUnmountingRef.current = true;
-        SheetManager.setRef(sheetId, { current: null });
+        SheetManager.setRef(sheetId, { current: null } as any);
         SheetManager.clearProps(sheetId);
       };
     }

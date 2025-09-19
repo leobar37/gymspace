@@ -21,7 +21,7 @@ interface ClientHeaderProps {
 
 export const ClientHeader: React.FC<ClientHeaderProps> = ({ client, profilePhotoUrl, onEdit }) => {
   return (
-    <Card className="p-6">
+    <Card>
       <VStack className="gap-4">
         <HStack className="items-center gap-4">
           <Avatar size="xl">
@@ -47,8 +47,7 @@ export const ClientHeader: React.FC<ClientHeaderProps> = ({ client, profilePhoto
             </Badge>
           </VStack>
         </HStack>
-
-        <Button onPress={onEdit} variant="outline" className="w-full">
+        <Button onPress={onEdit} className="w-full">
           <HStack className="items-center gap-2">
             <Icon as={EditIcon} className="w-4 h-4" />
             <ButtonText>Editar Cliente</ButtonText>

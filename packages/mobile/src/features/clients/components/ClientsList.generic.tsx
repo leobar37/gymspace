@@ -1,20 +1,19 @@
-import React, { useMemo } from 'react';
-import { View, FlatList, RefreshControl, StyleSheet } from 'react-native';
-import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { HStack } from '@/components/ui/hstack';
-import { VStack } from '@/components/ui/vstack';
-import { Text } from '@/components/ui/text';
-import { Icon } from '@/components/ui/icon';
-import { Spinner } from '@/components/ui/spinner';
 import { Button, ButtonText } from '@/components/ui/button';
-import { Badge, BadgeText } from '@/components/ui/badge';
+import { HStack } from '@/components/ui/hstack';
+import { Icon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
-import { InputSearch } from '@/shared/input-search';
-import { ClientCard } from '@/shared/components/ClientCard';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { useDataSearch } from '@/hooks/useDataSearch';
-import { useClientsController } from '../controllers/clients.controller';
-import { UsersIcon, UserPlusIcon, CheckIcon, MoreHorizontalIcon } from 'lucide-react-native';
+import { ClientCard } from '@/shared/components/ClientCard';
+import { InputSearch } from '@/shared/input-search';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import type { Client } from '@gymspace/sdk';
+import { UserPlusIcon, UsersIcon } from 'lucide-react-native';
+import React, { useMemo } from 'react';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { useClientsController } from '../controllers/clients.controller';
 
 export interface ClientsListProps {
   // Selection props
@@ -65,7 +64,7 @@ const ClientListItem: React.FC<ClientListItemProps> = ({
   canSelect = true,
   selectReason,
   showCheckInStatus = false,
-  isSheet = false
+  isSheet = false,
 }) => {
   return (
     <ClientCard
@@ -93,17 +92,20 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
   onAddClient,
   showCheckInStatus = false,
   isSheet = false,
-  resultsMessage
+  resultsMessage,
 }) => {
   const { useClientsList } = useClientsController();
 
   // Fetch clients with appropriate parameters
-  const queryParams = useMemo(() => ({
-    limit: 1000,
-    page: 1,
-    activeOnly,
-    includeContractStatus: showCheckInStatus,
-  }), [activeOnly, showCheckInStatus]);
+  const queryParams = useMemo(
+    () => ({
+      limit: 1000,
+      page: 1,
+      activeOnly,
+      includeContractStatus: showCheckInStatus,
+    }),
+    [activeOnly, showCheckInStatus],
+  );
 
   const { data: clientsResponse, isLoading, refetch, isRefetching } = useClientsList(queryParams);
 
@@ -112,7 +114,7 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
 
     // Apply additional filtering if provided
     if (filterFunction) {
-      filteredClients = filteredClients.filter(client => filterFunction(client).canSelect);
+      filteredClients = filteredClients.filter((client) => filterFunction(client).canSelect);
     }
 
     return filteredClients;
@@ -126,7 +128,7 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
       client.email || '',
       client.clientNumber || '',
       client.documentValue || '',
-      client.phone || ''
+      client.phone || '',
     ],
     searchPlaceholder,
   });
@@ -148,10 +150,15 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
 
     const count = displayClients.length;
     if (searchInput.length > 0) {
-      return count === 0 ? resultsMessage.noResults :
-             count === 1 ? resultsMessage.single : resultsMessage.plural.replace('{count}', count.toString());
+      return count === 0
+        ? resultsMessage.noResults
+        : count === 1
+          ? resultsMessage.single
+          : resultsMessage.plural.replace('{count}', count.toString());
     }
-    return count === 1 ? resultsMessage.single : resultsMessage.plural.replace('{count}', count.toString());
+    return count === 1
+      ? resultsMessage.single
+      : resultsMessage.plural.replace('{count}', count.toString());
   };
 
   const getEmptyMessage = () => {
@@ -170,7 +177,6 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
 
   const renderClientItem = ({ item: client }: { item: Client }) => {
     const filterResult = filterFunction ? filterFunction(client) : { canSelect: true };
-
     return (
       <ClientListItem
         client={client}
@@ -204,9 +210,7 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
   const renderEmptyState = () => (
     <VStack className="items-center justify-center py-8">
       <Icon as={UsersIcon} className="w-12 h-12 text-gray-300 mb-4" />
-      <Text className="text-gray-500 text-center mb-4">
-        {getEmptyMessage()}
-      </Text>
+      <Text className="text-gray-500 text-center mb-4">{getEmptyMessage()}</Text>
       {showAddButton && onAddClient && !searchInput.length && (
         <Button variant="outline" size="sm" onPress={onAddClient}>
           <Icon as={UserPlusIcon} className="mr-2" size="sm" />
@@ -229,10 +233,7 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
 
       {/* Add New Client Button */}
       {showAddButton && onAddClient && (
-        <Pressable
-          onPress={onAddClient}
-          className="px-4 py-3 bg-white border-b border-gray-100"
-        >
+        <Pressable onPress={onAddClient} className="px-4 py-3 bg-white border-b border-gray-100">
           <HStack className="items-center gap-3">
             <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
               <Icon as={UserPlusIcon} className="text-blue-600" size="sm" />
@@ -244,9 +245,7 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
 
       {/* Results count */}
       {!isLoading && displayClients.length > 0 && (
-        <Text className="text-sm text-gray-500 px-4">
-          {getResultsMessage()}
-        </Text>
+        <Text className="text-sm text-gray-500 px-4">{getResultsMessage()}</Text>
       )}
     </VStack>
   );
@@ -264,8 +263,7 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
   if (isSheet) {
     return (
       <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
-        <ListHeader />
-        {displayClients.length === 0 ? renderEmptyState() : displayClients.map(renderItem)}
+        {displayClients.map(renderItem)}
       </BottomSheetScrollView>
     );
   }
@@ -276,17 +274,14 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
       data={displayClients}
       keyExtractor={(item) => item.id}
       renderItem={renderClientItem}
+      className='mt-5'
       ListHeaderComponent={ListHeader}
       ListEmptyComponent={renderEmptyState}
-      contentContainerStyle={{
-        flexGrow: 1,
-        padding: isSheet ? 0 : 16
-      }}
       ItemSeparatorComponent={() => <View className="h-px bg-gray-100" />}
-      keyboardShouldPersistTaps="handled"
-      refreshControl={onClientAction ?
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} /> :
-        undefined
+      refreshControl={
+        onClientAction ? (
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+        ) : undefined
       }
       showsVerticalScrollIndicator={false}
     />
