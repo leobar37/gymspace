@@ -1,6 +1,6 @@
 {
   "name": "@gymspace/sdk",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "GymSpace TypeScript SDK for API integration",
   "author": "GymSpace Team",
   "license": "MIT",
