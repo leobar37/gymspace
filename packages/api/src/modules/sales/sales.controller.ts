@@ -21,7 +21,6 @@ export class SalesController {
   @ApiResponse({ status: 409, description: 'Insufficient stock or invalid product' })
   async createSale(@Body() dto: CreateSaleDto, @AppCtxt() ctx: RequestContext) {
     return await this.salesService.createSale(ctx, dto);
-    return await this.salesService.createSale(ctx, dto);
   }
 
   @Get()

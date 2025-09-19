@@ -7,17 +7,25 @@ import { SheetManager } from './SheetManager';
  */
 export function SheetsRenderer() {
   const [registeredSheets, setRegisteredSheets] = React.useState<Array<{ id: string; Component: React.ComponentType<any> }>>([]);
+  const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
 
   React.useEffect(() => {
     // Get all registered sheets from SheetManager
     setRegisteredSheets(SheetManager.getAllRegisteredSheets());
   }, []);
 
+  // Subscribe to props changes to re-render components with updated props
+  React.useEffect(() => {
+    const unsubscribe = SheetManager.addListener(forceUpdate);
+    return unsubscribe;
+  }, []);
+
   return (
     <>
-      {registeredSheets.map(({ id, Component }) => (
-        <Component key={id} />
-      ))}
+      {registeredSheets.map(({ id, Component }) => {
+        const props = SheetManager.getProps(id);
+        return <Component key={id} {...props} />;
+      })}
     </>
   );
 }

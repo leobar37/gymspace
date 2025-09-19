@@ -3,24 +3,27 @@ import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { Badge, BadgeText } from '@/components/ui/badge';
 import type { Client } from '@gymspace/sdk';
-import { CheckCircleIcon, PhoneIcon } from 'lucide-react-native';
+import { CheckCircleIcon, PhoneIcon, MoreHorizontalIcon } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 
 interface ClientCardProps {
   client: Client;
   onPress?: (client: Client) => void;
+  onAction?: (client: Client) => void;
   disabled?: boolean;
   showCheckInStatus?: boolean;
   canCheckIn?: boolean;
   checkInReason?: string;
-  variant?: 'default' | 'compact';
+  variant?: 'minimal' | 'complete' | 'default' | 'compact';
 }
 
 export const ClientCard: React.FC<ClientCardProps> = ({
   client,
   onPress,
+  onAction,
   disabled = false,
   showCheckInStatus = false,
   canCheckIn = true,
@@ -38,14 +41,43 @@ export const ClientCard: React.FC<ClientCardProps> = ({
   };
 
   const initials = getInitials(fullName);
-  const avatarSize = variant === 'compact' ? 'w-9 h-9' : 'w-10 h-10';
-  const avatarTextSize = variant === 'compact' ? 'text-xs' : 'text-sm';
+
+  // Determine sizes based on variant
+  const isCompact = variant === 'compact';
+  const isMinimal = variant === 'minimal';
+  const avatarSize = isCompact ? 'w-9 h-9' : 'w-10 h-10';
+  const avatarTextSize = isCompact ? 'text-xs' : 'text-sm';
 
   const handlePress = () => {
     if (onPress) {
       onPress(client);
     }
   };
+
+  // Minimal variant - only name and document
+  if (isMinimal) {
+    return (
+      <Card className="p-3 bg-white">
+        <Pressable onPressIn={handlePress}>
+          <HStack className="items-center gap-3">
+            <View className={`${avatarSize} bg-blue-100 rounded-full items-center justify-center`}>
+              <Text className={`${avatarTextSize} font-semibold text-blue-600`}>{initials}</Text>
+            </View>
+            <VStack className="flex-1">
+              <Text className="font-medium text-gray-900" numberOfLines={1}>
+                {fullName}
+              </Text>
+              {client.documentValue && (
+                <Text className="text-xs text-gray-500">
+                  {client.documentType || 'CI'} {client.documentValue}
+                </Text>
+              )}
+            </VStack>
+          </HStack>
+        </Pressable>
+      </Card>
+    );
+  }
 
   return (
     <Card
@@ -87,15 +119,68 @@ export const ClientCard: React.FC<ClientCardProps> = ({
             )}
           </VStack>
 
-          {/* Status indicator */}
-          {showCheckInStatus && canCheckIn && (
-            <Icon as={CheckCircleIcon} className="w-5 h-5 text-green-600" />
-          )}
+          {/* Status indicators and actions */}
+          <VStack className="items-end gap-2">
+            {/* Check-in status */}
+            {showCheckInStatus && canCheckIn && (
+              <Icon as={CheckCircleIcon} className="w-5 h-5 text-green-600" />
+            )}
 
-          {/* Active status badge */}
-          {!showCheckInStatus && client.status === 'active' && (
-            <Text className="text-[10px] font-medium text-green-600 uppercase">Activo</Text>
-          )}
+            {/* Complete variant - optimized badges and actions */}
+            {variant === 'complete' && onAction && (
+              <>
+                {/* Action button in top right */}
+                <Pressable onPress={() => onAction(client)} className="p-1 -mt-1 -mr-1">
+                  <Icon as={MoreHorizontalIcon} className="text-gray-400" size="md" />
+                </Pressable>
+
+                {/* Status badges stack */}
+                <VStack className="items-end gap-1">
+                  {/* Status badge */}
+                  <Badge
+                    variant={client.status === 'active' ? 'solid' : 'outline'}
+                    action={client.status === 'active' ? 'success' : 'muted'}
+                    className="px-2 py-1"
+                  >
+                    <BadgeText className="text-xs font-medium">
+                      {client.status === 'active' ? 'ACTIVO' : 'INACTIVO'}
+                    </BadgeText>
+                  </Badge>
+
+                  {/* Active plan badge */}
+                  {client.contracts && client.contracts.length > 0 && client.status === 'active' && (
+                    <Badge variant="outline" action="info" className="px-2 py-1">
+                      <BadgeText className="text-xs font-medium">PLAN ACTIVO</BadgeText>
+                    </Badge>
+                  )}
+                </VStack>
+              </>
+            )}
+
+            {/* Standard management mode - less optimized */}
+            {variant !== 'complete' && onAction && (
+              <HStack className="items-center gap-2">
+                <Badge variant="solid" action={client.status === 'active' ? 'success' : 'muted'}>
+                  <BadgeText className="text-xs">{client.status === 'active' ? 'Activo' : 'Inactivo'}</BadgeText>
+                </Badge>
+                <Pressable onPress={() => onAction(client)} className="p-1">
+                  <Icon as={MoreHorizontalIcon} className="text-gray-500" size="sm" />
+                </Pressable>
+              </HStack>
+            )}
+
+            {/* Active status badge for non-management modes */}
+            {!showCheckInStatus && !onAction && client.status === 'active' && (
+              <Text className="text-[10px] font-medium text-green-600 uppercase">Activo</Text>
+            )}
+
+            {/* Show active contracts badge for non-complete variants */}
+            {variant !== 'complete' && onAction && client.contracts && client.contracts.length > 0 && (
+              <Badge variant="outline" action="info">
+                <BadgeText className="text-xs">Plan activo</BadgeText>
+              </Badge>
+            )}
+          </VStack>
         </HStack>
       </Pressable>
     </Card>

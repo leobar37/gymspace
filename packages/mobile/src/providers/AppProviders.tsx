@@ -4,14 +4,13 @@ import { CartProvider } from '@/contexts/CartContext';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter, useSegments } from 'expo-router';
-import { usePrefetchStore } from '@/stores/prefetch.store';
 
-import React, { useState } from 'react';
-import { Alert } from 'react-native';
-import { SheetProvider } from '@gymspace/sheet';
-import { GymSdkProvider } from './GymSdkProvider';
 import { LoadingScreen } from '@/shared/loading-screen/LoadingScreen';
 import '@/sheets';
+import { SheetProvider, SheetsRenderer } from '@gymspace/sheet';
+import React, { useState } from 'react';
+import { Alert } from 'react-native';
+import { GymSdkProvider } from './GymSdkProvider';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -118,6 +117,7 @@ export function AppProviders({ children }: AppProvidersProps) {
                 <SheetProvider>
                   {children}
                   <LoadingScreen />
+                  <SheetsRenderer />
                 </SheetProvider>
               </CartProvider>
             </ConfigProvider>

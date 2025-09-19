@@ -8,6 +8,7 @@ class SheetManagerClass implements SheetManagerType {
   private options = new Map<string, Partial<BottomSheetModalProps>>();
   private refs = new Map<string, RefObject<BottomSheetModal>>();
   private activeProps = new Map<string, any>();
+  private listeners = new Set<() => void>();
 
   private constructor() {}
 
@@ -44,10 +45,12 @@ class SheetManagerClass implements SheetManagerType {
     const ref = this.refs.get(id);
     if (ref?.current) {
       this.activeProps.set(id, props);
+      this.notifyListeners();
       ref.current.present();
     } else if (ref) {
       // Ref exists but current is null, set props and wait for mount
       this.activeProps.set(id, props);
+      this.notifyListeners();
       // Try again after a short delay to allow component to mount
       setTimeout(() => {
         const updatedRef = this.refs.get(id);
@@ -99,6 +102,16 @@ class SheetManagerClass implements SheetManagerType {
 
   clearProps(id: string) {
     this.activeProps.delete(id);
+    this.notifyListeners();
+  }
+
+  addListener(listener: () => void) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private notifyListeners() {
+    this.listeners.forEach(listener => listener());
   }
 
   getAllRegisteredSheets(): Array<{ id: string; Component: React.ComponentType<any> }> {

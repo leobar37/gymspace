@@ -22,7 +22,7 @@ import {
   InfoIcon,
   RefreshCwIcon,
   UserIcon,
-  UserPlusIcon
+  UserPlusIcon,
 } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -56,22 +56,17 @@ const formatTime = (dateString: string) => {
   }
 };
 
-
 // Date and Time Section
 const DateTimeSection: React.FC<{ sale: Sale }> = ({ sale }) => {
   return (
     <View className="py-4">
       <HStack className="items-center gap-2">
         <Icon as={CalendarIcon} className="text-gray-400" size="sm" />
-        <Text className="text-base font-semibold text-gray-900">
-          {formatDate(sale.saleDate)}
-        </Text>
+        <Text className="text-base font-semibold text-gray-900">{formatDate(sale.saleDate)}</Text>
       </HStack>
       <HStack className="items-center gap-2 mt-1">
         <Icon as={ClockIcon} className="text-gray-400" size="sm" />
-        <Text className="text-sm text-gray-600">
-          {formatTime(sale.saleDate)}
-        </Text>
+        <Text className="text-sm text-gray-600">{formatTime(sale.saleDate)}</Text>
       </HStack>
     </View>
   );
@@ -80,27 +75,23 @@ const DateTimeSection: React.FC<{ sale: Sale }> = ({ sale }) => {
 // Payment Status Section
 const PaymentStatusSection: React.FC<{ sale: Sale }> = ({ sale }) => {
   const isPaid = sale.paymentStatus === 'paid';
-  
+
   return (
     <View className="py-4">
-      <Text className="text-sm font-medium text-gray-500 mb-2">
-        Estado de Pago
-      </Text>
+      <Text className="text-sm font-medium text-gray-500 mb-2">Estado de Pago</Text>
       <HStack className="items-center justify-between">
         <HStack className="items-center gap-2">
-          <Icon 
-            as={isPaid ? CreditCardIcon : ClockIcon} 
-            className={isPaid ? 'text-green-600' : 'text-orange-500'} 
-            size="sm" 
+          <Icon
+            as={isPaid ? CreditCardIcon : ClockIcon}
+            className={isPaid ? 'text-green-600' : 'text-orange-500'}
+            size="sm"
           />
           <Text className={`font-medium ${isPaid ? 'text-green-700' : 'text-orange-600'}`}>
             {isPaid ? 'Pagado' : 'Pendiente'}
           </Text>
         </HStack>
         {sale.paymentMethod && (
-          <Text className="text-sm text-gray-600">
-            {sale.paymentMethod?.name || 'Efectivo'}
-          </Text>
+          <Text className="text-sm text-gray-600">{sale.paymentMethod?.name || 'Efectivo'}</Text>
         )}
       </HStack>
     </View>
@@ -108,25 +99,21 @@ const PaymentStatusSection: React.FC<{ sale: Sale }> = ({ sale }) => {
 };
 
 // Customer Section
-const CustomerSection: React.FC<{ 
-  sale: Sale; 
+const CustomerSection: React.FC<{
+  sale: Sale;
   onAffiliateClient: () => void;
   isUpdating: boolean;
 }> = ({ sale, onAffiliateClient, isUpdating }) => {
   if (sale.customerId && sale.customerName) {
     return (
       <View className="py-4">
-        <Text className="text-sm font-medium text-gray-500 mb-2">
-          Cliente
-        </Text>
+        <Text className="text-sm font-medium text-gray-500 mb-2">Cliente</Text>
         <HStack className="items-center justify-between">
           <HStack className="items-center gap-3">
             <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center">
               <Icon as={UserIcon} className="text-gray-600" size="sm" />
             </View>
-            <Text className="text-base font-medium text-gray-900">
-              {sale.customerName}
-            </Text>
+            <Text className="text-base font-medium text-gray-900">{sale.customerName}</Text>
           </HStack>
         </HStack>
       </View>
@@ -135,9 +122,7 @@ const CustomerSection: React.FC<{
 
   return (
     <View className="py-4">
-      <Text className="text-sm font-medium text-gray-500 mb-3">
-        Cliente
-      </Text>
+      <Text className="text-sm font-medium text-gray-500 mb-3">Cliente</Text>
       <Pressable
         onPress={onAffiliateClient}
         disabled={isUpdating}
@@ -145,9 +130,7 @@ const CustomerSection: React.FC<{
       >
         <HStack className="items-center justify-center gap-2">
           <Icon as={UserPlusIcon} className="text-blue-600" size="sm" />
-          <Text className="text-blue-600 font-medium">
-            Afiliar cliente a esta venta
-          </Text>
+          <Text className="text-blue-600 font-medium">Afiliar cliente a esta venta</Text>
         </HStack>
       </Pressable>
     </View>
@@ -155,7 +138,10 @@ const CustomerSection: React.FC<{
 };
 
 // Products Section
-const ProductsSection: React.FC<{ sale: Sale; formatPrice: (price: number) => string }> = ({ sale, formatPrice }) => {
+const ProductsSection: React.FC<{ sale: Sale; formatPrice: (price: number) => string }> = ({
+  sale,
+  formatPrice,
+}) => {
   if (!sale.saleItems || sale.saleItems.length === 0) {
     return null;
   }
@@ -163,16 +149,14 @@ const ProductsSection: React.FC<{ sale: Sale; formatPrice: (price: number) => st
   return (
     <View className="py-4">
       <HStack className="items-center justify-between mb-3">
-        <Text className="text-sm font-medium text-gray-500">
-          Productos Vendidos
-        </Text>
+        <Text className="text-sm font-medium text-gray-500">Productos Vendidos</Text>
         <Badge variant="outline" className="border-gray-300">
           <BadgeText className="text-gray-600">
             {sale.saleItems.length} {sale.saleItems.length === 1 ? 'producto' : 'productos'}
           </BadgeText>
         </Badge>
       </HStack>
-      
+
       <VStack className="gap-3">
         {sale.saleItems.map((item, index) => (
           <View key={`${item.productId}-${index}`} className="bg-gray-50 rounded-lg p-3">
@@ -182,17 +166,11 @@ const ProductsSection: React.FC<{ sale: Sale; formatPrice: (price: number) => st
                   {item.product?.name || 'Producto sin nombre'}
                 </Text>
                 <HStack className="gap-3">
-                  <Text className="text-sm text-gray-600">
-                    Cantidad: {item.quantity}
-                  </Text>
-                  <Text className="text-sm text-gray-600">
-                    {formatPrice(item.unitPrice)} c/u
-                  </Text>
+                  <Text className="text-sm text-gray-600">Cantidad: {item.quantity}</Text>
+                  <Text className="text-sm text-gray-600">{formatPrice(item.unitPrice)} c/u</Text>
                 </HStack>
               </VStack>
-              <Text className="font-semibold text-gray-900">
-                {formatPrice(item.total)}
-              </Text>
+              <Text className="font-semibold text-gray-900">{formatPrice(item.total)}</Text>
             </HStack>
           </View>
         ))}
@@ -211,14 +189,10 @@ const NotesSection: React.FC<{ sale: Sale }> = ({ sale }) => {
     <View className="py-4">
       <HStack className="items-center gap-2 mb-2">
         <Icon as={FileTextIcon} className="text-gray-400" size="sm" />
-        <Text className="text-sm font-medium text-gray-500">
-          Notas
-        </Text>
+        <Text className="text-sm font-medium text-gray-500">Notas</Text>
       </HStack>
       <View className="bg-gray-50 rounded-lg p-3">
-        <Text className="text-sm text-gray-700">
-          {sale.notes}
-        </Text>
+        <Text className="text-sm text-gray-700">{sale.notes}</Text>
       </View>
     </View>
   );
@@ -234,15 +208,8 @@ export default function SaleDetailScreen() {
   const { data: sale, isLoading, isError, error, refetch } = useSale(id);
   const { mutate: updateSale, isPending: isUpdating } = useUpdateSale();
 
-
   const handleAffiliateClient = useCallback(() => {
     if (!sale) return;
-
-    console.log('handleAffiliateClient called');
-    console.log('Opening client-selector sheet with data:', {
-      mode: 'affiliate',
-      currentClientId: sale.customerId,
-    });
 
     SheetManager.show('client-selector', {
       mode: 'affiliate',
@@ -254,7 +221,7 @@ export default function SaleDetailScreen() {
             updateSale(
               {
                 id: sale.id,
-                data: { customerId: client.id }
+                data: { customerId: client.id },
               },
               {
                 onSuccess: () => {
@@ -264,7 +231,7 @@ export default function SaleDetailScreen() {
                 onError: (error) => {
                   reject(error);
                 },
-              }
+              },
             );
           }),
           {
@@ -276,7 +243,7 @@ export default function SaleDetailScreen() {
               }
               return 'Error al afiliar el cliente';
             },
-          }
+          },
         );
       },
       onCancel: () => {
@@ -316,11 +283,7 @@ export default function SaleDetailScreen() {
               Error al cargar la venta: {error?.message || 'Venta no encontrada'}
             </AlertText>
           </UIAlert>
-          <Button
-            variant="outline"
-            onPress={() => refetch()}
-            className="mt-4"
-          >
+          <Button variant="outline" onPress={() => refetch()} className="mt-4">
             <Icon as={RefreshCwIcon} className="mr-2" size="sm" />
             <ButtonText>Reintentar</ButtonText>
           </Button>
@@ -330,7 +293,7 @@ export default function SaleDetailScreen() {
   }
 
   return (
-    <ScreenForm 
+    <ScreenForm
       title="Detalle de Venta"
       showFixedFooter={true}
       footerContent={
@@ -342,36 +305,36 @@ export default function SaleDetailScreen() {
         </View>
       }
     >
-      <ScrollView 
-        className="flex-1" 
+      <ScrollView
+        className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 16 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Date and Time */}
         <DateTimeSection sale={sale} />
-        
+
         {/* Divider */}
         <View className="h-px bg-gray-100" />
-        
+
         {/* Payment Status */}
         <PaymentStatusSection sale={sale} />
-        
+
         {/* Divider */}
         <View className="h-px bg-gray-100" />
-        
+
         {/* Customer */}
-        <CustomerSection 
-          sale={sale} 
+        <CustomerSection
+          sale={sale}
           onAffiliateClient={handleAffiliateClient}
           isUpdating={isUpdating}
         />
-        
+
         {/* Divider */}
         <View className="h-px bg-gray-100" />
-        
+
         {/* Products */}
         <ProductsSection sale={sale} formatPrice={formatPrice} />
-        
+
         {/* Notes - Only show if exists */}
         {sale.notes && (
           <>
@@ -379,7 +342,7 @@ export default function SaleDetailScreen() {
             <NotesSection sale={sale} />
           </>
         )}
-        
+
         {/* Bottom padding for scroll */}
         <View className="h-8" />
       </ScrollView>

@@ -1,0 +1,269 @@
+import React, { useMemo } from 'react';
+import { View, FlatList, RefreshControl } from 'react-native';
+import { HStack } from '@/components/ui/hstack';
+import { VStack } from '@/components/ui/vstack';
+import { Text } from '@/components/ui/text';
+import { Icon } from '@/components/ui/icon';
+import { Spinner } from '@/components/ui/spinner';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Badge, BadgeText } from '@/components/ui/badge';
+import { Pressable } from '@/components/ui/pressable';
+import { InputSearch } from '@/shared/input-search';
+import { ClientCard } from '@/shared/components/ClientCard';
+import { useDataSearch } from '@/hooks/useDataSearch';
+import { useClientsController } from '../controllers/clients.controller';
+import { UsersIcon, UserPlusIcon, CheckIcon, MoreHorizontalIcon } from 'lucide-react-native';
+import type { Client } from '@gymspace/sdk';
+
+export interface ClientsListProps {
+  // Selection props
+  selectedClientId?: string;
+  onClientSelect?: (client: Client) => void;
+
+  // Management mode props
+  onClientAction?: (client: Client) => void;
+
+  // Filtering options
+  activeOnly?: boolean;
+  filterFunction?: (client: Client) => { canSelect: boolean; reason?: string };
+
+  // UI customization
+  searchPlaceholder?: string;
+  emptyMessage?: string;
+  showAddButton?: boolean;
+  onAddClient?: () => void;
+
+  // Check-in specific
+  showCheckInStatus?: boolean;
+
+  // Sheet mode
+  isSheet?: boolean;
+
+  // Results count message customization
+  resultsMessage?: {
+    single: string;
+    plural: string;
+    noResults: string;
+  };
+
+  // Style customization
+  cardVariant?: 'minimal' | 'complete' | 'default' | 'compact';
+}
+
+interface ClientListItemProps {
+  client: Client;
+  onPress: (client: Client) => void;
+  onAction?: (client: Client) => void;
+  canSelect?: boolean;
+  selectReason?: string;
+  showCheckInStatus?: boolean;
+  cardVariant?: 'minimal' | 'complete' | 'default' | 'compact';
+}
+
+const ClientListItem: React.FC<ClientListItemProps> = ({
+  client,
+  onPress,
+  onAction,
+  canSelect = true,
+  selectReason,
+  showCheckInStatus = false,
+  cardVariant = 'default'
+}) => {
+  return (
+    <ClientCard
+      client={client}
+      onPress={() => onPress(client)}
+      onAction={onAction ? () => onAction(client) : undefined}
+      disabled={!canSelect}
+      showCheckInStatus={showCheckInStatus}
+      canCheckIn={canSelect}
+      checkInReason={selectReason}
+      variant={cardVariant}
+    />
+  );
+};
+
+export const ClientsListGeneric: React.FC<ClientsListProps> = ({
+  selectedClientId,
+  onClientSelect,
+  onClientAction,
+  activeOnly = false,
+  filterFunction,
+  searchPlaceholder = 'Buscar por nombre, email o documento...',
+  emptyMessage,
+  showAddButton = false,
+  onAddClient,
+  showCheckInStatus = false,
+  isSheet = false,
+  resultsMessage,
+  cardVariant = 'default'
+}) => {
+  const { useClientsList } = useClientsController();
+
+  // Fetch clients with appropriate parameters
+  const queryParams = useMemo(() => ({
+    limit: 1000,
+    page: 1,
+    activeOnly,
+    includeContractStatus: showCheckInStatus,
+  }), [activeOnly, showCheckInStatus]);
+
+  const { data: clientsResponse, isLoading, refetch, isRefetching } = useClientsList(queryParams);
+
+  const clients = useMemo(() => {
+    let filteredClients = clientsResponse?.data || [];
+
+    // Apply additional filtering if provided
+    if (filterFunction) {
+      filteredClients = filteredClients.filter(client => filterFunction(client).canSelect);
+    }
+
+    return filteredClients;
+  }, [clientsResponse?.data, filterFunction]);
+
+  // Local search using useDataSearch
+  const { searchInput, setSearchInput, filteredData, clearSearch } = useDataSearch({
+    data: clients,
+    searchFields: (client) => [
+      client.name || '',
+      client.email || '',
+      client.clientNumber || '',
+      client.documentValue || '',
+      client.phone || ''
+    ],
+    searchPlaceholder,
+  });
+
+  const displayClients = searchInput.length > 0 ? filteredData : clients;
+
+  const handleClientPress = (client: Client) => {
+    onClientSelect?.(client);
+  };
+
+  const getResultsMessage = () => {
+    if (!resultsMessage) {
+      const count = displayClients.length;
+      if (searchInput.length > 0) {
+        return `${count} cliente${count !== 1 ? 's' : ''} encontrado${count !== 1 ? 's' : ''}`;
+      }
+      return `${count} cliente${count !== 1 ? 's' : ''} disponible${count !== 1 ? 's' : ''}`;
+    }
+
+    const count = displayClients.length;
+    if (searchInput.length > 0) {
+      return count === 0 ? resultsMessage.noResults :
+             count === 1 ? resultsMessage.single : resultsMessage.plural.replace('{count}', count.toString());
+    }
+    return count === 1 ? resultsMessage.single : resultsMessage.plural.replace('{count}', count.toString());
+  };
+
+  const getEmptyMessage = () => {
+    if (emptyMessage) return emptyMessage;
+
+    if (searchInput.length > 0) {
+      return 'No se encontraron clientes con esos criterios';
+    }
+
+    if (showCheckInStatus) {
+      return 'No hay clientes con membresía activa disponibles para check-in';
+    }
+
+    return 'No hay clientes disponibles';
+  };
+
+  const renderClientItem = ({ item: client }: { item: Client }) => {
+    const filterResult = filterFunction ? filterFunction(client) : { canSelect: true };
+
+    return (
+      <ClientListItem
+        client={client}
+        onPress={handleClientPress}
+        onAction={onClientAction}
+        canSelect={filterResult.canSelect}
+        selectReason={filterResult.reason}
+        showCheckInStatus={showCheckInStatus}
+        cardVariant={cardVariant}
+      />
+    );
+  };
+
+  const renderEmptyState = () => (
+    <VStack className="items-center justify-center py-8">
+      <Icon as={UsersIcon} className="w-12 h-12 text-gray-300 mb-4" />
+      <Text className="text-gray-500 text-center mb-4">
+        {getEmptyMessage()}
+      </Text>
+      {showAddButton && onAddClient && !searchInput.length && (
+        <Button variant="outline" size="sm" onPress={onAddClient}>
+          <Icon as={UserPlusIcon} className="mr-2" size="sm" />
+          <ButtonText>Agregar nuevo cliente</ButtonText>
+        </Button>
+      )}
+    </VStack>
+  );
+
+  const ListHeader = () => (
+    <VStack className="gap-4">
+      {/* Search Bar */}
+      <InputSearch
+        value={searchInput}
+        onChangeText={setSearchInput}
+        placeholder={searchPlaceholder}
+        onClear={clearSearch}
+        isSheet={isSheet}
+      />
+
+      {/* Add New Client Button */}
+      {showAddButton && onAddClient && (
+        <Pressable
+          onPress={onAddClient}
+          className="px-4 py-3 bg-white border-b border-gray-100"
+        >
+          <HStack className="items-center gap-3">
+            <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+              <Icon as={UserPlusIcon} className="text-blue-600" size="sm" />
+            </View>
+            <Text className="text-blue-600 font-medium">Agregar nuevo cliente</Text>
+          </HStack>
+        </Pressable>
+      )}
+
+      {/* Results count */}
+      {!isLoading && displayClients.length > 0 && (
+        <Text className="text-sm text-gray-500 px-4">
+          {getResultsMessage()}
+        </Text>
+      )}
+    </VStack>
+  );
+
+  if (isLoading) {
+    return (
+      <VStack className="flex-1 items-center justify-center">
+        <Spinner size="large" />
+        <Text className="mt-2 text-gray-600">Cargando clientes...</Text>
+      </VStack>
+    );
+  }
+
+  return (
+    <FlatList
+      data={displayClients}
+      keyExtractor={(item) => item.id}
+      renderItem={renderClientItem}
+      ListHeaderComponent={ListHeader}
+      ListEmptyComponent={renderEmptyState}
+      contentContainerStyle={{
+        flexGrow: 1,
+        padding: isSheet ? 0 : 16
+      }}
+      ItemSeparatorComponent={() => <View className="h-px bg-gray-100" />}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={onClientAction ?
+        <RefreshControl refreshing={isRefetching} onRefresh={refetch} /> :
+        undefined
+      }
+      showsVerticalScrollIndicator={false}
+    />
+  );
+};

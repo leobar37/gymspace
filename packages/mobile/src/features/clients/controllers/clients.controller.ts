@@ -153,6 +153,43 @@ export const useClientsController = () => {
     });
   };
 
+  // Create client with callbacks
+  const createClientWithCallbacks = (
+    data: CreateClientDto,
+    callbacks?: {
+      onSuccess?: (client: Client) => void;
+      onError?: (error: any) => void;
+    }
+  ) => {
+    createClientMutation.mutate(data, {
+      onSuccess: (client) => {
+        callbacks?.onSuccess?.(client);
+      },
+      onError: (error) => {
+        callbacks?.onError?.(error);
+      },
+    });
+  };
+
+  // Update client with callbacks
+  const updateClientWithCallbacks = (
+    id: string,
+    data: UpdateClientDto,
+    callbacks?: {
+      onSuccess?: (client: Client) => void;
+      onError?: (error: any) => void;
+    }
+  ) => {
+    updateClientMutation.mutate({ id, data }, {
+      onSuccess: (client) => {
+        callbacks?.onSuccess?.(client);
+      },
+      onError: (error) => {
+        callbacks?.onError?.(error);
+      },
+    });
+  };
+
   return {
     // Query hooks
     useClientsList,
@@ -161,10 +198,12 @@ export const useClientsController = () => {
 
     // Mutations
     createClient: createClientMutation.mutate,
+    createClientWithCallbacks,
     isCreatingClient: createClientMutation.isPending,
     createClientError: createClientMutation.error,
 
     updateClient: updateClientMutation.mutate,
+    updateClientWithCallbacks,
     isUpdatingClient: updateClientMutation.isPending,
 
     toggleStatus: toggleStatusMutation.mutateAsync,
