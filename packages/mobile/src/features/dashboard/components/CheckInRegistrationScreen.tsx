@@ -71,7 +71,7 @@ export const CheckInRegistrationScreen: React.FC = () => {
   return (
     <View className="bg-white flex-1">
       {/* Header */}
-      <VStack className="p-6 border-b border-gray-200">
+      <VStack className="px-6 pt-3 border-b border-gray-200">
         <HStack className="justify-between items-center">
           <HStack className="items-center gap-3">
             <Pressable onPress={handleGoBack} className="p-2 -ml-2">
@@ -134,7 +134,7 @@ export const CheckInRegistrationScreen: React.FC = () => {
             </Button>
             <Button variant="solid" size="md" className="flex-1" onPress={handleSubmitCheckIn}>
               <Icon as={CheckCircleIcon} className="w-5 h-5 text-white mr-2" />
-              <ButtonText>Registrar Check-in</ButtonText>
+              <ButtonText>Check-in</ButtonText>
             </Button>
           </HStack>
         </View>

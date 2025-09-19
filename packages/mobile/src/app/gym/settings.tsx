@@ -1,31 +1,24 @@
-import React, { useEffect } from 'react';
-import { ScrollView, RefreshControl, Pressable } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { View } from '@/components/ui/view';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
-import { useUpdateCurrentGym, useGymStats } from '@/features/gyms/controllers/gyms.controller';
-import { useCurrentSession } from '@/hooks/useCurrentSession';
-import { Spinner } from '@/components/ui/spinner';
-import { UpdateGymDto } from '@gymspace/sdk';
-import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { 
-  Building2, 
-  Phone, 
-  Settings,
-  ChevronLeft,
-  Building,
-  ChevronRight
-} from 'lucide-react-native';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { View } from '@/components/ui/view';
+import { VStack } from '@/components/ui/vstack';
+import { useGymStats, useUpdateCurrentGym } from '@/features/gyms/controllers/gyms.controller';
+import { useCurrentSession } from '@/hooks/useCurrentSession';
+import { UpdateGymDto } from '@gymspace/sdk';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Stack, useRouter } from 'expo-router';
+import { Building, Building2, ChevronLeft, ChevronRight, Settings } from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { Pressable, RefreshControl, ScrollView } from 'react-native';
+import { z } from 'zod';
 
 // Validation schema
 const gymSettingsSchema = z.object({
@@ -75,9 +68,9 @@ export default function GymSettingsScreen() {
         address: data.address,
         phone: data.phone,
       };
-      
+
       await updateGym.mutateAsync(updateData);
-      
+
       toast.show({
         placement: 'top',
         render: ({ id }) => (
@@ -172,7 +165,7 @@ export default function GymSettingsScreen() {
                   </Text>
                   <Icon as={Building2} size="sm" className="text-gray-500" />
                 </HStack>
-                
+
                 <VStack space="md">
                   <HStack space="md">
                     <VStack space="xs" className="flex-1">
@@ -181,7 +174,7 @@ export default function GymSettingsScreen() {
                         {gymStats.totalClients}
                       </Text>
                     </VStack>
-                    
+
                     <VStack space="xs" className="flex-1">
                       <Text className="text-sm text-gray-500">Clientes Activos</Text>
                       <Text className="text-xl font-bold text-green-600">
@@ -189,7 +182,7 @@ export default function GymSettingsScreen() {
                       </Text>
                     </VStack>
                   </HStack>
-                  
+
                   <HStack space="md">
                     <VStack space="xs" className="flex-1">
                       <Text className="text-sm text-gray-500">Contratos Activos</Text>
@@ -197,7 +190,7 @@ export default function GymSettingsScreen() {
                         {gymStats.activeContracts}
                       </Text>
                     </VStack>
-                    
+
                     <VStack space="xs" className="flex-1">
                       <Text className="text-sm text-gray-500">Check-ins Hoy</Text>
                       <Text className="text-xl font-bold text-purple-600">
@@ -222,11 +215,11 @@ export default function GymSettingsScreen() {
                     </Text>
                   </HStack>
                 </HStack>
-                
+
                 <Text className="text-sm text-gray-600">
                   Administra tu organización y todos los gimnasios asociados
                 </Text>
-                
+
                 <Pressable
                   onPress={() => router.push('/gym/organization')}
                   className="flex-row items-center justify-between py-3 px-2 rounded-lg bg-gray-50 active:bg-gray-100"
@@ -234,12 +227,8 @@ export default function GymSettingsScreen() {
                   <HStack className="items-center flex-1" space="sm">
                     <Icon as={Building2} size="sm" className="text-blue-600" />
                     <VStack className="flex-1">
-                      <Text className="text-base font-medium text-gray-900">
-                        Ver Organización
-                      </Text>
-                      <Text className="text-sm text-gray-500">
-                        Resumen y gimnasios
-                      </Text>
+                      <Text className="text-base font-medium text-gray-900">Ver Organización</Text>
+                      <Text className="text-sm text-gray-500">Resumen y gimnasios</Text>
                     </VStack>
                   </HStack>
                   <Icon as={ChevronRight} size="sm" className="text-gray-400" />
@@ -254,9 +243,7 @@ export default function GymSettingsScreen() {
               <HStack className="items-center justify-between mb-2">
                 <HStack className="items-center" space="sm">
                   <Icon as={Settings} size="sm" className="text-gray-500" />
-                  <Text className="text-lg font-semibold text-gray-900">
-                    Información Básica
-                  </Text>
+                  <Text className="text-lg font-semibold text-gray-900">Información Básica</Text>
                 </HStack>
               </HStack>
 
@@ -293,9 +280,7 @@ export default function GymSettingsScreen() {
             onPress={handleSubmit(onSubmit)}
             disabled={!isDirty || updateGym.isPending}
           >
-            <ButtonText>
-              {updateGym.isPending ? 'Guardando...' : 'Guardar Cambios'}
-            </ButtonText>
+            <ButtonText>{updateGym.isPending ? 'Guardando...' : 'Guardar Cambios'}</ButtonText>
           </Button>
         </VStack>
       </ScrollView>

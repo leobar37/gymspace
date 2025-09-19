@@ -35,7 +35,7 @@ const DashboardComponent: React.FC = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-white">
       {/* Prefetch data in background without blocking UI */}
       <DataPrefetch />
 
@@ -45,7 +45,7 @@ const DashboardComponent: React.FC = () => {
         contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
-        <VStack className="p-4 gap-4">
+        <VStack className="px-4 py-2 gap-4">
           {/* Date Range Selector */}
           <TimeRange onRangeChange={handleRangeChange} hideLabel={true} />
 

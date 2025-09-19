@@ -51,8 +51,8 @@ export function SaleHistoryItem({ sale, onPress, showCustomer = true }: SaleHist
   const itemCount = sale._count?.saleItems || sale.saleItems?.length || 0;
 
   return (
-    <Card className="bg-white shadow-sm">
-      <Pressable onPress={handlePress} className="p-4 active:bg-gray-50">
+    <Card className="bg-white">
+      <Pressable onPress={handlePress} className="py-2  active:bg-gray-50">
         <VStack space="sm">
           {/* Header Row - Date, Time, and Payment Status */}
           <HStack className="justify-between items-start">
@@ -111,19 +111,7 @@ export function SaleHistoryItem({ sale, onPress, showCustomer = true }: SaleHist
               "{sale.notes}"
             </Text>
           )}
-          {/* Quick Item Preview */}
-          {/* {sale.items && sale.items.length > 0 && (
-            <VStack space="xs">
-              <Text className="text-xs font-medium text-gray-500 uppercase">
-                Productos vendidos:
-              </Text>
-              <Text className="text-sm text-gray-600" numberOfLines={2}>
-                {sale.items.map(item => 
-                  `${item.product?.name || 'Producto'} (${item.quantity}x)`
-                ).join(', ')}
-              </Text>
-            </VStack>
-          )} */}
+        
         </VStack>
       </Pressable>
     </Card>

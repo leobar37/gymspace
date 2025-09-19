@@ -7,61 +7,74 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { View } from '@/components/ui/view';
 import { VStack } from '@/components/ui/vstack';
-import { Input, InputField } from '@/components/ui/input';
+import { SalesSearchAndFilters } from '@/components/inventory/SalesSearchAndFilters';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useInfiniteScroll, InfiniteScrollList } from '@/shared/pagination';
-import type { Sale, SearchSalesParams } from '@gymspace/sdk';
+import type { Sale, SearchSalesParams, PaginatedResponseDto } from '@gymspace/sdk';
 import { router } from 'expo-router';
-import { InfoIcon, ShoppingCartIcon, SearchIcon, FilterIcon, PlusIcon } from 'lucide-react-native';
-import React, { useCallback, useState } from 'react';
+import { InfoIcon, ShoppingCartIcon, PlusIcon } from 'lucide-react-native';
+import React, { useCallback, useState, useMemo } from 'react';
+import { FlatList, RefreshControl, ListRenderItem } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SheetManager } from '@gymspace/sheet';
 import { Fab } from '@/components/ui/fab';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 export default function SalesHistoryScreen() {
   const { sdk } = useGymSdk();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
   const [filters, setFilters] = useState<SearchSalesParams>({ page: 1, limit: 20 });
 
-  // Use our new pagination hook
-  const pagination = useInfiniteScroll({
-    queryKey: ['sales', 'list', filters, searchTerm] as const,
-    queryFn: async (params) => {
+  // Use TanStack Query's useInfiniteQuery
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    isLoading,
+    refetch,
+  } = useInfiniteQuery<PaginatedResponseDto<Sale>>({
+    queryKey: ['sales', 'list', filters, activeSearchTerm],
+    queryFn: async ({ pageParam = 1 }) => {
       return sdk.sales.searchSales({
         ...filters,
-        ...params,
-        customerName: searchTerm || undefined,
+        page: pageParam as number,
+        limit: 20,
+        customerName: activeSearchTerm || undefined,
       });
     },
-    limit: 20,
-    enabled: true,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.meta.hasNext) {
+        return lastPage.meta.page + 1;
+      }
+      return undefined;
+    },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    prefetchNextPage: true,
   });
 
-  const { allItems: sales, state, isLoading, error, isFetching, refresh } = pagination;
+  // Flatten all pages into a single array of sales
+  const sales = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap((page) => page.data);
+  }, [data]);
 
   const handleFiltersChange = useCallback(
     (newFilters: SearchSalesParams) => {
       setFilters((prev) => ({ ...prev, ...newFilters }));
-      pagination.reset();
     },
-    [pagination],
+    [],
   );
 
-  const handleSearch = useCallback(() => {
-    pagination.reset();
-  }, [pagination]);
+  const handleSearch = useCallback((term: string) => {
+    setActiveSearchTerm(term);
+  }, []);
 
-  const handleOpenFilters = useCallback(() => {
-    SheetManager.show('sales-filters', {
-      payload: {
-        currentFilters: filters,
-        onApplyFilters: handleFiltersChange,
-      },
-    });
-  }, [filters, handleFiltersChange]);
+  const handleSearchTermChange = useCallback((_term: string) => {
+    // This is just for updating the local state in the search component
+    // The actual search happens when handleSearch is called
+  }, []);
 
   const handleSalePress = useCallback((sale: Sale) => {
     router.push(`/inventory/sales/${sale.id}`);
@@ -71,12 +84,12 @@ export default function SalesHistoryScreen() {
     let count = 0;
     if (filters.paymentStatus) count++;
     if (filters.startDate) count++;
-    if (searchTerm) count++;
+    if (activeSearchTerm) count++;
     return count;
-  }, [filters, searchTerm]);
+  }, [filters, activeSearchTerm]);
 
-  const renderSaleItem = useCallback(
-    ({ item }: { item: Sale }) => (
+  const renderSaleItem: ListRenderItem<Sale> = useCallback(
+    ({ item }) => (
       <SaleHistoryItem sale={item} onPress={handleSalePress} showCustomer={true} />
     ),
     [handleSalePress],
@@ -84,11 +97,6 @@ export default function SalesHistoryScreen() {
 
   const renderEmptyState = useCallback(() => {
     const hasFilters = getActiveFiltersCount() > 0;
-
-    // Don't show empty state while fetching
-    if (isFetching && sales.length === 0) {
-      return null;
-    }
 
     return (
       <View className="flex-1 items-center justify-center py-12 px-8">
@@ -122,7 +130,7 @@ export default function SalesHistoryScreen() {
         </VStack>
       </View>
     );
-  }, [getActiveFiltersCount, isFetching, sales.length]);
+  }, [getActiveFiltersCount]);
 
   const renderLoadingState = useCallback(
     () => (
@@ -146,21 +154,20 @@ export default function SalesHistoryScreen() {
               Error al cargar las ventas: {error?.message || 'Error desconocido'}
             </AlertText>
           </Alert>
-          <Button variant="outline" size="lg" onPress={refresh}>
+          <Button variant="outline" size="lg" onPress={() => refetch()}>
             <ButtonText className="text-base">Reintentar</ButtonText>
           </Button>
         </VStack>
       </View>
     ),
-    [error, refresh],
+    [error, refetch],
   );
 
   // Show loading screen only on very first load
-  if (isLoading && sales.length === 0 && !state.page) {
+  if (isLoading && sales.length === 0) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
         <VStack className="flex-1 p-4">
-          <Text className="text-2xl font-bold text-gray-900 mb-6">Historial de Ventas</Text>
           <View className="flex-1 items-center justify-center">
             <VStack space="lg" className="items-center">
               <Spinner size="large" />
@@ -175,78 +182,66 @@ export default function SalesHistoryScreen() {
   return (
     <View className="flex-1 bg-gray-50">
       <VStack className="flex-1">
-        {/* Fixed Header with Search */}
-        <View className="bg-white shadow-sm border-b border-gray-100">
-          <VStack className="p-4" space="lg">
-            {/* Search Bar and Filters */}
-            <HStack space="md" className="items-center">
-              <View className="flex-1">
-                <Input size="lg" className="bg-gray-50 border-gray-200">
-                  <InputField
-                    placeholder="Buscar por cliente..."
-                    value={searchTerm}
-                    onChangeText={setSearchTerm}
-                    onSubmitEditing={handleSearch}
-                    returnKeyType="search"
-                    className="text-base"
-                  />
-                </Input>
-              </View>
+        {/* Search and Filters Component */}
+        <SalesSearchAndFilters
+          searchTerm={activeSearchTerm}
+          onSearchTermChange={handleSearchTermChange}
+          onSearch={handleSearch}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          activeFiltersCount={getActiveFiltersCount()}
+        />
 
-              <Button
-                variant="outline"
-                size="md"
-                onPress={handleSearch}
-                className="border-gray-300 px-4"
-              >
-                <Icon as={SearchIcon} className="w-5 h-5 text-gray-600" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="md"
-                onPress={handleOpenFilters}
-                className={`border-gray-300 px-4 ${getActiveFiltersCount() > 0 ? 'bg-blue-50 border-blue-300' : ''}`}
-              >
-                <HStack space="xs" className="items-center">
-                  <Icon
-                    as={FilterIcon}
-                    className={`w-5 h-5 ${getActiveFiltersCount() > 0 ? 'text-blue-600' : 'text-gray-600'}`}
-                  />
-                  {getActiveFiltersCount() > 0 && (
-                    <View className="bg-blue-600 rounded-full px-1.5 py-0.5 min-w-[20px]">
-                      <Text className="text-xs text-white font-bold text-center">
-                        {getActiveFiltersCount()}
-                      </Text>
-                    </View>
-                  )}
-                </HStack>
-              </Button>
-            </HStack>
-          </VStack>
-        </View>
-
-        {/* Sales List with Infinite Scroll */}
-        <InfiniteScrollList
-          pagination={pagination}
+        {/* Sales List with Native FlatList */}
+        <FlatList
+          data={sales}
           renderItem={renderSaleItem}
-          ListHeaderComponent={null}
-          loadingComponent={renderLoadingState()}
-          emptyComponent={renderEmptyState()}
-          errorComponent={renderErrorState()}
-          enableRefresh={true}
-          onEndReachedThreshold={0.3}
-          performanceConfig={{
-            maxToRenderPerBatch: 10,
-            windowSize: 10,
-            initialNumToRender: 8,
-            removeClippedSubviews: true,
-          }}
+          keyExtractor={(item) => item.id}
+          className='px-2'
           contentContainerStyle={{
-            padding: 16,
-            paddingBottom: 20,
+            flexGrow: sales.length === 0 ? 1 : undefined,
+            paddingBottom: 80, // Space for FAB
           }}
+          ListEmptyComponent={
+            isLoading ? renderLoadingState() : error ? renderErrorState() : renderEmptyState()
+          }
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View className="py-4 items-center">
+                <HStack space="sm" className="items-center">
+                  <Spinner size="small" />
+                  <Text className="text-gray-600 text-sm">Cargando más...</Text>
+                </HStack>
+              </View>
+            ) : hasNextPage ? (
+              <View className="py-4 items-center">
+                <Text className="text-gray-500 text-sm">Desliza para cargar más</Text>
+              </View>
+            ) : sales.length > 0 ? (
+              <View className="py-4 items-center">
+                <Text className="text-gray-500 text-sm">{sales.length} ventas en total</Text>
+              </View>
+            ) : null
+          }
           ItemSeparatorComponent={() => <View className="h-2" />}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
+            }
+          }}
+          onEndReachedThreshold={0.3}
+          refreshControl={
+            <RefreshControl
+              refreshing={isFetching && !isFetchingNextPage}
+              onRefresh={() => refetch()}
+              tintColor="#3B82F6"
+            />
+          }
+          showsVerticalScrollIndicator={false}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          initialNumToRender={8}
+          removeClippedSubviews={true}
         />
 
         {/* Floating Action Button for New Sale */}

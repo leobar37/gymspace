@@ -64,15 +64,6 @@ function AppLayout() {
         headerShown: true,
       }}
     >
-      {/* <Stack.Screen
-        name="subscription/index"
-        options={{
-          title: 'Planes de Suscripción',
-          headerLargeTitle: false,
-          headerBackVisible: true,
-          headerBackTitle: 'Volver',
-        }}
-      /> */}
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );

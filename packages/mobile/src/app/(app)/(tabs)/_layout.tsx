@@ -68,6 +68,7 @@ function TabsLayoutComponent() {
         options={{
           title: 'Contratos',
           headerTitle: 'Contratos',
+        
           tabBarIcon: ({ color }) => (
             <Icon as={FileTextIcon} className="w-6 h-6" style={{ color }} />
           ),

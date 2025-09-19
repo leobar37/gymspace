@@ -16,7 +16,6 @@ const ScheduleFormContent: React.FC<ScheduleFormContentProps> = ({
 }) => {
   const { form } = useScheduleContext();
   const { handleSubmit } = form;
-
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View>

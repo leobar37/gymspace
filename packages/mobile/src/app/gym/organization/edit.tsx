@@ -1,15 +1,11 @@
-import React from 'react';
-import { Pressable } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Spinner } from '@/components/ui/spinner';
+import { Text } from '@/components/ui/text';
 import { View } from '@/components/ui/view';
 import { VStack } from '@/components/ui/vstack';
-import { Text } from '@/components/ui/text';
-import { Icon } from '@/components/ui/icon';
-import { ChevronLeft } from 'lucide-react-native';
+import { OrganizationUpdateForm, useOrganization } from '@/features/organizations';
 import { useCurrentSession } from '@/hooks/useCurrentSession';
-import { useOrganization } from '@/features/organizations';
-import { OrganizationUpdateForm } from '@/features/organizations';
-import { Spinner } from '@/components/ui/spinner';
+import { useRouter } from 'expo-router';
+import React from 'react';
 
 export default function EditOrganizationScreen() {
   const router = useRouter();

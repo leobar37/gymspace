@@ -96,7 +96,6 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
 }) => {
   const { useClientsList } = useClientsController();
 
-  // Fetch clients with appropriate parameters
   const queryParams = useMemo(
     () => ({
       limit: 1000,
@@ -220,39 +219,9 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
     </VStack>
   );
 
-  const ListHeader = () => (
-    <VStack className="gap-4">
-      {/* Search Bar */}
-      <InputSearch
-        value={searchInput}
-        onChangeText={setSearchInput}
-        placeholder={searchPlaceholder}
-        onClear={clearSearch}
-        isSheet={isSheet}
-      />
-
-      {/* Add New Client Button */}
-      {showAddButton && onAddClient && (
-        <Pressable onPress={onAddClient} className="px-4 py-3 bg-white border-b border-gray-100">
-          <HStack className="items-center gap-3">
-            <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
-              <Icon as={UserPlusIcon} className="text-blue-600" size="sm" />
-            </View>
-            <Text className="text-blue-600 font-medium">Agregar nuevo cliente</Text>
-          </HStack>
-        </Pressable>
-      )}
-
-      {/* Results count */}
-      {!isLoading && displayClients.length > 0 && (
-        <Text className="text-sm text-gray-500 px-4">{getResultsMessage()}</Text>
-      )}
-    </VStack>
-  );
-
   if (isLoading) {
     return (
-      <VStack className="flex-1 items-center justify-center">
+      <VStack className="flex-1 items-center justify-center mt-6">
         <Spinner size="large" />
         <Text className="mt-2 text-gray-600">Cargando clientes...</Text>
       </VStack>
@@ -268,23 +237,49 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
     );
   }
 
-  // Render for normal mode (FlatList)
+  // Render for normal mode (FlatList with fixed search bar)
   return (
-    <FlatList
-      data={displayClients}
-      keyExtractor={(item) => item.id}
-      renderItem={renderClientItem}
-      className='mt-5'
-      ListHeaderComponent={ListHeader}
-      ListEmptyComponent={renderEmptyState}
-      ItemSeparatorComponent={() => <View className="h-px bg-gray-100" />}
-      refreshControl={
-        onClientAction ? (
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        ) : undefined
-      }
-      showsVerticalScrollIndicator={false}
-    />
+    <View className="flex-1">
+      {/* Fixed Search Bar */}
+      <VStack className="bg-white border-b  border-gray-200 pb-3 pt-2">
+        <InputSearch
+          value={searchInput}
+          onChangeText={setSearchInput}
+          placeholder={searchPlaceholder}
+          onClear={clearSearch}
+          isSheet={isSheet}
+        />
+
+        {/* Add New Client Button */}
+        {showAddButton && onAddClient && (
+          <Pressable onPress={onAddClient} className="px-4 py-3 bg-white border-b border-gray-100">
+            <HStack className="items-center gap-3">
+              <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+                <Icon as={UserPlusIcon} className="text-blue-600" size="sm" />
+              </View>
+              <Text className="text-blue-600 font-medium">Agregar nuevo cliente</Text>
+            </HStack>
+          </Pressable>
+        )}
+      
+      </VStack>
+
+      {/* Scrollable List */}
+      <FlatList
+        data={displayClients}
+        keyExtractor={(item) => item.id}
+        renderItem={renderClientItem}
+        ListEmptyComponent={renderEmptyState}
+        ItemSeparatorComponent={() => <View className="h-px bg-gray-100" />}
+        refreshControl={
+          onClientAction ? (
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          ) : undefined
+        }
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 8 }}
+      />
+    </View>
   );
 };
 

@@ -110,7 +110,7 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({
     toggleDayOpen,
     addTimeSlot,
     removeTimeSlot,
-    getDaySchedule,
+    getDaySchedule: getDaySchedule as any,
   };
 
   return (

@@ -1,6 +1,50 @@
 # CLAUDE.md
 
-[Previous content remains unchanged]
+## Serena Tools & Memory Usage (CRITICAL)
+
+### Memory System
+- **ALWAYS** search `.serena/memories/` for existing patterns before implementing
+- **CHECK** for documented solutions: `ls .serena/memories/*.md`
+- **USE** memories to maintain consistency across the codebase
+- **CREATE** new memories after implementing reusable patterns
+- **UPDATE** memories when patterns evolve or improve
+
+### Serena Tools Priority
+When available, use these tools for better code understanding:
+- `mcp__serena__find_file` - Locate files quickly by name patterns
+- `mcp__serena__search_for_pattern` - Find code patterns across codebase
+- `mcp__serena__find_symbol` - Locate function/class definitions
+- `mcp__serena__find_referencing_symbols` - Find where symbols are used
+
+### Memory-First Workflow
+1. **Before implementing**: Search memories for similar patterns
+   ```bash
+   ls .serena/memories/ | grep -i "pattern-name"
+   ```
+2. **During development**: Reference existing memories for consistency
+3. **After success**: Document new patterns in `.serena/memories/`
+4. **Pattern format**: `feature-pattern-description.md`
+
+### Key Memories to Check
+- `react-native-infinite-scroll-pattern.md` - Infinite scroll with TanStack Query
+- Check for form patterns, navigation patterns, state management patterns
+- Look for component patterns before creating new ones
+
+### Infinite Scroll Implementation (CRITICAL)
+- **NEVER** use custom pagination hooks (`usePagination`, `useInfiniteScroll`)
+- **ALWAYS** use TanStack Query's `useInfiniteQuery` directly
+- **USE** native `FlatList` from React Native, not custom wrappers
+- **REFERENCE** `.serena/memories/react-native-infinite-scroll-pattern.md` for implementation
+- Key pattern:
+  ```typescript
+  const { data, fetchNextPage, hasNextPage, refetch } = useInfiniteQuery({
+    queryKey: ['resource', filters],
+    queryFn: ({ pageParam = 1 }) => sdk.resource.get({ page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.meta.hasNext ? lastPage.meta.page + 1 : undefined
+  });
+  const items = useMemo(() => data?.pages.flatMap(page => page.data) ?? [], [data]);
+  ```
 
 ## Development Paths
 

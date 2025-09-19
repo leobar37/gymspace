@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FlatList, RefreshControl, ListRenderItem } from 'react-native';
 import { useSafeNavigation } from '@/hooks/useSafeNavigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { SheetManager } from '@gymspace/sheet';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { View } from '@/components/ui/view';
 import { Text } from '@/components/ui/text';
@@ -14,55 +15,64 @@ import { Badge, BadgeText } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
-import { Input, InputField } from '@/components/ui/input';
 import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
+import { ContractsSearchAndFilters } from './ContractsSearchAndFilters';
+
+import { ChevronLeftIcon, FileTextIcon, PlusIcon, InfoIcon } from 'lucide-react-native';
 
 import {
-  ChevronLeftIcon,
-  FileTextIcon,
-  SearchIcon,
-  FilterIcon,
-  PlusIcon,
-  InfoIcon,
-} from 'lucide-react-native';
-
-import { ContractStatus, type GetContractsParams } from '@gymspace/sdk';
+  ContractStatus,
+  type GetContractsParams,
+  type PaginatedResponseDto,
+  type Contract,
+} from '@gymspace/sdk';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { useGymSdk } from '@/providers/GymSdkProvider';
-import { useInfiniteScroll, InfiniteScrollList } from '@/shared/pagination';
 
 function ContractsListComponent() {
   const formatPrice = useFormatPrice();
   const { sdk } = useGymSdk();
   const { navigateWithinFeature, goBack } = useSafeNavigation();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
   const [filters, setFilters] = useState<GetContractsParams>({ page: 1, limit: 20 });
 
-  // Use pagination hook
-  const pagination = useInfiniteScroll({
-    queryKey: ['contracts', 'list', filters, searchTerm] as const,
-    queryFn: async (params) => {
-      // Get contracts from SDK with search parameters
+  // Use TanStack Query's useInfiniteQuery
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    isLoading,
+    refetch,
+  } = useInfiniteQuery<PaginatedResponseDto<Contract>>({
+    queryKey: ['contracts', 'list', filters, activeSearchTerm],
+    queryFn: async ({ pageParam = 1 }) => {
       const response = await sdk.contracts.getGymContracts({
         ...filters,
-        ...params,
-        clientName: searchTerm || undefined,
+        page: pageParam as number,
+        limit: 20,
+        clientName: activeSearchTerm || undefined,
       });
-
-      // The response from SDK already has the correct structure with data and meta
-      // No need to transform it
       return response;
     },
-    limit: 20,
-    enabled: true,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.meta.hasNext) {
+        return lastPage.meta.page + 1;
+      }
+      return undefined;
+    },
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    prefetchNextPage: true,
   });
 
-  const { allItems: contracts = [], state, isLoading, error, isFetching, refresh } = pagination;
-
-  console.log('allItems', contracts);
+  // Flatten all pages into a single array of contracts
+  const contracts = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap((page) => page.data);
+  }, [data]);
 
   const getStatusBadge = (status: ContractStatus) => {
     switch (status) {
@@ -85,26 +95,18 @@ function ContractsListComponent() {
     return format(new Date(date), 'dd MMM yyyy', { locale: es });
   };
 
-  const handleFiltersChange = useCallback(
-    (newFilters: GetContractsParams) => {
-      setFilters((prev: GetContractsParams) => ({ ...prev, ...newFilters }));
-      pagination.reset();
-    },
-    [pagination],
-  );
+  const handleFiltersChange = useCallback((newFilters: GetContractsParams) => {
+    setFilters((prev: GetContractsParams) => ({ ...prev, ...newFilters }));
+  }, []);
 
-  const handleSearch = useCallback(() => {
-    pagination.reset();
-  }, [pagination]);
+  const handleSearch = useCallback((term: string) => {
+    setActiveSearchTerm(term);
+  }, []);
 
-  const handleOpenFilters = useCallback(() => {
-    SheetManager.show('contracts-filters', {
-      payload: {
-        currentFilters: filters,
-        onApplyFilters: handleFiltersChange,
-      },
-    });
-  }, [filters, handleFiltersChange]);
+  const handleSearchTermChange = useCallback((_term: string) => {
+    // This is just for updating the local state in the search component
+    // The actual search happens when handleSearch is called
+  }, []);
 
   const handleContractPress = useCallback(
     (contractId: string) => {
@@ -117,12 +119,12 @@ function ContractsListComponent() {
     let count = 0;
     if (filters.status) count++;
     if (filters.startDateFrom || filters.endDateFrom) count++;
-    if (searchTerm) count++;
+    if (activeSearchTerm) count++;
     return count;
-  }, [filters, searchTerm]);
+  }, [filters, activeSearchTerm]);
 
-  const renderContractItem = useCallback(
-    ({ item }: { item: any }) => {
+  const renderContractItem: ListRenderItem<Contract> = useCallback(
+    ({ item }) => {
       const statusInfo = getStatusBadge(item.status);
       const isFrozen = item.freezeStartDate && item.freezeEndDate;
 
@@ -131,7 +133,7 @@ function ContractsListComponent() {
           onPress={() => handleContractPress(item.id)}
           className="bg-white p-3 rounded-xl shadow-sm"
         >
-          <HStack className="justify-between items-start mb-2">
+          <HStack className="justify-between items-start">
             <VStack className="flex-1">
               <Text className="text-sm text-gray-500 mb-1">Contrato #{item.contractNumber}</Text>
               <Text className="text-base font-semibold text-gray-900 mb-1">
@@ -195,18 +197,12 @@ function ContractsListComponent() {
   const renderEmptyState = useCallback(() => {
     const hasFilters = getActiveFiltersCount() > 0;
 
-    // Don't show empty state while fetching
-    if (isFetching && contracts.length === 0) {
-      return null;
-    }
-
     return (
       <View className="flex-1 items-center justify-center py-12 px-8">
         <VStack space="lg" className="items-center">
           <View className="w-24 h-24 bg-gray-100 rounded-full items-center justify-center">
             <Icon as={FileTextIcon} className="w-12 h-12 text-gray-400" />
           </View>
-
           <VStack space="sm" className="items-center">
             <Text className="text-xl font-semibold text-gray-900 text-center">
               {hasFilters ? 'No se encontraron contratos' : 'No hay contratos registrados'}
@@ -232,7 +228,7 @@ function ContractsListComponent() {
         </VStack>
       </View>
     );
-  }, [getActiveFiltersCount, isFetching, contracts.length]);
+  }, [getActiveFiltersCount, navigateWithinFeature]);
 
   const renderLoadingState = useCallback(
     () => (
@@ -256,26 +252,20 @@ function ContractsListComponent() {
               Error al cargar los contratos: {error?.message || 'Error desconocido'}
             </AlertText>
           </Alert>
-          <Button variant="outline" size="lg" onPress={refresh}>
+          <Button variant="outline" size="lg" onPress={() => refetch()}>
             <ButtonText className="text-base">Reintentar</ButtonText>
           </Button>
         </VStack>
       </View>
     ),
-    [error, refresh],
+    [error, refetch],
   );
 
   // Show loading screen only on very first load
-  if (isLoading && contracts.length === 0 && !state?.page) {
+  if (isLoading && contracts.length === 0) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50">
         <VStack className="flex-1 p-4">
-          <HStack className="items-center mb-6">
-            <Pressable onPress={() => goBack()} className="p-2 -ml-2 rounded-lg">
-              <Icon as={ChevronLeftIcon} className="w-6 h-6 text-gray-700" />
-            </Pressable>
-            <Text className="text-2xl font-bold text-gray-900 ml-2">Contratos</Text>
-          </HStack>
           <View className="flex-1 items-center justify-center">
             <VStack space="lg" className="items-center">
               <Spinner size="large" />
@@ -290,77 +280,65 @@ function ContractsListComponent() {
   return (
     <SafeAreaView edges={['bottom']} className="flex-1 bg-gray-50">
       <VStack className="flex-1">
-        {/* Fixed Header with Search */}
-        <View className="bg-white shadow-sm border-b border-gray-100">
-          <VStack className="p-4" space="lg">
-            {/* Search Bar and Filters */}
-            <HStack space="md" className="items-center">
-              <View className="flex-1">
-                <Input size="lg" className="bg-gray-50 border-gray-200">
-                  <InputField
-                    placeholder="Buscar por cliente..."
-                    value={searchTerm}
-                    onChangeText={setSearchTerm}
-                    onSubmitEditing={handleSearch}
-                    returnKeyType="search"
-                    className="text-base"
-                  />
-                </Input>
-              </View>
+        {/* Search and Filters Component */}
+        <ContractsSearchAndFilters
+          searchTerm={activeSearchTerm}
+          onSearchTermChange={handleSearchTermChange}
+          onSearch={handleSearch}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          activeFiltersCount={getActiveFiltersCount()}
+        />
 
-              <Button
-                variant="outline"
-                size="md"
-                onPress={handleSearch}
-                className="border-gray-300 px-4"
-              >
-                <Icon as={SearchIcon} className="w-5 h-5 text-gray-600" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="md"
-                onPress={handleOpenFilters}
-                className={`border-gray-300 px-4 ${getActiveFiltersCount() > 0 ? 'bg-blue-50 border-blue-300' : ''}`}
-              >
-                <HStack space="xs" className="items-center">
-                  <Icon
-                    as={FilterIcon}
-                    className={`w-5 h-5 ${getActiveFiltersCount() > 0 ? 'text-blue-600' : 'text-gray-600'}`}
-                  />
-                  {getActiveFiltersCount() > 0 && (
-                    <View className="bg-blue-600 rounded-full px-1.5 py-0.5 min-w-[20px]">
-                      <Text className="text-xs text-white font-bold text-center">
-                        {getActiveFiltersCount()}
-                      </Text>
-                    </View>
-                  )}
-                </HStack>
-              </Button>
-            </HStack>
-          </VStack>
-        </View>
-
-        {/* Contracts List with Infinite Scroll */}
-        <InfiniteScrollList
-          pagination={pagination}
+        {/* Contracts List with Native FlatList */}
+        <FlatList
+          data={contracts}
           renderItem={renderContractItem}
-          loadingComponent={renderLoadingState()}
-          emptyComponent={renderEmptyState()}
-          errorComponent={renderErrorState()}
-          enableRefresh={true}
-          onEndReachedThreshold={0.3}
-          performanceConfig={{
-            maxToRenderPerBatch: 10,
-            windowSize: 10,
-            initialNumToRender: 8,
-            removeClippedSubviews: true,
-          }}
+          keyExtractor={(item) => item.id}
+          className="px-2 pt-2"
           contentContainerStyle={{
-            padding: 16,
-            paddingBottom: 20,
+            flexGrow: contracts.length === 0 ? 1 : undefined,
           }}
+          ListEmptyComponent={
+            isLoading ? renderLoadingState() : error ? renderErrorState() : renderEmptyState()
+          }
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View className="py-4 items-center">
+                <HStack space="sm" className="items-center">
+                  <Spinner size="small" />
+                  <Text className="text-gray-600 text-sm">Cargando más...</Text>
+                </HStack>
+              </View>
+            ) : hasNextPage ? (
+              <View className="py-4 items-center">
+                <Text className="text-gray-500 text-sm">Desliza para cargar más</Text>
+              </View>
+            ) : contracts.length > 0 ? (
+              <View className="py-4 items-center">
+                <Text className="text-gray-500 text-sm">{contracts.length} contratos en total</Text>
+              </View>
+            ) : null
+          }
           ItemSeparatorComponent={() => <View className="h-3" />}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
+            }
+          }}
+          onEndReachedThreshold={0.3}
+          refreshControl={
+            <RefreshControl
+              refreshing={isFetching && !isFetchingNextPage}
+              onRefresh={() => refetch()}
+              tintColor="#3B82F6"
+            />
+          }
+          showsVerticalScrollIndicator={false}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          initialNumToRender={8}
+          removeClippedSubviews={true}
         />
 
         <View className="absolute bottom-6 right-4">

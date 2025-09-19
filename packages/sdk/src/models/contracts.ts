@@ -43,7 +43,7 @@ export interface Contract {
   status: ContractStatus;
   price: number;
   discountPercentage?: number;
-  finalPrice: number;
+  finalAmount: number;
   freezeStartDate?: string;
   freezeEndDate?: string;
   receiptIds?: string[];

@@ -10,7 +10,6 @@ import { useCurrentSession } from '@/hooks/useCurrentSession';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useSafeNavigation } from '@/hooks/useSafeNavigation';
 
-
 import {
   Building2Icon,
   BuildingIcon,
@@ -151,7 +150,9 @@ const ProfileMenuComponent: React.FC = () => {
           icon: BuildingIcon,
           title: 'Mi Gimnasio',
           subtitle: gym?.name || 'Configuración del gimnasio',
-          onPress: () => navigateWithinFeature('/gym/settings'),
+          onPress: () => {
+            navigateWithinFeature(`/gym/${gym.id}`);
+          },
         },
       ],
     },

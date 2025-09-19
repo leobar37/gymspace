@@ -51,7 +51,6 @@ export const ClientListScreen: React.FC = () => {
   };
 
   const handleSelectClient = (client: Client) => {
-    console.log('Selected client:', client);
     const checkInStatus = canClientCheckIn(client);
 
     if (!checkInStatus.canSelect) {
@@ -66,14 +65,10 @@ export const ClientListScreen: React.FC = () => {
           variant: 'solid',
         },
       ]);
-      console.log("Client can't check in:", checkInStatus.reason);
       return;
     }
 
     try {
-      console.log('canClientCheckIn', checkInStatus);
-      console.log('Navigating with client:', client);
-
       // Navigate to registration screen with selected client
       router.navigate('registration', { props: { client } });
     } catch (error) {
@@ -97,7 +92,7 @@ export const ClientListScreen: React.FC = () => {
         onClientSelect={handleSelectClient}
         activeOnly={true}
         filterFunction={canClientCheckIn}
-        searchPlaceholder="Buscar por nombre, email o número..."
+        searchPlaceholder="Buscar..."
         showCheckInStatus={true}
         isSheet={true}
         resultsMessage={{
