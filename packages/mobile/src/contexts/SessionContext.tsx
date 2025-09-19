@@ -7,21 +7,27 @@ import type { CurrentSessionResponse } from '@gymspace/sdk';
 // Storage keys
 const STORAGE_KEYS = {
   ACCESS_TOKEN: '@gymspace/access_token',
+  REFRESH_TOKEN: '@gymspace/refresh_token',
   CURRENT_GYM_ID: '@gymspace/current_gym_id',
 } as const;
 
 // Storage management object
 const storage = {
   async getTokens() {
-    const [accessToken, gymId] = await Promise.all([
+    const [accessToken, refreshToken, gymId] = await Promise.all([
       AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN),
+      AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
       AsyncStorage.getItem(STORAGE_KEYS.CURRENT_GYM_ID),
     ]);
-    return { accessToken, gymId };
+    return { accessToken, refreshToken, gymId };
   },
 
   async setToken(token: string) {
     await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+  },
+
+  async setRefreshToken(token: string) {
+    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
   },
 
   async setGymId(gymId: string) {
@@ -35,6 +41,7 @@ const storage = {
   async clear() {
     await Promise.all([
       AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN),
+      AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN),
       AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_GYM_ID),
     ]);
   },
@@ -49,6 +56,7 @@ export const sessionKeys = {
 // Token data interface
 interface TokenData {
   accessToken: string;
+  refreshToken?: string;
 }
 
 // Session context value
@@ -99,9 +107,15 @@ export function SessionProvider({ children }: SessionProviderProps) {
       try {
         // Store in storage
         await storage.setToken(tokenData.accessToken);
+        if (tokenData.refreshToken) {
+          await storage.setRefreshToken(tokenData.refreshToken);
+        }
 
         // Update SDK - SDK is the source of truth
         sdk.setAuthToken(tokenData.accessToken);
+        if (tokenData.refreshToken) {
+          sdk.setRefreshToken(tokenData.refreshToken);
+        }
 
         // Refetch session after token is set - this will set accessToken if successful
         await queryClient.refetchQueries({ queryKey: sessionKeys.current() });
@@ -160,11 +174,14 @@ export function SessionProvider({ children }: SessionProviderProps) {
         initializedRef.current = true;
 
         try {
-          const { accessToken: storedToken, gymId: storedGymId } = await storage.getTokens();
+          const { accessToken: storedToken, refreshToken: storedRefreshToken, gymId: storedGymId } = await storage.getTokens();
 
           if (storedToken) {
             // Set token in SDK - SDK is the source of truth
             sdk.setAuthToken(storedToken);
+            if (storedRefreshToken) {
+              sdk.setRefreshToken(storedRefreshToken);
+            }
             if (storedGymId) {
               sdk.setGymId(storedGymId);
             }
@@ -184,6 +201,14 @@ export function SessionProvider({ children }: SessionProviderProps) {
           await storage.setToken(response.accessToken);
           // Update SDK token in case it's a refreshed token
           sdk.setAuthToken(response.accessToken);
+        }
+
+        // If a refresh token is provided, it means the token was refreshed
+        // Store the new refresh token for future use
+        if (response.refreshToken) {
+          await storage.setRefreshToken(response.refreshToken);
+          sdk.setRefreshToken(response.refreshToken);
+          console.log('Token was refreshed automatically');
         }
 
         if (response.gym?.id) {

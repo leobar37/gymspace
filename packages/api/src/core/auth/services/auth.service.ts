@@ -425,6 +425,81 @@ export class AuthService {
   }
 
   /**
+   * Check if token is near expiration and refresh if needed
+   * Returns the same token if not near expiration, or new tokens if refreshed
+   *
+   * Supabase automatically refreshes tokens when they're near expiration,
+   * but we'll explicitly check and refresh if within 30 minutes of expiration
+   */
+  async checkAndRefreshToken(
+    accessToken: string,
+    refreshToken: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken?: string;
+    refreshed: boolean;
+    expiresAt?: Date;
+  }> {
+    try {
+      // Decode the JWT to check expiration without verification
+      // We're using this just to check the exp claim
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.decode(accessToken) as any;
+
+      if (!decoded || !decoded.exp) {
+        // If we can't decode the token, return it as is
+        return {
+          accessToken,
+          refreshed: false,
+        };
+      }
+
+      // Check if token expires within the next 30 minutes
+      const expirationTime = decoded.exp * 1000; // Convert to milliseconds
+      const currentTime = Date.now();
+      const thirtyMinutesInMs = 30 * 60 * 1000;
+
+      const timeUntilExpiry = expirationTime - currentTime;
+      const shouldRefresh = timeUntilExpiry <= thirtyMinutesInMs;
+
+      if (shouldRefresh && refreshToken) {
+        // Token is near expiration, let's refresh it
+        try {
+          const { data, error } = await this.supabaseService
+            .getClient()
+            .auth.refreshSession({ refresh_token: refreshToken });
+
+          if (!error && data?.session) {
+            return {
+              accessToken: data.session.access_token,
+              refreshToken: data.session.refresh_token,
+              refreshed: true,
+              expiresAt: new Date(expirationTime),
+            };
+          }
+        } catch (refreshError) {
+          // If refresh fails, return the original token
+          console.error('Token refresh failed:', refreshError);
+        }
+      }
+
+      // No refresh needed or refresh failed, return original token
+      return {
+        accessToken,
+        refreshed: false,
+        expiresAt: new Date(expirationTime),
+      };
+    } catch (error) {
+      // If any error occurs, return the original token
+      console.error('Error checking token expiration:', error);
+      return {
+        accessToken,
+        refreshed: false,
+      };
+    }
+  }
+
+  /**
    * Verify email with our stored verification code
    */
   async verifyEmail(dto: VerifyEmailDto) {

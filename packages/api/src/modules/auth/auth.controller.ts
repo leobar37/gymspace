@@ -143,14 +143,32 @@ export class AuthController {
   async getCurrentSession(
     @AppCtxt() context: IRequestContext,
     @Headers('authorization') authorization: string,
+    @Headers('x-refresh-token') refreshToken: string,
   ): Promise<CurrentSessionDto> {
     console.log('server context', context);
 
     // Extract token from Authorization header
     const accessToken = authorization ? authorization.replace('Bearer ', '') : '';
 
+    // Check if token needs refresh and refresh if necessary
+    let finalAccessToken = accessToken;
+    let newRefreshToken: string | undefined;
+
+    if (accessToken && refreshToken) {
+      const refreshResult = await this.authService.checkAndRefreshToken(
+        accessToken,
+        refreshToken,
+      );
+
+      if (refreshResult.refreshed) {
+        finalAccessToken = refreshResult.accessToken;
+        newRefreshToken = refreshResult.refreshToken;
+      }
+    }
+
     return {
-      accessToken,
+      accessToken: finalAccessToken,
+      refreshToken: newRefreshToken, // Will be undefined if not refreshed
       user: context.user,
       gym: context.gym,
       organization: context.organization,

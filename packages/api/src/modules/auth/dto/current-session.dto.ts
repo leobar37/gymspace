@@ -9,6 +9,13 @@ export class CurrentSessionDto {
   accessToken: string;
 
   @ApiProperty({
+    description: 'New refresh token if the access token was refreshed',
+    type: String,
+    required: false,
+  })
+  refreshToken?: string;
+
+  @ApiProperty({
     description: 'Current authenticated user',
     type: 'object',
   })

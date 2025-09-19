@@ -283,6 +283,11 @@ paths:
           in: header
           schema:
             type: string
+        - name: x-refresh-token
+          required: true
+          in: header
+          schema:
+            type: string
       responses:
         '200':
           description: Current session information
@@ -4135,6 +4140,9 @@ components:
         accessToken:
           type: string
           description: Current access token
+        refreshToken:
+          type: string
+          description: New refresh token if the access token was refreshed
         user:
           type: object
           description: Current authenticated user

@@ -18,6 +18,7 @@ import {
 export class ApiClient {
   private axiosInstance: AxiosInstance;
   private config: GymSpaceConfig;
+  private refreshToken: string | null = null;
 
   constructor(config: GymSpaceConfig) {
     this.config = config;
@@ -41,6 +42,11 @@ export class ApiClient {
         // Add Authorization header if auth token is configured
         if (this.config.apiKey && config.headers) {
           config.headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+        }
+
+        // Add refresh token header for current-session endpoint
+        if (this.refreshToken && config.url?.includes('current-session') && config.headers) {
+          config.headers['X-Refresh-Token'] = this.refreshToken;
         }
 
         return config;
@@ -168,12 +174,21 @@ export class ApiClient {
     this.config.apiKey = token;
   }
 
+  setRefreshToken(token: string | null): void {
+    this.refreshToken = token;
+  }
+
+  getRefreshToken(): string | null {
+    return this.refreshToken;
+  }
+
   setGymId(gymId: string): void {
     this.axiosInstance.defaults.headers.common['X-Gym-Id'] = gymId;
   }
 
   clearAuth(): void {
     delete this.config.apiKey;
+    this.refreshToken = null;
     delete this.axiosInstance.defaults.headers.common['Authorization'];
     delete this.axiosInstance.defaults.headers.common['X-Gym-Id'];
   }
