@@ -43,7 +43,9 @@ export const BottomSheetWrapper = React.memo<BottomSheetWrapperProps>(({
 
   // Register ref with SheetManager if sheetId is provided
   useEffect(() => {
-    if (sheetId && bottomSheetRef.current) {
+    if (sheetId) {
+      // Register the ref immediately, even if current is null
+      // The ref will be updated when the component mounts
       SheetManager.setRef(sheetId, bottomSheetRef);
 
       // Clean up ref on unmount to prevent memory leak

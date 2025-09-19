@@ -6,6 +6,7 @@ export { SheetManager } from './SheetManager';
 
 // Components
 export { BottomSheetWrapper } from './BottomSheetWrapper';
+export { SheetsRenderer } from './SheetsRenderer';
 
 // Hooks
 export { useSheet } from './hooks/useSheet';

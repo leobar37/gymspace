@@ -45,8 +45,20 @@ class SheetManagerClass implements SheetManagerType {
     if (ref?.current) {
       this.activeProps.set(id, props);
       ref.current.present();
+    } else if (ref) {
+      // Ref exists but current is null, set props and wait for mount
+      this.activeProps.set(id, props);
+      // Try again after a short delay to allow component to mount
+      setTimeout(() => {
+        const updatedRef = this.refs.get(id);
+        if (updatedRef?.current) {
+          updatedRef.current.present();
+        } else {
+          console.warn(`Sheet with id "${id}" ref exists but component not mounted after timeout`);
+        }
+      }, 100);
     } else {
-      console.warn(`Sheet with id "${id}" not found or not mounted`);
+      console.warn(`Sheet with id "${id}" not found or not registered`);
     }
   }
 
@@ -87,6 +99,14 @@ class SheetManagerClass implements SheetManagerType {
 
   clearProps(id: string) {
     this.activeProps.delete(id);
+  }
+
+  getAllRegisteredSheets(): Array<{ id: string; Component: React.ComponentType<any> }> {
+    const sheets: Array<{ id: string; Component: React.ComponentType<any> }> = [];
+    this.sheets.forEach((component, id) => {
+      sheets.push({ id, Component: component });
+    });
+    return sheets;
   }
 }
 
