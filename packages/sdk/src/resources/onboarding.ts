@@ -18,8 +18,8 @@ export class OnboardingResource extends BaseResource {
     const response = await this.client.post<StartOnboardingResponse>('/onboarding/start', data);
     
     // Store tokens after successful onboarding start
-    if (response.access_token && response.refresh_token) {
-      this.client.setTokens(response.access_token, response.refresh_token);
+    if (response.access_token) {
+      this.client.setAuthToken(response.access_token);
     }
     
     return response;

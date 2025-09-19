@@ -87,12 +87,6 @@ export class GymSpaceSdk {
     this.client.setAuthToken(token);
   }
 
-  /**
-   * Set both access and refresh tokens
-   */
-  setTokens(accessToken: string, refreshToken: string): void {
-    this.client.setTokens(accessToken, refreshToken);
-  }
 
   /**
    * Set the current gym context

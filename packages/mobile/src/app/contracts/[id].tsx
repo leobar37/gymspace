@@ -128,11 +128,9 @@ export default function ContractDetailScreen() {
                     <Button
                       onPress={() =>
                         SheetManager.show('contract-renewal', {
-                          payload: {
-                            contract,
-                            onSuccess: () => {
-                              // Refetch contract data after successful renewal
-                            },
+                          contract,
+                          onSuccess: () => {
+                            // Refetch contract data after successful renewal
                           },
                         })
                       }
@@ -149,11 +147,9 @@ export default function ContractDetailScreen() {
                   <Button
                     onPress={() =>
                       SheetManager.show('contract-freeze', {
-                        payload: {
-                          contract,
-                          onSuccess: () => {
-                            // Refetch contract data after successful freeze
-                          },
+                        contract,
+                        onSuccess: () => {
+                          // Refetch contract data after successful freeze
                         },
                       })
                     }

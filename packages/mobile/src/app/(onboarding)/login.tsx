@@ -144,13 +144,11 @@ export default function LoginScreen() {
       console.log('response', response);
       
       // Set tokens in SDK immediately
-      sdk.setTokens(response.access_token, response.refresh_token);
-      
+      sdk.setAuthToken(response.access_token);
+
       // Store tokens in persistent storage
       const success = await storeTokens({
         accessToken: response.access_token,
-        refreshToken: response.refresh_token,
-        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
       });
 
       if (!success) {

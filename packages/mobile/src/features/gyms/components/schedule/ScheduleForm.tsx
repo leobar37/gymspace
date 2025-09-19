@@ -19,7 +19,7 @@ const ScheduleFormContent: React.FC<ScheduleFormContentProps> = ({
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <View className="p-6">
+      <View>
         {/* Instructions */}
         <View className="bg-white rounded-xl p-6 mb-6 shadow-sm">
           <Text className="text-sm text-gray-600 mb-4">

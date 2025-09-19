@@ -140,9 +140,17 @@ export class AuthController {
   })
   @Allow()
   @ApiResponse({ status: 401, description: 'User not authenticated' })
-  async getCurrentSession(@AppCtxt() context: IRequestContext): Promise<CurrentSessionDto> {
+  async getCurrentSession(
+    @AppCtxt() context: IRequestContext,
+    @Headers('authorization') authorization: string,
+  ): Promise<CurrentSessionDto> {
     console.log('server context', context);
+
+    // Extract token from Authorization header
+    const accessToken = authorization ? authorization.replace('Bearer ', '') : '';
+
     return {
+      accessToken,
       user: context.user,
       gym: context.gym,
       organization: context.organization,

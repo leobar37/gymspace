@@ -45,17 +45,15 @@ export function AssetSelector({
   
   const handleOpenSelector = async (onChange: (value: any) => void) => {
     await SheetManager.show('asset-selector', {
-      payload: {
-        isMulti: multi,
-        selectedAssets: assetIds,
-        onSelect: (selectedIds: string[]) => {
-          // Pass the value directly based on multi mode
-          const newValue = multi
-            ? selectedIds
-            : selectedIds[0] || null;
-          
-          onChange(newValue);
-        },
+      isMulti: multi,
+      selectedAssets: assetIds,
+      onSelect: (selectedIds: string[]) => {
+        // Pass the value directly based on multi mode
+        const newValue = multi
+          ? selectedIds
+          : selectedIds[0] || null;
+        
+        onChange(newValue);
       },
     });
   };

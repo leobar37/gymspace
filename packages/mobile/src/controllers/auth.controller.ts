@@ -43,8 +43,6 @@ export const useAuthController = () => {
       // Store tokens securely
       await storeTokens({
         accessToken: response.access_token,
-        refreshToken: response.refresh_token,
-        expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
       });
 
       // Small delay to ensure tokens are set in provider

@@ -158,12 +158,9 @@ const assetSelectorFlow = createMultiScreen()
 
 const { Component } = assetSelectorFlow;
 // Main Sheet Component
-interface AssetSelectorSheetProps extends SheetProps {
-  payload?: AssetSelectorPayload;
-}
+interface AssetSelectorSheetProps extends SheetProps, AssetSelectorPayload {}
 
 function AssetSelectorSheet(props: AssetSelectorSheetProps) {
-  const { payload } = props;
 
   const insets = useSafeAreaInsets();
 
@@ -189,7 +186,7 @@ function AssetSelectorSheet(props: AssetSelectorSheetProps) {
           paddingBottom: insets.bottom || 20,
         }}
       >
-        <PayloadContext.Provider value={payload}>
+        <PayloadContext.Provider value={props}>
           <Component />
         </PayloadContext.Provider>
       </View>

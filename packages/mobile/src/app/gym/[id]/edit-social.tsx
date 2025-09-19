@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonText } from '@/components/ui/button';
 import { useLocalSearchParams, router } from 'expo-router';
 import { UpdateGymSocialMediaDto } from '@gymspace/sdk';
 import { useForm, FormProvider } from 'react-hook-form';
@@ -129,20 +129,24 @@ export default function EditGymSocialMediaScreen() {
             </View>
           </View>
 
-          <View className="flex-row space-x-3 pt-4">
+          <View className="flex-row space-x-3 pt-6 pb-2">
             <Button
               variant="outline"
+              size="lg"
+              action="secondary"
               className="flex-1"
               onPress={() => router.back()}
             >
-              <Text>Cancelar</Text>
+              <ButtonText>Cancelar</ButtonText>
             </Button>
             <Button
               variant="solid"
+              size="lg"
+              action="primary"
               className="flex-1"
               onPress={methods.handleSubmit(onSubmit)}
             >
-              <Text>Guardar Redes</Text>
+              <ButtonText>Guardar Redes</ButtonText>
             </Button>
           </View>
         </View>

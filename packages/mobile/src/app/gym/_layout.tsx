@@ -28,6 +28,7 @@ export default function GymLayout() {
         options={{
           headerShown: false,
           title: 'Detalles del Gimnasio',
+          headerLeft: () => <BackButton />,
         }}
       />
     </Stack>

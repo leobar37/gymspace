@@ -105,6 +105,7 @@ export interface InvitationValidationResponse {
 }
 
 export interface CurrentSessionResponse {
+  accessToken: string;
   user: {
     id: string;
     email: string;

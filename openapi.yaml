@@ -277,7 +277,12 @@ paths:
     get:
       operationId: AuthController_getCurrentSession
       summary: Get current user session information
-      parameters: []
+      parameters:
+        - name: authorization
+          required: true
+          in: header
+          schema:
+            type: string
       responses:
         '200':
           description: Current session information
@@ -4127,6 +4132,9 @@ components:
     CurrentSessionDto:
       type: object
       properties:
+        accessToken:
+          type: string
+          description: Current access token
         user:
           type: object
           description: Current authenticated user
@@ -4148,6 +4156,7 @@ components:
           type: boolean
           description: Whether user is authenticated
       required:
+        - accessToken
         - user
         - permissions
         - isAuthenticated

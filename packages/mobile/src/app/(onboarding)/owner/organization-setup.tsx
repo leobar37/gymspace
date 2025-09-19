@@ -75,7 +75,6 @@ export default function OrganizationSetupScreen() {
       // Store tokens temporarily - they'll be applied after email verification
       setTempAuthTokens({
         accessToken: response.access_token,
-        refreshToken: response.refresh_token,
       });
       
       // Store the gym ID that was created during onboarding

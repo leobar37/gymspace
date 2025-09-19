@@ -11,7 +11,7 @@ import { Alert } from 'react-native';
 import { SheetProvider } from '@gymspace/sheet';
 import { GymSdkProvider } from './GymSdkProvider';
 import { LoadingScreen } from '@/shared/loading-screen/LoadingScreen';
-import '@/sheets'; 
+import '@/sheets';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -33,8 +33,6 @@ export function AppProviders({ children }: AppProvidersProps) {
           });
           try {
             router.replace('(onboarding)/login');
-            queryClient.clear();
-            usePrefetchStore.getState().resetPrefetch();
           } catch (error) {
             console.log('error to login', error);
           }
@@ -80,14 +78,10 @@ export function AppProviders({ children }: AppProvidersProps) {
           retry: 0,
           // Global mutation error handling
           onError: (error: any) => {
-            console.log("error-funny", error);
-            
+            console.log('error-funny', error);
+
             // Check for authentication errors in mutations
             if (error?.response?.status === 401 || error?.response?.status === 403) {
-              // Clear all queries
-              queryClient.clear();
-              usePrefetchStore.getState().resetPrefetch();
-
               // Show error message
               Alert.alert(
                 'Sesión Expirada',

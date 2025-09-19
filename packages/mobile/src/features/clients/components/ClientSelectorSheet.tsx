@@ -98,9 +98,18 @@ const ClientListScreen: React.FC = () => {
   }, [clientsData]);
 
   const handleSelectClient = useCallback((client: Client) => {
+    console.log('handleSelectClient called with client:', client);
+    console.log('Current payload:', payload);
+    
     if (payload?.mode === 'affiliate' || payload?.mode === 'select') {
+      console.log('Mode is:', payload.mode, '- executing onSelect');
       // Immediate selection for affiliation or selection mode
-      payload.onSelect(client);
+      if (payload.onSelect) {
+        console.log('Calling onSelect callback');
+        payload.onSelect(client);
+      } else {
+        console.error('onSelect callback is not defined!');
+      }
       SheetManager.hide('client-selector');
     }
   }, [payload]);
@@ -368,13 +377,12 @@ const clientSelectorFlow = createMultiScreen()
 const { Component } = clientSelectorFlow;
 
 // Main Sheet Component
-interface ClientSelectorSheetProps extends SheetProps {
-  payload?: ClientSelectorPayload;
-}
+interface ClientSelectorSheetProps extends SheetProps, ClientSelectorPayload {}
 
 function ClientSelectorSheet(props: ClientSelectorSheetProps) {
-  const { payload } = props;
   const insets = useSafeAreaInsets();
+
+  console.log('ClientSelectorSheet rendered with props:', props);
 
   return (
     <BottomSheetWrapper
@@ -398,7 +406,7 @@ function ClientSelectorSheet(props: ClientSelectorSheetProps) {
           paddingBottom: insets.bottom || 20,
         }}
       >
-        <PayloadContext.Provider value={payload}>
+        <PayloadContext.Provider value={props}>
           <Component />
         </PayloadContext.Provider>
       </View>

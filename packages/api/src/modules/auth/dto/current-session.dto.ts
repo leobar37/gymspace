@@ -3,6 +3,12 @@ import { IUser, IGym, IOrganization, ISubscription, Permission } from '@gymspace
 
 export class CurrentSessionDto {
   @ApiProperty({
+    description: 'Current access token',
+    type: String,
+  })
+  accessToken: string;
+
+  @ApiProperty({
     description: 'Current authenticated user',
     type: 'object',
   })

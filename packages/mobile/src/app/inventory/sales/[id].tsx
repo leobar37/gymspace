@@ -238,10 +238,17 @@ export default function SaleDetailScreen() {
   const handleAffiliateClient = useCallback(() => {
     if (!sale) return;
 
+    console.log('handleAffiliateClient called');
+    console.log('Opening client-selector sheet with data:', {
+      mode: 'affiliate',
+      currentClientId: sale.customerId,
+    });
+
     SheetManager.show('client-selector', {
       mode: 'affiliate',
       currentClientId: sale.customerId,
       onSelect: async (client: Client) => {
+        console.log('Client selected:', client);
         await execute(
           new Promise<void>((resolve, reject) => {
             updateSale(
@@ -271,6 +278,9 @@ export default function SaleDetailScreen() {
             },
           }
         );
+      },
+      onCancel: () => {
+        console.log('Client selection cancelled');
       },
     });
   }, [sale, execute, updateSale, refetch]);

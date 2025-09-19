@@ -17,6 +17,7 @@ import {
   Edit3,
   MessageCircle
 } from 'lucide-react-native';
+import { Icon } from '@/components/ui/icon';
 import { useGym } from '@/features/gyms/controllers/gyms.controller';
 
 export default function GymDetailScreen() {
@@ -75,9 +76,10 @@ export default function GymDetailScreen() {
             <Button
               variant="ghost"
               size="sm"
+              className="text-white"
               onPress={() => router.push(`/gym/${id}/edit-basic`)}
             >
-              <Edit3 size={18} color="#6b7280" />
+              <Icon as={Edit3} size="md" className="text-white" />
             </Button>
           </HStack>
 
@@ -146,9 +148,10 @@ export default function GymDetailScreen() {
             <Button
               variant="ghost"
               size="sm"
+              className="text-white"
               onPress={() => router.push(`/gym/${id}/edit-schedule`)}
             >
-              <Edit3 size={18} color="#6b7280" />
+              <Icon as={Edit3} size="md" className="text-white" />
             </Button>
           </HStack>
 
@@ -178,11 +181,13 @@ export default function GymDetailScreen() {
               Redes Sociales
             </Text>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
+              action="secondary"
               onPress={() => router.push(`/gym/${id}/edit-social`)}
+              className="px-3"
             >
-              <Edit3 size={18} color="#6b7280" />
+              <Icon as={Edit3} size="sm" />
             </Button>
           </HStack>
 

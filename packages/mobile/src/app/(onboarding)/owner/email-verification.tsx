@@ -23,8 +23,6 @@ export default function EmailVerificationScreen() {
     if (tempAuthTokens) {
       await storeTokens({
         accessToken: tempAuthTokens.accessToken,
-        refreshToken: tempAuthTokens.refreshToken,
-        expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours from now
       });
     }
     

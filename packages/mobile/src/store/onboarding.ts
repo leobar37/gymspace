@@ -36,7 +36,6 @@ interface OnboardingState {
   // Temporary auth tokens (stored during registration, used after verification)
   tempAuthTokens: {
     accessToken: string;
-    refreshToken: string;
   } | null;
   
   // Collaborator invitation

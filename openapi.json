@@ -433,7 +433,16 @@
       "get": {
         "operationId": "AuthController_getCurrentSession",
         "summary": "Get current user session information",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Current session information",
@@ -6695,6 +6704,10 @@
       "CurrentSessionDto": {
         "type": "object",
         "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Current access token"
+          },
           "user": {
             "type": "object",
             "description": "Current authenticated user"
@@ -6724,6 +6737,7 @@
           }
         },
         "required": [
+          "accessToken",
           "user",
           "permissions",
           "isAuthenticated"
