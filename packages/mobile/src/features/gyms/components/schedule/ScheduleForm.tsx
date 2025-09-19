@@ -20,23 +20,15 @@ const ScheduleFormContent: React.FC<ScheduleFormContentProps> = ({
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View>
-        {/* Instructions */}
+        {/* Day Schedule Cards */}
         <View className="bg-white rounded-xl p-6 mb-6 shadow-sm">
-          <Text className="text-sm text-gray-600 mb-4">
-            Configure los horarios de apertura y cierre para cada día de la semana.
-            Puede agregar múltiples rangos horarios por día.
-          </Text>
-
-          {/* Day Schedule Cards */}
-          <View>
-            {dayNames.map(({ key, label }) => (
-              <DayScheduleCard
-                key={key}
-                dayKey={key}
-                label={label}
-              />
-            ))}
-          </View>
+          {dayNames.map(({ key, label }) => (
+            <DayScheduleCard
+              key={key}
+              dayKey={key}
+              label={label}
+            />
+          ))}
         </View>
 
         {/* Action Buttons */}

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
 import { useGym } from '@/features/gyms/controllers/gyms.controller';
+import { WhatsAppIcon, InstagramIcon, FacebookIcon } from '@/components/icons';
 
 export default function GymDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,17 +35,29 @@ export default function GymDetailScreen() {
     return 'Horario no definido';
   };
 
-  const getSocialMediaIcon = (platform: string) => {
+  const getSocialMediaIcon = (platform: string, size = 18) => {
+    const getIconColor = (platform: string) => {
+      switch (platform) {
+        case 'facebook':
+          return '#1877f2';
+        case 'instagram':
+          return '#E4405F';
+        case 'whatsapp':
+          return '#25D366';
+        default:
+          return '#6b7280';
+      }
+    };
+
     switch (platform) {
       case 'facebook':
+        return <FacebookIcon size={size} color={getIconColor(platform)} />;
       case 'instagram':
-      case 'twitter':
-      case 'linkedin':
-        return Globe; // Using Globe for all social media platforms
+        return <InstagramIcon size={size} color={getIconColor(platform)} />;
       case 'whatsapp':
-        return MessageCircle;
+        return <WhatsAppIcon size={size} color={getIconColor(platform)} />;
       default:
-        return Globe;
+        return <Icon as={Globe} size="sm" className="text-gray-500" />;
     }
   };
 
@@ -196,11 +209,14 @@ export default function GymDetailScreen() {
               {Object.entries(gym.socialMedia)
                 .filter(([_, value]) => value)
                 .map(([platform, value]) => (
-                  <VStack key={platform} className="space-y-1">
-                    <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      {platform}
-                    </Text>
-                    <Text className="text-base text-gray-900">
+                  <VStack key={platform} className="space-y-2">
+                    <HStack className="items-center space-x-2">
+                      {getSocialMediaIcon(platform)}
+                      <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        {platform}
+                      </Text>
+                    </HStack>
+                    <Text className="text-base text-gray-900 ml-6">
                       {value as string}
                     </Text>
                   </VStack>

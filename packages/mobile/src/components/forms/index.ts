@@ -10,6 +10,7 @@ export { FormCheckbox } from './FormCheckbox';
 export { FormRadio } from './FormRadio';
 export { FormSwitch } from './FormSwitch';
 export { FormDatePicker } from './FormDatePicker';
+export { FormTimePicker } from './FormTimePicker';
 
 // Form Utilities
 export {

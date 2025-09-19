@@ -79,9 +79,17 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({
   const toggleDayOpen = (dayKey: DayKey) => {
     const currentDay = getValues(dayKey);
     const newIsOpen = !currentDay.isOpen;
+    
+    // When enabling, if there are no slots, add a default one
+    // When disabling, keep the slots (they're just not active)
+    let newSlots = currentDay.slots || [];
+    if (newIsOpen && newSlots.length === 0) {
+      newSlots = [{ open: '06:00', close: '22:00' }];
+    }
+    
     setValue(dayKey, {
       isOpen: newIsOpen,
-      slots: newIsOpen ? [{ open: '06:00', close: '22:00' }] : [],
+      slots: newSlots,
     }, { shouldValidate: true });
   };
 
