@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { FormInput } from '@/components/forms/FormInput';
+import { FormTimePicker } from '@/components/forms';
 import { X } from 'lucide-react-native';
 import { useScheduleContext, DayKey } from './ScheduleContext';
 
@@ -24,54 +24,31 @@ export const TimeSlotRow: React.FC<TimeSlotRowProps> = ({
   const closeError = errors[dayKey]?.slots?.[index]?.close;
 
   return (
-    <View className="flex-row items-start space-x-3 mb-3">
+    <View className="flex-row items-start gap-2 mb-3">
       {/* Open Time Input */}
       <View className="flex-1">
-        <FormInput
+        <FormTimePicker
           name={`${dayKey}.slots.${index}.open`}
-          label=""
-          placeholder="06:00"
-          maxLength={5}
-          keyboardType="numeric"
+          placeholder="Open"
         />
-        {openError && (
-          <Text className="text-xs text-red-500 mt-1">
-            {openError.message}
-          </Text>
-        )}
-      </View>
-
-      {/* Separator */}
-      <View className="justify-center pt-3">
-        <Text className="text-gray-500 text-sm">a</Text>
       </View>
 
       {/* Close Time Input */}
       <View className="flex-1">
-        <FormInput
+        <FormTimePicker
           name={`${dayKey}.slots.${index}.close`}
-          label=""
-          placeholder="22:00"
-          maxLength={5}
-          keyboardType="numeric"
+          placeholder="Close"
         />
-        {closeError && (
-          <Text className="text-xs text-red-500 mt-1">
-            {closeError.message}
-          </Text>
-        )}
       </View>
 
       {/* Remove Button */}
-      <View className="justify-center pt-3">
-        <TouchableOpacity
-          onPress={onRemove}
-          className="p-2 -m-2"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <X size={20} color="#ef4444" />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        onPress={onRemove}
+        className="mt-2.5 p-2"
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <X size={20} color="#ef4444" />
+      </TouchableOpacity>
     </View>
   );
 };

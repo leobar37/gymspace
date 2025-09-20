@@ -67,7 +67,7 @@ export const DayScheduleCard: React.FC<DayScheduleCardProps> = ({
       {!daySchedule.isOpen && (
         <View className="py-4">
           <Text className="text-sm text-gray-500 text-center">
-            Cerrado
+            Closed
           </Text>
         </View>
       )}
