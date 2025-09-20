@@ -1,17 +1,10 @@
 import React, { useCallback, useMemo, useRef } from 'react';
-import {
-  View,
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-} from 'react-native';
+import { View, ActivityIndicator, Alert, Pressable, RefreshControl } from 'react-native';
 import { BottomSheetFlatList } from '@gymspace/sheet';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
+import { Fab, FabIcon } from '@/components/ui/fab';
 import {
   Plus as PlusIcon,
   Check as CheckIcon,
@@ -32,147 +25,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AssetPreview } from '../AssetPreview';
 import type { AssetResponseDto } from '@gymspace/sdk';
 import type { AssetSelectorRouteContext } from '../AssetSelectorSheet';
-
-// Theme colors
-const COLORS = {
-  primary: '#6366f1',
-  gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-  },
-  white: '#ffffff',
-  black: '#000000',
-} as const;
-
-// Optimized styles object
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.gray[50],
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-  },
-  flatListContent: {
-    paddingBottom: 100,
-    paddingTop: 12,
-    flexGrow: 1,
-  },
-  columnWrapper: {
-    paddingHorizontal: 12,
-  },
-  assetItemContainer: {
-    flex: 1,
-    padding: 4,
-  },
-  assetItemView: {
-    width: '100%',
-    aspectRatio: 1,
-    position: 'relative',
-  },
-  assetItemBorder: {
-    flex: 1,
-    borderWidth: 2,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: COLORS.gray[100],
-  },
-  selectedBorder: {
-    borderColor: COLORS.primary,
-  },
-  unselectedBorder: {
-    borderColor: COLORS.gray[200],
-  },
-  selectionIndicator: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    padding: 4,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  floatingButton: {
-    position: 'absolute',
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  confirmButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-  },
-  backdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  uploadOptionsMenu: {
-    position: 'absolute',
-    right: 20,
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    padding: 8,
-  },
-  uploadOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  uploadOptionDivider: {
-    height: 1,
-    backgroundColor: COLORS.gray[200],
-  },
-  uploadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  uploadingContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-  },
-});
 
 interface AssetListRouteProps {
   route: {
@@ -204,19 +56,18 @@ const AssetItem: React.FC<AssetItemProps> = React.memo(
       };
     }, [isSelected]);
 
-    const borderStyle = useMemo(
-      () => [styles.assetItemBorder, isSelected ? styles.selectedBorder : styles.unselectedBorder],
-      [isSelected],
-    );
-
     return (
       <AnimatedPressable
-        style={[styles.assetItemContainer, animatedStyle]}
+        style={[animatedStyle, { flex: 1 / 3, padding: 4 }]}
         onPress={onPress}
         onLongPress={onLongPress}
       >
-        <View style={styles.assetItemView}>
-          <View style={borderStyle}>
+        <View className="aspect-square">
+          <View
+            className={`flex-1 border-2 rounded-xl overflow-hidden bg-gray-100 ${
+              isSelected ? 'border-primary-500' : 'border-gray-200'
+            }`}
+          >
             <AssetPreview asset={item} size="full" resizeMode="cover" className="w-full h-full" />
           </View>
 
@@ -225,7 +76,7 @@ const AssetItem: React.FC<AssetItemProps> = React.memo(
             <Animated.View
               entering={FadeIn.duration(200)}
               exiting={FadeOut.duration(200)}
-              style={styles.selectionIndicator}
+              className="absolute top-2 right-2 bg-primary-500 rounded-xl p-1 shadow-lg"
             >
               <Icon as={CheckIcon} className="text-white" size="xs" />
             </Animated.View>
@@ -324,7 +175,7 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
 
       try {
         const options: ImagePicker.ImagePickerOptions = {
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          mediaTypes: 'Images' as ImagePicker.MediaType,
           allowsEditing: false,
           quality: 0.8,
           allowsMultipleSelection: type === 'gallery' ? context.isMulti : false,
@@ -360,7 +211,7 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
             const file = createFileUpload(asset);
 
             const uploadedAsset = await uploadAssetMutation.mutateAsync({
-              file: file as File, // Type assertion for SDK compatibility
+              file: file as any as File, // Type assertion for SDK compatibility
               metadata: {
                 width: asset.width,
                 height: asset.height,
@@ -414,13 +265,11 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
   const handleAssetLongPress = useCallback(
     async (asset: AssetResponseDto) => {
       // Show preview with delete option
-      await SheetManager.show('asset-preview', {
-        payload: {
-          assetId: asset.id,
-          onDelete: (assetId: string) => {
-            SheetManager.hide('asset-preview');
-            showDeleteConfirmation(assetId, asset.originalName);
-          },
+      SheetManager.show('asset-preview', {
+        assetId: asset.id,
+        onDelete: (assetId: string) => {
+          SheetManager.hide('asset-preview');
+          showDeleteConfirmation(assetId, asset.originalName);
         },
       });
     },
@@ -455,15 +304,9 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
         <Icon as={ImageIcon} size="xl" className="text-gray-300 mb-4" />
         <Text className="text-gray-500 text-base mb-2">No hay archivos disponibles</Text>
         <Text className="text-gray-400 text-sm mb-6">Sube tu primer archivo</Text>
-        <Button variant="solid" size="md" onPress={handleAddAsset}>
-          <HStack space="sm" className="items-center">
-            <Icon as={PlusIcon} className="text-white" size="sm" />
-            <ButtonText>Subir Archivo</ButtonText>
-          </HStack>
-        </Button>
       </View>
     ),
-    [handleAddAsset],
+    [],
   );
 
   const ListHeaderComponent = useCallback(() => null, []); // Will be replaced with floating button
@@ -480,49 +323,57 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
     [context.isMulti, context.selectedAssets.length],
   );
 
+  const dynamicPaddingBottom = useMemo(
+    () => (context.isMulti && context.selectedAssets.length > 0 ? 100 : 80),
+    [context.isMulti, context.selectedAssets.length],
+  );
+
   if (isLoading && !assets) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View className="flex-1 items-center justify-center py-20">
+        <ActivityIndicator size="large" color="#6366f1" />
         <Text className="text-gray-600 mt-4">Cargando archivos...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <>
       <BottomSheetFlatList
         data={sortedAssets}
         renderItem={renderAssetItem}
         keyExtractor={keyExtractor}
         numColumns={3}
-        columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={styles.flatListContent}
+        columnWrapperStyle={{ paddingHorizontal: 8 }}
+        contentContainerStyle={{
+          paddingTop: 12,
+          flexGrow: 1,
+          height: '100%',
+        }}
         ListEmptyComponent={ListEmptyComponent}
         ListHeaderComponent={sortedAssets.length > 0 ? ListHeaderComponent : null}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor={COLORS.primary}
-          />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#6366f1" />
         }
       />
 
       {/* Floating upload button */}
-      <Animated.View style={[styles.floatingButton, { bottom: floatingUploadButtonBottom }]}>
-        <Pressable onPress={handleAddAsset} style={styles.floatingButton}>
-          <Icon as={PlusIcon} className="text-white" size="lg" />
-        </Pressable>
-      </Animated.View>
+      <Fab
+        size="lg"
+        placement="bottom right"
+        onPress={handleAddAsset}
+        style={{ bottom: floatingUploadButtonBottom }}
+      >
+        <FabIcon as={PlusIcon} />
+      </Fab>
 
       {/* Floating confirm button for multi selection */}
       {context.isMulti && context.selectedAssets.length > 0 && (
         <Animated.View
           entering={FadeIn.duration(200)}
           exiting={FadeOut.duration(200)}
-          style={styles.confirmButton}
+          className="absolute bottom-5 left-5 right-5"
         >
           <Button
             variant="solid"
@@ -542,25 +393,29 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
       {showUploadOptions && (
         <>
           {/* Backdrop */}
-          <Pressable style={styles.backdrop} onPress={() => setShowUploadOptions(false)} />
+          <Pressable
+            className="absolute inset-0 bg-black/50"
+            onPress={() => setShowUploadOptions(false)}
+          />
 
           {/* Options menu */}
           <Animated.View
             entering={FadeIn.duration(200)}
-            style={[styles.uploadOptionsMenu, { bottom: uploadOptionsMenuBottom }]}
+            className="absolute right-5 bg-white rounded-xl shadow-xl p-2"
+            style={{ bottom: uploadOptionsMenuBottom }}
             pointerEvents="box-none"
           >
             <Pressable
               onPress={() => handleImagePickerOption('camera')}
-              style={styles.uploadOption}
+              className="flex-row items-center py-3 px-4"
             >
               <Icon as={CameraIcon} className="text-gray-700 mr-3" size="md" />
               <Text className="text-gray-700">Tomar Foto</Text>
             </Pressable>
-            <View style={styles.uploadOptionDivider} />
+            <View className="h-px bg-gray-200" />
             <Pressable
               onPress={() => handleImagePickerOption('gallery')}
-              style={styles.uploadOption}
+              className="flex-row items-center py-3 px-4"
             >
               <Icon as={GalleryIcon} className="text-gray-700 mr-3" size="md" />
               <Text className="text-gray-700">Seleccionar de Galería</Text>
@@ -571,13 +426,13 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
 
       {/* Upload loading indicator */}
       {isUploading && (
-        <View style={styles.uploadingOverlay}>
-          <View style={styles.uploadingContent}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
+        <View className="absolute inset-0 bg-black/50 items-center justify-center">
+          <View className="bg-white rounded-xl p-5 items-center">
+            <ActivityIndicator size="large" color="#6366f1" />
             <Text className="text-gray-700 mt-3">Subiendo imagen...</Text>
           </View>
         </View>
       )}
-    </View>
+    </>
   );
 };

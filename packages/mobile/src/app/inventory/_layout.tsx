@@ -24,7 +24,15 @@ export default function InventoryLayout() {
         name="products"
         options={{
           headerShown: false,
-          headerLeft: () => <BackButton label="" />,
+          animation: 'simple_push',
+          headerLeft: () => (
+            <BackButton
+              label=""
+              onPress={() => {
+                router.push('/more');
+              }}
+            />
+          ),
         }}
       />
 

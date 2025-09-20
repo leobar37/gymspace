@@ -82,13 +82,10 @@ export default function NewProductScreen() {
   };
 
   return (
-    <VStack className="flex-1">
-      {/* Form */}
-      <ProductForm
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        isLoading={createProductMutation.isPending}
-      />
-    </VStack>
+    <ProductForm
+      onSubmit={handleSubmit}
+      onCancel={handleCancel}
+      isLoading={createProductMutation.isPending}
+    />
   );
 }

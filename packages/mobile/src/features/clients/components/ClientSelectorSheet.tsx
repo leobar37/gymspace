@@ -106,7 +106,6 @@ const ClientListScreen: React.FC = () => {
         title={payload?.mode === 'affiliate' ? 'Afiliar Cliente' : 'Seleccionar Cliente'}
         onClose={handleClose}
       />
-
       <ClientsListGeneric
         selectedClientId={payload?.currentClientId}
         onClientSelect={handleSelectClient}
@@ -115,7 +114,6 @@ const ClientListScreen: React.FC = () => {
         showAddButton={true}
         onAddClient={handleCreateNew}
         isSheet={true}
-        cardVariant="minimal"
         emptyMessage={
           payload?.mode === 'affiliate'
             ? 'No hay clientes disponibles para afiliar'

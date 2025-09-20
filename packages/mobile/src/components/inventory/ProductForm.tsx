@@ -145,7 +145,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
           <HStack space="sm" className="items-center">
             <Icon as={SaveIcon} className="w-4 h-4 text-white" />
             <ButtonText className="text-white font-semibold">
-              {product ? 'Actualizar' : 'Crear'} Producto
+              {product ? 'Actualizar' : 'Crear'} 
             </ButtonText>
           </HStack>
         )}
@@ -162,7 +162,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading = false }: 
         footerContent={actions}
         className="bg-white"
       >
-        <VStack space="lg" className="px-3 py-4">
+        <VStack space="lg" className="px-3 pb-4">
           {/* Basic Information */}
           <VStack space="md">
             <Text className="text-lg font-semibold text-gray-900">Información Básica</Text>

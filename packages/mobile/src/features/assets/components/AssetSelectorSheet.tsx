@@ -1,13 +1,17 @@
-import React from 'react';
-import { View } from 'react-native';
-import { BottomSheetWrapper, SheetManager, SheetProps } from '@gymspace/sheet';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createMultiScreen, useMultiScreenContext } from '@/components/ui/multi-screen';
 import { Button } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
+import { createMultiScreen, useMultiScreenContext } from '@/components/ui/multi-screen';
 import { Text } from '@/components/ui/text';
+import {
+  BottomSheetScrollView,
+  BottomSheetWrapper,
+  SheetManager,
+  SheetProps,
+} from '@gymspace/sheet';
 import { ArrowLeft, X as CloseIcon } from 'lucide-react-native';
+import React from 'react';
+import { View } from 'react-native';
 import { AssetListRoute } from './routes/AssetListRoute';
 
 export interface AssetSelectorPayload {
@@ -37,20 +41,33 @@ interface NavigationHeaderProps {
   title: string;
   subtitle?: string;
   onClose: () => void;
+  onClearSelection?: () => void;
+  hasSelection?: boolean;
 }
 
-const NavigationHeader: React.FC<NavigationHeaderProps> = ({ title, subtitle, onClose }) => {
+const NavigationHeader: React.FC<NavigationHeaderProps> = ({
+  title,
+  subtitle,
+  onClose,
+  onClearSelection,
+  hasSelection,
+}) => {
   const { router } = useMultiScreenContext();
   const canGoBack = router.canGoBack;
 
   return (
     <View className="px-4 py-3 border-b border-gray-200 bg-white">
       <HStack className="items-center justify-between">
-        {/* Left side - Back button or empty space */}
-        <View className="w-10">
+        {/* Left side - Back button or clear selection */}
+        <View className="min-w-[40px]">
           {canGoBack && (
             <Button variant="link" size="sm" onPress={() => router.goBack()} className="p-0">
               <Icon as={ArrowLeft} className="text-gray-700" size="md" />
+            </Button>
+          )}
+          {!canGoBack && hasSelection && onClearSelection && (
+            <Button variant="link" size="sm" onPress={onClearSelection} className="p-0">
+              <Text className="text-primary-500 text-sm font-medium">Limpiar</Text>
             </Button>
           )}
         </View>
@@ -135,8 +152,12 @@ const ListScreen: React.FC = () => {
     [selectedAssets, payload, router, safeSetSelectedAssets],
   );
 
+  const handleClearSelection = React.useCallback(() => {
+    safeSetSelectedAssets([]);
+  }, [safeSetSelectedAssets]);
+
   return (
-    <>
+    <View className="h-full">
       <NavigationHeader
         title={payload?.isMulti ? 'Seleccionar Archivos' : 'Seleccionar Archivo'}
         subtitle={
@@ -145,9 +166,11 @@ const ListScreen: React.FC = () => {
             : undefined
         }
         onClose={routeContext.onCancel}
+        onClearSelection={handleClearSelection}
+        hasSelection={selectedAssets.length > 0}
       />
       <AssetListRoute route={{ params: routeContext }} />
-    </>
+    </View>
   );
 };
 
@@ -168,11 +191,6 @@ function AssetSelectorSheet(props: AssetSelectorSheetProps) {
         backgroundColor: 'white',
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
-      }}
-      handleIndicatorStyle={{
-        backgroundColor: '#D1D5DB',
-        width: 150,
-        height: 4,
       }}
     >
       <PayloadContext.Provider value={props}>

@@ -205,7 +205,7 @@ export const AssetPreviewSheet: React.FC<AssetPreviewSheetProps> = (props) => {
       </HStack>
 
       {/* Content */}
-      <BottomSheetScrollView className="pb-safe" showsVerticalScrollIndicator={false}>
+      <BottomSheetScrollView className="h-full" showsVerticalScrollIndicator={false}>
         {renderContent()}
       </BottomSheetScrollView>
     </BottomSheetWrapper>
