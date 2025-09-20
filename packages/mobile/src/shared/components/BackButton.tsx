@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewStyle } from 'react-native';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -19,7 +19,32 @@ export const BackButton: React.FC<BackButtonProps> = ({
   label = '',
   style,
 }) => {
+  const navigation = useNavigation();
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    const unsubscribeBeforeRemove = navigation.addListener('beforeRemove', () => {
+      setIsNavigating(true);
+    });
+
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      setIsNavigating(false);
+    });
+
+    const unsubscribeBlur = navigation.addListener('blur', () => {
+      setIsNavigating(false);
+    });
+
+    return () => {
+      unsubscribeBeforeRemove();
+      unsubscribeFocus();
+      unsubscribeBlur();
+    };
+  }, [navigation]);
+
   const handlePress = () => {
+    if (isNavigating) return;
+
     if (onPress) {
       onPress();
     } else {
@@ -30,6 +55,7 @@ export const BackButton: React.FC<BackButtonProps> = ({
   return (
     <Pressable
       onPress={handlePress}
+      disabled={isNavigating}
       style={[
         {
           marginLeft: -8, // Compensate for padding to align with screen edge
@@ -38,6 +64,7 @@ export const BackButton: React.FC<BackButtonProps> = ({
           minHeight: 44, // Apple's minimum touch target
           minWidth: 44,
           justifyContent: 'center',
+          opacity: isNavigating ? 0.5 : 1,
         },
         style
       ]}

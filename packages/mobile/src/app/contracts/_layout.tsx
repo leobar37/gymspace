@@ -1,6 +1,6 @@
+import { BackButton } from '@/shared/components/BackButton';
 import { Stack } from 'expo-router';
 import React from 'react';
-import { BackButton } from '@/shared/components/BackButton';
 
 export default function ContractsLayout() {
   return (
@@ -15,7 +15,6 @@ export default function ContractsLayout() {
         },
         headerTintColor: '#374151',
         animation: 'slide_from_right',
-        headerBackTitle: ' ',
       }}
     >
       <Stack.Screen

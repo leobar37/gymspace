@@ -11,7 +11,6 @@ import { DataPrefetch } from './DataPrefetch';
 import { useQueryClient } from '@tanstack/react-query';
 
 const DashboardComponent: React.FC = () => {
-  // Dashboard date range management
   const { setDateRange } = useDashboardDateRangeManager();
   const queryClient = useQueryClient();
 

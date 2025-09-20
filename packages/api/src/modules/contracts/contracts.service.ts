@@ -49,10 +49,8 @@ export class ContractsService {
       throw new ResourceNotFoundException('Gimnasio', gymId);
     }
 
-    // Verify client belongs to this gym
     await this.clientsService.validateClientBelongsToGym(context, dto.gymClientId);
 
-    // Check if client has active contract
     await this.clientsService.checkActiveContract(context, dto.gymClientId);
 
     // Run intelligent contract status update to ensure accurate status

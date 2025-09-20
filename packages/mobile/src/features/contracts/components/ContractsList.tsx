@@ -132,11 +132,10 @@ function ContractsListComponent() {
       return (
         <Pressable
           onPress={() => handleContractPress(item.id)}
-          className="bg-white p-3 rounded-xl shadow-sm"
+          className="bg-white p-3 py-3 rounded-xl shadow-sm"
         >
           <HStack className="justify-between items-start">
             <VStack className="flex-1">
-              <Text className="text-sm text-gray-500 mb-1">Contrato #{item.contractNumber}</Text>
               <Text className="text-base font-semibold text-gray-900 mb-1">
                 {item.gymClient?.name || 'Cliente'}
               </Text>

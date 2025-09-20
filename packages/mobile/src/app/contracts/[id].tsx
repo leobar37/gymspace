@@ -49,11 +49,7 @@ export default function ContractDetailScreen() {
   const formatPriceConfig = useFormatPrice();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
-  const {
-    useContractDetail,
-    cancelContract,
-    isCancellingContract,
-  } = useContractsController();
+  const { useContractDetail, cancelContract, isCancellingContract } = useContractsController();
 
   const { data: contract, isLoading } = useContractDetail(id!);
 
@@ -64,6 +60,7 @@ export default function ContractDetailScreen() {
       reason: '',
     },
   });
+  console.log('contract', JSON.stringify(contract, null, 2));
 
   const formatPrice = formatPriceConfig;
 
@@ -101,14 +98,7 @@ export default function ContractDetailScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
-      <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-        <ContractDetailHeader contract={contract} />
-
+      <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
         <ScrollView className="flex-1 bg-gray-50">
           <VStack className="p-4 gap-4">
             <ContractStatusCard contract={contract} />

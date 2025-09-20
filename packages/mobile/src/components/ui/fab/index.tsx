@@ -43,7 +43,7 @@ const fabStyle = tva({
     placement: {
       'top right': 'top-4 right-4',
       'top left': 'top-4 left-4',
-      'bottom right': 'bottom-4 right-4',
+      'bottom right': 'bottom-16 right-4',
       'bottom left': 'bottom-4 left-4',
       'top center': 'top-4 self-center',
       'bottom center': 'bottom-4 self-center',

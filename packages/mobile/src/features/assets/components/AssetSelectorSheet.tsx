@@ -152,18 +152,13 @@ const ListScreen: React.FC = () => {
 };
 
 // Create MultiScreen flow using builder
-const assetSelectorFlow = createMultiScreen()
-  .addStep('list', ListScreen)
-  .build();
+const assetSelectorFlow = createMultiScreen().addStep('list', ListScreen).build();
 
 const { Component } = assetSelectorFlow;
 // Main Sheet Component
 interface AssetSelectorSheetProps extends SheetProps, AssetSelectorPayload {}
 
 function AssetSelectorSheet(props: AssetSelectorSheetProps) {
-
-  const insets = useSafeAreaInsets();
-
   return (
     <BottomSheetWrapper
       sheetId="asset-selector"
@@ -180,16 +175,9 @@ function AssetSelectorSheet(props: AssetSelectorSheetProps) {
         height: 4,
       }}
     >
-      <View
-        style={{
-          height: '100%',
-          paddingBottom: insets.bottom || 20,
-        }}
-      >
-        <PayloadContext.Provider value={props}>
-          <Component />
-        </PayloadContext.Provider>
-      </View>
+      <PayloadContext.Provider value={props}>
+        <Component />
+      </PayloadContext.Provider>
     </BottomSheetWrapper>
   );
 }

@@ -187,9 +187,9 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
 
           <VStack className="gap-2">
             <Text className="font-medium text-gray-900">Duración *</Text>
-            <HStack className="gap-3 items-start">
-              <VStack className="flex-1">
-                <GluestackInput variant="rounded" size="md">
+            <VStack className="gap-3 items-start">
+              <VStack className="flex-1 w-full">
+                <GluestackInput variant="rounded" className='w-full'  size="md">
                   <InputField
                     value={Math.floor(Number(durationController.field.value) || 1).toString()}
                     onChangeText={(text) => {
@@ -199,6 +199,7 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
                     onBlur={durationController.field.onBlur}
                     placeholder="Cantidad"
                     keyboardType="number-pad"
+                    className="w-full"
                     placeholderClassName="text-gray-400"
                   />
                 </GluestackInput>
@@ -208,17 +209,15 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
                   </Text>
                 )}
               </VStack>
-              <VStack className="w-32">
-                <FormSelect
-                  name="durationType"
-                  placeholder="Periodo"
-                  options={[
-                    { label: 'Días', value: 'days' },
-                    { label: 'Meses', value: 'months' },
-                  ]}
-                />
-              </VStack>
-            </HStack>
+              <FormSelect
+                name="durationType"
+                placeholder="Periodo"
+                options={[
+                  { label: 'Días', value: 'days' },
+                  { label: 'Meses', value: 'months' },
+                ]}
+              />
+            </VStack>
           </VStack>
         </VStack>
 

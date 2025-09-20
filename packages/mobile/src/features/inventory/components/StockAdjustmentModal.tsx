@@ -61,8 +61,6 @@ export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = (props)
     onCancel,
   } = props;
 
-  console.log('Rendering StockAdjustmentModal with product:', product);
-
   // Form for additional details
   const form = useForm<StockAdjustmentForm>({
     resolver: zodResolver(stockAdjustmentSchema),

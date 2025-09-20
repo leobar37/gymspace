@@ -6,7 +6,6 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Pressable } from '@/components/ui/pressable';
-import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import {
   FormControl,
@@ -109,11 +108,11 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
 
           {/* Selector Button */}
           <Pressable onPress={() => setShowOptions(true)} disabled={isDisabled}>
-            <Card className="border border-gray-300">
-              <View className="p-3 min-h-[52px] justify-center">
+            <View className="border h-9 border-gray-300">
+              <View className="px-3 py-2 justify-center">
                 {getDisplayValue()}
               </View>
-            </Card>
+            </View>
           </Pressable>
 
           {fieldState.error && (
@@ -127,24 +126,27 @@ export function FormSelect<TFieldValues extends FieldValues = FieldValues>({
       {/* Options Actionsheet */}
       <Actionsheet isOpen={showOptions} onClose={() => setShowOptions(false)}>
         <ActionsheetBackdrop />
-        <ActionsheetContent>
+        <ActionsheetContent className="pb-6">
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
-          
-          {options.map((option) => (
-            <ActionsheetItem
-              key={option.value}
-              onPress={() => handleOptionSelect(option.value)}
-            >
-              <HStack className="justify-between items-center flex-1">
-                <ActionsheetItemText>{option.label}</ActionsheetItemText>
-                {field.value === option.value && (
-                  <Icon as={CheckIcon} className="text-blue-500 w-5 h-5" />
-                )}
-              </HStack>
-            </ActionsheetItem>
-          ))}
+
+          <VStack className="w-full">
+            {options.map((option) => (
+              <ActionsheetItem
+                key={option.value}
+                onPress={() => handleOptionSelect(option.value)}
+                className="w-full"
+              >
+                <HStack className="justify-between items-center flex-1 py-2">
+                  <ActionsheetItemText className="flex-1">{option.label}</ActionsheetItemText>
+                  {field.value === option.value && (
+                    <Icon as={CheckIcon} className="text-blue-500 w-5 h-5 ml-2" />
+                  )}
+                </HStack>
+              </ActionsheetItem>
+            ))}
+          </VStack>
         </ActionsheetContent>
       </Actionsheet>
     </>

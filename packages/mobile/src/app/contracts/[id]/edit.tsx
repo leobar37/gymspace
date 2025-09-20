@@ -9,6 +9,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { InfoIcon } from 'lucide-react-native';
+import { BackButton } from '@/shared/components';
 
 export default function EditContractScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,7 +20,8 @@ export default function EditContractScreen() {
       <Stack.Screen
         options={{
           title: 'Editar Contrato',
-          headerBackTitle: 'Volver',
+          headerBackTitle: '',
+          headerLeft: () => <BackButton />,
         }}
       />
       <SafeAreaView style={{ flex: 1 }}>
@@ -29,14 +31,14 @@ export default function EditContractScreen() {
               <Box className="w-20 h-20 bg-yellow-100 rounded-full items-center justify-center">
                 <Icon as={InfoIcon} className="w-10 h-10 text-yellow-600" />
               </Box>
-              
+
               <VStack space="sm" className="items-center">
                 <Text className="text-lg font-semibold text-gray-900 text-center">
                   Los contratos no se pueden editar
                 </Text>
                 <Text className="text-gray-600 text-center">
-                  Una vez creado un contrato, no es posible modificar sus términos. 
-                  Si necesitas hacer cambios, debes anular el contrato actual y crear uno nuevo.
+                  Una vez creado un contrato, no es posible modificar sus términos. Si necesitas
+                  hacer cambios, debes anular el contrato actual y crear uno nuevo.
                 </Text>
               </VStack>
 
@@ -48,12 +50,8 @@ export default function EditContractScreen() {
                 >
                   <ButtonText>Ver Contrato</ButtonText>
                 </Button>
-                
-                <Button
-                  variant="outline"
-                  onPress={() => router.back()}
-                  className="w-full"
-                >
+
+                <Button variant="outline" onPress={() => router.back()} className="w-full">
                   <ButtonText>Volver</ButtonText>
                 </Button>
               </VStack>

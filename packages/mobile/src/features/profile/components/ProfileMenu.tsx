@@ -59,7 +59,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
 
 const ProfileMenuComponent: React.FC = () => {
   const { clearAuth } = useGymSdk();
-  const { session } = useCurrentSession();
+  const { session, clearSession } = useCurrentSession();
   const { navigateWithinFeature, resetAndNavigate } = useSafeNavigation();
 
   const user = session?.user;
@@ -69,6 +69,7 @@ const ProfileMenuComponent: React.FC = () => {
     try {
       // Clear all auth and session data
       await clearAuth();
+      await clearSession();
       // Navigate to onboarding
       resetAndNavigate('/(onboarding)');
     } catch (error) {

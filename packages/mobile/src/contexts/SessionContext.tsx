@@ -158,6 +158,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
       setAccessToken(null);
       setCurrentGymIdState(null);
 
+      queryClient.clear();
       // Remove all session queries
       queryClient.removeQueries({ queryKey: sessionKeys.all });
     } catch (error) {

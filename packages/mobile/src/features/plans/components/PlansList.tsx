@@ -5,14 +5,13 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
-import { Input, InputField, InputIcon } from '@/components/ui/input';
-import { Icon } from '@/components/ui/icon';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Fab, FabIcon } from '@/components/ui/fab';
 import { Box } from '@/components/ui/box';
 import { Pressable } from '@/components/ui/pressable';
+import { Icon } from '@/components/ui/icon';
 import {
   Actionsheet,
   ActionsheetContent,
@@ -30,13 +29,14 @@ import {
   AlertDialogBody,
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
-import { SearchIcon, PlusIcon, EditIcon, TrashIcon, XIcon } from 'lucide-react-native';
+import { PlusIcon, EditIcon, TrashIcon, XIcon } from 'lucide-react-native';
 import { usePlansController } from '../controllers/plans.controller';
 import { MembershipPlan } from '@gymspace/sdk';
 import { Toast, ToastTitle, ToastDescription, useToast } from '@/components/ui/toast';
 import { useFormatPrice } from '@/config/ConfigContext';
 import { useDataSearch } from '@/hooks/useDataSearch';
-
+import { useEffect } from 'react';
+import { InputSearch } from '@/shared/input-search';
 interface PlanItemProps {
   plan: MembershipPlan;
   onPress: () => void;
@@ -199,6 +199,10 @@ export const PlansList: React.FC = () => {
     searchPlaceholder: 'Buscar planes...',
   });
 
+  useEffect(() => {
+    router.prefetch('/plans/create');
+  }, []);
+
   const handlePlanPress = useCallback((plan: MembershipPlan) => {
     router.push(`/plans/${plan.id}`);
   }, []);
@@ -257,16 +261,11 @@ export const PlansList: React.FC = () => {
   return (
     <View className="flex-1 bg-gray-50">
       <VStack className="p-4 bg-white border-b border-gray-200">
-        <Input>
-          <InputIcon>
-            <Icon as={SearchIcon} className='text-gray-500' />
-          </InputIcon>
-          <InputField
-            placeholder="Buscar planes..."
-            value={searchInput}
-            onChangeText={setSearchInput}
-          />
-        </Input>
+        <InputSearch
+          value={searchInput}
+          onChangeText={setSearchInput}
+          placeholder="Buscar planes..."
+        />
       </VStack>
 
       <FlatList

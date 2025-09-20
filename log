@@ -1,1010 +1,427 @@
+# CLAUDE.md
 
-> @gymspace/mobile@1.0.0 start /Users/leobar37/code/gymspace/packages/mobile
-> NODE_ENV=development expo start --clear
+## Serena Tools & Memory Usage (CRITICAL)
 
-env: load .env.local .env
-env: export EXPO_PUBLIC_API_URL APP_VARIANT
-Starting project at /Users/leobar37/code/gymspace/packages/mobile
-Starting Metro Bundler
-warning: Bundler cache is empty, rebuilding (this may take a minute)
-The following packages should be updated for best compatibility with the installed expo version:
-  @shopify/flash-list@2.0.3 - expected version: 2.0.2
-  expo-router@6.0.6 - expected version: ~6.0.7
-Your project may not work correctly until you install the expected versions of the packages.
-▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-█ ▄▄▄▄▄ █▀▄█▀     █ ▄▄▄▄▄ █
-█ █   █ █▄   ▄██▀ █ █   █ █
-█ █▄▄▄█ █ ▀█▀█▄▀ ██ █▄▄▄█ █
-█▄▄▄▄▄▄▄█ ▀▄█ █▄▀ █▄▄▄▄▄▄▄█
-█ ▄█ ▀█▄▄██ ▀█ ▀██▀  ▄▀▄▄▀█
-█ ▄▄██ ▄▄ ▄▄██▀▄▀▄▄▀ ▀▀█▄▄█
-██▀▄▄█▀▄▀ ▀▀▀   █▀█ ▄█ ██▀█
-█▄▀▄█▀ ▄ ▄▄ █  ██ ▄▄ ▀▀██▄█
-█▄▄▄▄█▄▄▄ ▄▄▄▄█▄  ▄▄▄ █ ▄ █
-█ ▄▄▄▄▄ █▄█▀▀██▄  █▄█  ▀▄▄█
-█ █   █ █▀▄█▄█ ▀▀▄ ▄▄ █▀▄██
-█ █▄▄▄█ █▀ ▀█▄  █  █▄  ▄█▄█
-█▄▄▄▄▄▄▄█▄▄▄▄█▄▄█▄███▄▄█▄▄█
+### Memory System
+- **ALWAYS** search `.serena/memories/` for existing patterns before implementing
+- **CHECK** for documented solutions: `ls .serena/memories/*.md`
+- **USE** memories to maintain consistency across the codebase
+- **CREATE** new memories after implementing reusable patterns
+- **UPDATE** memories when patterns evolve or improve
 
-› Metro waiting on exp://192.168.100.23:8081
-› Scan the QR code above with Expo Go (Android) or the Camera app (iOS)
+### Serena Tools Priority
+When available, use these tools for better code understanding:
+- `mcp__serena__find_file` - Locate files quickly by name patterns
+- `mcp__serena__search_for_pattern` - Find code patterns across codebase
+- `mcp__serena__find_symbol` - Locate function/class definitions
+- `mcp__serena__find_referencing_symbols` - Find where symbols are used
 
-› Web is waiting on http://localhost:8081
+### Memory-First Workflow
+1. **Before implementing**: Search memories for similar patterns
+   ```bash
+   ls .serena/memories/ | grep -i "pattern-name"
+   ```
+2. **During development**: Reference existing memories for consistency
+3. **After success**: Document new patterns in `.serena/memories/`
+4. **Pattern format**: `feature-pattern-description.md`
 
-› Using Expo Go
-› Press s │ switch to development build
+### Key Memories to Check
+- `react-native-infinite-scroll-pattern.md` - Infinite scroll with TanStack Query
+- Check for form patterns, navigation patterns, state management patterns
+- Look for component patterns before creating new ones
 
-› Press a │ open Android
-› Press i │ open iOS simulator
-› Press w │ open web
+### Infinite Scroll Implementation (CRITICAL)
+- **NEVER** use custom pagination hooks (`usePagination`, `useInfiniteScroll`)
+- **ALWAYS** use TanStack Query's `useInfiniteQuery` directly
+- **USE** native `FlatList` from React Native, not custom wrappers
+- **REFERENCE** `.serena/memories/react-native-infinite-scroll-pattern.md` for implementation
+- Key pattern:
+  ```typescript
+  const { data, fetchNextPage, hasNextPage, refetch } = useInfiniteQuery({
+    queryKey: ['resource', filters],
+    queryFn: ({ pageParam = 1 }) => sdk.resource.get({ page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.meta.hasNext ? lastPage.meta.page + 1 : undefined
+  });
+  const items = useMemo(() => data?.pages.flatMap(page => page.data) ?? [], [data]);
+  ```
 
-› Press j │ open debugger
-› Press r │ reload app
-› Press m │ toggle menu
-› shift+m │ more tools
-› Press o │ open project code in your editor
+## Development Paths
 
-› Press ? │ show all commands
+### Type Management (CRITICAL for Mobile App)
+- **ALWAYS** use SDK types directly in controllers, don't duplicate type definitions
+- **NEVER** create local types that mirror SDK DTOs
+- Pattern for controllers:
+  ```typescript
+  import { CreateContractDto, RenewContractDto } from '@gymspace/sdk';
+  export type ContractFormData = CreateContractDto;
+  ```
+- This ensures all fields from SDK are properly included in requests
+- Prevents issues like missing paymentMethodId or other required fields
 
-Logs for your project will appear below. Press Ctrl+C to exit.
-› Opening on Android...
-› Opening exp://192.168.100.23:8081 on Medium_Phone_API_36.0
-› Press ? │ show all commands
-Android Bundled 11222ms node_modules/expo-router/entry.js (5103 modules)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
- WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
- LOG  starting in... http://192.168.100.23:5200/api/v1
- LOG  On auth route without token - this is normal
- LOG  Setting token in SDK. Token length: 844
- LOG  SDK auth token set
- LOG  SDK gym ID set: ab4259d6-7ed3-4df1-9911-63bcaf43398c
- LOG  Session restored from storage
- LOG  SYNC USEEFFECT TRIGGERED
- LOG  accessToken: Has token
- LOG  isLoading: false
- LOG  Syncing tokens with SDK - useEffect - Token length: 844
- LOG  SDK auth token synced - useEffect
- LOG  SDK gym ID synced - useEffect: ab4259d6-7ed3-4df1-9911-63bcaf43398c
- LOG  Enabling session query after token setup
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "4dce4518-9d97-47bf-8e1a-1522b5db2383", "statusCode": 401, "timestamp": "2025-09-19T00:24:33.798Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+## Development Paths
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+### SDK Access Pattern (CRITICAL for Mobile App)
+- **NEVER** import gymspaceClient directly from lib/api-client
+- **ALWAYS** use useGymSdk hook from @/providers/GymSdkProvider
+- Pattern: `const { sdk } = useGymSdk();`
+- This ensures proper authentication and configuration
+- All API calls in mobile app must go through the sdk from useGymSdk
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "2bce83f9-86ea-498f-bbc6-f0a6ba8992c2", "statusCode": 401, "timestamp": "2025-09-19T00:24:34.420Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+### Loading Screen Pattern (CRITICAL for Mobile App)
+- **ALWAYS** use `useLoadingScreen` from `@/shared/loading-screen` for:
+  - Create operations (new records)
+  - Update/Edit operations
+  - Delete operations
+  - Complex async operations
+- Pattern: `const { execute } = useLoadingScreen();`
+- Wrap async operations with `execute()` providing:
+  - `action`: Loading message
+  - `successMessage`: Success feedback
+  - `successActions`: Post-success navigation options
+  - `errorFormatter`: Error message formatting
+- **NEVER** use simple try/catch with toast for these operations
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+### Form Development
+- Always use `/Users/leobar37/code/gymspace/packages/mobile/src/components/forms` to work with forms
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "c706f5f4-4f63-48ac-ba5e-6e8faf3137f0", "statusCode": 401, "timestamp": "2025-09-19T00:24:35.018Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+### Component Replacements
+- CardContent component does not exist, use View with tailwind classes instead
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  pass here to login {"segments": []}
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+### Configuration Context (CRITICAL for Mobile App)
+- **NEVER** use `useGymContext` or `useGymConfig` - they don't exist
+- Available hooks from `@/config/ConfigContext`:
+  - `useConfig()` - Returns full config context
+  - `useCountryConfig()` - Returns country configuration
+  - `useDocumentTypes()` - Returns document types for the country
+  - `useDocumentValidator()` - Returns document validation function
+  - `useFormatPrice()` - Returns price formatting function
+- Pattern for country config: `const config = useCountryConfig();`
+- Pattern for price formatting: `const formatPrice = useFormatPrice();`
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "bfaa4fbe-28fb-4679-8110-9fd1ceaf2f66", "statusCode": 401, "timestamp": "2025-09-19T00:24:35.617Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+### Service Architecture (CRITICAL for Backend)
+- **ALWAYS** pass the complete RequestContext/IRequestContext as the first parameter in ALL service methods
+- **NEVER** pass just gymId, userId, or any other individual parameter instead of context
+- Pattern: `async methodName(context: IRequestContext, ...otherParams): Promise<ReturnType>`
+- The context contains gymId, userId, permissions, organization, and other critical information
+- Example: `validateClientBelongsToGym(context: IRequestContext, clientId: string)` ✅
+- Wrong: `validateClientBelongsToGym(gymId: string, clientId: string)` ❌
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+## State Management
+- Use zustand for complex state management that needs to be shared across components
+- Create stores in `features/[feature]/stores/` directory
+- Use TanStack Query mutations for server state updates
+- Integrate zustand with TanStack Query for optimistic updates
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "0b1f1995-13a6-42da-a4a7-07a9452e0097", "statusCode": 401, "timestamp": "2025-09-19T00:24:36.189Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+## UI Components Best Practices
+- NEVER add custom color styles to buttons (no bg-blue-600, text-white, etc.)
+- ALWAYS use Button component variants: variant="solid" for primary, variant="outline" for secondary
+- Let the design system handle all button colors and styles
+- Use proper component wrappers from the UI library
+- Icons in buttons should not have color classes when using solid variant
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+## Form Development Best Practices
+- ALWAYS use react-hook-form with FormProvider for form state management
+- NEVER use useState for form fields - use react-hook-form instead
+- Use zodResolver for form validation with zod schemas
+- Always use FormInput, FormTextarea, FormSwitch components from forms directory
+- Form components should receive name prop and work with react-hook-form
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "a4492455-aa3a-45ea-b933-5242a1d6abea", "statusCode": 401, "timestamp": "2025-09-19T00:24:36.751Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+## Routing Structure
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+### Main App Structure
+- `/_layout.tsx` - Root app layout with providers, gesture handler, and safe area
+- `/index.tsx` - App entry point with auth redirects
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "fe18e1ed-077f-45ee-85ae-90afbf06a098", "statusCode": 401, "timestamp": "2025-09-19T00:24:37.316Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+### Authentication & Onboarding Routes
+**Base:** `/(onboarding)/`
+- `_layout.tsx` - Onboarding layout with auth checks and redirects
+- `index.tsx` - Onboarding landing page
+- `login.tsx` - User login screen
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+**Owner Onboarding:** `/(onboarding)/owner/`
+- `_layout.tsx` - Owner onboarding stack layout
+- `welcome.tsx` - Welcome screen for gym owners
+- `step-1-personal.tsx` - Personal information collection
+- `step-2-contact.tsx` - Contact details form
+- `step-3-security.tsx` - Password and security setup
+- `email-verification.tsx` - Email verification process
+- `organization-setup.tsx` - Organization configuration
+- `create-gym.tsx` - Gym creation and setup
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "d161d2a6-1066-428b-96ad-487830cd9835", "statusCode": 401, "timestamp": "2025-09-19T00:24:37.884Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+**Collaborator Onboarding:** `/(onboarding)/collaborator/`
+- `_layout.tsx` - Collaborator onboarding stack layout
+- `invitation.tsx` - Accept invitation to gym
+- `complete-registration.tsx` - Complete collaborator registration
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+**Password Reset:** `/(onboarding)/password-reset/`
+- `_layout.tsx` - Password reset flow layout
+- `request.tsx` - Request password reset via email
+- `verify.tsx` - Verify reset code from email
+- `reset.tsx` - Set new password form
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "7c0d7143-3380-4c97-8a67-a50651debba4", "statusCode": 401, "timestamp": "2025-09-19T00:24:38.452Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+### Main Application (Authenticated Users)
+**Base:** `/(app)/` - Tab-based navigation
+- `_layout.tsx` - Main app layout with bottom tabs (Inicio, Clientes, Inventario, Contratos, Más)
+- `index.tsx` - Dashboard with gym overview and stats
+- `clients.tsx` - Clients management tab overview
+- `inventory.tsx` - Inventory and sales tab overview
+- `contracts.tsx` - Contracts management tab overview
+- `more.tsx` - Additional options and settings tab
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+### Feature Module Routes
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "0e364b58-3fff-4424-9128-6c04c5c2f6c1", "statusCode": 401, "timestamp": "2025-09-19T00:24:39.016Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+**Clients Management:** `/clients/`
+- `_layout.tsx` - Clients stack navigation
+- `create.tsx` - Create new client form
+- `[id].tsx` - View client details and information
+- `[id]/edit.tsx` - Edit existing client data
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+**Plans Management:** `/plans/`
+- `_layout.tsx` - Plans stack navigation
+- `index.tsx` - List all available plans
+- `create.tsx` - Create new membership plan
+- `[id].tsx` - View plan details and pricing
+- `[id]/edit.tsx` - Edit plan information and pricing
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "90e11b3a-10a9-4213-9a9b-f9eeac3f6aaa", "statusCode": 401, "timestamp": "2025-09-19T00:24:39.583Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+**Contracts Management:** `/contracts/`
+- `_layout.tsx` - Contracts stack navigation
+- `create.tsx` - Create new client contract
+- `[id].tsx` - View contract details and status
+- `[id]/edit.tsx` - Edit contract terms and details
+- `[id]/renew.tsx` - Renew existing contract
+- `expiring.tsx` - View contracts nearing expiration
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+**Inventory Management:** `/inventory/`
+- `_layout.tsx` - Inventory stack navigation
+- `products.tsx` - List all products in inventory
+- `products/new.tsx` - Add new product to inventory
+- `products/[id].tsx` - View product details and stock levels
+- `categories.tsx` - Manage product categories
+- `categories/new.tsx` - Create new product category
+- `categories/[id]/edit.tsx` - Edit category information
+- `new-sale.tsx` - Process new product sale
+- `sales/[id].tsx` - View individual sale details
+- `sales-history.tsx` - Complete sales transaction history
+- `low-stock.tsx` - View products with low stock alerts
+- `reports.tsx` - Inventory analytics and reports
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "4969b462-8912-48f9-b74c-fb48b944444f", "statusCode": 401, "timestamp": "2025-09-19T00:24:40.147Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+**Suppliers Management:** `/suppliers/`
+- `_layout.tsx` - Suppliers stack navigation
+- `index.tsx` - List all registered suppliers
+- `create.tsx` - Add new supplier to system
+- `[id].tsx` - View supplier details and contact info
+- `[id]/edit.tsx` - Edit supplier information
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+**Profile Management:** `/profile/`
+- `_layout.tsx` - Profile stack navigation
+- `edit.tsx` - Edit user profile information
+- `change-password.tsx` - Change account password
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "12f81b86-3743-46c3-b7cb-cd20965c2c83", "statusCode": 401, "timestamp": "2025-09-19T00:24:40.716Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+**Gym Settings:** `/gym/`
+- `_layout.tsx` - Gym settings stack navigation
+- `settings.tsx` - Configure gym preferences and settings
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+### Navigation Patterns
+- Use `router.push()` for programmatic navigation
+- Avoid `Redirect` components for user-initiated navigation
+- Tab navigation for main app sections
+- Stack navigation within feature modules
+- Authentication redirects handled in layout components
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "052fbd58-1ea8-47cc-aeb2-327f93898a8f", "statusCode": 401, "timestamp": "2025-09-19T00:24:41.267Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+## Preferences
+- always respond in english
+- use zustand to handle complicated state management
+- use TanStack Query for data fetching and caching
+- use tailwind for styling
+- never add styles to the button, use the default styles of the library and its variants
+- always pass the complete RequestContext to the services
+- nevear addd examples unless i ask for it
+- not add README.md after do something
+- the primary color is the default of the library
+- never run commands unless i ask for it
+- not run lints commands
+- user serena when it is available
+- use serena tools to work better
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+## React Native Mobile Expert Agent
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "f03f75bf-0eb0-4dca-a0c0-91d7be6f1464", "statusCode": 401, "timestamp": "2025-09-19T00:24:41.833Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+### Activation Conditions
+This specialized agent activates when:
+- Implementing or designing mobile app components or interfaces
+- Working with React Native Expo and @gluestack-ui components
+- Creating screens, navigation patterns, or mobile-specific features
+- Keywords: "mobile screen", "app component", "react native", "expo", "gluestack", "mobile UI", "mobile form"
+- Working within the `packages/mobile` directory
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+### Core Expertise
+- **Framework**: React Native with Expo SDK 51
+- **UI Library**: @gluestack-ui/themed components
+- **Navigation**: Expo Router for file-based routing
+- **State Management**: Zustand stores and TanStack Query
+- **Forms**: React Hook Form with Zod validation
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "b702628c-607a-4c3d-a462-410fc6973634", "statusCode": 401, "timestamp": "2025-09-19T00:24:42.402Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+### Component Resources
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+#### UI Components Location
+**Base Path**: `packages/mobile/src/components/ui/`
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "cb8a638c-8d0f-4584-98c9-c8b5b1bdc577", "statusCode": 401, "timestamp": "2025-09-19T00:24:42.971Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+Available UI components that MUST be used:
+- `ActionSheet`: Bottom sheet actions and menus
+- `Alert`: Alert dialogs and confirmations
+- `Button`: Primary interactive element with variants
+- `Card`: Content containers with consistent styling
+- `Checkbox`: Selection controls for forms
+- `Input`: Text input fields with validation support
+- `Modal`: Overlay dialogs and popups
+- `Select`: Dropdown selection components
+- `Switch`: Toggle switches for boolean values
+- `Text`: Typography component with variants
+- `Toast`: Notification messages and feedback
+- `Badge`: Status indicators and labels
+- `Avatar`: User profile images and placeholders
+- `Progress`: Loading and progress indicators
+- `Spinner`: Loading spinners and activity indicators
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+#### Form Components (CRITICAL)
+**Base Path**: `packages/mobile/src/components/forms/`
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "c9551fa3-6ae2-4f9c-98e2-ac2bc837b2a1", "statusCode": 401, "timestamp": "2025-09-19T00:24:43.534Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+ALWAYS use these form components when creating forms:
+- `FormInput`: Text input with react-hook-form integration
+- `FormTextarea`: Multi-line text input with validation
+- `FormSwitch`: Toggle switches for form boolean fields
+- `FormSelect`: Dropdown select with form integration
+- `FormDatePicker`: Date selection with validation
+- `FormCheckbox`: Checkbox with form state management
+- `FormProvider`: Context provider for form state
+- `FormField`: Field wrapper with error handling
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+### Development Guidelines
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "3a05926b-2654-4165-a98d-4c61ad13cd81", "statusCode": 401, "timestamp": "2025-09-19T00:24:44.099Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+#### Import Patterns
+```typescript
+// UI Components
+import { Button, Text, Card } from '@/components/ui';
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+// Form Components
+import { FormInput, FormProvider } from '@/components/forms';
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "8ed3f919-fe18-4e52-8751-8829b1a7d39d", "statusCode": 401, "timestamp": "2025-09-19T00:24:44.665Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+// Hooks
+import { useGymSdk } from '@/providers/GymSdkProvider';
+import { useLoadingScreen } from '@/shared/loading-screen';
+import { useCountryConfig, useFormatPrice } from '@/config/ConfigContext';
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+// SDK Types
+import { CreateClientDto, UpdateClientDto } from '@gymspace/sdk';
+```
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "93b10f55-e5ef-410e-a4b2-1a2db75490ec", "statusCode": 401, "timestamp": "2025-09-19T00:24:45.233Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+#### Best Practices
+1. **Component Selection**: Always use components from `@/components/ui/` for UI elements
+2. **Form Creation**: Always use components from `@/components/forms/` for form fields
+3. **API Calls**: Always use `const { sdk } = useGymSdk()` for API operations
+4. **Loading States**: Always wrap async operations with `useLoadingScreen().execute()`
+5. **Type Safety**: Always import and use SDK types directly, never duplicate them
+6. **Styling**: Use tailwind classes with NativeWind, never inline styles
+7. **Navigation**: Use `router.push()` from expo-router for navigation
+8. **Validation**: Use Zod schemas with react-hook-form for form validation
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+#### Common Patterns
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "4e828574-0210-4e77-9030-509b6f0dd814", "statusCode": 401, "timestamp": "2025-09-19T00:24:45.835Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+**Screen Component Structure**:
+```typescript
+export default function ScreenName() {
+  const { sdk } = useGymSdk();
+  const { execute } = useLoadingScreen();
+  const router = useRouter();
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+  // Form setup with react-hook-form
+  const form = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "9dfbd012-63e5-4da5-9a3b-e043bc7186ad", "statusCode": 401, "timestamp": "2025-09-19T00:24:46.403Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+  // API operations wrapped in loading screen
+  const handleSubmit = form.handleSubmit(async (data) => {
+    await execute({
+      action: 'Creating...',
+      fn: async () => {
+        await sdk.resource.create(data);
+        router.push('/success');
+      },
+      successMessage: 'Created successfully',
+    });
+  });
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+  return (
+    <FormProvider {...form}>
+      {/* Screen content */}
+    </FormProvider>
+  );
+}
+```
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "67b959d7-cacb-41a3-bcce-9b7bde9c5b44", "statusCode": 401, "timestamp": "2025-09-19T00:24:46.965Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+**Form Field Pattern**:
+```typescript
+<FormInput
+  name="fieldName"
+  label="Field Label"
+  placeholder="Enter value"
+  keyboardType="default"
+/>
+```
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+#### Gluestack-UI Component Usage
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "048938c2-572f-4abc-bb7e-4c3add9ca3b4", "statusCode": 401, "timestamp": "2025-09-19T00:24:47.537Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+**Button Variants**:
+- `variant="solid"` - Primary actions
+- `variant="outline"` - Secondary actions
+- `variant="ghost"` - Tertiary actions
+- `variant="link"` - Text-only actions
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+**Modal Pattern**:
+```typescript
+<Modal isOpen={isOpen} onClose={onClose}>
+  <Modal.Backdrop />
+  <Modal.Content>
+    <Modal.Header>
+      <Text>Title</Text>
+      <Modal.CloseButton />
+    </Modal.Header>
+    <Modal.Body>
+      {/* Content */}
+    </Modal.Body>
+    <Modal.Footer>
+      <Button onPress={onClose}>Close</Button>
+    </Modal.Footer>
+  </Modal.Content>
+</Modal>
+```
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
- LOG  Making getCurrentSession request now...
- LOG  pass here to login {"segments": []}
- ERROR  HTTP Error: {"details": {"error": "Unauthorized", "message": "Invalid authentication token", "method": "GET", "path": "/api/v1/auth/current-session", "requestId": "240c83ff-2f98-42d3-91c9-b3d118501723", "statusCode": 401, "timestamp": "2025-09-19T00:24:48.100Z"}, "errorCode": undefined, "message": "Invalid authentication token", "method": "GET", "path": "auth/current-session", "resource": "unknown", "status": 401} 
+**ActionSheet Pattern**:
+```typescript
+<ActionSheet isOpen={isOpen} onClose={onClose}>
+  <ActionSheet.Backdrop />
+  <ActionSheet.Content>
+    <ActionSheet.DragIndicator />
+    <ActionSheet.Item onPress={handleAction}>
+      <ActionSheet.ItemText>Option</ActionSheet.ItemText>
+    </ActionSheet.Item>
+  </ActionSheet.Content>
+</ActionSheet>
+```
 
-Code: index.js
-  100 |     const errorData = data;
-  101 |     const resource = errorData?.resource || "unknown";
-> 102 |     console.error("HTTP Error:", {
-      |                  ^
-  103 |       method,
-  104 |       path: requestPath,
-  105 |       status,
-Call Stack
-  ApiClient#handleError (packages/sdk/dist/index.js:102:18)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- ERROR  Session fetch error: [AuthenticationError: Invalid authentication token] 
+#### Mobile-Specific Considerations
+1. **Keyboard Handling**: Use KeyboardAvoidingView for forms
+2. **Safe Areas**: Use SafeAreaView or useSafeAreaInsets
+3. **Gesture Handling**: Leverage react-native-gesture-handler
+4. **Performance**: Use FlashList for large lists
+5. **Accessibility**: Add proper accessibility props to all interactive elements
+6. **Platform Differences**: Handle iOS/Android differences when necessary
 
-Code: index.js
-  12 | var GymSpaceError = class extends Error {
-  13 |   constructor(message, statusCode, code, details) {
-> 14 |     super(message);
-     |     ^
-  15 |     this.statusCode = statusCode;
-  16 |     this.code = code;
-  17 |     this.details = details;
-Call Stack
-  GymSpaceError#constructor (packages/sdk/dist/index.js:14:5)
-  AuthenticationError#constructor (packages/sdk/dist/index.js:23:5)
-  ApiClient#handleError (packages/sdk/dist/index.js:113:39)
-  axiosInstance.interceptors.response.use$argument_1 (packages/sdk/dist/index.js:84:31)
-  ApiClient#setupInterceptors (packages/sdk/dist/index.js:85:8)
- LOG  Fetching current session with token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNGEzNDBiYi1mYzAyLTRkZjgtOTQ2OS1mYWI2OTFjMjJjM2IiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU4MjMwNzQ0LCJpYXQiOjE3NTgyMjcxNDQsImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiYWRtaW5AZ3ltc3BhY2UucGUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFkbWluaXN0cmFkb3IgUHJpbmNpcGFsIiwicGhvbmUiOiIrNTE5OTk4ODg3NzciLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6ImQ0YTM0MGJiLWZjMDItNGRmOC05NDY5LWZhYjY5MWMyMmMzYiIsInVzZXJUeXBlIjoib3duZXIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1ODIyNzE0NH1dLCJzZXNzaW9uX2lkIjoiNjVhNTM0MzctNmVlYS00NTZkLWI0NTgtNWNlZjMzZTA4Njk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.l11s6Kp4ytH4PGcyV64w90Vn2wmBt2PfIrvMTNFqrsk
- LOG  sessionQueryEnabled: true
- LOG  isLoading: false
- LOG  About to make SDK request...
-⠹ Stopping server LOG  Making getCurrentSession request now...
-› Stopped server
+### Agent Tools and Capabilities
+When this agent is active, it will:
+- Automatically use the correct UI components from the component library
+- Generate forms using the proper form components
+- Implement proper loading states and error handling
+- Follow established mobile app patterns and conventions
+- Ensure type safety with SDK types
+- Create responsive and accessible mobile interfaces

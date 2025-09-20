@@ -23,7 +23,8 @@ export default function PlansLayout() {
         name="[id]"
         options={{
           title: 'Detalles del Plan',
-          headerBackTitle: 'Atrás',
+          headerBackTitle: '',
+          headerLeft: () => <BackButton label="" />,
         }}
       />
       <Stack.Screen

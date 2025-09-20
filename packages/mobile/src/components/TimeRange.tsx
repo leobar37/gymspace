@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { Calendar, CalendarClock, CalendarDays, CalendarRange, X } from 'lucide-react-native';
 import React, { useEffect, useReducer, useRef } from 'react';
 import { Platform, Text, View } from 'react-native';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 
 type TimeRangeOption = 'day' | 'week' | 'month' | 'custom';
 
@@ -190,6 +190,8 @@ export function TimeRange({
 
   const handleOptionSelect = (option: TimeRangeOption) => {
     if (option === 'custom') {
+      console.log("custom option selected", customRangeSheetRef.current);
+      
       customRangeSheetRef.current?.present();
     } else {
       dispatch({ type: 'SELECT_OPTION', payload: option });
@@ -283,7 +285,7 @@ export function TimeRange({
         enablePanDownToClose
         backgroundStyle={{ backgroundColor: '#fff' }}
       >
-        <View className="p-4">
+        <BottomSheetView className="p-4">
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-lg font-bold text-gray-900">Rango personalizado</Text>
@@ -371,7 +373,7 @@ export function TimeRange({
               maximumDate={new Date()}
             />
           )}
-        </View>
+        </BottomSheetView>
       </BottomSheetModal>
     </>
   );

@@ -22,17 +22,6 @@ export function SheetsRenderer() {
     return unsubscribe as any;
   }, []);
 
-  console.log(
-    'render',
-    JSON.stringify(
-      {
-        keys: registeredSheets.map((d) => d.id),
-      },
-      null,
-      2,
-    ),
-  );
-
   return (
     <>
       {registeredSheets.map(({ id, Component }) => {
