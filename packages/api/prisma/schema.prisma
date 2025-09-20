@@ -881,6 +881,7 @@ model Sale {
     paymentStatus   PaymentStatus @default(unpaid) @map("payment_status")
     paymentMethodId String?       @map("payment_method_id")
     saleDate        DateTime      @default(now()) @map("sale_date")
+    paidAt          DateTime?     @map("paid_at") // Date when the sale was paid
     customerName    String?       @map("customer_name")
     notes           String?       @db.Text
     fileIds         String[]      @map("file_ids")

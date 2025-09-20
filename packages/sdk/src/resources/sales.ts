@@ -1,9 +1,10 @@
 import { BaseResource } from './base';
-import { 
+import {
   Sale,
-  CreateSaleDto, 
+  CreateSaleDto,
   UpdateSaleDto,
   UpdatePaymentStatusDto,
+  PaySaleDto,
   SearchSalesParams,
   SalesStats,
   TopSellingProduct,
@@ -43,6 +44,14 @@ export class SalesResource extends BaseResource {
     options?: RequestOptions
   ): Promise<Sale> {
     return this.client.put<Sale>(`${this.basePath}/${id}/payment-status`, { paymentStatus }, options);
+  }
+
+  async paySale(
+    id: string,
+    data: PaySaleDto,
+    options?: RequestOptions
+  ): Promise<Sale> {
+    return this.client.post<Sale>(`${this.basePath}/${id}/payment`, data, options);
   }
 
   async deleteSale(id: string, options?: RequestOptions): Promise<void> {

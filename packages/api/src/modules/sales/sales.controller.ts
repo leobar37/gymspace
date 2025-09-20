@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiSecurity } from '@nestjs/swagger';
 import { SalesService } from './sales.service';
-import { CreateSaleDto, UpdateSaleDto, SearchSalesDto, UpdatePaymentStatusDto } from './dto';
+import { CreateSaleDto, UpdateSaleDto, SearchSalesDto, UpdatePaymentStatusDto, PaySaleDto } from './dto';
 import { Allow, AppCtxt } from '../../common/decorators';
 import { RequestContext } from '../../common/services/request-context.service';
 import { PERMISSIONS } from '@gymspace/shared';
@@ -108,6 +108,20 @@ export class SalesController {
     @AppCtxt() ctx: RequestContext,
   ) {
     return await this.salesService.updatePaymentStatus(ctx, id, dto);
+  }
+
+  @Post(':id/payment')
+  @Allow(PERMISSIONS.SALES_UPDATE)
+  @ApiOperation({ summary: 'Process payment for a sale' })
+  @ApiResponse({ status: 200, description: 'Payment processed successfully' })
+  @ApiResponse({ status: 400, description: 'Sale is already paid' })
+  @ApiResponse({ status: 404, description: 'Sale not found' })
+  async paySale(
+    @Param('id') id: string,
+    @Body() dto: PaySaleDto,
+    @AppCtxt() ctx: RequestContext,
+  ) {
+    return await this.salesService.paySale(ctx, id, dto);
   }
 
   @Delete(':id')

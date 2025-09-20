@@ -635,6 +635,7 @@ Table sales {
   paymentStatus PaymentStatus [not null, default: 'unpaid']
   paymentMethodId String
   saleDate DateTime [default: `now()`, not null]
+  paidAt DateTime
   customerName String
   notes String
   fileIds String[] [not null]

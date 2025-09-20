@@ -73,7 +73,10 @@ const DateTimeSection: React.FC<{ sale: Sale }> = ({ sale }) => {
 };
 
 // Payment Status Section
-const PaymentStatusSection: React.FC<{ sale: Sale }> = ({ sale }) => {
+const PaymentStatusSection: React.FC<{ sale: Sale; onPaymentPress: () => void }> = ({
+  sale,
+  onPaymentPress
+}) => {
   const isPaid = sale.paymentStatus === 'paid';
 
   return (
@@ -90,8 +93,16 @@ const PaymentStatusSection: React.FC<{ sale: Sale }> = ({ sale }) => {
             {isPaid ? 'Pagado' : 'Pendiente'}
           </Text>
         </HStack>
-        {sale.paymentMethod && (
+        {isPaid && sale.paymentMethod && (
           <Text className="text-sm text-gray-600">{sale.paymentMethod?.name || 'Efectivo'}</Text>
+        )}
+        {!isPaid && (
+          <Pressable
+            onPress={onPaymentPress}
+            className="bg-green-600 rounded-lg p-2 active:bg-green-700"
+          >
+            <Icon as={CreditCardIcon} className="text-white" size="sm" />
+          </Pressable>
         )}
       </HStack>
     </View>
@@ -252,6 +263,19 @@ export default function SaleDetailScreen() {
     });
   }, [sale, execute, updateSale, refetch]);
 
+  const handlePayment = useCallback(() => {
+    if (!sale) return;
+
+    SheetManager.show('sale-payment', {
+      sale,
+      onSuccess: () => {
+        // Sheet is closed automatically after payment
+        // Just refresh the sale data
+        refetch();
+      }
+    });
+  }, [sale, refetch]);
+
   if (!id) {
     return (
       <ScreenForm title="Detalle de Venta">
@@ -264,7 +288,7 @@ export default function SaleDetailScreen() {
 
   if (isLoading) {
     return (
-      <ScreenForm title="Detalle de Venta">
+      <ScreenForm showBackButton={false}>
         <View className="flex-1 items-center justify-center">
           <Spinner size="large" />
           <Text className="text-gray-600 mt-4">Cargando venta...</Text>
@@ -294,8 +318,9 @@ export default function SaleDetailScreen() {
 
   return (
     <ScreenForm
-      title="Detalle de Venta"
+      showBackButton={false}
       showFixedFooter={true}
+      useSafeArea={false}
       footerContent={
         <View className="bg-blue-50 rounded-lg p-4">
           <HStack className="justify-between items-center">
@@ -317,7 +342,7 @@ export default function SaleDetailScreen() {
         <View className="h-px bg-gray-100" />
 
         {/* Payment Status */}
-        <PaymentStatusSection sale={sale} />
+        <PaymentStatusSection sale={sale} onPaymentPress={handlePayment} />
 
         {/* Divider */}
         <View className="h-px bg-gray-100" />

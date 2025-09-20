@@ -10,6 +10,7 @@ import { CheckInSheet } from '@/features/dashboard/components/CheckInSheet';
 import { StockAdjustmentModal } from '@/features/inventory/components/StockAdjustmentModal';
 import { StockMovementDetailSheet } from '@/features/inventory/components/StockMovementDetailSheet';
 import { StockMovementsSheet } from '@/features/inventory/components/StockMovementsSheet';
+import { SalePaymentSheet } from '@/features/sales/components/SalePaymentSheet';
 import { SheetManager } from '@gymspace/sheet';
 
 // Register the stock adjustment modal
@@ -47,6 +48,9 @@ SheetManager.register('client-selector', ClientSelectorSheet);
 
 // Register the check-in sheet
 SheetManager.register('check-in', CheckInSheet);
+
+// Register the sale payment sheet
+SheetManager.register('sale-payment', SalePaymentSheet);
 
 console.log(
   'load sheets',

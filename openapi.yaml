@@ -3503,6 +3503,34 @@ paths:
       security:
         - gym-id: []
         - bearer: []
+  /api/v1/sales/{id}/payment:
+    post:
+      operationId: SalesController_paySale
+      summary: Process payment for a sale
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaySaleDto'
+      responses:
+        '200':
+          description: Payment processed successfully
+        '400':
+          description: Sale is already paid
+        '404':
+          description: Sale not found
+      tags:
+        - Sales
+      security:
+        - gym-id: []
+        - bearer: []
   /api/v1/suppliers:
     post:
       operationId: SuppliersController_createSupplier
@@ -6162,6 +6190,27 @@ components:
           description: New payment status
       required:
         - paymentStatus
+    PaySaleDto:
+      type: object
+      properties:
+        paymentMethodId:
+          type: string
+          description: The payment method ID to use for this sale
+          example: uuid
+        notes:
+          type: string
+          description: Additional notes about the payment
+          example: Payment received via bank transfer
+        fileIds:
+          description: Array of file IDs for payment receipts or documents
+          example:
+            - file-uuid-1
+            - file-uuid-2
+          type: array
+          items:
+            type: string
+      required:
+        - paymentMethodId
     CreateSupplierDto:
       type: object
       properties:

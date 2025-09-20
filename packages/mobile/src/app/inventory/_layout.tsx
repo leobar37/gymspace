@@ -70,7 +70,7 @@ export default function InventoryLayout() {
       <Stack.Screen
         name="sales/[id]"
         options={{
-          headerShown: false,
+          title: 'Detalle de Venta',
           headerLeft: () => <BackButton label="" />,
         }}
       />

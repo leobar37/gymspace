@@ -52,6 +52,12 @@ export interface UpdatePaymentStatusDto {
   paymentStatus: 'paid' | 'unpaid';
 }
 
+export interface PaySaleDto {
+  paymentMethodId: string;
+  notes?: string;
+  fileIds?: string[];
+}
+
 export interface Sale {
   id: string;
   gymId: string;
