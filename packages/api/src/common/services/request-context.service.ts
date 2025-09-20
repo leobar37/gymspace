@@ -62,6 +62,13 @@ export class RequestContext implements IRequestContext {
   }
 
   /**
+   * Get user ID if available (for super admin operations that might not have a user)
+   */
+  getUserIdOptional(): UUID | undefined {
+    return this._user?.id;
+  }
+
+  /**
    * Initialize context from request
    */
   fromRequest(request: FastifyRequest): RequestContext {
@@ -97,6 +104,16 @@ export class RequestContext implements IRequestContext {
    */
   createEmpty(): RequestContext {
     // Used for system operations that don't have a user context
+    return this;
+  }
+
+  /**
+   * Create admin context for admin operations
+   */
+  createAdmin(user: IUser, permissions: Permission[]): RequestContext {
+    this._user = user;
+    this._permissions = permissions;
+    // Admin context doesn't have gym/organization specific context
     return this;
   }
 
