@@ -4,7 +4,6 @@ import { VStack } from '@/components/ui/vstack';
 import { ClientsListGeneric } from '@/features/clients/components/ClientsList.generic';
 import { useLoadingScreenStore } from '@/shared/loading-screen';
 import type { Client } from '@gymspace/sdk';
-import { SheetManager } from '@gymspace/sheet';
 import React from 'react';
 import { View } from 'react-native';
 
@@ -74,10 +73,6 @@ export const ClientListScreen: React.FC = () => {
     } catch (error) {
       console.log('Error navigating to registration screen:', error);
     }
-  };
-
-  const handleClose = () => {
-    SheetManager.hide('check-in');
   };
 
   return (
