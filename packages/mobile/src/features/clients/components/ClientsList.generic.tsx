@@ -12,7 +12,7 @@ import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import type { Client } from '@gymspace/sdk';
 import { UserPlusIcon, UsersIcon } from 'lucide-react-native';
 import React, { useMemo } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
 import { useClientsController } from '../controllers/clients.controller';
 
 export interface ClientsListProps {
@@ -231,9 +231,42 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
   // Render for sheet mode (BottomSheetScrollView)
   if (isSheet) {
     return (
-      <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
-        {displayClients.map(renderItem)}
-      </BottomSheetScrollView>
+      <View className="flex-1">
+        {/* Fixed Search Bar */}
+        <VStack className="bg-white border-b border-gray-200 px-4 pb-3 pt-2">
+          <InputSearch
+            value={searchInput}
+            onChangeText={setSearchInput}
+            placeholder={searchPlaceholder}
+            onClear={clearSearch}
+            isSheet={isSheet}
+          />
+        </VStack>
+
+        {/* Add New Client Button */}
+        {showAddButton && onAddClient && (
+          <Pressable onPress={onAddClient} className="px-4 py-3 bg-white border-b border-gray-100">
+            <HStack className="items-center gap-3">
+              <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center">
+                <Icon as={UserPlusIcon} className="text-blue-600" size="sm" />
+              </View>
+              <Text className="text-blue-600 font-medium">Agregar nuevo cliente</Text>
+            </HStack>
+          </Pressable>
+        )}
+
+        {/* Scrollable Content */}
+        <BottomSheetScrollView 
+          contentContainerClassName="flex-grow px-4 pt-2 pb-4"
+          showsVerticalScrollIndicator={false}
+        >
+          {displayClients.length > 0 ? (
+            displayClients.map(renderItem)
+          ) : (
+            renderEmptyState()
+          )}
+        </BottomSheetScrollView>
+      </View>
     );
   }
 
@@ -277,15 +310,8 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
           ) : undefined
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 8 }}
+        contentContainerClassName="pt-2"
       />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  contentContainer: {
-    flexGrow: 1,
-    padding: 16,
-  },
-});
