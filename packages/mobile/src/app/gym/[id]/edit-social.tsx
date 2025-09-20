@@ -15,11 +15,13 @@ import { WhatsAppIcon, InstagramIcon, FacebookIcon } from '@/components/icons';
 
 const gymSocialMediaSchema = z.object({
   facebook: z.string().url('URL de Facebook inválida').optional().or(z.literal('')),
-  instagram: z.string()
+  instagram: z
+    .string()
     .regex(/^@?[a-zA-Z0-9._]+$/, 'Usuario de Instagram inválido')
     .optional()
     .or(z.literal('')),
-  whatsapp: z.string()
+  whatsapp: z
+    .string()
     .regex(/^\+?[1-9]\d{1,14}$/, 'Número de WhatsApp inválido')
     .optional()
     .or(z.literal('')),
@@ -88,7 +90,8 @@ export default function EditGymSocialMediaScreen() {
       <ScrollView className="flex-1 bg-white">
         <View className="p-4 space-y-4">
           <Text className="text-sm text-gray-600 mb-2">
-            Agregue las redes sociales de su gimnasio para que los clientes puedan encontrarlo fácilmente.
+            Agregue las redes sociales de su gimnasio para que los clientes puedan encontrarlo
+            fácilmente.
           </Text>
 
           <View className="space-y-4">
@@ -98,6 +101,7 @@ export default function EditGymSocialMediaScreen() {
                 <Text className="text-sm font-medium text-gray-900 ml-2">Facebook</Text>
               </View>
               <FormInput
+                label=""
                 name="facebook"
                 placeholder="https://facebook.com/migym"
                 autoCapitalize="none"
@@ -113,11 +117,7 @@ export default function EditGymSocialMediaScreen() {
                 <InstagramIcon size={18} color="#E4405F" />
                 <Text className="text-sm font-medium text-gray-900 ml-2">Instagram</Text>
               </View>
-              <FormInput
-                name="instagram"
-                placeholder="@migym"
-                autoCapitalize="none"
-              />
+              <FormInput label="" name="instagram" placeholder="@migym" autoCapitalize="none" />
               <Text className="text-xs text-gray-500 mt-1">
                 Ingrese su nombre de usuario de Instagram (con o sin @)
               </Text>
@@ -129,6 +129,7 @@ export default function EditGymSocialMediaScreen() {
                 <Text className="text-sm font-medium text-gray-900 ml-2">WhatsApp</Text>
               </View>
               <FormInput
+                label=""
                 name="whatsapp"
                 placeholder="+1234567890"
                 keyboardType="phone-pad"

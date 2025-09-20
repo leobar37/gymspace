@@ -16,6 +16,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Alert, AlertIcon, AlertText } from '@/components/ui/alert';
+import { Fab, FabIcon } from '@/components/ui/fab';
 import { ContractsSearchAndFilters } from './ContractsSearchAndFilters';
 
 import { ChevronLeftIcon, FileTextIcon, PlusIcon, InfoIcon } from 'lucide-react-native';
@@ -341,19 +342,16 @@ function ContractsListComponent() {
           removeClippedSubviews={true}
         />
 
-        <View className="absolute bottom-6 right-4">
-          <Pressable
+        {/* Floating Action Button */}
+        {contracts.length > 0 && (
+          <Fab
+            size="lg"
+            placement="bottom right"
             onPress={() => navigateWithinFeature('/contracts/create')}
-            className="bg-blue-600 rounded-full shadow-2xl active:bg-blue-700"
           >
-            {contracts.length > 0 ? (
-              // Compact FAB when there are contracts
-              <View className="w-14 h-14 items-center justify-center">
-                <Icon as={PlusIcon} className="text-white w-7 h-7" />
-              </View>
-            ) : null}
-          </Pressable>
-        </View>
+            <FabIcon as={PlusIcon} />
+          </Fab>
+        )}
       </VStack>
     </SafeAreaView>
   );
