@@ -7,7 +7,7 @@ import {
   RefreshControl,
   StyleSheet,
 } from 'react-native';
-import { FlatList } from '@gymspace/sheet';
+import { BottomSheetFlatList } from '@gymspace/sheet';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -491,7 +491,7 @@ export const AssetListRoute: React.FC<AssetListRouteProps> = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
+      <BottomSheetFlatList
         data={sortedAssets}
         renderItem={renderAssetItem}
         keyExtractor={keyExtractor}
