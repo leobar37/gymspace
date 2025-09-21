@@ -9,11 +9,10 @@ import { useGymSdk } from '@/providers/GymSdkProvider';
 import { ClientCard } from '@/shared/components/ClientCard';
 import { InputSearch } from '@/shared/input-search';
 import { useLoadingScreenStore } from '@/shared/loading-screen';
-import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import type { Client } from '@gymspace/sdk';
 import { CalendarIcon, UsersIcon } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { View } from 'react-native';
 import { useClientsController } from '../../clients/controllers/clients.controller';
 import { CheckInClientsTabs } from './CheckInClientsTabs';
 import dayjs from 'dayjs';
@@ -200,8 +199,8 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({ onClient
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <VStack className="px-6 py-4 border-b border-gray-200">
+    <>
+      <VStack className="px-6 py-4 border-b border-gray-200 bg-white">
         <VStack className="mb-4">
           <Text className="text-xl font-bold text-gray-900">Check-In de Clientes</Text>
           <HStack className="items-center gap-2 mt-1">
@@ -221,24 +220,28 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({ onClient
           value={currentSearch.searchInput}
           onChangeText={currentSearch.setSearchInput}
           placeholder={currentSearch.searchPlaceholder}
-          onClear={currentSearch.clearSearch}
+          onClear={()=>{
+            console.log('clear');
+            
+            currentSearch.clearSearch();
+          }}
           isSheet={true}
         />
       </VStack>
 
-      <BottomSheetFlatList
-        data={currentClients}
-        keyExtractor={(item: any) => item.id + Math.random().toString(36).substring(7)}
-        renderItem={({ item }) => renderClientItem(item)}
-        ListEmptyComponent={renderEmptyState}
+      <BottomSheetScrollView
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 8,
+          paddingBottom: 50,
           flexGrow: currentClients.length === 0 ? 1 : undefined,
         }}
         showsVerticalScrollIndicator={false}
-      />
-      <View className="h-[50px]" />
-    </View>
+      >
+        {currentClients.length > 0
+          ? currentClients.map((client) => renderClientItem(client))
+          : renderEmptyState()}
+      </BottomSheetScrollView>
+    </>
   );
 };

@@ -189,7 +189,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
     // Update social media
     const socialMedia = {
-      facebook: 'https://facebook.com/gimnasioelitelima',
+      facebook: 'gimnasioelitelima',
       instagram: '@gimnasioelitelima',
       whatsapp: '+51999888777',
     };
@@ -383,7 +383,6 @@ export class SetupDefaultUserCommand extends CommandRunner {
 
   private async createDefaultClients(): Promise<void> {
     console.log('\n👥 Creating default clients...');
-
     const defaultClients = [
       {
         name: 'Carlos Rodriguez',
@@ -435,6 +434,106 @@ export class SetupDefaultUserCommand extends CommandRunner {
         address: 'Calle Las Palmeras 654, San Borja',
         notes: 'Contacto de emergencia: Carmen Vargas - +51987654330',
       },
+      {
+        name: 'Patricia Fernández',
+        email: 'patricia.fernandez@example.com',
+        phone: '+51987654331',
+        documentType: 'dni',
+        documentValue: '56789012',
+        birthDate: '1993-07-22',
+        address: 'Av. Primavera 890, Surco',
+        notes: 'Contacto de emergencia: Miguel Fernández - +51987654332. Alergia al látex.',
+      },
+      {
+        name: 'Jorge Ramírez',
+        email: 'jorge.ramirez@example.com',
+        phone: '+51987654333',
+        documentType: 'dni',
+        documentValue: '67890123',
+        birthDate: '1987-02-14',
+        address: 'Jr. Los Cedros 234, La Molina',
+        notes: 'Contacto de emergencia: Rosa Ramírez - +51987654334. Lesión previa en rodilla izquierda.',
+      },
+      {
+        name: 'Lucía Gutiérrez',
+        email: 'lucia.gutierrez@example.com',
+        phone: '+51987654335',
+        documentType: 'dni',
+        documentValue: '78901234',
+        birthDate: '1998-09-30',
+        address: 'Calle Las Orquídeas 567, San Miguel',
+        notes: 'Contacto de emergencia: Alberto Gutiérrez - +51987654336. Estudiante universitaria.',
+      },
+      {
+        name: 'Diego Castillo',
+        email: 'diego.castillo@example.com',
+        phone: '+51987654337',
+        documentType: 'dni',
+        documentValue: '89012345',
+        birthDate: '1991-04-05',
+        address: 'Av. Colonial 432, Pueblo Libre',
+        notes: 'Contacto de emergencia: Sandra Castillo - +51987654338. Entrenamiento para maratón.',
+      },
+      {
+        name: 'Valentina Morales',
+        email: 'valentina.morales@example.com',
+        phone: '+51987654339',
+        documentType: 'dni',
+        documentValue: '90123456',
+        birthDate: '1996-11-28',
+        address: 'Jr. Los Jazmines 876, Magdalena',
+        notes: 'Contacto de emergencia: Eduardo Morales - +51987654340. Prefiere clases grupales.',
+      },
+      {
+        name: 'Alejandro Silva',
+        email: 'alejandro.silva@example.com',
+        phone: '+51987654341',
+        documentType: 'dni',
+        documentValue: '01234567',
+        birthDate: '1982-06-17',
+        address: 'Calle Los Pinos 321, Jesus María',
+        notes: 'Contacto de emergencia: Laura Silva - +51987654342. Diabético tipo 2, requiere monitoreo.',
+      },
+      {
+        name: 'Camila Herrera',
+        email: 'camila.herrera@example.com',
+        phone: '+51987654343',
+        documentType: 'dni',
+        documentValue: '12345679',
+        birthDate: '2000-01-12',
+        address: 'Av. Brasil 765, Breña',
+        notes: 'Contacto de emergencia: Fernando Herrera - +51987654344. Primera vez en gimnasio.',
+      },
+      {
+        name: 'Andrés López',
+        email: 'andres.lopez@example.com',
+        phone: '+51987654345',
+        documentType: 'dni',
+        documentValue: '23456780',
+        birthDate: '1989-10-03',
+        address: 'Av. Universitaria 543, San Miguel',
+        notes: 'Contacto de emergencia: Isabel López - +51987654346. Experiencia en crossfit.',
+      },
+      {
+        name: 'Sofía Navarro',
+        email: 'sofia.navarro@example.com',
+        phone: '+51987654347',
+        documentType: 'dni',
+        documentValue: '34567891',
+        birthDate: '1994-12-25',
+        address: 'Calle Los Álamos 234, Lince',
+        notes: 'Contacto de emergencia: Ricardo Navarro - +51987654348. Embarazo de 4 meses, requiere rutina especial.',
+      },
+      {
+        name: 'Gabriel Jiménez',
+        email: 'gabriel.jimenez@example.com',
+        phone: '+51987654349',
+        documentType: 'dni',
+        documentValue: '45678902',
+        birthDate: '1997-08-07',
+        address: 'Jr. Las Rosas 678, Surquillo',
+        notes: 'Contacto de emergencia: Teresa Jiménez - +51987654350. Jugador de fútbol amateur.',
+      },
     ];
 
     for (const client of defaultClients) {
@@ -466,7 +565,7 @@ export class SetupDefaultUserCommand extends CommandRunner {
     console.log('💪 Membership Plans Created: 3');
     console.log('📦 Products Created: 5');
     console.log('🛎️ Services Created: 6');
-    console.log('👥 Clients Created: 5');
+    console.log('👥 Clients Created: 15');
     console.log('========================================\n');
 
     console.log('ℹ️  You can now log in with these credentials and start using the system.');

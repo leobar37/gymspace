@@ -18,33 +18,6 @@ export const saleKeys = {
   today: () => [...saleKeys.all, 'today'] as const,
 };
 
-export interface UseSalesOptions extends SearchSalesParams {
-  enabled?: boolean;
-  staleTime?: number;
-  gcTime?: number;
-}
-
-export function useSales(options: UseSalesOptions = {}) {
-  const { sdk } = useGymSdk();
-  const {
-    enabled = true,
-    staleTime = 2 * 60 * 1000, // 2 minutes for sales data
-    gcTime = 10 * 60 * 1000, // 10 minutes
-    ...searchParams
-  } = options;
-
-  return useQuery({
-    queryKey: saleKeys.list(searchParams),
-    queryFn: async (): Promise<TransformedPaginatedResponse<Sale>> => {
-      const response = await sdk.sales.searchSales(searchParams);
-      return transformPaginatedResponse(response);
-    },
-    enabled,
-    staleTime,
-    gcTime,
-  });
-}
-
 export function useSale(id: string, options: { enabled?: boolean } = {}) {
   const { sdk } = useGymSdk();
   const { enabled = true } = options;

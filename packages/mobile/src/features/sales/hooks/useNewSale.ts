@@ -73,14 +73,15 @@ export const useNewSale = () => {
       Alert.alert('Carrito vacío', 'Agrega items al carrito antes de completar la venta.');
       throw new Error('Cart is empty');
     }
-    
     setProcessing(true);
-    setError(null);
-    
+    setError(null);  
     try {
       // Get form values
       const formValues = getValues();
       
+      console.log("formValues:", JSON.stringify(formValues, null, 2));
+      
+
       // Build sale data
       const saleItems: SaleItemDto[] = items.map(item => ({
         productId: item.product.id,
@@ -90,14 +91,16 @@ export const useNewSale = () => {
       
       const saleData: CreateSaleDto = {
         items: saleItems,
-        customerId: formValues.client?.id,
+        customerId: formValues.client as any as string,
         customerName: formValues.customerName || undefined,
         notes: formValues.notes || undefined,
         paymentStatus: formValues.paymentStatus,
         paymentMethodId: formValues.paymentMethodId || undefined,
         fileIds: formValues.fileIds.filter((id): id is string => Boolean(id)),
       };
-      
+
+      console.log("Creating sale with data:", JSON.stringify(saleData, null, 2));
+
       // Execute sale
       const result = await context.createSaleMutation.mutateAsync(saleData);
       
@@ -166,7 +169,6 @@ export const useNewSale = () => {
     lastSelectedProductId,
     setLastSelectedProduct,
     
-    // Composite actions
     completeSale,
     resetSale,
   };

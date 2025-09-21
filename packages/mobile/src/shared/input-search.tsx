@@ -22,6 +22,8 @@ export const InputSearch: React.FC<InputSearchProps> = ({
   isSheet = false,
 }) => {
   const handleClear = () => {
+    console.log('clear 2');
+
     onChangeText('');
     onClear?.();
   };
@@ -29,11 +31,7 @@ export const InputSearch: React.FC<InputSearchProps> = ({
   if (isSheet) {
     return (
       <View style={styles.container}>
-        <Icon
-          as={SearchIcon}
-          style={styles.searchIcon}
-          className="w-5 h-5 text-gray-400"
-        />
+        <Icon as={SearchIcon} style={styles.searchIcon} className="w-5 h-5 text-gray-400" />
         <BottomSheetTextInput
           style={styles.sheetInput}
           placeholder={placeholder}
@@ -46,9 +44,10 @@ export const InputSearch: React.FC<InputSearchProps> = ({
         />
         {value.length > 0 && (
           <Pressable
-            onPress={handleClear}
-            style={styles.clearButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            onPress={() => {
+              handleClear();
+            }}
+            className="absolute right-3 z-50 p-1 border border-red-400"
           >
             <Icon as={XIcon} className="w-5 h-5 text-gray-400" />
           </Pressable>
@@ -76,7 +75,7 @@ export const InputSearch: React.FC<InputSearchProps> = ({
         {value.length > 0 && (
           <Pressable
             onPress={handleClear}
-            className="absolute right-3 top-3 z-10"
+            style={styles.clearButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Icon as={XIcon} className="w-5 h-5 text-gray-400" />
@@ -89,17 +88,18 @@ export const InputSearch: React.FC<InputSearchProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
     backgroundColor: '#F9FAFB',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 12,
   },
   sheetInput: {
     flex: 1,
-    paddingHorizontal: 40,
+    paddingLeft: 28,
+    paddingRight: 28,
     paddingVertical: 12,
     fontSize: 16,
     color: '#1F2937',
@@ -107,12 +107,12 @@ const styles = StyleSheet.create({
   searchIcon: {
     position: 'absolute',
     left: 12,
-    zIndex: 10,
-    pointerEvents: 'none',
+    zIndex: 1,
   },
   clearButton: {
     position: 'absolute',
     right: 12,
-    zIndex: 10,
+    zIndex: 1000,
+    padding: 4,
   },
 });

@@ -63,7 +63,7 @@ export default function LoginScreen() {
   const methods = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: __DEV__ ? 'usatloqueando@gmail.com' : '',
+      email: __DEV__ ? 'admin@gymspace.pe' : '',
       password: __DEV__ ? '182@Alfk3458' : '',
     },
   });

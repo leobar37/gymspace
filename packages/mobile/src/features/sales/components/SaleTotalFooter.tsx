@@ -23,57 +23,26 @@ export const SaleTotalFooter: React.FC = () => {
     await execute(completeSale(), {
       action: 'Procesando venta...',
       successMessage: `Venta por ${formatPrice(total)} completada exitosamente`,
-      successActions: [
-        {
-          label: 'Nueva venta',
-          onPress: () => {
-            resetSale();
-          },
-          variant: 'solid',
-        },
-        {
-          label: 'Volver al inicio',
-          onPress: () => {
-            resetSale();
-            router.push('/(app)/(tabs)/sales-history');
-          },
-          variant: 'outline',
-        },
-      ],
+      onSuccess: () => {
+        resetSale();
+        router.push('/(app)/(tabs)/sales-history');
+      },
       errorFormatter: (error) => {
         if (error instanceof Error) {
           return `Error al procesar la venta: ${error.message}`;
         }
         return 'No se pudo completar la venta. Por favor intenta nuevamente.';
       },
-      errorActions: [
-        {
-          label: 'Reintentar',
-          onPress: () => {
-            // The user can retry from the same screen
-          },
-          variant: 'solid',
-        },
-        {
-          label: 'Cancelar',
-          onPress: () => {
-            // No action needed, just close the modal
-          },
-          variant: 'outline',
-        },
-      ],
-      hideOnSuccess: false,
+      hideOnSuccess: true,
     });
   };
 
   return (
-    <VStack space="sm">
+    <VStack space="sm" className="pb-5">
       {/* Total Display */}
       <HStack className="justify-between items-center p-4 bg-gray-50 rounded-lg">
         <Text className="text-lg font-medium text-gray-700">Total</Text>
-        <Text className="text-2xl font-bold text-gray-900">
-          {formatPrice(total)}
-        </Text>
+        <Text className="text-2xl font-bold text-gray-900">{formatPrice(total)}</Text>
       </HStack>
 
       {/* Action Buttons */}

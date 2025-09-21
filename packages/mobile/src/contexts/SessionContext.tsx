@@ -166,16 +166,18 @@ export function SessionProvider({ children }: SessionProviderProps) {
     }
   }, [queryClient, sdk]);
 
-  // Session query - source of truth for session data
   const sessionQuery = useQuery({
     queryKey: sessionKeys.current(),
     queryFn: async (): Promise<CurrentSessionResponse> => {
-      // Initialize from storage only on first run
       if (!initializedRef.current) {
         initializedRef.current = true;
 
         try {
-          const { accessToken: storedToken, refreshToken: storedRefreshToken, gymId: storedGymId } = await storage.getTokens();
+          const {
+            accessToken: storedToken,
+            refreshToken: storedRefreshToken,
+            gymId: storedGymId,
+          } = await storage.getTokens();
 
           if (storedToken) {
             // Set token in SDK - SDK is the source of truth
@@ -231,7 +233,6 @@ export function SessionProvider({ children }: SessionProviderProps) {
   // Handle session data updates - this is where we update state from SDK response
   useEffect(() => {
     if (sessionQuery.data) {
-      // Set accessToken from session response
       if (sessionQuery.data.accessToken) {
         setAccessToken(sessionQuery.data.accessToken);
       }
@@ -270,7 +271,6 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const currentSession = sessionQuery.data || null;
 
   const value: SessionContextValue = {
-    // Auth state
     accessToken,
     currentGymId,
     isAuthenticated,
@@ -288,7 +288,6 @@ export function SessionProvider({ children }: SessionProviderProps) {
     isSessionError: sessionQuery.isError,
     sessionError: sessionQuery.error || null,
 
-    // Actions
     storeTokens,
     setCurrentGymId,
     clearAuth,

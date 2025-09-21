@@ -1,12 +1,12 @@
-import React, { createContext, useContext } from 'react';
-import { useForm, FormProvider, UseFormReturn } from 'react-hook-form';
 import { useProducts, useServices } from '@/features/products/hooks';
+import type { Product } from '@gymspace/sdk';
+import React, { createContext, useContext } from 'react';
+import { FormProvider, useForm, UseFormReturn } from 'react-hook-form';
 import { useCreateSale } from '../hooks/useSales';
-import type { Product, Client } from '@gymspace/sdk';
 import type { PaymentStatus } from '../types';
 
 export interface SaleDetailsFormData {
-  client?: Client;
+  client?: string;
   customerName?: string;
   notes?: string;
   fileIds: string[];
@@ -23,7 +23,7 @@ interface NewSaleContextValue {
 
   // API mutations
   createSaleMutation: ReturnType<typeof useCreateSale>;
-  
+
   // Form methods
   formMethods: UseFormReturn<SaleDetailsFormData>;
 }
@@ -82,9 +82,7 @@ export const NewSaleProvider: React.FC<NewSaleProviderProps> = ({ children }) =>
 
   return (
     <NewSaleContext.Provider value={value}>
-      <FormProvider {...formMethods}>
-        {children}
-      </FormProvider>
+      <FormProvider {...formMethods}>{children}</FormProvider>
     </NewSaleContext.Provider>
   );
 };

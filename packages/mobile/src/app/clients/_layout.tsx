@@ -6,13 +6,6 @@ export default function ClientsLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: '#ffffff',
-        },
-        headerTitleStyle: {
-          fontSize: 18,
-          fontWeight: '600',
-        },
         headerTintColor: '#374151',
         animation: 'slide_from_right',
         headerBackTitle: ' ',
@@ -27,6 +20,7 @@ export default function ClientsLayout() {
       <Stack.Screen
         name="create"
         options={{
+          headerShown: true,
           title: 'Nuevo Cliente',
           headerLeft: () => <BackButton />,
         }}

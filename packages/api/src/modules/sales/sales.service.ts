@@ -33,22 +33,18 @@ export class SalesService {
     const gymId = context.getGymId()!;
     const userId = context.getUserId();
 
-    // Validate payment method if provided
     await this.saleValidationService.validatePaymentMethod(
       context,
       dto.paymentMethodId,
     );
 
-    // Validate all products and stock
     const products = await this.saleValidationService.validateSaleItems(
       context,
       dto.items,
     );
 
-    // Generate unique sale number
     const saleNumber = await this.saleNumberService.generateSaleNumber(context);
 
-    // Calculate total
     const total = dto.items.reduce(
       (sum, item) => sum + item.quantity * item.unitPrice,
       0,

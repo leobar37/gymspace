@@ -91,13 +91,6 @@ export class OnboardingService {
       throw new ResourceNotFoundException('Subscription');
     }
 
-    // Ensure it's a free plan (for now only free plans are allowed)
-    const isFreePlan = this.isFreePlan(subscriptionPlan.price);
-    if (!isFreePlan) {
-      throw new ValidationException([
-        { field: 'subscriptionPlanId', message: 'Only free plans are allowed at this time' },
-      ]);
-    }
     const verificationCode = this.emailService.generateVerificationCode();
     try {
       // Create everything in a transaction
@@ -164,7 +157,6 @@ export class OnboardingService {
           },
         });
 
-        // Create subscription organization link
         await tx.subscriptionOrganization.create({
           data: {
             organizationId: organization.id,
@@ -177,12 +169,11 @@ export class OnboardingService {
           },
         });
 
-        // Create initial gym with minimal data
         const gym = await tx.gym.create({
           data: {
             organizationId: organization.id,
-            name: `${dto.organizationName} - Main Location`,
-            slug: this.generateSlug(`${dto.organizationName}-main`),
+            name: `${dto.organizationName}`,
+            slug: this.generateSlug(`${dto.organizationName}`),
             gymCode: this.generateGymCode(),
             settings: {
               setupCompleted: false,
@@ -192,7 +183,6 @@ export class OnboardingService {
           },
         });
 
-        // Create default payment methods for Peru organizations
         if (dto.country === 'PE') {
           await this.createDefaultPaymentMethods(tx, organization.id, user.id);
         }

@@ -32,7 +32,7 @@ export const CheckInSheet: React.FC = () => {
       sheetId="check-in"
       snapPoints={['75%', '90%']}
       enablePanDownToClose
-      scrollable={false}
+      scrollable={true}
     >
       <Component />
     </BottomSheetWrapper>

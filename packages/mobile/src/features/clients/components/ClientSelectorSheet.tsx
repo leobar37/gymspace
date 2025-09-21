@@ -100,6 +100,8 @@ const ClientListScreen: React.FC = () => {
     router.navigate('create');
   }, [router]);
 
+  console.log("payload in list screen", payload);
+  
   return (
     <>
       <NavigationHeader

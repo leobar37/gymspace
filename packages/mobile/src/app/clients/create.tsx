@@ -1,16 +1,6 @@
-import React from 'react';
-import { Stack } from 'expo-router';
 import { CreateClientForm } from '@/features/clients/components/CreateClientForm';
+import React from 'react';
 
 export default function CreateClientScreen() {
-  return (
-    <>
-      <Stack.Screen 
-        options={{ 
-          headerShown: false,
-        }} 
-      />
-      <CreateClientForm />
-    </>
-  );
+  return <CreateClientForm />;
 }

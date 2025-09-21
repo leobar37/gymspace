@@ -9,8 +9,6 @@ import {
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
 import { Heading } from '@/components/ui/heading';
-import { HStack } from '@/components/ui/hstack';
-import { Icon } from '@/components/ui/icon';
 import { VStack } from '@/components/ui/vstack';
 import { useDocumentTypes, useDocumentValidator } from '@/config/ConfigContext';
 import { FileSelector } from '@/features/files/components/FileSelector';
@@ -18,9 +16,8 @@ import { ScreenForm } from '@/shared/components/ScreenForm';
 import { useLoadingScreen } from '@/shared/loading-screen/useLoadingScreen';
 import type { Client, CreateClientDto } from '@gymspace/sdk';
 import { router } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import React from 'react';
-import { KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import { z } from 'zod';
 import { useClientsController, type ClientFormData } from '../controllers/clients.controller';
 
@@ -251,16 +248,13 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <FormProvider {...methods}>
-        <ScreenForm showBackButton={false} showFixedFooter={true} footerContent={actions}>
+        <ScreenForm
+          showBackButton={false}
+          showFixedFooter={true}
+          useSafeArea={false}
+          footerContent={actions}
+        >
           <VStack className="gap-6">
-            <HStack className="items-center gap-2 mb-2">
-              <Pressable onPress={() => router.back()} className="p-2 -ml-2">
-                <Icon as={ChevronLeft} className="text-gray-600" size="xl" />
-              </Pressable>
-              <Heading className="text-2xl font-bold text-gray-900">
-                {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
-              </Heading>
-            </HStack>
             <VStack className="gap-4">
               <Heading className="text-xl font-bold text-gray-900">Información Personal</Heading>
               <FormInput

@@ -26,7 +26,7 @@ export default function NewSaleLayout() {
             options={{
               title: 'Seleccionar Productos',
               headerBackVisible: false,
-              presentation: 'modal',
+              animation: 'simple_push',
               headerLeft: () => <BackButton />,
             }}
           />
