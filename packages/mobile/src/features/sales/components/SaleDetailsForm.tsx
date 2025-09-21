@@ -1,4 +1,5 @@
 import React from 'react';
+import { useWatch } from 'react-hook-form';
 import { VStack } from '@/components/ui/vstack';
 import { ClientSelector } from '@/features/clients/components/ClientSelector';
 import { FileSelector } from '@/features/files/components/FileSelector';
@@ -7,6 +8,9 @@ import { FormTextarea } from '@/components/forms/FormTextarea';
 import { PaymentStatusField } from '@/components/forms/PaymentStatusField';
 
 export const SaleDetailsForm: React.FC = () => {
+  const paymentStatus = useWatch({ name: 'paymentStatus' });
+  const isPaymentPending = paymentStatus === 'unpaid';
+
   return (
     <VStack space="md">
       {/* Client Selector */}
@@ -32,21 +36,25 @@ export const SaleDetailsForm: React.FC = () => {
       />
 
       {/* Payment Method Selector */}
-      <PaymentMethodSelectorField
-        name="paymentMethodId"
-        label="Método de Pago"
-        placeholder="Seleccionar método de pago"
-        description="Seleccione el método de pago utilizado para esta venta"
-        allowClear={true}
-        enabledOnly={true}
-      />
+      {!isPaymentPending && (
+        <PaymentMethodSelectorField
+          name="paymentMethodId"
+          label="Método de Pago"
+          placeholder="Seleccionar método de pago"
+          description="Seleccione el método de pago utilizado para esta venta"
+          allowClear={true}
+          enabledOnly={true}
+        />
+      )}
 
       {/* File Attachments */}
-      <FileSelector 
-        name="fileIds" 
-        multi={true} 
-        label="Archivos adjuntos (opcional)"
-      />
+      {!isPaymentPending && (
+        <FileSelector 
+          name="fileIds" 
+          multi={true} 
+          label="Archivos adjuntos (opcional)"
+        />
+      )}
     </VStack>
   );
 };
