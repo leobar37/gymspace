@@ -78,6 +78,12 @@ export interface Client {
     evaluations: number;
     checkIns: number;
   };
+  hasCheckedInToday?: boolean;
+  lastCheckIn?: {
+    id: string;
+    timestamp: string;
+    createdAt: string;
+  };
 }
 
 export interface ClientStat {
@@ -124,6 +130,8 @@ export interface SearchClientsParams extends PaginationQueryDto {
   clientNumber?: string;
   documentId?: string;
   includeContractStatus?: boolean;
+  notCheckedInToday?: boolean;
+  checkedInToday?: boolean;
 }
 
 export interface ClientSearchForCheckInResponse {
