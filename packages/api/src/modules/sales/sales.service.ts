@@ -50,6 +50,15 @@ export class SalesService {
       0,
     );
 
+    let customerName = dto.customerName;
+    if (dto.customerId) {
+      const customer = await this.saleValidationService.validateCustomer(
+        context,
+        dto.customerId,
+      );
+      customerName = customer.name;
+    }
+
     // Create sale in transaction
     return await this.prisma.$transaction(async (tx) => {
       // Create the sale
@@ -59,7 +68,7 @@ export class SalesService {
           customerId: dto.customerId,
           saleNumber,
           total,
-          customerName: dto.customerName,
+          customerName,
           notes: dto.notes,
           fileIds: dto.fileIds || [],
           paymentStatus: dto.paymentStatus ?? PaymentStatus.unpaid,
