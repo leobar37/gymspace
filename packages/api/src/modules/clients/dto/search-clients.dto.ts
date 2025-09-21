@@ -67,4 +67,24 @@ export class SearchClientsDto extends PartialType(PaginationQueryDto) {
   @IsBoolean()
   @Transform(({ value }) => value === 'true' || value === true)
   includeContractStatus?: boolean;
+
+  @ApiProperty({
+    example: true,
+    required: false,
+    description: 'Filter clients who have NOT checked in today (timezone-aware)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  notCheckedInToday?: boolean;
+
+  @ApiProperty({
+    example: true,
+    required: false,
+    description: 'Filter clients who HAVE checked in today (timezone-aware)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  checkedInToday?: boolean;
 }

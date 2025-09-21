@@ -9,6 +9,7 @@ import { Prisma } from '@prisma/client';
 import { RequestContext } from '../../common/services/request-context.service';
 import { IRequestContext } from '@gymspace/shared';
 import { ClientStatsService } from './helpers/client-stats.service';
+import { TimezoneUtil } from '../../common/utils/timezone.util';
 
 @Injectable()
 export class ClientsService {
@@ -251,6 +252,9 @@ export class ClientsService {
       throw new ResourceNotFoundException('Gym', gymId);
     }
 
+    // Get gym timezone for check-in filtering
+    const gymTimezone = ctx.organization?.timezone || 'America/Lima';
+
     const where: Prisma.GymClientWhereInput = {
       gymId,
     };
@@ -278,6 +282,41 @@ export class ClientsService {
     // Apply active filter
     if (dto.activeOnly) {
       where.status = 'active';
+    }
+
+    // Apply check-in filters (mutually exclusive)
+    let todayStart: Date | undefined;
+    let todayEnd: Date | undefined;
+    
+    if (dto.notCheckedInToday || dto.checkedInToday) {
+      // Get today's date range in the gym's timezone
+      const nowInTimezone = TimezoneUtil.nowInTimezone(gymTimezone);
+      todayStart = TimezoneUtil.startOfDayUtc(nowInTimezone, gymTimezone);
+      todayEnd = TimezoneUtil.endOfDayUtc(nowInTimezone, gymTimezone);
+
+      if (dto.notCheckedInToday) {
+        // Filter clients who have NOT checked in today
+        where.NOT = {
+          checkIns: {
+            some: {
+              timestamp: {
+                gte: todayStart,
+                lte: todayEnd,
+              },
+            },
+          },
+        };
+      } else if (dto.checkedInToday) {
+        // Filter clients who HAVE checked in today
+        where.checkIns = {
+          some: {
+            timestamp: {
+              gte: todayStart,
+              lte: todayEnd,
+            },
+          },
+        };
+      }
     }
 
     // Get total count
@@ -322,6 +361,33 @@ export class ClientsService {
       };
     }
 
+    // Include check-in data if any check-in filter is applied or contract status is requested
+    const needCheckInData = dto.notCheckedInToday || dto.checkedInToday || dto.includeContractStatus;
+    if (needCheckInData) {
+      // Calculate today's range if not already calculated
+      if (!todayStart || !todayEnd) {
+        const nowInTimezone = TimezoneUtil.nowInTimezone(gymTimezone);
+        todayStart = TimezoneUtil.startOfDayUtc(nowInTimezone, gymTimezone);
+        todayEnd = TimezoneUtil.endOfDayUtc(nowInTimezone, gymTimezone);
+      }
+      
+      includeOptions.checkIns = {
+        where: {
+          timestamp: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+        orderBy: { timestamp: 'desc' },
+        take: 1,
+        select: {
+          id: true,
+          timestamp: true,
+          createdAt: true,
+        },
+      };
+    }
+
     // Removed debug log for production
 
     // Get clients with pagination
@@ -332,8 +398,23 @@ export class ClientsService {
       ...paginationParams,
     });
 
+    // Transform clients to include check-in status
+    const transformedClients = clients.map((client: any) => {
+      const hasCheckedInToday = client.checkIns && client.checkIns.length > 0;
+      const lastCheckIn = hasCheckedInToday ? client.checkIns[0] : undefined;
+
+      // Remove the checkIns array from the response if it exists
+      const { checkIns, ...clientData } = client;
+
+      return {
+        ...clientData,
+        hasCheckedInToday,
+        lastCheckIn,
+      };
+    });
+
     // Return paginated response
-    return this.paginationService.paginate(clients, total, {
+    return this.paginationService.paginate(transformedClients, total, {
       page: dto.page,
       limit: dto.limit,
     });

@@ -13,7 +13,12 @@ export const CheckInSheet: React.FC = () => {
   const { Component } = checkInFlow;
 
   return (
-    <BottomSheetWrapper sheetId="check-in" snapPoints={['70%']} enablePanDownToClose scrollable>
+    <BottomSheetWrapper 
+      sheetId="check-in" 
+      snapPoints={['75%', '90%']} 
+      enablePanDownToClose 
+      scrollable={false}
+    >
       <Component />
     </BottomSheetWrapper>
   );
