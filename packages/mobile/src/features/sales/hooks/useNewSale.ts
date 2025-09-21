@@ -25,12 +25,8 @@ export const useNewSale = () => {
   
   const isProcessing = useSaleUIStore((state) => state.isProcessing);
   const error = useSaleUIStore((state) => state.error);
-  const showItemSelection = useSaleUIStore((state) => state.showItemSelection);
   const selectedTab = useSaleUIStore((state) => state.selectedTab);
-  const setShowItemSelection = useSaleUIStore((state) => state.setShowItemSelection);
   const setSelectedTab = useSaleUIStore((state) => state.setSelectedTab);
-  const openItemSelection = useSaleUIStore((state) => state.openItemSelection);
-  const closeItemSelection = useSaleUIStore((state) => state.closeItemSelection);
   const setProcessing = useSaleUIStore((state) => state.setProcessing);
   const setError = useSaleUIStore((state) => state.setError);
   const resetUI = useSaleUIStore((state) => state.reset);
@@ -157,12 +153,8 @@ export const useNewSale = () => {
     // UI state and actions
     isProcessing,
     error,
-    showItemSelection,
     selectedTab,
-    setShowItemSelection,
     setSelectedTab,
-    openItemSelection,
-    closeItemSelection,
     
     // Products and services data
     products: context.products,

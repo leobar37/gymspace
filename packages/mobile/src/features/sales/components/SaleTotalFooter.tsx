@@ -13,7 +13,11 @@ import { router } from 'expo-router';
 export const SaleTotalFooter: React.FC = () => {
   const formatPrice = useFormatPrice();
   const { execute } = useLoadingScreen();
-  const { total, completeSale, resetSale, openItemSelection } = useNewSale();
+  const { total, completeSale, resetSale } = useNewSale();
+
+  const handleAddItems = () => {
+    router.push('/inventory/new-sale/select-items');
+  };
 
   const handleCompleteSale = async () => {
     await execute(completeSale(), {
@@ -75,7 +79,7 @@ export const SaleTotalFooter: React.FC = () => {
       {/* Action Buttons */}
       <HStack space="sm">
         {/* Add Items Button */}
-        <Button onPress={openItemSelection} variant="outline" size="md" className="flex-1">
+        <Button onPress={handleAddItems} variant="outline" size="md" className="flex-1">
           <HStack space="xs" className="items-center">
             <Icon as={PlusIcon} className="w-4 h-4" />
             <ButtonText>Agregar items</ButtonText>
