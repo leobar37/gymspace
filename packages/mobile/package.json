@@ -16,6 +16,7 @@
     "@gluestack-ui/core": "^3.0.10",
     "@gluestack-ui/utils": "^3.0.7",
     "@gorhom/bottom-sheet": "^5.2.6",
+    "@gorhom/portal": "^1.0.14",
     "@gymspace/sdk": "workspace:*",
     "@gymspace/sheet": "workspace:*",
     "@hookform/resolvers": "catalog:",

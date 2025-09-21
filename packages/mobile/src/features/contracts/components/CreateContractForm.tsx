@@ -195,7 +195,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                       </Text>
                     </HStack>
 
-                    {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
+                    {/* {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
                       <HStack className="justify-between">
                         <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                         <Text className="font-medium text-green-600">
@@ -205,7 +205,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                           )}
                         </Text>
                       </HStack>
-                    )}
+                    )} */}
 
                     {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
                       <HStack className="justify-between">

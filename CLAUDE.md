@@ -120,6 +120,15 @@ When available, use these tools for better code understanding:
 - Use proper component wrappers from the UI library
 - Icons in buttons should not have color classes when using solid variant
 
+### Button Component Variants
+- `variant="solid"` - Primary actions with full background color
+- `variant="outline"` - Secondary actions with border only
+- `variant="link"` - Text-only actions with underline on hover
+- `variant="unstyled"` - Completely removes all default styles for custom styling
+  - Removes: background, padding, height, border radius, hover states, focus rings, font weight
+  - Use when you need full control over button appearance
+  - Example: `<Button variant="unstyled" className="custom-styles">`
+
 ## Form Development Best Practices
 - ALWAYS use react-hook-form with FormProvider for form state management
 - NEVER use useState for form fields - use react-hook-form instead

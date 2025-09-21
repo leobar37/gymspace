@@ -187,28 +187,7 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
 
           <VStack className="gap-2">
             <Text className="font-medium text-gray-900">Duración *</Text>
-            <VStack className="gap-3 items-start">
-              <VStack className="flex-1 w-full">
-                <GluestackInput variant="rounded" className='w-full'  size="md">
-                  <InputField
-                    value={Math.floor(Number(durationController.field.value) || 1).toString()}
-                    onChangeText={(text) => {
-                      const num = parseInt(text, 10);
-                      durationController.field.onChange(isNaN(num) ? 1 : Math.max(1, num));
-                    }}
-                    onBlur={durationController.field.onBlur}
-                    placeholder="Cantidad"
-                    keyboardType="number-pad"
-                    className="w-full"
-                    placeholderClassName="text-gray-400"
-                  />
-                </GluestackInput>
-                {durationController.fieldState.error && (
-                  <Text className="text-red-500 text-sm mt-1">
-                    {durationController.fieldState.error.message}
-                  </Text>
-                )}
-              </VStack>
+            <VStack className="flex-1 w-full">
               <FormSelect
                 name="durationType"
                 placeholder="Periodo"
@@ -217,6 +196,25 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
                   { label: 'Meses', value: 'months' },
                 ]}
               />
+              <GluestackInput variant="rounded" className="w-full mt-2" size="md">
+                <InputField
+                  value={Math.floor(Number(durationController.field.value) || 1).toString()}
+                  onChangeText={(text) => {
+                    const num = parseInt(text, 10);
+                    durationController.field.onChange(isNaN(num) ? 1 : Math.max(1, num));
+                  }}
+                  onBlur={durationController.field.onBlur}
+                  placeholder="Cantidad"
+                  keyboardType="number-pad"
+                  className="w-full"
+                  placeholderClassName="text-gray-400"
+                />
+              </GluestackInput>
+              {durationController.fieldState.error && (
+                <Text className="text-red-500 text-sm mt-1">
+                  {durationController.fieldState.error.message}
+                </Text>
+              )}
             </VStack>
           </VStack>
         </VStack>
@@ -239,7 +237,6 @@ export const CreatePlanForm: React.FC<CreatePlanFormProps> = ({
 
         <VStack className="gap-4">
           <Text className="text-lg font-semibold">Características</Text>
-
           <VStack className="gap-2">
             <Text className="text-sm font-medium text-gray-700">Características incluidas</Text>
 
