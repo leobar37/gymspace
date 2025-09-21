@@ -5,10 +5,14 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { ShoppingCartIcon, PlusIcon } from 'lucide-react-native';
-import { useNewSale } from '../hooks/useNewSale';
+import { useRouter } from 'expo-router';
 
 export const EmptyCart: React.FC = () => {
-  const { openItemSelection } = useNewSale();
+  const router = useRouter();
+
+  const handleAddItems = () => {
+    router.push('/inventory/new-sale/select-items');
+  };
   
   return (
     <Card className="bg-gray-50 border-gray-200 border-dashed">
@@ -20,7 +24,7 @@ export const EmptyCart: React.FC = () => {
             Agrega items para comenzar una nueva venta
           </Text>
         </VStack>
-        <Button onPress={openItemSelection} variant="solid">
+        <Button onPress={handleAddItems} variant="solid">
           <Icon as={PlusIcon} className="w-4 h-4 mr-2" />
           <ButtonText>Agregar items</ButtonText>
         </Button>

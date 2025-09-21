@@ -120,7 +120,7 @@ export default function SalesHistoryScreen() {
             <Button
               variant="solid"
               size="lg"
-              onPress={() => router.push('/inventory/new-sale')}
+              onPress={() => router.push('/inventory/new-sale/')}
               className="mt-4"
             >
               <Icon as={ShoppingCartIcon} className="w-5 h-5 mr-2" />
@@ -245,7 +245,7 @@ export default function SalesHistoryScreen() {
         />
 
         {/* Floating Action Button for New Sale */}
-        <Fab onPress={() => router.push('/inventory/new-sale')} placement="bottom right" size="lg">
+        <Fab onPress={() => router.push('/inventory/new-sale/')} placement="bottom right" size="lg">
           <Icon as={PlusIcon} className="text-white" />
         </Fab>
       </VStack>

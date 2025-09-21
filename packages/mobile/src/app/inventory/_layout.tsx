@@ -46,13 +46,6 @@ export default function InventoryLayout() {
       />
 
       <Stack.Screen
-        name="new-sale"
-        options={{
-          title: 'Nueva Venta',
-          headerLeft: () => <BackButton label="" onPress={() => router.push('/sales-history')} />,
-        }}
-      />
-      <Stack.Screen
         name="categories"
         options={{
           headerShown: true,
