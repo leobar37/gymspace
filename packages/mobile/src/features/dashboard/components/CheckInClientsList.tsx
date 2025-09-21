@@ -1,7 +1,6 @@
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
-import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -16,6 +15,7 @@ import { CalendarIcon, UsersIcon } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { useClientsController } from '../../clients/controllers/clients.controller';
+import { CheckInClientsTabs } from './CheckInClientsTabs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 
@@ -23,9 +23,7 @@ interface CheckInClientsListProps {
   onClientSelect?: (client: Client) => void;
 }
 
-export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
-  onClientSelect,
-}) => {
+export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({ onClientSelect }) => {
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
   const { useClientsList } = useClientsController();
 
@@ -35,7 +33,6 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
     return dayjs().format('dddd, D [de] MMMM [de] YYYY');
   };
 
-  // Query for pending clients (not checked in today)
   const pendingQuery = useClientsList({
     page: 1,
     limit: 1000,
@@ -51,19 +48,15 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
     checkedInToday: true,
   });
 
-  // Process pending clients data
   const pendingClients = useMemo(() => {
     return pendingQuery.data?.data || [];
   }, [pendingQuery.data]);
 
-  // Process completed clients data
   const completedClients = useMemo(() => {
     return completedQuery.data?.data || [];
   }, [completedQuery.data]);
 
-  // Client validation logic (redundant but kept for consistency)
   const canClientCheckIn = (client: Client): { canSelect: boolean; reason?: string } => {
-    // Check if client is active
     if (client.status !== 'active') {
       return {
         canSelect: false,
@@ -71,7 +64,6 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
       };
     }
 
-    // Check if client has active contracts
     if (!client.contracts || client.contracts.length === 0) {
       return {
         canSelect: false,
@@ -79,7 +71,6 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
       };
     }
 
-    // Check if any contract is valid
     const now = new Date();
     const hasValidContract = client.contracts.some((contract) => {
       if (contract.status !== 'active') return false;
@@ -100,7 +91,6 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
     return { canSelect: true };
   };
 
-  // Local search for pending clients
   const pendingSearch = useDataSearch({
     data: pendingClients,
     searchFields: (client) => [
@@ -113,7 +103,6 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
     searchPlaceholder: 'Buscar cliente...',
   });
 
-  // Local search for completed clients
   const completedSearch = useDataSearch({
     data: completedClients,
     searchFields: (client) => [
@@ -128,9 +117,12 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
 
   // Get current search based on active tab
   const currentSearch = activeTab === 'pending' ? pendingSearch : completedSearch;
-  const currentClients = currentSearch.searchInput.length > 0 
-    ? currentSearch.filteredData 
-    : (activeTab === 'pending' ? pendingClients : completedClients);
+  const currentClients =
+    currentSearch.searchInput.length > 0
+      ? currentSearch.filteredData
+      : activeTab === 'pending'
+        ? pendingClients
+        : completedClients;
 
   const handleSelectClient = (client: Client) => {
     if (activeTab === 'completed') {
@@ -180,14 +172,13 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
     <VStack className="items-center justify-center py-8">
       <Icon as={UsersIcon} className="w-12 h-12 text-gray-300 mb-4" />
       <Text className="text-gray-500 text-center mb-2">
-        {activeTab === 'pending' 
+        {activeTab === 'pending'
           ? currentSearch.searchInput.length > 0
             ? 'No se encontraron clientes pendientes'
             : 'No hay clientes pendientes de check-in'
           : currentSearch.searchInput.length > 0
             ? 'No se encontraron clientes con check-in'
-            : 'No hay clientes con check-in hoy'
-        }
+            : 'No hay clientes con check-in hoy'}
       </Text>
       {activeTab === 'pending' && currentSearch.searchInput.length === 0 && (
         <Text className="text-gray-400 text-center text-sm">
@@ -210,75 +201,22 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
 
   return (
     <View className="flex-1 bg-white">
-      {/* Fixed Header */}
       <VStack className="px-6 py-4 border-b border-gray-200">
-        {/* Title and Date */}
         <VStack className="mb-4">
           <Text className="text-xl font-bold text-gray-900">Check-In de Clientes</Text>
           <HStack className="items-center gap-2 mt-1">
             <Icon as={CalendarIcon} className="w-4 h-4 text-gray-500" />
-            <Text className="text-sm text-gray-600 capitalize">
-              {getCurrentDateFormatted()}
-            </Text>
+            <Text className="text-sm text-gray-600 capitalize">{getCurrentDateFormatted()}</Text>
           </HStack>
         </VStack>
 
-        {/* Tabs */}
-        <HStack className="gap-2 mb-4">
-          <Pressable
-            onPress={() => setActiveTab('pending')}
-            className={`flex-1 py-3 px-4 rounded-lg border ${
-              activeTab === 'pending'
-                ? 'bg-blue-50 border-blue-200'
-                : 'bg-gray-50 border-gray-200'
-            }`}
-          >
-            <HStack className="items-center justify-center gap-2">
-              <Text
-                className={`font-medium ${
-                  activeTab === 'pending' ? 'text-blue-700' : 'text-gray-600'
-                }`}
-              >
-                Pendientes
-              </Text>
-              <Badge
-                variant="solid"
-                action={activeTab === 'pending' ? 'info' : 'muted'}
-                size="sm"
-              >
-                <BadgeText>{pendingClients.length}</BadgeText>
-              </Badge>
-            </HStack>
-          </Pressable>
+        <CheckInClientsTabs
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          pendingCount={pendingClients.length}
+          completedCount={completedClients.length}
+        />
 
-          <Pressable
-            onPress={() => setActiveTab('completed')}
-            className={`flex-1 py-3 px-4 rounded-lg border ${
-              activeTab === 'completed'
-                ? 'bg-green-50 border-green-200'
-                : 'bg-gray-50 border-gray-200'
-            }`}
-          >
-            <HStack className="items-center justify-center gap-2">
-              <Text
-                className={`font-medium ${
-                  activeTab === 'completed' ? 'text-green-700' : 'text-gray-600'
-                }`}
-              >
-                Completados
-              </Text>
-              <Badge
-                variant="solid"
-                action={activeTab === 'completed' ? 'success' : 'muted'}
-                size="sm"
-              >
-                <BadgeText>{completedClients.length}</BadgeText>
-              </Badge>
-            </HStack>
-          </Pressable>
-        </HStack>
-
-        {/* Search Bar */}
         <InputSearch
           value={currentSearch.searchInput}
           onChangeText={currentSearch.setSearchInput}
@@ -288,20 +226,19 @@ export const CheckInClientsList: React.FC<CheckInClientsListProps> = ({
         />
       </VStack>
 
-      {/* Scrollable Content using BottomSheetFlatList for better performance */}
       <BottomSheetFlatList
         data={currentClients}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: any) => item.id + Math.random().toString(36).substring(7)}
         renderItem={({ item }) => renderClientItem(item)}
         ListEmptyComponent={renderEmptyState}
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 8,
-          paddingBottom: 16,
           flexGrow: currentClients.length === 0 ? 1 : undefined,
         }}
         showsVerticalScrollIndicator={false}
       />
+      <View className="h-[50px]" />
     </View>
   );
 };

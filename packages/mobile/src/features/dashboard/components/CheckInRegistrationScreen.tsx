@@ -9,7 +9,6 @@ import { VStack } from '@/components/ui/vstack';
 import { useCheckInForm } from '@/features/dashboard/controllers/check-ins.controller';
 import { useLoadingScreen } from '@/shared/loading-screen';
 import type { Client } from '@gymspace/sdk';
-import { SheetManager } from '@gymspace/sheet';
 import { ArrowLeftIcon, CheckCircleIcon, UserIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -33,26 +32,10 @@ export const CheckInRegistrationScreen: React.FC = () => {
         }
         return 'Error al registrar check-in';
       },
-      successActions: [
-        {
-          label: 'Nuevo Check-in',
-          onPress: () => {
-            setNotes('');
-            router.navigate('client-list');
-          },
-          variant: 'solid',
-        },
-        {
-          label: 'Cerrar',
-          onPress: () => {
-            setNotes('');
-            router.navigate('client-list');
-            SheetManager.hide('check-in');
-          },
-          variant: 'outline',
-        },
-      ],
-      hideOnSuccess: false,
+      onSuccess: () => {
+        router.navigate('client-list');
+      },
+      hideOnSuccess: true,
     });
   };
 

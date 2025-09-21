@@ -94,6 +94,13 @@ export default function InventoryLayout() {
           headerLeft: () => <BackButton label="" />,
         }}
       />
+
+      <Stack.Screen
+        name="new-sale"
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen
         name="services/[id]"
         options={{
@@ -116,12 +123,6 @@ export default function InventoryLayout() {
         }}
       />
 
-      <Stack.Screen
-        options={{
-          title: '',
-          headerLeft: () => <BackButton label="" />,
-        }}
-      />
       <Stack.Screen
         name="services"
         options={{

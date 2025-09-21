@@ -3,7 +3,47 @@ import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useDashboardDateRange, useSetDashboardDateRange } from '../stores/dashboard.store';
 import { useCallback } from 'react';
 
-// Helper to format dates for API
+export const dashboardQueryKeys = {
+  stats: ['dashboard', 'stats'],
+  checkInsBase: ['dashboard', 'check-ins'],
+  contractsRevenue: (startDate: Date | string, endDate: Date | string) => [
+    'dashboard',
+    'contracts-revenue',
+    startDate,
+    endDate,
+  ],
+  salesRevenue: (startDate: Date | string, endDate: Date | string) => [
+    'dashboard',
+    'sales-revenue',
+    startDate,
+    endDate,
+  ],
+  debts: (startDate: Date | string, endDate: Date | string) => [
+    'dashboard',
+    'debts',
+    startDate,
+    endDate,
+  ],
+  checkIns: (startDate: Date | string, endDate: Date | string) => [
+    ...dashboardQueryKeys.checkInsBase,
+    startDate,
+    endDate,
+  ],
+  newClients: (startDate: Date | string, endDate: Date | string) => [
+    'dashboard',
+    'new-clients',
+    startDate,
+    endDate,
+  ],
+  expiringContracts: (startDate: Date | string, endDate: Date | string) => [
+    'dashboard',
+    'expiring-contracts',
+    startDate,
+    endDate,
+  ],
+};
+
+// Helper to format dates  API
 const formatDateForAPI = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
@@ -11,9 +51,8 @@ const formatDateForAPI = (date: Date): string => {
 // Hook for dashboard stats (lightweight, no date range needed)
 export const useDashboardStatsWidget = () => {
   const { sdk } = useGymSdk();
-  
   return useQuery({
-    queryKey: ['dashboard', 'stats'],
+    queryKey: dashboardQueryKeys.stats,
     queryFn: async () => {
       return await sdk.dashboard.getStats();
     },
@@ -26,9 +65,8 @@ export const useDashboardStatsWidget = () => {
 export const useContractsRevenueWidget = () => {
   const { sdk } = useGymSdk();
   const dateRange = useDashboardDateRange();
-  
   return useQuery({
-    queryKey: ['dashboard', 'contracts-revenue', dateRange.startDate, dateRange.endDate],
+    queryKey: dashboardQueryKeys.contractsRevenue(dateRange.startDate, dateRange.endDate),
     queryFn: async () => {
       return await sdk.dashboard.getContractsRevenue({
         startDate: formatDateForAPI(dateRange.startDate),
@@ -44,9 +82,8 @@ export const useContractsRevenueWidget = () => {
 export const useSalesRevenueWidget = () => {
   const { sdk } = useGymSdk();
   const dateRange = useDashboardDateRange();
-  
   return useQuery({
-    queryKey: ['dashboard', 'sales-revenue', dateRange.startDate, dateRange.endDate],
+    queryKey: dashboardQueryKeys.salesRevenue(dateRange.startDate, dateRange.endDate),
     queryFn: async () => {
       return await sdk.dashboard.getSalesRevenue({
         startDate: formatDateForAPI(dateRange.startDate),
@@ -62,9 +99,8 @@ export const useSalesRevenueWidget = () => {
 export const useDebtsWidget = () => {
   const { sdk } = useGymSdk();
   const dateRange = useDashboardDateRange();
-  
   return useQuery({
-    queryKey: ['dashboard', 'debts', dateRange.startDate, dateRange.endDate],
+    queryKey: dashboardQueryKeys.debts(dateRange.startDate, dateRange.endDate),
     queryFn: async () => {
       return await sdk.dashboard.getDebts({
         startDate: formatDateForAPI(dateRange.startDate),
@@ -80,9 +116,8 @@ export const useDebtsWidget = () => {
 export const useCheckInsWidget = () => {
   const { sdk } = useGymSdk();
   const dateRange = useDashboardDateRange();
-  
   return useQuery({
-    queryKey: ['dashboard', 'check-ins', dateRange.startDate, dateRange.endDate],
+    queryKey: dashboardQueryKeys.checkIns(dateRange.startDate, dateRange.endDate),
     queryFn: async () => {
       return await sdk.dashboard.getCheckIns({
         startDate: formatDateForAPI(dateRange.startDate),
@@ -98,9 +133,8 @@ export const useCheckInsWidget = () => {
 export const useNewClientsWidget = () => {
   const { sdk } = useGymSdk();
   const dateRange = useDashboardDateRange();
-  
   return useQuery({
-    queryKey: ['dashboard', 'new-clients', dateRange.startDate, dateRange.endDate],
+    queryKey: dashboardQueryKeys.newClients(dateRange.startDate, dateRange.endDate),
     queryFn: async () => {
       return await sdk.dashboard.getNewClients({
         startDate: formatDateForAPI(dateRange.startDate),
@@ -116,9 +150,8 @@ export const useNewClientsWidget = () => {
 export const useExpiringContractsWidget = () => {
   const { sdk } = useGymSdk();
   const dateRange = useDashboardDateRange();
-  
   return useQuery({
-    queryKey: ['dashboard', 'expiring-contracts', dateRange.startDate, dateRange.endDate],
+    queryKey: dashboardQueryKeys.expiringContracts(dateRange.startDate, dateRange.endDate),
     queryFn: async () => {
       return await sdk.dashboard.getExpiringContracts(10, {
         startDate: formatDateForAPI(dateRange.startDate),
@@ -134,11 +167,14 @@ export const useExpiringContractsWidget = () => {
 export const useDashboardDateRangeManager = () => {
   const dateRange = useDashboardDateRange();
   const setDateRange = useSetDashboardDateRange();
-  
-  const handleDateRangeChange = useCallback((startDate: Date, endDate: Date) => {
-    setDateRange(startDate, endDate);
-  }, [setDateRange]);
-  
+
+  const handleDateRangeChange = useCallback(
+    (startDate: Date, endDate: Date) => {
+      setDateRange(startDate, endDate);
+    },
+    [setDateRange],
+  );
+
   return {
     dateRange,
     setDateRange: handleDateRangeChange,

@@ -12,7 +12,7 @@ import {
 } from '@/features/sales/components';
 
 export default function NewSaleScreen() {
-  const { hasItems, itemCount } = useNewSale();
+  const { hasItems } = useNewSale();
 
   return (
     <ScreenForm

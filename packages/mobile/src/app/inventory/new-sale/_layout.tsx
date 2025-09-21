@@ -10,14 +10,7 @@ export default function NewSaleLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack
           screenOptions={{
-            headerStyle: {
-              backgroundColor: '#ffffff',
-            },
-            headerTintColor: '#1f2937',
-            headerTitleStyle: {
-              fontWeight: '600',
-            },
-            headerShadowVisible: true,
+            headerShadowVisible: false,
             headerLeft: () => <BackButton />,
           }}
         >
@@ -25,7 +18,6 @@ export default function NewSaleLayout() {
             name="index"
             options={{
               title: 'Nueva Venta',
-              headerBackVisible: false,
               headerLeft: () => <BackButton />,
             }}
           />

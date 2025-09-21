@@ -1497,6 +1497,26 @@
               "example": true,
               "type": "boolean"
             }
+          },
+          {
+            "name": "notCheckedInToday",
+            "required": false,
+            "in": "query",
+            "description": "Filter clients who have NOT checked in today (timezone-aware)",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "checkedInToday",
+            "required": false,
+            "in": "query",
+            "description": "Filter clients who HAVE checked in today (timezone-aware)",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -1869,6 +1889,26 @@
             "required": false,
             "in": "query",
             "description": "Include contract status in response",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "notCheckedInToday",
+            "required": false,
+            "in": "query",
+            "description": "Filter clients who have NOT checked in today (timezone-aware)",
+            "schema": {
+              "example": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "checkedInToday",
+            "required": false,
+            "in": "query",
+            "description": "Filter clients who HAVE checked in today (timezone-aware)",
             "schema": {
               "example": true,
               "type": "boolean"

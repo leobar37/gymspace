@@ -233,16 +233,17 @@ When available, use these tools for better code understanding:
 - always respond in english
 - use zustand to handle complicated state management
 - use TanStack Query for data fetching and caching
-- use tailwind for styling
+- use tailwind/nativewind for styling
 - never add styles to the button, use the default styles of the library and its variants
 - always pass the complete RequestContext to the services
-- nevear addd examples unless i ask for it
+- never add examples unless i ask for it
 - not add README.md after do something
 - the primary color is the default of the library
 - never run commands unless i ask for it
 - not run lints commands
 - user serena when it is available
 - use serena tools to work better
+- not add comments unless i ask for it
 
 ## React Native Mobile Expert Agent
 

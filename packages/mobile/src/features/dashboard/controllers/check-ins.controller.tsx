@@ -9,15 +9,21 @@ import {
   CreateCheckInDto,
   SearchCheckInsParams,
   CurrentlyInGymResponse,
-  ClientCheckInHistory
+  ClientCheckInHistory,
 } from '@gymspace/sdk';
+import { dashboardQueryKeys } from '../hooks';
 
-const QUERY_KEYS = {
-  checkIns: 'checkIns',
-  currentlyInGym: 'currentlyInGym',
-  clientHistory: 'clientHistory',
-  stats: 'checkInStats',
-} as const;
+// Centralized query keys for check-ins
+export const checkInQueryKeys = {
+  checkIns: (gymId?: string, params?: SearchCheckInsParams) => ['checkIns', gymId, params],
+  currentlyInGym: (gymId?: string) => ['currentlyInGym', gymId],
+  clientHistory: (clientId: string) => ['clientHistory', clientId],
+  stats: (gymId?: string, period: 'day' | 'week' | 'month' = 'month') => [
+    'checkInStats',
+    gymId,
+    period,
+  ],
+};
 
 export const useCheckInsController = () => {
   const { sdk } = useGymSdk();
@@ -32,29 +38,23 @@ export const useCheckInsController = () => {
       if (!gymId) throw new Error('No gym selected');
       return sdk.checkIns.createCheckIn(data);
     },
-    onSuccess: (data) => {
-      toast.show({
-        placement: 'top',
-        duration: 3000,
-        render: ({ id }) => (
-          <Toast nativeID={`toast-${id}`} action="success" variant="solid">
-            <ToastTitle>Check-in registrado exitosamente</ToastTitle>
-          </Toast>
-        ),
-      });
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.checkIns] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.currentlyInGym] });
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.clientHistory, data.gymClientId]
-      });
-
-      // Invalidate dashboard stats (check-in counts, recent activity)
-      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: dashboardKeys.recentActivity() });
-
-      // Invalidate client stats to refresh the client's check-in data
-      queryClient.invalidateQueries({ queryKey: clientsKeys.stats(data.gymClientId) });
+    onSuccess: async (data) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: clientsKeys.all,
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: dashboardQueryKeys.checkInsBase,
+          exact: false,
+        }),
+        queryClient.invalidateQueries({ queryKey: checkInQueryKeys.checkIns(gymId), exact: false }),
+        queryClient.invalidateQueries({ queryKey: checkInQueryKeys.currentlyInGym(gymId) }),
+        queryClient.invalidateQueries({
+          queryKey: checkInQueryKeys.clientHistory(data.gymClientId),
+        }),
+        queryClient.invalidateQueries({ queryKey: clientsKeys.stats(data.gymClientId) }),
+      ]);
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || 'Failed to register check-in';
@@ -74,7 +74,7 @@ export const useCheckInsController = () => {
   // Get list of check-ins with filters
   const useCheckInsList = (params?: SearchCheckInsParams) => {
     return useQuery({
-      queryKey: [QUERY_KEYS.checkIns, gymId, params],
+      queryKey: checkInQueryKeys.checkIns(gymId, params),
       queryFn: async () => {
         if (!gymId) throw new Error('No gym selected');
         return sdk.checkIns.searchCheckIns(params);
@@ -86,7 +86,7 @@ export const useCheckInsController = () => {
   // Get clients currently in the gym
   const useCurrentlyInGym = () => {
     return useQuery({
-      queryKey: [QUERY_KEYS.currentlyInGym, gymId],
+      queryKey: checkInQueryKeys.currentlyInGym(gymId),
       queryFn: async (): Promise<CurrentlyInGymResponse> => {
         if (!gymId) throw new Error('No gym selected');
         return sdk.checkIns.getCurrentlyInGym();
@@ -99,7 +99,7 @@ export const useCheckInsController = () => {
   // Get client check-in history
   const useClientCheckInHistory = (clientId: string, enabled = true) => {
     return useQuery({
-      queryKey: [QUERY_KEYS.clientHistory, clientId],
+      queryKey: checkInQueryKeys.clientHistory(clientId),
       queryFn: async (): Promise<ClientCheckInHistory> => {
         if (!gymId) throw new Error('No gym selected');
         return sdk.checkIns.getClientCheckInHistory(clientId);
@@ -111,7 +111,7 @@ export const useCheckInsController = () => {
   // Get check-in statistics
   const useCheckInStats = (period: 'day' | 'week' | 'month' = 'month') => {
     return useQuery({
-      queryKey: [QUERY_KEYS.stats, gymId, period],
+      queryKey: checkInQueryKeys.stats(gymId, period),
       queryFn: async () => {
         if (!gymId) throw new Error('No gym selected');
         return sdk.checkIns.getGymCheckInStats({ period });
@@ -136,8 +136,8 @@ export const useCheckInsController = () => {
           </Toast>
         ),
       });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.checkIns] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.currentlyInGym] });
+      queryClient.invalidateQueries({ queryKey: checkInQueryKeys.checkIns(gymId) });
+      queryClient.invalidateQueries({ queryKey: checkInQueryKeys.currentlyInGym(gymId) });
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || 'Failed to delete check-in';
@@ -167,8 +167,8 @@ export const useCheckInsController = () => {
 
     // Utils
     invalidateCheckIns: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.checkIns] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.currentlyInGym] });
+      queryClient.invalidateQueries({ queryKey: checkInQueryKeys.checkIns(gymId) });
+      queryClient.invalidateQueries({ queryKey: checkInQueryKeys.currentlyInGym(gymId) });
     },
   };
 };
