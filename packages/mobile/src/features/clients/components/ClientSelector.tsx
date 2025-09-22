@@ -108,8 +108,8 @@ export function ClientSelector<TFieldValues extends FieldValues = FieldValues>({
             ${fieldState.error ? 'border-red-500' : 'border-gray-300'} 
             rounded-lg 
             px-4
-            py-4
-            min-h-[60px]
+            py-1
+            min-h-[50px]
             ${!enabled ? 'opacity-50' : ''}
           `}
           >

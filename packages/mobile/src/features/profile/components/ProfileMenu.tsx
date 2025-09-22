@@ -24,7 +24,7 @@ import {
   WrenchIcon,
 } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 interface MenuItemProps {
   icon: any;
@@ -44,8 +44,8 @@ const MenuItem: React.FC<MenuItemProps> = ({
   iconColor = 'text-gray-600',
 }) => {
   return (
-    <Pressable onPress={onPress}>
-      <HStack className="items-center py-3 px-4">
+    <Button variant="unstyled" onPress={onPress} className="w-full h-16">
+      <HStack className="items-center py-3 px-4 w-full">
         <Icon as={icon} className={`w-5 h-5 ${iconColor} mr-3`} />
         <VStack className="flex-1">
           <Text className="text-gray-900 font-medium">{title}</Text>
@@ -53,7 +53,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
         </VStack>
         {showArrow && <Icon as={ChevronRightIcon} className="w-5 h-5 text-gray-400" />}
       </HStack>
-    </Pressable>
+    </Button>
   );
 };
 

@@ -181,11 +181,11 @@ export const PlanSelector: React.FC<PlanSelectorProps> = ({
         {label && (
           <Text className="text-sm font-medium text-gray-700 mb-1">{label}</Text>
         )}
-        
-        {/* Plan Selector Button */}
+      
+      {/* Plan Selector Button */}
         <Pressable onPress={() => setShowPlanSelector(true)}>
           <Card className="border border-gray-200">
-            <View className="p-3">
+            <View className="px-2">
               {isLoading ? (
                 <HStack className="justify-center items-center">
                   <Spinner size="small" />
