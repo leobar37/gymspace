@@ -13,6 +13,7 @@ import { PaymentMethodSelectorField } from '@/features/payment-methods/component
 import { PlanSelector } from '@/features/plans/components/PlanSelector';
 import { ScreenForm } from '@/shared/components/ScreenForm';
 import { useLoadingScreen } from '@/shared/loading-screen';
+import { MembershipPlan } from '@gymspace/sdk';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, parse } from 'date-fns';
 import { useRouter } from 'expo-router';
@@ -61,7 +62,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   const { createContract } = useContractsController();
   const { execute } = useLoadingScreen();
 
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
   // Parse initial date if provided as string
   const parseInitialDate = (dateStr?: string) => {
     if (!dateStr) return new Date();
@@ -85,6 +86,8 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
       receiptIds: [],
     },
   });
+
+  const allowsCustomPricing = selectedPlan?.allowsCustomPricing;
 
   const {
     control,
@@ -195,7 +198,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                       </Text>
                     </HStack>
 
-                    {/* {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
+                    {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
                       <HStack className="justify-between">
                         <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
                         <Text className="font-medium text-green-600">
@@ -205,7 +208,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
                           )}
                         </Text>
                       </HStack>
-                    )} */}
+                    )}
 
                     {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
                       <HStack className="justify-between">
@@ -279,27 +282,31 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
           </View>
 
           {/* Discount */}
-          <View className="mb-3">
-            <FormInput
-              control={control}
-              name="discountPercentage"
-              label="Descuento (%)"
-              placeholder="0"
-              keyboardType="numeric"
-            />
-          </View>
+          {allowsCustomPricing && (
+            <View className="mb-3">
+              <FormInput
+                control={control}
+                name="discountPercentage"
+                label="Descuento (%)"
+                placeholder="0"
+                keyboardType="numeric"
+              />
+            </View>
+          )}
 
           {/* Custom Price */}
-          <View className="mb-3">
-            <FormInput
-              control={control}
-              name="customPrice"
-              label="Precio personalizado (opcional)"
-              placeholder="0.00"
-              keyboardType="numeric"
-              description="Si se especifica, este precio reemplazará el precio del plan"
-            />
-          </View>
+          {allowsCustomPricing && (
+            <View className="mb-3">
+              <FormInput
+                control={control}
+                name="customPrice"
+                label="Precio personalizado (opcional)"
+                placeholder="0.00"
+                keyboardType="numeric"
+                description="Si se especifica, este precio reemplazará el precio del plan"
+              />
+            </View>
+          )}
 
           {/* Attachments */}
           <View className="mb-3">

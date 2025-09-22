@@ -303,6 +303,7 @@ function ClientSelectorSheet(props: ClientSelectorSheetProps) {
         width: 100,
         height: 4,
       }}
+      scrollable
     >
       <View
         style={{
