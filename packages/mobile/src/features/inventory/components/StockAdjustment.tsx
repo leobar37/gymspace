@@ -117,24 +117,14 @@ export const StockAdjustment: React.FC<StockAdjustmentProps> = ({
       {showStockAdjustment ? (
         <VStack space="lg">
           {/* Stock Counter Section */}
-          <View className="bg-gray-50 rounded-xl p-6">
+          <View className="bg-white rounded-xl p-6 border border-gray-200">
             <Text className="text-center text-sm text-gray-500 mb-2">Stock Actual</Text>
 
             <HStack className="items-center justify-between">
               {/* Decrease Button */}
-              <Pressable
-                onPress={decrementStock}
-                className="bg-red-500 rounded-xl p-4 active:bg-red-600"
-                style={{
-                  elevation: 2,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                }}
-              >
+              <Button variant="solid" onPress={decrementStock} className=" rounded-xl p-4">
                 <Icon as={MinusIcon} className="w-6 h-6 text-white" />
-              </Pressable>
+              </Button>
 
               {/* Stock Display */}
               <VStack className="items-center flex-1 px-4">
@@ -150,19 +140,9 @@ export const StockAdjustment: React.FC<StockAdjustmentProps> = ({
               </VStack>
 
               {/* Increase Button */}
-              <Pressable
-                onPress={incrementStock}
-                className="bg-green-500 rounded-xl p-4 active:bg-green-600"
-                style={{
-                  elevation: 2,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
-                }}
-              >
+              <Button variant="solid" onPress={incrementStock} className="rounded-xl p-4">
                 <Icon as={PlusIcon} className="w-6 h-6 text-white" />
-              </Pressable>
+              </Button>
             </HStack>
 
             {/* Warnings */}
@@ -194,15 +174,15 @@ export const StockAdjustment: React.FC<StockAdjustmentProps> = ({
               <ButtonText className="font-medium">Cancelar</ButtonText>
             </Button>
             <Button
-              className="flex-1 bg-gray-900"
+              className="flex-1"
               variant="solid"
               onPress={handleProceedToConfirmation}
               disabled={stockAdjustment === 0}
               size="lg"
             >
               <HStack space="sm" className="items-center">
-                <Icon as={CheckIcon} className="w-5 h-5 text-white" />
-                <ButtonText className="font-semibold text-white">Confirmar</ButtonText>
+                <Icon as={CheckIcon} className="w-5 h-5" />
+                <ButtonText className="font-semibold">Confirmar</ButtonText>
               </HStack>
             </Button>
           </HStack>

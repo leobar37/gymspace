@@ -10,7 +10,7 @@ import React from 'react';
 export default function EditPaymentMethodScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { usePaymentMethodDetail } = usePaymentMethodsController();
-  
+
   const { data: paymentMethod, isLoading, error } = usePaymentMethodDetail(id);
 
   if (isLoading) {
@@ -35,17 +35,5 @@ export default function EditPaymentMethodScreen() {
     );
   }
 
-  return (
-    <>
-      <Stack.Screen 
-        options={{ 
-          headerShown: false,
-        }} 
-      />
-      <EditPaymentMethodForm 
-        initialData={paymentMethod} 
-        paymentMethodId={id} 
-      />
-    </>
-  );
+  return <EditPaymentMethodForm initialData={paymentMethod} paymentMethodId={id} />;
 }

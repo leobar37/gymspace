@@ -178,60 +178,54 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
   return (
     <FormProvider {...methods}>
       <ScreenForm
-        title="Nuevo contrato"
-        showBackButton={true}
+        showBackButton={false}
         showFixedFooter
+        useSafeArea={false}
         footerContent={
-          <View>
+          <View className="mx-2 py-2">
             {/* Price Summary */}
             {selectedPlan && (
-              <Card className="mx-4 mt-3 mb-2">
-                <View className="p-3">
-                  <Heading size="sm" className="mb-2">
-                    Resumen de precios
-                  </Heading>
-                  <VStack className="gap-2">
+              <View>
+                <Heading size="sm" className="mb-2">
+                  Resumen de precios
+                </Heading>
+                <VStack className="gap-2">
+                  <HStack className="justify-between">
+                    <Text className="text-gray-600">Precio del plan:</Text>
+                    <Text className="font-medium">{formatPrice(selectedPlan.basePrice || 0)}</Text>
+                  </HStack>
+
+                  {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
                     <HStack className="justify-between">
-                      <Text className="text-gray-600">Precio del plan:</Text>
-                      <Text className="font-medium">
-                        {formatPrice(selectedPlan.basePrice || 0)}
+                      <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
+                      <Text className="font-medium text-green-600">
+                        -
+                        {formatPrice(
+                          ((selectedPlan.basePrice || 0) * Number(watchedDiscount)) / 100,
+                        )}
                       </Text>
                     </HStack>
+                  )}
 
-                    {Number(watchedDiscount) > 0 && !watchedCustomPrice && (
-                      <HStack className="justify-between">
-                        <Text className="text-gray-600">Descuento ({watchedDiscount}%):</Text>
-                        <Text className="font-medium text-green-600">
-                          -
-                          {formatPrice(
-                            ((selectedPlan.basePrice || 0) * Number(watchedDiscount)) / 100,
-                          )}
-                        </Text>
-                      </HStack>
-                    )}
-
-                    {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
-                      <HStack className="justify-between">
-                        <Text className="text-gray-600">Precio personalizado:</Text>
-                        <Text className="font-medium text-blue-600">
-                          {formatPrice(Number(watchedCustomPrice))}
-                        </Text>
-                      </HStack>
-                    )}
-
-                    <HStack className="justify-between pt-2 border-t border-gray-200">
-                      <Text className="font-semibold">Precio final:</Text>
-                      <Text className="font-bold text-lg">
-                        {formatPrice(calculateFinalPrice())}
+                  {watchedCustomPrice && Number(watchedCustomPrice) > 0 && (
+                    <HStack className="justify-between">
+                      <Text className="text-gray-600">Precio personalizado:</Text>
+                      <Text className="font-medium text-blue-600">
+                        {formatPrice(Number(watchedCustomPrice))}
                       </Text>
                     </HStack>
-                  </VStack>
-                </View>
-              </Card>
+                  )}
+
+                  <HStack className="justify-between pt-2 border-t border-gray-200">
+                    <Text className="font-semibold">Precio final:</Text>
+                    <Text className="font-bold text-lg">{formatPrice(calculateFinalPrice())}</Text>
+                  </HStack>
+                </VStack>
+              </View>
             )}
 
             {/* Submit Button */}
-            <View className="px-4 pb-3">
+            <View className="mt-3 pb-3">
               <Button onPress={handleSubmit(onSubmit)} isDisabled={!isValid} variant="solid">
                 <ButtonText>Crear contrato</ButtonText>
               </Button>
@@ -239,7 +233,7 @@ export const CreateContractForm: React.FC<CreateContractFormProps> = ({
           </View>
         }
       >
-        <View className="py-1 px-3 pb-40 bg-white">
+        <View className="py-1 px-3 pb-3 bg-white">
           <Heading size="md" className="mb-3">
             Información del contrato
           </Heading>

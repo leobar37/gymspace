@@ -1,5 +1,5 @@
 import { FormProvider } from '@/components/forms';
-import { BackButton } from '@/shared/components';
+import { ScreenForm } from '@/shared/components/ScreenForm';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Card } from '@/components/ui/card';
@@ -14,8 +14,7 @@ import { router } from 'expo-router';
 import React from 'react';
 import { CheckIcon } from 'lucide-react-native';
 import { useForm } from 'react-hook-form';
-import { ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 import { updatePaymentMethodSchema, type UpdatePaymentMethodInput } from '../schemas';
 import type { PaymentMethod } from '@gymspace/sdk';
 
@@ -135,82 +134,70 @@ export const EditPaymentMethodForm: React.FC<EditPaymentMethodFormProps> = ({
     );
   };
 
+  // Check if form is dirty (touched) AND valid for button enabling
+  const isButtonEnabled = form.formState.isDirty && form.formState.isValid && !form.formState.isSubmitting;
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-white border-b border-gray-200 px-4 py-3">
-        <HStack className="items-center gap-3">
-          <BackButton
-            label=""
-            onPress={() => router.back()}
-          />
-          <Text className="text-lg font-semibold text-gray-900">
-            Editar método de pago
+    <ScreenForm
+      title="Editar Método de Pago"
+      showBackButton={true}
+      showFixedFooter={true}
+      useSafeArea={false}
+      footerContent={
+        <Button
+          size="lg"
+          variant="solid"
+          onPress={form.handleSubmit(onSubmit)}
+          isDisabled={!isButtonEnabled}
+        >
+          <Icon as={CheckIcon} className="text-white mr-2" size="sm" />
+          <ButtonText>
+            {form.formState.isSubmitting ? 'Guardando cambios...' : 'Guardar cambios'}
+          </ButtonText>
+        </Button>
+      }
+    >
+      {/* Payment Method Type Info */}
+      <Card>
+        <View className="p-4">
+          <Text className="font-semibold text-gray-900 mb-2">Información del método</Text>
+          <VStack space="xs">
+            <Text className="text-sm text-gray-600">
+              <Text className="font-medium">Tipo:</Text> {paymentMethodOption.name}
+            </Text>
+            <Text className="text-sm text-gray-600">
+              <Text className="font-medium">Código:</Text> {paymentMethodOption.code}
+            </Text>
+          </VStack>
+        </View>
+      </Card>
+
+      {/* Edit Form */}
+      <Card>
+        <View className="py-4 px-2">
+          <Text className="font-semibold text-gray-900 mb-4">
+            Configuración del método de pago
           </Text>
-        </HStack>
-      </View>
 
-      <ScrollView className="flex-1">
-        <VStack className="p-4" space="lg">
-          {/* Payment Method Type Info */}
-          <Card>
-            <View className="p-4">
-              <Text className="font-semibold text-gray-900 mb-2">Información del método</Text>
-              <VStack space="xs">
-                <Text className="text-sm text-gray-600">
-                  <Text className="font-medium">Tipo:</Text> {paymentMethodOption.name}
-                </Text>
-                <Text className="text-sm text-gray-600">
-                  <Text className="font-medium">Código:</Text> {paymentMethodOption.code}
-                </Text>
-              </VStack>
-            </View>
-          </Card>
+          <FormProvider {...form}>
+            <PaymentMethodForm paymentMethod={paymentMethodOption} />
+          </FormProvider>
 
-          {/* Edit Form */}
-          <Card>
-            <View className="p-4">
-              <Text className="font-semibold text-gray-900 mb-4">
-                Configuración del método de pago
+          {/* Validation Errors Summary */}
+          {Object.keys(form.formState.errors).length > 0 && (
+            <VStack space="xs" className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <Text className="text-sm font-medium text-red-800">
+                Por favor corrige los siguientes errores:
               </Text>
-              
-              <FormProvider {...form}>
-                <PaymentMethodForm paymentMethod={paymentMethodOption} />
-              </FormProvider>
-
-              {/* Validation Errors Summary */}
-              {Object.keys(form.formState.errors).length > 0 && (
-                <VStack
-                  space="xs"
-                  className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg"
-                >
-                  <Text className="text-sm font-medium text-red-800">
-                    Por favor corrige los siguientes errores:
-                  </Text>
-                  {Object.entries(form.formState.errors).map(([field, error]) => (
-                    <Text key={field} className="text-xs text-red-700">
-                      • {typeof error?.message === 'string' ? error.message : `Error en ${field}`}
-                    </Text>
-                  ))}
-                </VStack>
-              )}
-            </View>
-          </Card>
-
-          {/* Save Button */}
-          <Button
-            size="lg"
-            variant="solid"
-            onPress={form.handleSubmit(onSubmit)}
-            isDisabled={form.formState.isSubmitting || !form.formState.isValid}
-          >
-            <Icon as={CheckIcon} className="text-white mr-2" size="sm" />
-            <ButtonText>
-              {form.formState.isSubmitting ? 'Guardando cambios...' : 'Guardar cambios'}
-            </ButtonText>
-          </Button>
-        </VStack>
-      </ScrollView>
-    </SafeAreaView>
+              {Object.entries(form.formState.errors).map(([field, error]) => (
+                <Text key={field} className="text-xs text-red-700">
+                  • {typeof error?.message === 'string' ? error.message : `Error en ${field}`}
+                </Text>
+              ))}
+            </VStack>
+          )}
+        </View>
+      </Card>
+    </ScreenForm>
   );
 };

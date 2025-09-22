@@ -135,7 +135,7 @@ export default function ProductDetailScreen() {
 
   // View mode
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView edges={["bottom"]} className="flex-1 bg-white">
       <ScrollView showsVerticalScrollIndicator={false} className="bg-white">
         <VStack className="px-3 py-4">
           {/* Header with actions */}
@@ -164,7 +164,7 @@ export default function ProductDetailScreen() {
           />
 
           {/* Product Image */}
-          <View className="mt-4">
+          <View className="mt-2 mb-4">
             <ProductImage imageId={product.imageId} productName={product.name} />
           </View>
 

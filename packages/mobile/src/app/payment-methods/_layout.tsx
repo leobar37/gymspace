@@ -71,8 +71,15 @@ export default function PaymentMethodsLayout() {
         name="[id]/edit"
         options={{
           title: 'Editar método de pago',
-          headerShown: false,
-          animation: 'ios_from_right',
+          animation: 'none',
+          headerLeft: () => (
+            <BackButton
+              label=""
+              onPress={() => {
+                router.back();
+              }}
+            />
+          ),
         }}
       />
     </Stack>

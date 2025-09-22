@@ -23,8 +23,9 @@ export default function InventoryLayout() {
       <Stack.Screen
         name="products"
         options={{
-          headerShown: false,
+          headerShown: true,
           animation: 'simple_push',
+          title: 'Productos',
           headerLeft: () => (
             <BackButton
               label=""

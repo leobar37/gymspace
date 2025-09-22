@@ -13,9 +13,8 @@ interface StockMovementsSheetProps {
 
 export const StockMovementsSheet = (props: StockMovementsSheetProps) => {
   const product = props.product;
-  if (!product) return null;
 
-  const { data: stockMovements = [], isLoading, refetch } = useProductStockMovements(product.id);
+  const { data: stockMovements = [], isLoading, refetch } = useProductStockMovements(product?.id);
 
   const handleMovementPress = (movement: StockMovement) => {
     // Close current sheet and open detail sheet
@@ -39,20 +38,22 @@ export const StockMovementsSheet = (props: StockMovementsSheetProps) => {
           <View className="flex-row justify-between items-center">
             <View className="flex-1 mr-2">
               <Text className="text-lg font-semibold">Movimientos de Stock</Text>
-              <Text className="text-sm text-gray-600 mt-0.5">{product.name}</Text>
+              <Text className="text-sm text-gray-600 mt-0.5">{product?.name}</Text>
             </View>
-            <Button variant="ghost" size="sm" onPress={() => SheetManager.hide('stock-movements')}>
+            <Button variant="solid"  size="sm" onPress={() => SheetManager.hide('stock-movements')}>
               <ButtonText>Cerrar</ButtonText>
             </Button>
           </View>
         </View>
         <View className="flex-1">
-          <StockMovements
-            stockMovements={stockMovements}
-            isLoading={isLoading}
-            onRefresh={() => refetch()}
-            onItemPress={handleMovementPress}
-          />
+          {!!product && (
+            <StockMovements
+              stockMovements={stockMovements}
+              isLoading={isLoading}
+              onRefresh={() => refetch()}
+              onItemPress={handleMovementPress}
+            />
+          )}
         </View>
       </View>
     </BottomSheetWrapper>

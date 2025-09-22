@@ -57,7 +57,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({
       keyExtractor={(item) => item.id}
       numColumns={numColumns}
       contentContainerStyle={{ 
-        paddingVertical: 8,
+        paddingVertical: 1,
         flexGrow: services.length === 0 ? 1 : undefined,
       }}
       ListEmptyComponent={renderEmptyState}

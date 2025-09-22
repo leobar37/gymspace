@@ -1,25 +1,18 @@
 import { FormProvider } from '@/components/forms';
 import { FormTextarea } from '@/components/forms/FormTextarea';
-import { SupplierSelector } from '@/features/suppliers/components';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { SupplierSelector } from '@/features/suppliers/components';
 import type { Product } from '@gymspace/sdk';
+import { BottomSheetWrapper, SheetProps } from '@gymspace/sheet';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  AlertTriangleIcon,
-  CheckIcon,
-  FileTextIcon,
-  PackageIcon,
-  XIcon,
-} from 'lucide-react-native';
+import { AlertTriangleIcon, CheckIcon, FileTextIcon, PackageIcon } from 'lucide-react-native';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { BottomSheetWrapper, SheetProps, SheetManager } from '@gymspace/sheet';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Form validation schema
 const stockAdjustmentSchema = z.object({
@@ -29,16 +22,6 @@ const stockAdjustmentSchema = z.object({
 });
 
 type StockAdjustmentForm = z.infer<typeof stockAdjustmentSchema>;
-
-interface StockAdjustmentPayload {
-  product: Product;
-  stockAdjustment: number;
-  newStock: number;
-  wouldExceedMax: boolean;
-  wouldGoBelowMin: boolean;
-  onConfirm: (data: StockAdjustmentForm) => Promise<void>;
-  onCancel: () => void;
-}
 
 interface StockAdjustmentModalProps extends SheetProps {
   product?: Product;

@@ -111,7 +111,7 @@ export function PaymentMethodSelectorField<TFieldValues extends FieldValues = Fi
             rounded-lg 
             px-4
             py-4
-            min-h-[60px]
+            min-h-[55px]
             ${!enabled ? 'opacity-50' : ''}
           `}
           >

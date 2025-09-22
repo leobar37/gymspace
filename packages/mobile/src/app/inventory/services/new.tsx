@@ -3,6 +3,7 @@ import { FormTextarea } from '@/components/forms/FormTextarea';
 import { Button, ButtonText } from '@/components/ui/button';
 import { SafeAreaView } from '@/components/ui/safe-area-view';
 import { View } from '@/components/ui/view';
+import { VStack } from '@/components/ui/vstack';
 import { useCountryConfig } from '@/config/ConfigContext';
 import { AssetSelector } from '@/features/assets/components/AssetSelector';
 import { useProductsController } from '@/features/products/controllers/products.controller';
@@ -89,7 +90,7 @@ export default function NewServiceScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView edges={["bottom"]} className="flex-1 bg-white">
       <FormProvider {...methods}>
         <ScreenForm
           showFixedFooter={true}
@@ -107,7 +108,7 @@ export default function NewServiceScreen() {
           }
         >
           {/* Form Fields */}
-          <View className="space-y-4 bg-white">
+          <VStack className="gap-y-3 bg-white">
             <FormInput
               name="name"
               label="Nombre del Servicio"
@@ -135,7 +136,7 @@ export default function NewServiceScreen() {
               multi={false}
               required={false}
             />
-          </View>
+          </VStack>
         </ScreenForm>
       </FormProvider>
     </SafeAreaView>

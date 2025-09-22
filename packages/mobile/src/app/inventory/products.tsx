@@ -25,23 +25,18 @@ import {
   useProductsFilter,
 } from '@/features/products/hooks/useProducts';
 import type { Product } from '@gymspace/sdk';
-import {
-  InfoIcon,
-  PackageIcon,
-  PlusIcon,
-  FilterIcon,
-} from 'lucide-react-native';
+import { InfoIcon, PackageIcon, PlusIcon, FilterIcon } from 'lucide-react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
-const CARD_PADDING = 4;
-const CONTAINER_PADDING = 16;
+const CARD_PADDING = 1;
+const CONTAINER_PADDING = 10;
 const CARDS_PER_ROW = 2;
 const CARD_WIDTH =
   (screenWidth - CONTAINER_PADDING * 2 - CARD_PADDING * (CARDS_PER_ROW + 1)) / CARDS_PER_ROW;
 
 // Fixed header height for sticky positioning
-const HEADER_HEIGHT = 56;
-const SEARCH_BAR_HEIGHT = 56;
+const HEADER_HEIGHT = 10;
+const SEARCH_BAR_HEIGHT = 10;
 
 // Product Search Header Component
 interface ProductSearchHeaderProps {
@@ -63,57 +58,40 @@ const ProductSearchHeader: React.FC<ProductSearchHeaderProps> = ({
     <RNView
       style={{
         position: 'absolute',
-        top: 0,
+        top: 12,
         left: 0,
         right: 0,
         zIndex: 1000,
         backgroundColor: 'white',
       }}
     >
-      <SafeAreaView edges={['top']}>
-        <VStack>
-          {/* Navigation Header */}
-          <HStack
-            className="items-center justify-between px-4 bg-white"
-            style={{ height: HEADER_HEIGHT }}
+      <VStack>
+        {/* Search and Filter Bar */}
+        <HStack className="px-4  bg-white" style={{ minHeight: SEARCH_BAR_HEIGHT }} space="sm">
+          <View className="flex-1">
+            <InputSearch
+              value={searchInput}
+              onChangeText={onSearchInputChange}
+              placeholder="Buscar productos..."
+              onClear={() => {
+                onSearchInputChange('');
+                onSearch();
+              }}
+            />
+          </View>
+          <Pressable
+            onPress={onShowFilters}
+            className="px-3 py-2 bg-gray-100 rounded-lg flex-row items-center"
           >
-            <HStack className="items-center flex-1">
-              <BackButton label="" />
-              <Text className="text-xl font-semibold text-gray-900 ml-2">Productos</Text>
-            </HStack>
-          </HStack>
-
-          {/* Search and Filter Bar */}
-          <HStack
-            className="px-4 pb-3 bg-white"
-            style={{ minHeight: SEARCH_BAR_HEIGHT }}
-            space="sm"
-          >
-            <View className="flex-1">
-              <InputSearch
-                value={searchInput}
-                onChangeText={onSearchInputChange}
-                placeholder="Buscar productos..."
-                onClear={() => {
-                  onSearchInputChange('');
-                  onSearch();
-                }}
-              />
-            </View>
-            <Pressable
-              onPress={onShowFilters}
-              className="px-3 py-2 bg-gray-100 rounded-lg flex-row items-center"
-            >
-              <Icon as={FilterIcon} className="w-5 h-5 text-gray-700" />
-              {activeFiltersCount > 0 && (
-                <Badge variant="solid" size="sm" className="ml-2 bg-blue-500">
-                  <BadgeText className="text-white text-xs">{activeFiltersCount}</BadgeText>
-                </Badge>
-              )}
-            </Pressable>
-          </HStack>
-        </VStack>
-      </SafeAreaView>
+            <Icon as={FilterIcon} className="w-5 h-5 text-gray-700" />
+            {activeFiltersCount > 0 && (
+              <Badge variant="solid" size="sm" className="ml-2 bg-blue-500">
+                <BadgeText className="text-white text-xs">{activeFiltersCount}</BadgeText>
+              </Badge>
+            )}
+          </Pressable>
+        </HStack>
+      </VStack>
     </RNView>
   );
 };
@@ -266,11 +244,11 @@ export default function ProductsScreen() {
     () => (
       <RNView>
         {/* Spacer for fixed header */}
-        <RNView style={{ height: HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 24 }} />
+        <RNView style={{ height: HEADER_HEIGHT + SEARCH_BAR_HEIGHT + 18 }} />
 
         {/* Results Summary */}
         {filteredProducts.length > 0 && (
-          <HStack className="justify-between items-center px-4 pb-3">
+          <HStack className="justify-between items-center px-4">
             <Text className="text-sm text-gray-600">
               {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''}{' '}
               encontrado
@@ -324,7 +302,7 @@ export default function ProductsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white">
       {/* Fixed Header */}
       <ProductSearchHeader
         searchInput={searchInput}
@@ -333,12 +311,10 @@ export default function ProductsScreen() {
         onShowFilters={handleShowFilters}
         activeFiltersCount={activeFiltersCount}
       />
-
       {/* Content */}
       <FlatList
         data={filteredProducts}
         renderItem={renderProductCard}
-        className="mt-2"
         keyExtractor={(item) => item.id}
         numColumns={CARDS_PER_ROW}
         ListHeaderComponent={ListHeader}
@@ -365,6 +341,6 @@ export default function ProductsScreen() {
       <Fab onPress={handleAddProduct} size="lg" placement="bottom right">
         <FabIcon as={PlusIcon} />
       </Fab>
-    </View>
+    </SafeAreaView>
   );
 }

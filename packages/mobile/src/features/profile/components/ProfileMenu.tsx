@@ -24,7 +24,7 @@ import {
   WrenchIcon,
 } from 'lucide-react-native';
 import React from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 interface MenuItemProps {
   icon: any;
@@ -44,16 +44,16 @@ const MenuItem: React.FC<MenuItemProps> = ({
   iconColor = 'text-gray-600',
 }) => {
   return (
-    <Button variant="unstyled" onPress={onPress} className="w-full h-16">
-      <HStack className="items-center py-3 px-4 w-full">
-        <Icon as={icon} className={`w-5 h-5 ${iconColor} mr-3`} />
+    <Pressable onPress={onPress}>
+      <HStack className="items-center py-3 px-4">
+        <Icon as={icon} className={`size-8 ${iconColor} mr-4`} />
         <VStack className="flex-1">
           <Text className="text-gray-900 font-medium">{title}</Text>
           {subtitle && <Text className="text-sm text-gray-500 mt-0.5">{subtitle}</Text>}
         </VStack>
         {showArrow && <Icon as={ChevronRightIcon} className="w-5 h-5 text-gray-400" />}
       </HStack>
-    </Button>
+    </Pressable>
   );
 };
 
@@ -207,7 +207,7 @@ const ProfileMenuComponent: React.FC = () => {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1 bg-white">
       <VStack className="pb-8">
         {/* Profile Header */}
         <Card className="mb-4 p-6">
@@ -232,7 +232,7 @@ const ProfileMenuComponent: React.FC = () => {
 
         {/* Menu Sections */}
         {menuSections.map((section, index) => (
-          <VStack key={index} className="mt-6">
+          <VStack key={index} className="mt-2">
             <Text className="px-4 mb-2 text-sm font-medium text-gray-500 uppercase">
               {section.title}
             </Text>

@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, FlatList, TouchableOpacity } from 'react-native';
-import BottomSheet, { BottomSheetWrapper, SheetManager, SheetProps, BottomSheetFooter } from '@gymspace/sheet';
+import { BottomSheetWrapper, SheetManager, SheetProps, BottomSheetFooter } from '@gymspace/sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createMultiScreen, useMultiScreenContext } from '@/components/ui/multi-screen';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -72,45 +72,44 @@ interface PaymentMethodListItemProps {
   onPress: (paymentMethod: PaymentMethod) => void;
 }
 
-const PaymentMethodListItem: React.FC<PaymentMethodListItemProps> = ({
-  paymentMethod,
-  isSelected,
-  onPress,
-}) => {
-  const IconComponent = getPaymentMethodIcon(paymentMethod);
-  const colorClasses = getPaymentMethodColor(paymentMethod.code);
-  const bgColor = colorClasses.split(' ')[0];
-  const textColor = colorClasses.split(' ')[1];
+const PaymentMethodListItem: React.FC<PaymentMethodListItemProps> = React.memo(
+  ({ paymentMethod, isSelected, onPress }) => {
+    const IconComponent = getPaymentMethodIcon(paymentMethod);
+    const colorClasses = getPaymentMethodColor(paymentMethod.code);
+    const bgColor = colorClasses.split(' ')[0];
+    const textColor = colorClasses.split(' ')[1];
 
-  return (
-    <TouchableOpacity
-      onPress={() => onPress(paymentMethod)}
-      className={`p-4 border-b border-gray-100 ${isSelected ? 'bg-blue-50' : ''}`}
-    >
-      <HStack className="items-center gap-3">
-        <View className={`w-12 h-12 rounded-full items-center justify-center ${bgColor}`}>
-          <Icon as={IconComponent} className={textColor} size="md" />
-        </View>
-        
-        <VStack className="flex-1 gap-1">
-          <HStack className="items-center justify-between">
-            <Text className="text-base font-semibold text-gray-900">{paymentMethod.name}</Text>
-            {isSelected && (
-              <Icon as={Check} className="text-blue-600" size="sm" />
-            )}
-          </HStack>
-          <Text className="text-sm text-gray-600">{paymentMethod.code}</Text>
-          
-          <HStack className="items-center gap-2 mt-1">
-            <Badge variant="solid" action={paymentMethod.enabled ? 'success' : 'muted'} size="sm">
-              <BadgeText>{paymentMethod.enabled ? 'Activo' : 'Inactivo'}</BadgeText>
-            </Badge>
-          </HStack>
-        </VStack>
-      </HStack>
-    </TouchableOpacity>
-  );
-};
+    return (
+      <TouchableOpacity
+        onPress={() => onPress(paymentMethod)}
+        className={`p-4 border-b border-gray-100 ${isSelected ? 'bg-blue-50' : ''}`}
+      >
+        <HStack className="items-center gap-3">
+          <View className={`w-12 h-12 rounded-full items-center justify-center ${bgColor}`}>
+            <Icon as={IconComponent} className={textColor} size="md" />
+          </View>
+
+          <VStack className="flex-1 gap-1">
+            <HStack className="items-center justify-between">
+              <Text className="text-base font-semibold text-gray-900">{paymentMethod.name}</Text>
+              <HStack className="items-center gap-2">
+                <Badge
+                  variant="solid"
+                  action={paymentMethod.enabled ? 'success' : 'muted'}
+                  size="sm"
+                >
+                  <BadgeText>{paymentMethod.enabled ? 'Activo' : 'Inactivo'}</BadgeText>
+                </Badge>
+                {isSelected && <Icon as={Check} className="text-blue-600" size="sm" />}
+              </HStack>
+            </HStack>
+            <Text className="text-sm text-gray-600">{paymentMethod.code}</Text>
+          </VStack>
+        </HStack>
+      </TouchableOpacity>
+    );
+  },
+);
 
 // Payment Method List Screen
 const PaymentMethodListScreen: React.FC = () => {
@@ -120,21 +119,19 @@ const PaymentMethodListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const { data: paymentMethodsResponse, isLoading } = usePaymentMethodsList({
-    active: true,
+    enabledOnly: true,
     search: searchQuery || undefined,
+    limit: 50,
+    page: 1,
   });
 
   const paymentMethods = useMemo(() => {
     return paymentMethodsResponse?.data || [];
   }, [paymentMethodsResponse]);
 
-  const filteredPaymentMethods = useMemo(() => {
-    if (!searchQuery) return paymentMethods;
-    return paymentMethods.filter(pm => 
-      pm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pm.code.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [paymentMethods, searchQuery]);
+  // Client-side filtering is redundant since API supports search
+  // Remove this to avoid unnecessary computation
+  const filteredPaymentMethods = paymentMethods;
 
   const handleSelectPaymentMethod = useCallback(
     (paymentMethod: PaymentMethod) => {
@@ -148,21 +145,21 @@ const PaymentMethodListScreen: React.FC = () => {
     SheetManager.hide('payment-method-selector');
   }, [payload]);
 
-  const renderPaymentMethod = ({ item }: { item: PaymentMethod }) => (
-    <PaymentMethodListItem
-      paymentMethod={item}
-      isSelected={item.id === payload?.currentPaymentMethodId}
-      onPress={handleSelectPaymentMethod}
-    />
+  const renderPaymentMethod = useCallback(
+    ({ item }: { item: PaymentMethod }) => (
+      <PaymentMethodListItem
+        paymentMethod={item}
+        isSelected={item.id === payload?.currentPaymentMethodId}
+        onPress={handleSelectPaymentMethod}
+      />
+    ),
+    [payload?.currentPaymentMethodId, handleSelectPaymentMethod],
   );
 
   return (
     <>
-      <NavigationHeader
-        title="Seleccionar Método de Pago"
-        onClose={handleClose}
-      />
-      
+      <NavigationHeader title="Seleccionar Método de Pago" onClose={handleClose} />
+
       <View className="flex-1">
         {/* Search Input */}
         <View className="p-4 border-b border-gray-200">
@@ -185,6 +182,9 @@ const PaymentMethodListScreen: React.FC = () => {
           renderItem={renderPaymentMethod}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ flexGrow: 1 }}
+          removeClippedSubviews
+          maxToRenderPerBatch={10}
+          windowSize={10}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center p-8">
               <Text className="text-gray-500 text-center">
@@ -206,7 +206,7 @@ interface PaymentMethodDetailsScreenProps {
 const PaymentMethodDetailsScreen: React.FC = () => {
   const payload = React.useContext(PayloadContext);
   const { router } = useMultiScreenContext();
-  
+
   // Get payment method from router props
   const { paymentMethod } = router.props as PaymentMethodDetailsScreenProps;
 
@@ -225,10 +225,7 @@ const PaymentMethodDetailsScreen: React.FC = () => {
   if (!paymentMethod) {
     return (
       <>
-        <NavigationHeader
-          title="Detalles del Método"
-          onClose={handleClose}
-        />
+        <NavigationHeader title="Detalles del Método" onClose={handleClose} />
         <View className="flex-1 items-center justify-center p-4">
           <Text className="text-gray-500">No se encontró información del método de pago</Text>
           <Button variant="outline" size="md" onPress={() => router.goBack()} className="mt-4">
@@ -242,11 +239,9 @@ const PaymentMethodDetailsScreen: React.FC = () => {
   const strategy = getPaymentViewerStrategy(paymentMethod);
   const IconComponent = getPaymentMethodIcon(paymentMethod);
   const colorClasses = getPaymentMethodColor(paymentMethod.code);
-  const bgColor = colorClasses.split(' ')[0];
-  const textColor = colorClasses.split(' ')[1];
 
-  const renderFooter = useCallback(() => (
-    <BottomSheetFooter>
+  const renderFooter = useCallback(
+    () => (
       <View className="px-4 py-4 bg-white border-t border-gray-200">
         <VStack className="gap-3">
           {paymentMethod.enabled ? (
@@ -266,8 +261,9 @@ const PaymentMethodDetailsScreen: React.FC = () => {
           )}
         </VStack>
       </View>
-    </BottomSheetFooter>
-  ), [paymentMethod.enabled, handleSelectPaymentMethod]);
+    ),
+    [paymentMethod.enabled, handleSelectPaymentMethod],
+  );
 
   return (
     <>
@@ -276,31 +272,11 @@ const PaymentMethodDetailsScreen: React.FC = () => {
         subtitle={paymentMethod.name}
         onClose={handleClose}
       />
-      
-      <View className="flex-1">
-        {/* Header with icon and basic info */}
-        <View className="px-4 py-6 border-b border-gray-200">
-          <VStack className="items-center gap-4">
-            <View className={`w-20 h-20 rounded-full items-center justify-center ${bgColor}`}>
-              <Icon as={IconComponent} className={textColor} size="xl" />
-            </View>
-            
-            <VStack className="items-center gap-2">
-              <Text className="text-2xl font-bold text-gray-900">{paymentMethod.name}</Text>
-              <Text className="text-lg font-mono text-gray-600">{paymentMethod.code}</Text>
-              <Badge variant="solid" action={paymentMethod.enabled ? 'success' : 'muted'} size="md">
-                <BadgeText>{paymentMethod.enabled ? 'Activo' : 'Inactivo'}</BadgeText>
-              </Badge>
-            </VStack>
-          </VStack>
-        </View>
 
-        {/* Strategy-based content */}
-        <View className="flex-1 px-4 py-4">
-          <strategy.Component paymentMethod={paymentMethod} />
-        </View>
+      <View className="flex-1 px-4 py-4">
+        <strategy.Component paymentMethod={paymentMethod} />
       </View>
-      
+
       {renderFooter()}
     </>
   );
@@ -325,6 +301,7 @@ function PaymentMethodSelectorSheet(props: PaymentMethodSelectorSheetProps) {
       sheetId="payment-method-selector"
       snapPoints={['85%']}
       enablePanDownToClose
+      enableDynamicSizing={false}
       backgroundStyle={{
         backgroundColor: 'white',
         borderTopLeftRadius: 16,
@@ -335,6 +312,7 @@ function PaymentMethodSelectorSheet(props: PaymentMethodSelectorSheetProps) {
         width: 100,
         height: 4,
       }}
+      keyboardBlurBehavior="restore"
     >
       <View
         style={{

@@ -14,7 +14,7 @@ export default function ContractsLayout() {
           fontWeight: '600',
         },
         headerTintColor: '#374151',
-        animation: 'slide_from_right',
+        animation: 'simple_push',
       }}
     >
       <Stack.Screen
@@ -26,7 +26,8 @@ export default function ContractsLayout() {
       <Stack.Screen
         name="create"
         options={{
-          headerShown: false,
+          title: 'Crear Contrato',
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen
