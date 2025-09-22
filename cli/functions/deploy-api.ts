@@ -255,7 +255,7 @@ export async function deployApi(options: DeployApiOptions): Promise<void> {
         '--platform', 'linux/amd64',
         '.'
       ], { 
-        stdio: 'pipe'
+        stdio: 'inherit'
       });
     }
     spinner.succeed('Docker image built successfully');

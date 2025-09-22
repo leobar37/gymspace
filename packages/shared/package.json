@@ -1,6 +1,6 @@
 {
   "name": "@gymspace/shared",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Shared types and interfaces for GymSpace",
   "author": "GymSpace Team",
   "license": "MIT",
