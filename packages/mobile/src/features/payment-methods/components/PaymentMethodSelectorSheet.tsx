@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
-import { View, KeyboardAvoidingView, Platform } from 'react-native';
-import { BottomSheetWrapper, SheetManager, SheetProps } from '@gymspace/sheet';
+import React, { useCallback, useMemo } from 'react';
+import { View, FlatList, TouchableOpacity } from 'react-native';
+import BottomSheet, { BottomSheetWrapper, SheetManager, SheetProps, BottomSheetFooter } from '@gymspace/sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createMultiScreen, useMultiScreenContext } from '@/components/ui/multi-screen';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -8,22 +8,15 @@ import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { ArrowLeft, X as CloseIcon, Check } from 'lucide-react-native';
-import { useLoadingScreen } from '@/shared/loading-screen';
-import { FormProvider, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { FormInput } from '@/components/forms';
-import { PaymentMethodsListGeneric } from './PaymentMethodsList.generic';
-import { usePaymentMethodsController } from '../controllers/payment-methods.controller';
-import type { PaymentMethod, CreatePaymentMethodDto } from '@gymspace/sdk';
-import { getPaymentMethodIcon, getPaymentMethodColor } from '../utils/payment-method-helpers';
+import { ArrowLeft, X as CloseIcon, Check, Search } from 'lucide-react-native';
+import { Input, InputField, InputIcon, InputSlot } from '@/components/ui/input';
 import { Badge, BadgeText } from '@/components/ui/badge';
-import { useMutation } from '@tanstack/react-query';
-import { useGymSdk } from '@/providers/GymSdkProvider';
+import { usePaymentMethodsController } from '../controllers/payment-methods.controller';
+import type { PaymentMethod } from '@gymspace/sdk';
+import { getPaymentMethodIcon, getPaymentMethodColor } from '../utils/payment-method-helpers';
+import { getPaymentViewerStrategy } from '../strategies/payment-viewer-strategies';
 
 export interface PaymentMethodSelectorPayload {
-  mode?: 'select' | 'create';
   currentPaymentMethodId?: string;
   onSelect: (paymentMethod: PaymentMethod) => void;
   onCancel?: () => void;
@@ -72,14 +65,79 @@ const NavigationHeader: React.FC<NavigationHeaderProps> = ({ title, subtitle, on
   );
 };
 
+// Payment Method List Item Component
+interface PaymentMethodListItemProps {
+  paymentMethod: PaymentMethod;
+  isSelected: boolean;
+  onPress: (paymentMethod: PaymentMethod) => void;
+}
+
+const PaymentMethodListItem: React.FC<PaymentMethodListItemProps> = ({
+  paymentMethod,
+  isSelected,
+  onPress,
+}) => {
+  const IconComponent = getPaymentMethodIcon(paymentMethod);
+  const colorClasses = getPaymentMethodColor(paymentMethod.code);
+  const bgColor = colorClasses.split(' ')[0];
+  const textColor = colorClasses.split(' ')[1];
+
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(paymentMethod)}
+      className={`p-4 border-b border-gray-100 ${isSelected ? 'bg-blue-50' : ''}`}
+    >
+      <HStack className="items-center gap-3">
+        <View className={`w-12 h-12 rounded-full items-center justify-center ${bgColor}`}>
+          <Icon as={IconComponent} className={textColor} size="md" />
+        </View>
+        
+        <VStack className="flex-1 gap-1">
+          <HStack className="items-center justify-between">
+            <Text className="text-base font-semibold text-gray-900">{paymentMethod.name}</Text>
+            {isSelected && (
+              <Icon as={Check} className="text-blue-600" size="sm" />
+            )}
+          </HStack>
+          <Text className="text-sm text-gray-600">{paymentMethod.code}</Text>
+          
+          <HStack className="items-center gap-2 mt-1">
+            <Badge variant="solid" action={paymentMethod.enabled ? 'success' : 'muted'} size="sm">
+              <BadgeText>{paymentMethod.enabled ? 'Activo' : 'Inactivo'}</BadgeText>
+            </Badge>
+          </HStack>
+        </VStack>
+      </HStack>
+    </TouchableOpacity>
+  );
+};
+
 // Payment Method List Screen
 const PaymentMethodListScreen: React.FC = () => {
   const payload = React.useContext(PayloadContext);
   const { router } = useMultiScreenContext();
+  const { usePaymentMethodsList } = usePaymentMethodsController();
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const { data: paymentMethodsResponse, isLoading } = usePaymentMethodsList({
+    active: true,
+    search: searchQuery || undefined,
+  });
+
+  const paymentMethods = useMemo(() => {
+    return paymentMethodsResponse?.data || [];
+  }, [paymentMethodsResponse]);
+
+  const filteredPaymentMethods = useMemo(() => {
+    if (!searchQuery) return paymentMethods;
+    return paymentMethods.filter(pm => 
+      pm.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pm.code.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [paymentMethods, searchQuery]);
 
   const handleSelectPaymentMethod = useCallback(
     (paymentMethod: PaymentMethod) => {
-      // Navigate to details screen instead of direct selection
       router.navigate('details', { props: { paymentMethod } });
     },
     [router],
@@ -90,32 +148,52 @@ const PaymentMethodListScreen: React.FC = () => {
     SheetManager.hide('payment-method-selector');
   }, [payload]);
 
-  const handleCreateNew = useCallback(() => {
-    router.navigate('create');
-  }, [router]);
+  const renderPaymentMethod = ({ item }: { item: PaymentMethod }) => (
+    <PaymentMethodListItem
+      paymentMethod={item}
+      isSelected={item.id === payload?.currentPaymentMethodId}
+      onPress={handleSelectPaymentMethod}
+    />
+  );
 
-  console.log("payload in list screen", payload);
-  
   return (
     <>
       <NavigationHeader
-        title={payload?.mode === 'create' ? 'Crear Método de Pago' : 'Seleccionar Método de Pago'}
+        title="Seleccionar Método de Pago"
         onClose={handleClose}
       />
-      <PaymentMethodsListGeneric
-        selectedPaymentMethodId={payload?.currentPaymentMethodId}
-        onPaymentMethodSelect={handleSelectPaymentMethod}
-        activeOnly={true}
-        searchPlaceholder="Buscar por nombre o código..."
-        showAddButton={true}
-        onAddPaymentMethod={handleCreateNew}
-        isSheet={true}
-        emptyMessage={
-          payload?.mode === 'create'
-            ? 'No hay métodos de pago disponibles para crear'
-            : 'No hay métodos de pago disponibles'
-        }
-      />
+      
+      <View className="flex-1">
+        {/* Search Input */}
+        <View className="p-4 border-b border-gray-200">
+          <Input>
+            <InputSlot className="pl-3">
+              <InputIcon as={Search} className="text-gray-400" />
+            </InputSlot>
+            <InputField
+              placeholder="Buscar por nombre o código..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              className="pl-2"
+            />
+          </Input>
+        </View>
+
+        {/* Payment Methods List */}
+        <FlatList
+          data={filteredPaymentMethods}
+          renderItem={renderPaymentMethod}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ flexGrow: 1 }}
+          ListEmptyComponent={
+            <View className="flex-1 items-center justify-center p-8">
+              <Text className="text-gray-500 text-center">
+                {isLoading ? 'Cargando métodos de pago...' : 'No hay métodos de pago disponibles'}
+              </Text>
+            </View>
+          }
+        />
+      </View>
     </>
   );
 };
@@ -139,7 +217,6 @@ const PaymentMethodDetailsScreen: React.FC = () => {
 
   const handleSelectPaymentMethod = useCallback(() => {
     if (paymentMethod && payload?.onSelect) {
-      console.log('Selecting payment method from details:', paymentMethod);
       payload.onSelect(paymentMethod);
       SheetManager.hide('payment-method-selector');
     }
@@ -162,10 +239,35 @@ const PaymentMethodDetailsScreen: React.FC = () => {
     );
   }
 
+  const strategy = getPaymentViewerStrategy(paymentMethod);
   const IconComponent = getPaymentMethodIcon(paymentMethod);
-  const colorClass = getPaymentMethodColor(paymentMethod.code);
-  const bgColor = colorClass.split(' ')[0];
-  const textColor = colorClass.split(' ')[1];
+  const colorClasses = getPaymentMethodColor(paymentMethod.code);
+  const bgColor = colorClasses.split(' ')[0];
+  const textColor = colorClasses.split(' ')[1];
+
+  const renderFooter = useCallback(() => (
+    <BottomSheetFooter>
+      <View className="px-4 py-4 bg-white border-t border-gray-200">
+        <VStack className="gap-3">
+          {paymentMethod.enabled ? (
+            <Button size="lg" onPress={handleSelectPaymentMethod}>
+              <Icon as={Check} className="mr-2" size="md" />
+              <ButtonText>Seleccionar este método</ButtonText>
+            </Button>
+          ) : (
+            <View className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <HStack className="items-center gap-2">
+                <Icon as={Check} className="text-amber-600" size="sm" />
+                <Text className="text-amber-800 text-sm">
+                  Este método de pago está desactivado y no puede ser seleccionado
+                </Text>
+              </HStack>
+            </View>
+          )}
+        </VStack>
+      </View>
+    </BottomSheetFooter>
+  ), [paymentMethod.enabled, handleSelectPaymentMethod]);
 
   return (
     <>
@@ -175,9 +277,9 @@ const PaymentMethodDetailsScreen: React.FC = () => {
         onClose={handleClose}
       />
       
-      <View className="flex-1 px-4 py-6">
-        <VStack className="gap-6">
-          {/* Payment Method Icon and Basic Info */}
+      <View className="flex-1">
+        {/* Header with icon and basic info */}
+        <View className="px-4 py-6 border-b border-gray-200">
           <VStack className="items-center gap-4">
             <View className={`w-20 h-20 rounded-full items-center justify-center ${bgColor}`}>
               <Icon as={IconComponent} className={textColor} size="xl" />
@@ -191,230 +293,16 @@ const PaymentMethodDetailsScreen: React.FC = () => {
               </Badge>
             </VStack>
           </VStack>
-
-          {/* Description */}
-          {paymentMethod.description && (
-            <VStack className="gap-2">
-              <Text className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                Descripción
-              </Text>
-              <View className="bg-gray-50 rounded-lg p-4">
-                <Text className="text-gray-700 leading-relaxed">
-                  {paymentMethod.description}
-                </Text>
-              </View>
-            </VStack>
-          )}
-
-          {/* Additional Information */}
-          <VStack className="gap-4">
-            <Text className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-              Información Adicional
-            </Text>
-            
-            <VStack className="gap-3">
-              <HStack className="justify-between items-center py-3 border-b border-gray-100">
-                <Text className="text-gray-600">ID</Text>
-                <Text className="font-mono text-gray-900">{paymentMethod.id}</Text>
-              </HStack>
-
-              <HStack className="justify-between items-center py-3 border-b border-gray-100">
-                <Text className="text-gray-600">Estado</Text>
-                <Badge variant="solid" action={paymentMethod.enabled ? 'success' : 'muted'} size="sm">
-                  <BadgeText>{paymentMethod.enabled ? 'Activo' : 'Inactivo'}</BadgeText>
-                </Badge>
-              </HStack>
-
-              {paymentMethod.metadata?.type && (
-                <HStack className="justify-between items-center py-3 border-b border-gray-100">
-                  <Text className="text-gray-600">Tipo</Text>
-                  <Text className="text-gray-900 capitalize">{paymentMethod.metadata.type}</Text>
-                </HStack>
-              )}
-
-              {paymentMethod.metadata?.country && (
-                <HStack className="justify-between items-center py-3 border-b border-gray-100">
-                  <Text className="text-gray-600">País</Text>
-                  <Text className="text-gray-900 uppercase">{paymentMethod.metadata.country}</Text>
-                </HStack>
-              )}
-
-              {paymentMethod.createdAt && (
-                <HStack className="justify-between items-center py-3">
-                  <Text className="text-gray-600">Fecha de creación</Text>
-                  <Text className="text-gray-900">
-                    {new Date(paymentMethod.createdAt).toLocaleDateString()}
-                  </Text>
-                </HStack>
-              )}
-            </VStack>
-          </VStack>
-
-          {/* Action Buttons */}
-          <View className="mt-auto pt-6">
-            <VStack className="gap-3">
-              {paymentMethod.enabled && (
-                <Button size="lg" onPress={handleSelectPaymentMethod}>
-                  <Icon as={Check} className="mr-2" size="md" />
-                  <ButtonText>Seleccionar este método</ButtonText>
-                </Button>
-              )}
-              
-              {!paymentMethod.enabled && (
-                <View className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <HStack className="items-center gap-2">
-                    <Icon as={Check} className="text-amber-600" size="sm" />
-                    <Text className="text-amber-800 text-sm">
-                      Este método de pago está desactivado y no puede ser seleccionado
-                    </Text>
-                  </HStack>
-                </View>
-              )}
-
-              <Button
-                variant="outline"
-                size="lg"
-                onPress={() => router.goBack()}
-              >
-                <ButtonText>Volver a la lista</ButtonText>
-              </Button>
-            </VStack>
-          </View>
-        </VStack>
-      </View>
-    </>
-  );
-};
-
-// Quick Create Payment Method Screen
-const QuickCreatePaymentMethodScreen: React.FC = () => {
-  const payload = React.useContext(PayloadContext);
-  const { router } = useMultiScreenContext();
-  const { execute } = useLoadingScreen();
-  const { sdk } = useGymSdk();
-
-  // Create mutation for payment method
-  const createPaymentMethodMutation = useMutation({
-    mutationFn: async (data: CreatePaymentMethodDto) => {
-      const response = await sdk.paymentMethods.createPaymentMethod(data);
-      return response;
-    },
-  });
-
-  // Create validation schema
-  const schema = z.object({
-    name: z.string().min(1, 'El nombre es requerido'),
-    code: z.string().min(1, 'El código es requerido'),
-    description: z.string().optional(),
-    enabled: z.boolean().default(true),
-  });
-
-  type FormData = z.infer<typeof schema>;
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      name: '',
-      code: '',
-      description: '',
-      enabled: true,
-    },
-  });
-
-  const handleClose = useCallback(() => {
-    payload?.onCancel?.();
-    SheetManager.hide('payment-method-selector');
-  }, [payload]);
-
-  const onSubmit = form.handleSubmit(async (data) => {
-    await execute({
-      action: 'Creando método de pago...',
-      fn: async () => {
-        const createData: CreatePaymentMethodDto = {
-          name: data.name,
-          code: data.code,
-          description: data.description || '',
-          enabled: data.enabled,
-          metadata: {
-            type: 'custom_payment',
-            country: 'PE',
-          },
-        };
-
-        const newPaymentMethod = await createPaymentMethodMutation.mutateAsync(createData);
-
-        // Navigate back to list to show the updated data
-        router.navigate('list');
-
-        // Select the newly created payment method
-        payload?.onSelect(newPaymentMethod);
-        SheetManager.hide('payment-method-selector');
-      },
-      successMessage: 'Método de pago creado correctamente',
-    });
-  });
-
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <NavigationHeader
-        title="Nuevo Método de Pago Rápido"
-        subtitle="Información básica"
-        onClose={handleClose}
-      />
-
-      <FormProvider {...form}>
-        <View className="flex-1 px-4 py-4">
-          <VStack className="gap-4">
-            <Text className="text-sm text-gray-600">
-              Ingrese los datos básicos del método de pago. La descripción es opcional. Podrá
-              completar más información después.
-            </Text>
-
-            <FormInput
-              name="name"
-              label="Nombre del método"
-              placeholder="Ej: Efectivo, Transferencia bancaria"
-              autoCapitalize="words"
-            />
-
-            <FormInput
-              name="code"
-              label="Código identificador"
-              placeholder="Ej: cash, transfer"
-              autoCapitalize="none"
-            />
-
-            <FormInput
-              name="description"
-              label="Descripción (opcional)"
-              placeholder="Descripción del método de pago"
-              autoCapitalize="sentences"
-              multiline
-              numberOfLines={3}
-            />
-          </VStack>
-
-          <View className="mt-auto pt-4">
-            <HStack className="gap-3">
-              <Button
-                variant="outline"
-                size="md"
-                onPress={() => router.goBack()}
-                className="flex-1"
-              >
-                <ButtonText>Cancelar</ButtonText>
-              </Button>
-              <Button size="md" onPress={onSubmit} className="flex-1">
-                <ButtonText>Crear Método</ButtonText>
-              </Button>
-            </HStack>
-          </View>
         </View>
-      </FormProvider>
-    </KeyboardAvoidingView>
+
+        {/* Strategy-based content */}
+        <View className="flex-1 px-4 py-4">
+          <strategy.Component paymentMethod={paymentMethod} />
+        </View>
+      </View>
+      
+      {renderFooter()}
+    </>
   );
 };
 
@@ -422,7 +310,6 @@ const QuickCreatePaymentMethodScreen: React.FC = () => {
 const paymentMethodSelectorFlow = createMultiScreen()
   .addStep('list', PaymentMethodListScreen)
   .addStep('details', PaymentMethodDetailsScreen)
-  .addStep('create', QuickCreatePaymentMethodScreen)
   .build();
 
 const { Component } = paymentMethodSelectorFlow;
@@ -432,8 +319,6 @@ interface PaymentMethodSelectorSheetProps extends SheetProps, PaymentMethodSelec
 
 function PaymentMethodSelectorSheet(props: PaymentMethodSelectorSheetProps) {
   const insets = useSafeAreaInsets();
-
-  console.log('props', props);
 
   return (
     <BottomSheetWrapper
