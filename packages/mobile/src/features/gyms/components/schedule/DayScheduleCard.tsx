@@ -32,8 +32,8 @@ export const DayScheduleCard: React.FC<DayScheduleCardProps> = ({
           {label}
         </Text>
         <Switch
-          isChecked={daySchedule.isOpen}
-          onToggle={() => toggleDayOpen(dayKey)}
+          value={daySchedule.isOpen}
+          onValueChange={() => toggleDayOpen(dayKey)}
         />
       </View>
 

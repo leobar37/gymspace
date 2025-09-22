@@ -1,7 +1,8 @@
 import React from 'react';
-import { ScrollView, View } from 'react-native';
-import { Text } from '@/components/ui/text';
+import { View } from 'react-native';
 import { Button, ButtonText } from '@/components/ui/button';
+import { VStack } from '@/components/ui/vstack';
+import { ScreenForm } from '@/shared/components/ScreenForm';
 import { ScheduleProvider, dayNames, ScheduleFormData, useScheduleContext } from './ScheduleContext';
 import { DayScheduleCard } from './DayScheduleCard';
 
@@ -16,40 +17,47 @@ const ScheduleFormContent: React.FC<ScheduleFormContentProps> = ({
 }) => {
   const { form } = useScheduleContext();
   const { handleSubmit } = form;
+
+  // Footer content with action buttons
+  const footerContent = (
+    <VStack space="sm">
+      <Button
+        variant="solid"
+        size="lg"
+        onPress={handleSubmit(onSubmit)}
+      >
+        <ButtonText>Guardar Horario</ButtonText>
+      </Button>
+
+      <Button
+        variant="outline"
+        size="lg"
+        onPress={onCancel}
+      >
+        <ButtonText>Cancelar</ButtonText>
+      </Button>
+    </VStack>
+  );
+
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View>
-        {/* Day Schedule Cards */}
-        <View className="bg-white rounded-xl p-6 mb-6 shadow-sm">
-          {dayNames.map(({ key, label }) => (
-            <DayScheduleCard
-              key={key}
-              dayKey={key}
-              label={label}
-            />
-          ))}
-        </View>
-
-        {/* Action Buttons */}
-        <View className="space-y-3">
-          <Button
-            variant="solid"
-            size="lg"
-            onPress={handleSubmit(onSubmit)}
-          >
-            <ButtonText>Guardar Horario</ButtonText>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="lg"
-            onPress={onCancel}
-          >
-            <ButtonText>Cancelar</ButtonText>
-          </Button>
-        </View>
+    <ScreenForm
+      showFixedFooter={true}
+      useSafeArea={false}
+      footerContent={footerContent}
+      showBackButton={false}
+      contentClassName="bg-gray-50"
+    >
+      {/* Day Schedule Cards */}
+      <View className="rounded-xl py-3">
+        {dayNames.map(({ key, label }) => (
+          <DayScheduleCard
+            key={key}
+            dayKey={key}
+            label={label}
+          />
+        ))}
       </View>
-    </ScrollView>
+    </ScreenForm>
   );
 };
 

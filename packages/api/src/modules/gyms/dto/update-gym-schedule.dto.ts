@@ -20,6 +20,7 @@ class TimeSlot {
 
 class DaySchedule {
   @ApiProperty({ description: 'Is the gym open this day', example: true })
+  @IsOptional()
   isOpen: boolean;
 
   @ApiProperty({

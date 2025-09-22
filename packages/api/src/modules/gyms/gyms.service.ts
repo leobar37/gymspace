@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CacheService } from '../../core/cache/cache.service';
 import { OrganizationsService } from '../organizations/organizations.service';
-import { CreateGymDto, UpdateGymDto, UpdateCurrentGymDto } from './dto';
+import { CreateGymDto, UpdateGymDto, UpdateCurrentGymDto, UpdateGymScheduleDto } from './dto';
 import { BusinessException, ResourceNotFoundException } from '../../common/exceptions';
 import { Gym } from '@prisma/client';
 import { RequestContext } from '../../common/services/request-context.service';
@@ -415,7 +415,7 @@ export class GymsService extends BaseGymService {
   /**
    * Update gym schedule
    */
-  async updateGymSchedule(context: RequestContext, gymId: string, dto: any): Promise<Gym> {
+  async updateGymSchedule(context: RequestContext, gymId: string, dto: UpdateGymScheduleDto): Promise<Gym> {
     const userId = context.getUserId();
 
     // Use base service to validate gym access
