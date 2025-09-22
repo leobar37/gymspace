@@ -42,8 +42,8 @@ export const ContractPricingCard: React.FC<ContractPricingCardProps> = ({
         <HStack className="justify-between">
           <Text className="font-semibold">Precio final:</Text>
           <Text className="font-bold text-lg">
-            {contract.finalPrice !== null && contract.finalPrice !== undefined
-              ? formatPrice(Number(contract.finalPrice))
+            {contract.finalAmount !== null && contract.finalAmount !== undefined
+              ? formatPrice(Number(contract.finalAmount))
               : formatPrice(Number(contract.gymMembershipPlan?.basePrice || 0))}
           </Text>
         </HStack>

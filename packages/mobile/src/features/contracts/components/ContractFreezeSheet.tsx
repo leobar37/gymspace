@@ -52,9 +52,6 @@ export const ContractFreezeSheet: React.FC<ContractFreezeSheetProps> = (props) =
   const onSuccess = props.onSuccess;
 
   // Handle case where contract is not provided yet
-  if (!contract) {
-    return null;
-  }
 
   const form = useForm<FreezeFormData>({
     resolver: zodResolver(freezeSchema),
@@ -116,21 +113,22 @@ export const ContractFreezeSheet: React.FC<ContractFreezeSheetProps> = (props) =
 
   return (
     <BottomSheetWrapper sheetId="contract-freeze" scrollable snapPoints={['90%']}>
-      <View className="bg-white">
-        {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
-          <HStack className="gap-2 items-center">
-            <Icon as={Snowflake} size="md" className="text-blue-600" />
-            <Heading size="lg">Congelar Contrato</Heading>
-          </HStack>
-          <Pressable onPress={() => SheetManager.hide('contract-freeze')} className="p-2">
-            <Icon as={X} size="md" className="text-gray-500" />
-          </Pressable>
-        </View>
+      {contract && (
+        <View className="bg-white">
+          {/* Header */}
+          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
+            <HStack className="gap-2 items-center">
+              <Icon as={Snowflake} size="md" className="text-blue-600" />
+              <Heading size="lg">Congelar Contrato</Heading>
+            </HStack>
+            <Pressable onPress={() => SheetManager.hide('contract-freeze')} className="p-2">
+              <Icon as={X} size="md" className="text-gray-500" />
+            </Pressable>
+          </View>
 
-        {/* Content */}
-        <FormProvider {...form}>
-          <VStack className="p-4 gap-4">
+          {/* Content */}
+          <FormProvider {...form}>
+            <VStack className="p-4 gap-4">
               {/* Info Box */}
               <Box className="bg-blue-50 p-4 rounded-xl border border-blue-200">
                 <HStack className="gap-2 mb-2">
@@ -229,29 +227,30 @@ export const ContractFreezeSheet: React.FC<ContractFreezeSheetProps> = (props) =
                 </Box>
               )}
 
-            {/* Footer Actions */}
-            <HStack className="gap-3 mt-6">
-              <Button
-                variant="outline"
-                size="lg"
-                className="flex-1"
-                onPress={() => SheetManager.hide('contract-freeze')}
-              >
-                <ButtonText>Cancelar</ButtonText>
-              </Button>
-              <Button
-                size="lg"
-                className="flex-1"
-                onPress={form.handleSubmit(handleSubmit)}
-                isDisabled={isFreezingContract}
-              >
-                <Icon as={Snowflake} size="sm" className="mr-2" />
-                <ButtonText>Congelar</ButtonText>
-              </Button>
-            </HStack>
-          </VStack>
-        </FormProvider>
-      </View>
+              {/* Footer Actions */}
+              <HStack className="gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="flex-1"
+                  onPress={() => SheetManager.hide('contract-freeze')}
+                >
+                  <ButtonText>Cancelar</ButtonText>
+                </Button>
+                <Button
+                  size="lg"
+                  className="flex-1"
+                  onPress={form.handleSubmit(handleSubmit)}
+                  isDisabled={isFreezingContract}
+                >
+                  <Icon as={Snowflake} size="sm" className="mr-2" />
+                  <ButtonText>Congelar</ButtonText>
+                </Button>
+              </HStack>
+            </VStack>
+          </FormProvider>
+        </View>
+      )}
     </BottomSheetWrapper>
   );
 };

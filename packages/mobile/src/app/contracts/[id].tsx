@@ -7,16 +7,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
 } from '@/components/ui/alert-dialog';
-import { Card } from '@/components/ui/card';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Heading } from '@/components/ui/heading';
 import { Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import {
-  ContractDetailHeader,
   ContractInfoCard,
   ContractPaymentMethodCard,
   ContractPricingCard,
@@ -25,17 +24,18 @@ import {
   useContractsController,
 } from '@/features/contracts';
 import { ContractStatus } from '@gymspace/sdk';
+import { SheetManager } from '@gymspace/sheet';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { PauseIcon, RefreshCwIcon, XIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { Alert, ScrollView } from 'react-native';
-import { SheetManager } from '@gymspace/sheet';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { useFormatPrice } from '@/config/ConfigContext';
+import { useLoadingScreen } from '@/shared/loading-screen';
 
 // Form schema for cancel
 const cancelSchema = z.object({
@@ -48,10 +48,11 @@ export default function ContractDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const formatPriceConfig = useFormatPrice();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const { execute } = useLoadingScreen();
 
-  const { useContractDetail, cancelContract, isCancellingContract } = useContractsController();
+  const { useContractDetail, cancelContract } = useContractsController();
 
-  const { data: contract, isLoading } = useContractDetail(id!);
+  const { data: contract, isLoading, refetch: refetchContract } = useContractDetail(id!);
 
   // Cancel form
   const cancelForm = useForm<CancelFormData>({
@@ -60,23 +61,31 @@ export default function ContractDetailScreen() {
       reason: '',
     },
   });
-  console.log('contract', JSON.stringify(contract, null, 2));
 
   const formatPrice = formatPriceConfig;
 
   const handleCancel = async (data: CancelFormData) => {
-    cancelContract(
-      { id: id!, reason: data.reason },
-      {
-        onSuccess: () => {
-          setShowCancelDialog(false);
-          Alert.alert('Éxito', 'El contrato ha sido cancelado');
+    const cancelPromise = () => new Promise((resolve, reject) => {
+      cancelContract(
+        { id: id!, reason: data.reason },
+        {
+          onSuccess: () => {
+            setShowCancelDialog(false);
+            refetchContract();
+            resolve(undefined);
+          },
+          onError: (error: any) => {
+            reject(error.response?.data?.message || 'No se pudo cancelar el contrato');
+          },
         },
-        onError: (error: any) => {
-          Alert.alert('Error', error.response?.data?.message || 'No se pudo cancelar el contrato');
-        },
-      },
-    );
+      );
+    });
+
+    await execute(cancelPromise(), {
+      action: 'Cancelando contrato...',
+      successMessage: 'Contrato cancelado exitosamente',
+      errorFormatter: (error) => `Error: ${error}`,
+    });
   };
 
   if (isLoading) {
@@ -120,6 +129,7 @@ export default function ContractDetailScreen() {
                         SheetManager.show('contract-renewal', {
                           contract,
                           onSuccess: () => {
+                            refetchContract();
                             // Refetch contract data after successful renewal
                           },
                         })
@@ -140,6 +150,7 @@ export default function ContractDetailScreen() {
                         contract,
                         onSuccess: () => {
                           // Refetch contract data after successful freeze
+                          refetchContract();
                         },
                       })
                     }
@@ -191,16 +202,17 @@ export default function ContractDetailScreen() {
               </FormProvider>
             </AlertDialogBody>
             <AlertDialogFooter>
-              <Button onPress={() => setShowCancelDialog(false)} variant="outline" className="mr-3">
-                <ButtonText>No, mantener</ButtonText>
-              </Button>
-              <Button
-                onPress={cancelForm.handleSubmit(handleCancel)}
-                action="negative"
-                isDisabled={isCancellingContract}
-              >
-                <ButtonText>Sí, cancelar</ButtonText>
-              </Button>
+              <View className="flex flex-row mt-5 gap-x-3 justify-center">
+                <Button onPress={() => setShowCancelDialog(false)}>
+                  <ButtonText>No, mantener</ButtonText>
+                </Button>
+                <Button
+                  onPress={cancelForm.handleSubmit(handleCancel)}
+                  action="negative"
+                >
+                  <ButtonText>Sí, cancelar</ButtonText>
+                </Button>
+              </View>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

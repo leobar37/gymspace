@@ -9,7 +9,7 @@ import { Text } from '@/components/ui/text';
 export default function EditClientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { useClientDetail } = useClientsController();
-  
+
   const { data: client, isLoading } = useClientDetail(id);
 
   if (isLoading) {
@@ -31,11 +31,6 @@ export default function EditClientScreen() {
 
   return (
     <>
-      <Stack.Screen 
-        options={{ 
-          headerShown: false,
-        }} 
-      />
       <CreateClientForm initialData={client} isEditing={true} clientId={id} />
     </>
   );

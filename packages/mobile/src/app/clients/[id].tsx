@@ -79,7 +79,7 @@ export default function ClientDetailScreen() {
   }
 
   return (
-    <View  className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-white">
       <Header
         clientName={client?.name}
         onBack={() => router.back()}
@@ -98,9 +98,7 @@ export default function ClientDetailScreen() {
             />
           )}
           {activeTab === 'checkins' && <ClientCheckInsSection clientId={id} />}
-          {activeTab === 'stats' && (
-            <ClientStatisticsSection  stats={stats} isLoading={false} />
-          )}
+          {activeTab === 'stats' && <ClientStatisticsSection stats={stats} isLoading={false} />}
         </VStack>
       </ScrollView>
 
@@ -170,7 +168,7 @@ const InfoTab: React.FC<InfoTabProps> = ({
   onToggleStatus,
   isTogglingStatus,
 }) => (
-  <>
+  <View>
     <ClientHeader client={client} profilePhotoUrl={profilePhotoUrl} onEdit={onEdit} />
     <ClientContactInfo phone={client.phone} email={client.email} birthDate={client.birthDate} />
     <ClientNotes notes={client.notes} />
@@ -186,5 +184,5 @@ const InfoTab: React.FC<InfoTabProps> = ({
         </ButtonText>
       </Button>
     </VStack>
-  </>
+  </View>
 );

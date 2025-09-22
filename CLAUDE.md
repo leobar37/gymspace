@@ -75,11 +75,33 @@ When available, use these tools for better code understanding:
   - Delete operations
   - Complex async operations
 - Pattern: `const { execute } = useLoadingScreen();`
+- **CORRECT USAGE**: `execute` takes a Promise as first parameter, config object as second:
+  ```typescript
+  // CORRECT ✅
+  await execute(promiseFunction(), {
+    action: 'Loading message...',
+    successMessage: 'Success message',
+    errorFormatter: (error) => `Error: ${error}`,
+  });
+
+  // Example with mutation
+  const promise = () => new Promise((resolve, reject) => {
+    mutate(data, {
+      onSuccess: (result) => { resolve(result); },
+      onError: (error) => { reject(error); }
+    });
+  });
+  await execute(promise(), { action: '...', successMessage: '...' });
+  ```
+- **WRONG**: `execute({ fn: async () => {...}, action: '...' })` ❌
+- **WRONG**: `execute({ action: '...', fn: async () => {...} })` ❌
 - Wrap async operations with `execute()` providing:
-  - `action`: Loading message
-  - `successMessage`: Success feedback
-  - `successActions`: Post-success navigation options
-  - `errorFormatter`: Error message formatting
+  - First parameter: The promise to execute
+  - Second parameter: Config object with:
+    - `action`: Loading message
+    - `successMessage`: Success feedback
+    - `successActions`: Post-success navigation options (optional)
+    - `errorFormatter`: Error message formatting
 - **NEVER** use simple try/catch with toast for these operations
 
 ### Form Development

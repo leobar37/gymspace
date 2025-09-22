@@ -16,7 +16,7 @@ export default ({ config }) => {
         backgroundColor: '#ffffff',
       },
       ios: {
-        supportsTablet: true,
+        supportsTablet: false,
         bundleIdentifier: 'com.elena.gymspace',
         infoPlist: {
           ITSAppUsesNonExemptEncryption: false,

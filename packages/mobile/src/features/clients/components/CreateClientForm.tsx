@@ -3,6 +3,7 @@ import {
   FormInput,
   FormProvider,
   FormSelect,
+  FormTextarea,
   useForm,
   zodResolver,
 } from '@/components/forms';
@@ -24,41 +25,24 @@ import { useClientsController, type ClientFormData } from '../controllers/client
 const createClientSchema = (
   validateDocument: (type: string, value: string) => { isValid: boolean; error?: string },
 ) =>
-  z
-    .object({
-      name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-      birthDate: z.date().nullable().optional().or(z.undefined()),
-      documentValue: z.string().optional().or(z.literal('')).or(z.undefined()),
-      documentType: z.string().optional().or(z.undefined()),
-      phone: z.string().min(8, 'Teléfono inválido').optional().or(z.literal('')).or(z.undefined()),
-      email: z.string().email('Email inválido').optional().or(z.literal('')).or(z.undefined()),
-      address: z.string().optional().or(z.literal('')).or(z.undefined()),
-      gender: z.string().optional().or(z.literal('')).or(z.undefined()),
-      maritalStatus: z.string().optional().or(z.literal('')).or(z.undefined()),
-      city: z.string().optional().or(z.literal('')).or(z.undefined()),
-      state: z.string().optional().or(z.literal('')).or(z.undefined()),
-      postalCode: z.string().optional().or(z.literal('')).or(z.undefined()),
-      occupation: z.string().optional().or(z.literal('')).or(z.undefined()),
-      notes: z.string().optional().or(z.undefined()),
-      profilePhotoId: z.string().nullable().optional(),
-      customData: z.record(z.any()).optional(),
-    })
-    .refine(
-      (data) => {
-        if (data.documentValue && data.documentValue.trim() !== '' && !data.documentType) {
-          return false;
-        }
-        if (data.documentValue && data.documentType && data.documentValue.trim() !== '') {
-          const validation = validateDocument(data.documentType, data.documentValue);
-          return validation.isValid;
-        }
-        return true;
-      },
-      {
-        message: 'Documento inválido',
-        path: ['documentValue'],
-      },
-    );
+  z.object({
+    name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+    birthDate: z.date().nullable().optional().or(z.undefined()),
+    documentValue: z.string().optional().or(z.literal('')).or(z.undefined()),
+    documentType: z.string().optional().or(z.undefined()),
+    phone: z.string().min(8, 'Teléfono inválido').optional().or(z.literal('')).or(z.undefined()),
+    email: z.string().email('Email inválido').optional().or(z.literal('')).or(z.undefined()),
+    address: z.string().optional().or(z.literal('')).or(z.undefined()),
+    gender: z.string().optional().or(z.literal('')).or(z.undefined()),
+    maritalStatus: z.string().optional().or(z.literal('')).or(z.undefined()),
+    city: z.string().optional().or(z.literal('')).or(z.undefined()),
+    state: z.string().optional().or(z.literal('')).or(z.undefined()),
+    postalCode: z.string().optional().or(z.literal('')).or(z.undefined()),
+    occupation: z.string().optional().or(z.literal('')).or(z.undefined()),
+    notes: z.string().optional().or(z.undefined()),
+    profilePhotoId: z.string().nullable().optional(),
+    customData: z.record(z.any()).optional(),
+  });
 
 type ClientFormSchema = ClientFormData;
 
@@ -147,7 +131,7 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
         birthDate: formatDateForAPI(formData.birthDate),
         gender: sanitizeField(formData.gender),
         maritalStatus: sanitizeField(formData.maritalStatus),
-        address: formData.address?.trim() || '', // SDK requires address as string, not optional
+        address: formData.address?.trim() || '',
         city: sanitizeField(formData.city),
         state: sanitizeField(formData.state),
         postalCode: sanitizeField(formData.postalCode),
@@ -208,17 +192,24 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
       onSuccess: () => {
         router.back();
       },
-      errorActions: [
-        {
-          label: 'Cerrar',
-          onPress: () => {},
-          variant: 'solid',
-        },
-      ],
     });
   };
 
-  const { isValid } = methods.formState;
+  const { isValid, isDirty, errors } = methods.formState;
+
+  console.log(
+    'Form errors:',
+    JSON.stringify(
+      {
+        isValid,
+        isDirty,
+        errors,
+      },
+      null,
+      3,
+    ),
+  );
+
   const isFormDisabled = isLoading || !isValid;
 
   const actions = (
@@ -381,7 +372,6 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                   { label: 'Unión libre', value: 'domestic_partnership' },
                 ]}
               />
-
               <FormInput
                 name="occupation"
                 label="Ocupación (opcional)"
@@ -389,15 +379,13 @@ export const CreateClientForm: React.FC<CreateClientFormProps> = ({
                 returnKeyType="next"
               />
             </VStack>
-
             <Divider />
             <VStack className="gap-4">
               <Heading className="text-xl font-bold text-gray-900">Notas</Heading>
-              <FormInput
+              <FormTextarea
                 name="notes"
                 label="Notas adicionales (opcional)"
                 placeholder="Información adicional, observaciones, preferencias..."
-                multiline
                 returnKeyType="done"
                 numberOfLines={4}
                 maxLength={500}
