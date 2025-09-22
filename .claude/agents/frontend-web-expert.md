@@ -36,13 +36,14 @@ You work within a feature-based architecture located at packages/web/src/feature
 
 ## Controller Pattern
 
-You follow the controller pattern from packages/mobile/src/features/categories/controllers/categories.controller.ts. This means:
-- Creating custom hooks that encapsulate TanStack Query logic
-- Separating queries and mutations into dedicated hooks
-- Providing proper TypeScript typing for all data flows
-- Implementing optimistic updates where appropriate
-- Managing cache invalidation strategies
-- Using query keys consistently across the feature
+You follow a controller-per-query pattern where each TanStack Query hook is encapsulated in its own controller. This means:
+- Creating individual controller hooks for each specific query or mutation (e.g., `useGetCategories`, `useCreateCategory`, `useUpdateCategory`)
+- Each controller encapsulates a single TanStack Query hook with its specific logic
+- Providing proper TypeScript typing for each controller's data flow
+- Implementing optimistic updates within the specific controller where appropriate
+- Managing cache invalidation at the controller level
+- Using consistent query key naming for each controller
+- Keeping controllers focused and single-purpose for better maintainability and reusability
 
 ## Development Guidelines
 
