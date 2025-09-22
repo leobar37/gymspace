@@ -20,6 +20,10 @@ export class ApiClient {
   private config: GymSpaceConfig;
   private refreshToken: string | null = null;
 
+  public getAccessToken(): string | null {
+    return this.config.apiKey || null;
+  }
+
   constructor(config: GymSpaceConfig) {
     this.config = config;
 
@@ -67,7 +71,6 @@ export class ApiClient {
       },
     );
   }
-
 
   private handleError(error: AxiosError): GymSpaceError {
     const requestPath = error.config?.url || 'unknown';

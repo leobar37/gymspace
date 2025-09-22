@@ -2,13 +2,12 @@ import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { ConfigProvider } from '@/config/ConfigContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { SessionProvider } from '@/contexts/SessionContext';
-import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useRouter, useSegments } from 'expo-router';
 import { LoadingScreen } from '@/shared/loading-screen/LoadingScreen';
 import { SheetManager, SheetProvider, SheetsRenderer } from '@gymspace/sheet';
-import '../sheets';
+import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useSegments } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
+import '../sheets';
 import { GymSdkProvider } from './GymSdkProvider';
 
 interface AppProvidersProps {
@@ -16,7 +15,6 @@ interface AppProvidersProps {
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
-  const router = useRouter();
   const segments = useSegments();
   // Create QueryClient inside component with useState to ensure single instance
   const [queryClient] = useState(() => {
@@ -29,11 +27,7 @@ export function AppProviders({ children }: AppProvidersProps) {
           console.log('pass here to login', {
             segments,
           });
-          try {
-            router.replace('(onboarding)/login');
-          } catch (error) {
-            console.log('error to login', error);
-          }
+
           return;
         }
 
@@ -76,26 +70,6 @@ export function AppProviders({ children }: AppProvidersProps) {
           retry: 0,
           // Global mutation error handling
           onError: (error: any) => {
-            // Check for authentication errors in mutations
-            if (error?.response?.status === 401 || error?.response?.status === 403) {
-              // Show error message
-              Alert.alert(
-                'Sesión Expirada',
-                'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => {
-                      // Navigate to login screen
-                      router.replace('/login');
-                    },
-                  },
-                ],
-                { cancelable: false },
-              );
-              return;
-            }
-
             // Log other mutation errors
             console.error('Mutation error:', error?.message || error);
           },

@@ -11,7 +11,7 @@ export interface UseCurrentSessionOptions {
   gcTime?: number;
 }
 
-export function useCurrentSession(options: UseCurrentSessionOptions = {}) {
+export function useCurrentSession() {
   // Options are no longer used as they're now handled in SessionContext
   // But we keep the parameter for backward compatibility
   const session = useSession();

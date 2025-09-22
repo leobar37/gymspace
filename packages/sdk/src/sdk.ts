@@ -26,7 +26,7 @@ import {
 } from './resources';
 
 export class GymSpaceSdk {
-  private client: ApiClient;
+  public client: ApiClient;
   
   // Resources
   public auth: AuthResource;

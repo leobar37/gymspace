@@ -59,6 +59,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({ sale, onSuccess
       notes: '',
     },
   });
+  console.log('sale in PaymentFormContent:', JSON.stringify(sale, null, 3));
 
   const handleSubmit = async (data: PaymentFormData) => {
     const paymentData: PaySaleDto = {
@@ -83,26 +84,19 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({ sale, onSuccess
               }, 300); // Small delay to allow sheet animation to complete
             },
             onError: reject,
-          }
+          },
         );
       }),
       {
         action: 'Procesando pago...',
         successMessage: 'Pago registrado exitosamente',
-        successActions: [
-          {
-            label: 'Ver venta',
-            onPress: () => router.push(`/inventory/sales/${sale.id}`),
-          },
-        ],
-      }
+        successActions: [],
+        hideOnSuccess: true,
+      },
     );
   };
 
   const getCustomerName = () => {
-    if (sale.customer) {
-      return `${sale.customer.firstName} ${sale.customer.lastName}`;
-    }
     if (sale.customerName) {
       return sale.customerName;
     }
@@ -126,24 +120,18 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({ sale, onSuccess
             {/* Sale information */}
             <Box className="bg-blue-50 p-4 rounded-xl">
               <Text className="font-semibold text-blue-900 mb-3">Información de la Venta</Text>
-              <VStack className="gap-2">
+              <VStack className="gap-1">
                 <HStack className="justify-between">
                   <Text className="text-sm text-blue-700">N° Venta:</Text>
-                  <Text className="text-sm font-medium text-blue-900">
-                    {sale.saleNumber}
-                  </Text>
+                  <Text className="text-sm font-medium text-blue-900">{sale.saleNumber}</Text>
                 </HStack>
                 <HStack className="justify-between">
                   <Text className="text-sm text-blue-700">Cliente:</Text>
-                  <Text className="text-sm font-medium text-blue-900">
-                    {getCustomerName()}
-                  </Text>
+                  <Text className="text-sm font-medium text-blue-900">{getCustomerName()}</Text>
                 </HStack>
                 <HStack className="justify-between">
                   <Text className="text-sm text-blue-700">Total:</Text>
-                  <Text className="text-lg font-bold text-blue-900">
-                    {formatPrice(sale.total)}
-                  </Text>
+                  <Text className="text-lg font-bold text-blue-900">{formatPrice(sale.total)}</Text>
                 </HStack>
               </VStack>
             </Box>
@@ -161,11 +149,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({ sale, onSuccess
             {/* Receipt photo upload */}
             <VStack className="gap-2">
               <Text className="text-sm font-semibold text-gray-700">Comprobante (opcional)</Text>
-              <FileSelector
-                name="fileIds"
-                multi={false}
-                label=""
-              />
+              <FileSelector name="fileIds" multi={true} label="" />
             </VStack>
 
             {/* Notes */}
@@ -212,12 +196,7 @@ export const SalePaymentSheet: React.FC<SalePaymentSheetProps> = (props) => {
   const { sale, onSuccess } = props;
 
   return (
-    <BottomSheetWrapper
-      sheetId="sale-payment"
-      snapPoints={['90%']}
-      enablePanDownToClose
-      scrollable
-    >
+    <BottomSheetWrapper sheetId="sale-payment" snapPoints={['90%']} enablePanDownToClose scrollable>
       {sale ? (
         <PaymentFormContent sale={sale} onSuccess={onSuccess} />
       ) : (

@@ -36,16 +36,20 @@ export function CartItem({
 
   // Clases para modo normal vs compacto
   const paddingClass = compact ? 'px-3 py-2.5' : 'p-4';
-  const imageSizeWrapper = compact ? 'w-11 h-11' : 'w-14 h-14';
+  const imageSizeWrapper = compact ? 'w-14 h-14' : 'w-16 h-16';
   const nameTextClass = compact ? 'text-[13px]' : 'text-sm';
   const unitPriceTextClass = compact ? 'text-[11px]' : 'text-xs';
   const totalTextClass = compact ? 'text-[15px]' : 'text-base';
 
   return (
-    <View className={`bg-white ${hideDivider ? '' : 'border-b border-b-gray-100'} ${compact ? '' : ''}`}>
-      <HStack space={compact ? 'sm' : 'md'} className={`${paddingClass} items-center`}>
+    <View
+      className={`bg-white ${hideDivider ? '' : 'border-b border-b-gray-100'} ${compact ? '' : ''}`}
+    >
+      <HStack space={"md"} className={`${paddingClass} items-center`}>
         {showImage && (
-          <View className={`${imageSizeWrapper} bg-gray-100 rounded-md overflow-hidden items-center justify-center`}>
+          <View
+            className={`${imageSizeWrapper} bg-gray-100 rounded-md overflow-hidden items-center justify-center`}
+          >
             {product.imageId ? (
               <AssetPreview
                 assetId={product.imageId}
@@ -61,28 +65,28 @@ export function CartItem({
           </View>
         )}
 
-        {/* Product Info & Controls */}
         <VStack className="flex-1" space="xs">
-          {/* Product Name & Price */}
           <HStack className="justify-between items-start">
             <VStack className="flex-1 mr-1">
               <Text className={`text-gray-900 font-semibold ${nameTextClass}`} numberOfLines={2}>
                 {product.name}
               </Text>
             </VStack>
-            
+
             {/* Remove Button */}
             <Pressable
               onPress={onRemove}
               hitSlop={8}
-              className={`items-center justify-center rounded-full ${compact ? 'w-7 h-7' : 'w-8 h-8'} active:bg-red-50`}
+              className={`items-center justify-center rounded-full ${compact ? 'w-8 h-8' : 'w-8 h-8'} active:bg-red-50`}
             >
-              <Icon as={TrashIcon} className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-red-500`} />
+              <Icon
+                as={TrashIcon}
+                className={`${compact ? 'w-4 h-4' : 'w-4 h-4'} text-red-500`}
+              />
             </Pressable>
           </HStack>
 
-          {/* Quantity Controls & Total */}
-          <HStack className="justify-between items-center mt-1.5">
+          <HStack className="justify-between items-center -mt-1">
             <QuantitySelector
               quantity={quantity}
               onQuantityChange={onQuantityChange}
@@ -91,18 +95,23 @@ export function CartItem({
               size={compact ? 'sm' : 'sm'}
             />
             <VStack className="items-end" space="0">
-              <Text className={`text-gray-900 font-semibold ${totalTextClass}`} style={{ fontVariant: ['tabular-nums'] }}>
+              <Text
+                className={`text-gray-900 font-semibold ${totalTextClass}`}
+                style={{ fontVariant: ['tabular-nums'] }}
+              >
                 {formatPrice(total)}
               </Text>
-              <Text className={`text-gray-500 ${unitPriceTextClass}`} style={{ fontVariant: ['tabular-nums'] }}>
+              <Text
+                className={`text-gray-500 ${unitPriceTextClass}`}
+                style={{ fontVariant: ['tabular-nums'] }}
+              >
                 {formatPrice(product.price)} c/u
               </Text>
             </VStack>
           </HStack>
 
-          {/* Stock Warning */}
           {product.stock && product.stock <= lowStockThreshold && (
-            <View className="mt-1">
+            <View>
               <Text className="px-2 py-[2px] bg-orange-50 text-orange-600 rounded-full text-[10px] font-medium">
                 Stock: {product.stock}
               </Text>

@@ -78,7 +78,6 @@ export default function SelectItemsScreen() {
         isInBottomSheet={false}
       />
 
- 
       <View className="bg-white border-t border-gray-200">
         {lastSelectedProduct && <QuantityControlFooter product={lastSelectedProduct} />}
         {/* Confirmation Button */}

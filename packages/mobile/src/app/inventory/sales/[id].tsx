@@ -75,7 +75,7 @@ const DateTimeSection: React.FC<{ sale: Sale }> = ({ sale }) => {
 // Payment Status Section
 const PaymentStatusSection: React.FC<{ sale: Sale; onPaymentPress: () => void }> = ({
   sale,
-  onPaymentPress
+  onPaymentPress,
 }) => {
   const isPaid = sale.paymentStatus === 'paid';
 
@@ -246,6 +246,7 @@ export default function SaleDetailScreen() {
             );
           }),
           {
+            hideOnSuccess: true,
             action: 'Afiliando cliente...',
             successMessage: 'Cliente afiliado correctamente',
             errorFormatter: (error: any) => {
@@ -268,11 +269,11 @@ export default function SaleDetailScreen() {
 
     SheetManager.show('sale-payment', {
       sale,
-      onSuccess: () => {
+      onSuccess: async () => {
         // Sheet is closed automatically after payment
         // Just refresh the sale data
-        refetch();
-      }
+        await refetch();
+      },
     });
   }, [sale, refetch]);
 

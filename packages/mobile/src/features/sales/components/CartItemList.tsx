@@ -13,7 +13,6 @@ export const CartItemList: React.FC = () => {
       <CartItem
         item={item}
         compact
-        hideDivider={index === items.length - 1}
         onQuantityChange={(quantity) => updateQuantity(item.product.id, quantity)}
         onRemove={() => removeItem(item.product.id)}
       />
@@ -27,7 +26,6 @@ export const CartItemList: React.FC = () => {
       renderItem={renderCartItem}
       keyExtractor={(item) => item.product.id}
       scrollEnabled={false}
-      // Eliminamos separador vertical grande; el divider inferior de cada item hace el trabajo.
       ItemSeparatorComponent={() => <View />}
     />
   );

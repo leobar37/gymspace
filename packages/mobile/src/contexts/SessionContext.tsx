@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import type { CurrentSessionResponse } from '@gymspace/sdk';
+import { useNavigation, useRouter } from 'expo-router';
+import { useSegments } from 'expo-router';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -98,8 +100,12 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [currentGymId, setCurrentGymIdState] = useState<string | null>(null);
   const initializedRef = useRef(false);
-
   const queryClient = useQueryClient();
+
+  const router = useRouter();
+  const segments = useSegments();
+  const isOnboarding = (segments?.[0] ?? '') === '(onboarding)';
+  console.log('segments', segments, { isOnboarding });
 
   // Store tokens - sets token in SDK and refetches session
   const storeTokens = useCallback(
@@ -171,7 +177,6 @@ export function SessionProvider({ children }: SessionProviderProps) {
     queryFn: async (): Promise<CurrentSessionResponse> => {
       if (!initializedRef.current) {
         initializedRef.current = true;
-
         try {
           const {
             accessToken: storedToken,
@@ -194,6 +199,11 @@ export function SessionProvider({ children }: SessionProviderProps) {
           // If loading fails, clear potentially corrupted storage
           await storage.clear();
         }
+      }
+
+      const currentToken = sdk.getClient().getAccessToken();
+      if (!currentToken) {
+        throw new Error('No access token available');
       }
 
       const response = await sdk.auth.getCurrentSession();
@@ -236,7 +246,6 @@ export function SessionProvider({ children }: SessionProviderProps) {
       if (sessionQuery.data.accessToken) {
         setAccessToken(sessionQuery.data.accessToken);
       }
-
       // Update gym ID from session if it has changed
       if (sessionQuery.data.gym && sessionQuery.data.gym.id !== currentGymId) {
         setCurrentGymIdState(sessionQuery.data.gym.id);
@@ -251,6 +260,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
       const error = sessionQuery.error as any;
       if (error.status === 401 || error.message?.includes('Unauthorized')) {
         clearAuth();
+        if (!isOnboarding) {
+          router.push('(onboarding)');
+        }
       }
     }
   }, [sessionQuery.error, clearAuth]);
