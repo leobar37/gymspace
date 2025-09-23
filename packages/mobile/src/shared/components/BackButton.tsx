@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ViewStyle } from 'react-native';
+import { ViewStyle, BackHandler, Platform } from 'react-native';
 import { router, useNavigation } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { Pressable } from '@/components/ui/pressable';
@@ -12,12 +12,14 @@ interface BackButtonProps {
   onPress?: () => void;
   label?: string;
   style?: ViewStyle;
+  path?: string;
 }
 
 export const BackButton: React.FC<BackButtonProps> = ({
   onPress,
   label = '',
   style,
+  path,
 }) => {
   const navigation = useNavigation();
   const [isNavigating, setIsNavigating] = useState(false);
@@ -42,11 +44,38 @@ export const BackButton: React.FC<BackButtonProps> = ({
     };
   }, [navigation]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return;
+    }
+
+    const backAction = () => {
+      if (isNavigating) {
+        return false;
+      }
+
+      if (onPress) {
+        onPress();
+      } else if (path) {
+        router.replace(path);
+      } else {
+        router.back();
+      }
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    return () => backHandler.remove();
+  }, [isNavigating, onPress, path]);
+
   const handlePress = () => {
     if (isNavigating) return;
 
     if (onPress) {
       onPress();
+    } else if (path) {
+      router.replace(path);
     } else {
       router.back();
     }

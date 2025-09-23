@@ -14,6 +14,22 @@ const BACKDROP_DEFAULT_DISAPPEARS = -1;
 const BACKDROP_DEFAULT_APPEARS = 0;
 const DEFAULT_PADDING_BOTTOM = 20;
 
+// Exportable backdrop renderer function
+export const renderBackdrop = (
+  backdropComponent?: React.ComponentType<ComponentProps<typeof BottomSheetBackdrop>>,
+) => {
+  return (props: ComponentProps<typeof BottomSheetBackdrop>) =>
+    backdropComponent ? (
+      React.createElement(backdropComponent, props)
+    ) : (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={BACKDROP_DEFAULT_DISAPPEARS}
+        appearsOnIndex={BACKDROP_DEFAULT_APPEARS}
+      />
+    );
+};
+
 export const BottomSheetWrapper = React.memo<BottomSheetWrapperProps>(
   ({
     children,
@@ -104,21 +120,6 @@ export const BottomSheetWrapper = React.memo<BottomSheetWrapperProps>(
       }
     }, [onDismiss, onHide, sheetId]);
 
-    // Default backdrop component with proper typing
-    const renderBackdrop = useCallback(
-      (props: ComponentProps<typeof BottomSheetBackdrop>) =>
-        backdropComponent ? (
-          React.createElement(backdropComponent, props)
-        ) : (
-          <BottomSheetBackdrop
-            {...props}
-            disappearsOnIndex={BACKDROP_DEFAULT_DISAPPEARS}
-            appearsOnIndex={BACKDROP_DEFAULT_APPEARS}
-          />
-        ),
-      [backdropComponent],
-    );
-
     // Get props from SheetManager if available
     const sheetProps = sheetId ? SheetManager.getProps(sheetId) : undefined;
 
@@ -152,7 +153,7 @@ export const BottomSheetWrapper = React.memo<BottomSheetWrapperProps>(
         enableDynamicSizing={enableDynamicSizing}
         onChange={handleSheetChanges}
         onDismiss={handleDismiss}
-        backdropComponent={renderBackdrop}
+        backdropComponent={renderBackdrop(backdropComponent)}
         handleComponent={handleComponent}
         footerComponent={footerComponent}
         {...restProps}

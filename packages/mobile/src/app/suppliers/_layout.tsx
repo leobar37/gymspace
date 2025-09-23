@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { BackButton } from '@/shared/components/BackButton';
 
 export default function SuppliersLayout() {
   return (
@@ -6,7 +7,8 @@ export default function SuppliersLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerShown: false,
+          title: 'Proveedores',
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen
@@ -14,6 +16,7 @@ export default function SuppliersLayout() {
         options={{
           title: 'Crear Proveedor',
           headerBackTitle: 'Atrás',
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen
@@ -21,6 +24,7 @@ export default function SuppliersLayout() {
         options={{
           title: 'Detalles del Proveedor',
           headerBackTitle: 'Atrás',
+          headerLeft: () => <BackButton />,
         }}
       />
       <Stack.Screen
@@ -28,6 +32,7 @@ export default function SuppliersLayout() {
         options={{
           title: 'Editar Proveedor',
           headerBackTitle: 'Atrás',
+          headerLeft: () => <BackButton />,
         }}
       />
     </Stack>

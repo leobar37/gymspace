@@ -130,7 +130,7 @@ export default function InventoryLayout() {
           headerShown: true,
           title: 'Servicios',
           headerBackTitle: '',
-          headerLeft: () => <BackButton label="" onPress={() => router.back()} />,
+          headerLeft: () => <BackButton label="" onPress={() => router.push('/more')} />,
         }}
       />
     </Stack>

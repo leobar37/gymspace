@@ -18,13 +18,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SuppliersScreen() {
-  const {
-    data: suppliers,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useSuppliers({});
+  const { data: suppliers, isLoading, isError, error, refetch } = useSuppliers({});
 
   // Use the new search hook
   const {
@@ -36,11 +30,7 @@ export default function SuppliersScreen() {
     resultCount,
   } = useDataSearch<Supplier>({
     data: suppliers?.data,
-    searchFields: (supplier) => [
-      supplier.name,
-      supplier.email || '',
-      supplier.phone || '',
-    ],
+    searchFields: (supplier) => [supplier.name, supplier.email || '', supplier.phone || ''],
     searchPlaceholder: 'Buscar proveedores...',
   });
 
@@ -65,14 +55,6 @@ export default function SuppliersScreen() {
   const renderHeader = useCallback(
     () => (
       <VStack space="md">
-        {/* Back Button and Title */}
-        <HStack className="items-center">
-          <Button variant="link" size="sm" onPress={() => router.back()}>
-            <Icon as={ArrowLeftIcon} className="w-5 h-5 text-gray-600" />
-          </Button>
-          <Text className="text-xl font-semibold text-gray-900">Proveedores</Text>
-        </HStack>
-
         {/* Search Bar */}
         <HStack space="sm" className="items-center">
           <VStack className="flex-1">
@@ -98,8 +80,8 @@ export default function SuppliersScreen() {
         {/* Results Summary */}
         {filteredSuppliers && (
           <Text className="text-sm text-gray-600">
-            {resultCount} proveedor{resultCount !== 1 ? 'es' : ''}{' '}
-            encontrado{resultCount !== 1 ? 's' : ''}
+            {resultCount} proveedor{resultCount !== 1 ? 'es' : ''} encontrado
+            {resultCount !== 1 ? 's' : ''}
           </Text>
         )}
       </VStack>
@@ -163,7 +145,7 @@ export default function SuppliersScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView edges={["bottom"]} className="flex-1 bg-gray-50">
       <View className="flex-1">
         <FlatList
           data={filteredSuppliers}

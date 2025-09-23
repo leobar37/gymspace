@@ -9,4 +9,3 @@ para realizar la implementacion.
 - nunca modifiques nada que no este relacionado con la tarea
 - divide la tarea en subtareas si es necesario
 - no incluyas comentarios.
-

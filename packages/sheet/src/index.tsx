@@ -5,7 +5,7 @@ export { SheetProvider } from './SheetProvider';
 export { SheetManager } from './SheetManager';
 
 // Components
-export { BottomSheetWrapper } from './BottomSheetWrapper';
+export { BottomSheetWrapper , renderBackdrop} from './BottomSheetWrapper';
 export { SheetsRenderer } from './SheetsRenderer';
 
 // Hooks

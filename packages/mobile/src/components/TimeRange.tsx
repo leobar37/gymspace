@@ -7,7 +7,7 @@ import React, { useEffect, useReducer, useRef } from 'react';
 import { Platform, Text, View } from 'react-native';
 import BottomSheetModal, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Portal } from '@gorhom/portal';
-
+import { renderBackdrop } from "@gymspace/sheet";
 type TimeRangeOption = 'day' | 'week' | 'month' | 'custom';
 
 interface TimeRangeProps {
@@ -282,7 +282,7 @@ export function TimeRange({
 
       {/* Custom Date Range Sheet */}
       <Portal>
-        <BottomSheetModal enablePanDownToClose ref={customRangeSheetRef} snapPoints={['40%']}>
+        <BottomSheetModal backdropComponent={renderBackdrop()} enablePanDownToClose ref={customRangeSheetRef} snapPoints={['40%']}>
           <BottomSheetView className="p-4">
             {/* Header */}
             <View className="flex-row items-center justify-between mb-4">

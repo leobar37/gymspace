@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { BackButton } from '@/shared/components/BackButton';
 
 export default function ProfileLayout() {
   return (
@@ -6,6 +7,7 @@ export default function ProfileLayout() {
       screenOptions={{
         headerShown: true,
         headerBackTitle: 'Volver',
+        headerLeft: () => <BackButton />,
       }}
     />
   );
