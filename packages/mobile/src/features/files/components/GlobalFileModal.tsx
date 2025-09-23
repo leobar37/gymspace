@@ -79,14 +79,17 @@ import { ResizeMode, Video } from 'expo-av';
 import { Image } from 'expo-image';
 import { XIcon } from 'lucide-react-native';
 import React from 'react';
-import { Dimensions, View, Modal, SafeAreaView, ActivityIndicator } from 'react-native';
-import { AnimatedAnimatedTouchableOpacity } from '@/components/ui/animated-touchable-opacity';
+import { Dimensions, View, Modal, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useFilesStore } from '../stores/files.store';
 import { useFile } from '../controllers/files.controller';
-import type { FileResponseDto } from '@gymspace/sdk';
+import { SafeAreaView } from 'react-native-safe-area-context';
 export function GlobalFileModal() {
   const { isViewerOpen, viewerFile, viewerFileId, closeFileViewer } = useFilesStore();
-  const { data: fetchedFile, isLoading, isError } = useFile(viewerFileId || '', !!viewerFileId && isViewerOpen);
+  const {
+    data: fetchedFile,
+    isLoading,
+    isError,
+  } = useFile(viewerFileId || '', !!viewerFileId && isViewerOpen);
   const screenDimensions = Dimensions.get('window');
 
   // Use viewerFile if available, otherwise use fetched file from fileId
@@ -132,7 +135,7 @@ export function GlobalFileModal() {
             <Text style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 16 }}>
               No se pudo cargar el archivo solicitado
             </Text>
-            <AnimatedTouchableOpacity
+            <TouchableOpacity
               onPress={closeFileViewer}
               style={{
                 paddingVertical: 10,
@@ -142,7 +145,7 @@ export function GlobalFileModal() {
               }}
             >
               <Text style={{ fontSize: 16, color: '#374151' }}>Cerrar</Text>
-            </AnimatedTouchableOpacity>
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </Modal>
@@ -189,7 +192,7 @@ export function GlobalFileModal() {
           >
             {file.originalName}
           </Text>
-          <AnimatedTouchableOpacity
+          <TouchableOpacity
             onPress={handleClose}
             style={{
               padding: 8,
@@ -198,7 +201,7 @@ export function GlobalFileModal() {
             }}
           >
             <Icon as={XIcon} size="lg" style={{ color: '#000' }} />
-          </AnimatedTouchableOpacity>
+          </TouchableOpacity>
         </View>
 
         {/* Content */}
@@ -275,10 +278,10 @@ export function GlobalFileModal() {
 
 /**
  * GlobalFileModalById - Version that accepts a fileId and fetches the file data
- * 
+ *
  * @example
  * ```tsx
- * <GlobalFileModalById 
+ * <GlobalFileModalById
  *   fileId="file-123"
  *   visible={isOpen}
  *   onClose={() => setIsOpen(false)}
@@ -302,9 +305,7 @@ export function GlobalFileModalById({ fileId, visible, onClose }: GlobalFileModa
       return (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" />
-          <Text style={{ marginTop: 16, fontSize: 16, color: '#6b7280' }}>
-            Cargando archivo...
-          </Text>
+          <Text style={{ marginTop: 16, fontSize: 16, color: '#6b7280' }}>Cargando archivo...</Text>
         </View>
       );
     }
@@ -400,7 +401,7 @@ export function GlobalFileModalById({ fileId, visible, onClose }: GlobalFileModa
           >
             {file?.originalName || 'Archivo'}
           </Text>
-          <AnimatedTouchableOpacity
+          <TouchableOpacity
             onPress={onClose}
             style={{
               padding: 8,
@@ -409,7 +410,7 @@ export function GlobalFileModalById({ fileId, visible, onClose }: GlobalFileModa
             }}
           >
             <Icon as={XIcon} size="lg" style={{ color: '#000' }} />
-          </AnimatedTouchableOpacity>
+          </TouchableOpacity>
         </View>
 
         {/* Content */}

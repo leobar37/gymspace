@@ -35,6 +35,9 @@ interface GenericTableProps<T> {
   errorState?: ReactNode;
   loadingState?: ReactNode;
   actions?: (item: T) => ReactNode;
+  onRowClick?: (item: T) => void;
+  className?: string;
+  rowClassName?: string;
 }
 
 export function GenericTable<T>({
@@ -49,6 +52,9 @@ export function GenericTable<T>({
   errorState,
   loadingState,
   actions,
+  onRowClick,
+  className,
+  rowClassName,
 }: GenericTableProps<T>) {
   const renderSortIcon = (column: Column<T>) => {
     if (!column.sortable || !sortConfig) return null;
@@ -102,7 +108,11 @@ export function GenericTable<T>({
     }
 
     return data.map((item) => (
-      <TableRow key={keyExtractor(item)}>
+      <TableRow
+        key={keyExtractor(item)}
+        className={`${onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''} ${rowClassName || ''}`}
+        onClick={() => onRowClick?.(item)}
+      >
         {columns.map((column) => (
           <TableCell key={column.key} className={column.className}>
             {column.accessor ? column.accessor(item) : (item as any)[column.key]}
@@ -118,7 +128,7 @@ export function GenericTable<T>({
   };
 
   return (
-    <div className="rounded-lg border bg-white">
+    <div className={`rounded-lg border bg-white ${className || ''}`}>
       <Table>
         <TableHeader>
           <TableRow>

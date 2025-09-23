@@ -1,13 +1,12 @@
-import {
-  AnimatedTouchableOpacity,
-} from '@/components/ui/animated-touchable-opacity';
+import { AnimatedTouchableOpacity } from '@/components/ui/animated-touchable-opacity';
 import { cn } from '@/lib/utils';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
 import { Calendar, CalendarClock, CalendarDays, CalendarRange, X } from 'lucide-react-native';
 import React, { useEffect, useReducer, useRef } from 'react';
 import { Platform, Text, View } from 'react-native';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheetModal, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { Portal } from '@gorhom/portal';
 
 type TimeRangeOption = 'day' | 'week' | 'month' | 'custom';
 
@@ -190,9 +189,8 @@ export function TimeRange({
 
   const handleOptionSelect = (option: TimeRangeOption) => {
     if (option === 'custom') {
-      console.log("custom option selected", customRangeSheetRef.current);
-      
-      customRangeSheetRef.current?.present();
+      console.log('custom option selected', customRangeSheetRef.current);
+      customRangeSheetRef.current?.expand?.();
     } else {
       dispatch({ type: 'SELECT_OPTION', payload: option });
       const range = calculateDateRange(option);
@@ -200,7 +198,11 @@ export function TimeRange({
     }
   };
 
-  const handleCustomDateChange = (_event: any, selectedDate: Date | undefined, isStart: boolean) => {
+  const handleCustomDateChange = (
+    _event: any,
+    selectedDate: Date | undefined,
+    isStart: boolean,
+  ) => {
     if (Platform.OS === 'android') {
       dispatch({ type: 'SHOW_START_PICKER', payload: false });
       dispatch({ type: 'SHOW_END_PICKER', payload: false });
@@ -218,7 +220,7 @@ export function TimeRange({
   const applyCustomRange = () => {
     dispatch({ type: 'SELECT_OPTION', payload: 'custom' });
     onRangeChange?.(state.customStartDate, state.customEndDate);
-    customRangeSheetRef.current?.dismiss();
+    customRangeSheetRef.current?.close();
   };
 
   const formatDate = (date: Date) => {
@@ -279,102 +281,99 @@ export function TimeRange({
       </View>
 
       {/* Custom Date Range Sheet */}
-      <BottomSheetModal
-        ref={customRangeSheetRef}
-        snapPoints={['60%', '90%']}
-        enablePanDownToClose
-        backgroundStyle={{ backgroundColor: '#fff' }}
-      >
-        <BottomSheetView className="p-4">
-          {/* Header */}
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-gray-900">Rango personalizado</Text>
-            <AnimatedTouchableOpacity
-              onPress={() => customRangeSheetRef.current?.dismiss()}
-              className="p-2"
-            >
-              <X size={24} color="#6b7280" />
-            </AnimatedTouchableOpacity>
-          </View>
-
-          {/* Date Pickers */}
-          <View className="space-y-4">
-            {/* Start Date */}
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">Fecha inicial</Text>
+      <Portal>
+        <BottomSheetModal enablePanDownToClose ref={customRangeSheetRef} snapPoints={['40%']}>
+          <BottomSheetView className="p-4">
+            {/* Header */}
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-lg font-bold text-gray-900">Rango personalizado</Text>
               <AnimatedTouchableOpacity
-                onPress={() => dispatch({ type: 'SHOW_START_PICKER', payload: true })}
-                className="bg-gray-50 rounded-lg p-4 flex-row items-center justify-between"
+                onPress={() => customRangeSheetRef.current.close()}
+                className="p-2"
               >
-                <View className="flex-row items-center">
-                  <Calendar size={20} color="#3b82f6" />
-                  <Text className="text-base font-medium text-gray-900 ml-3">
-                    {formatDate(state.customStartDate)}
-                  </Text>
-                </View>
-                <Text className="text-sm text-blue-600">Cambiar</Text>
+                <X size={24} color="#6b7280" />
               </AnimatedTouchableOpacity>
             </View>
 
-            {/* End Date */}
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">Fecha final</Text>
+            {/* Date Pickers */}
+            <View className="space-y-4">
+              {/* Start Date */}
+              <View>
+                <Text className="text-sm font-medium text-gray-700 mb-2">Fecha inicial</Text>
+                <AnimatedTouchableOpacity
+                  onPress={() => dispatch({ type: 'SHOW_START_PICKER', payload: true })}
+                  className="bg-gray-50 rounded-lg p-4 flex-row items-center justify-between"
+                >
+                  <View className="flex-row items-center">
+                    <Calendar size={20} color="#3b82f6" />
+                    <Text className="text-base font-medium text-gray-900 ml-3">
+                      {formatDate(state.customStartDate)}
+                    </Text>
+                  </View>
+                  <Text className="text-sm text-blue-600">Cambiar</Text>
+                </AnimatedTouchableOpacity>
+              </View>
+
+              {/* End Date */}
+              <View>
+                <Text className="text-sm font-medium text-gray-700 mb-2">Fecha final</Text>
+                <AnimatedTouchableOpacity
+                  onPress={() => dispatch({ type: 'SHOW_END_PICKER', payload: true })}
+                  className="bg-gray-50 rounded-lg p-4 flex-row items-center justify-between"
+                >
+                  <View className="flex-row items-center">
+                    <Calendar size={20} color="#3b82f6" />
+                    <Text className="text-base font-medium text-gray-900 ml-3">
+                      {formatDate(state.customEndDate)}
+                    </Text>
+                  </View>
+                  <Text className="text-sm text-blue-600">Cambiar</Text>
+                </AnimatedTouchableOpacity>
+              </View>
+
+              {/* Summary */}
+              <View className="bg-blue-50 rounded-lg p-3">
+                <Text className="text-sm text-blue-900 text-center">
+                  {(() => {
+                    const days = getDaysDifference();
+                    return `${days} ${days === 1 ? 'día' : 'días'} seleccionados`;
+                  })()}
+                </Text>
+              </View>
+
+              {/* Apply Button */}
               <AnimatedTouchableOpacity
-                onPress={() => dispatch({ type: 'SHOW_END_PICKER', payload: true })}
-                className="bg-gray-50 rounded-lg p-4 flex-row items-center justify-between"
+                onPress={applyCustomRange}
+                className="bg-blue-600 rounded-lg py-3 mt-2"
               >
-                <View className="flex-row items-center">
-                  <Calendar size={20} color="#3b82f6" />
-                  <Text className="text-base font-medium text-gray-900 ml-3">
-                    {formatDate(state.customEndDate)}
-                  </Text>
-                </View>
-                <Text className="text-sm text-blue-600">Cambiar</Text>
+                <Text className="text-white text-center font-semibold">Aplicar rango</Text>
               </AnimatedTouchableOpacity>
             </View>
 
-            {/* Summary */}
-            <View className="bg-blue-50 rounded-lg p-3">
-              <Text className="text-sm text-blue-900 text-center">
-                {(() => {
-                  const days = getDaysDifference();
-                  return `${days} ${days === 1 ? 'día' : 'días'} seleccionados`;
-                })()}
-              </Text>
-            </View>
+            {/* Native Date Pickers */}
+            {state.showStartPicker && (
+              <DateTimePicker
+                value={state.customStartDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={(event, date) => handleCustomDateChange(event, date, true)}
+                maximumDate={state.customEndDate}
+              />
+            )}
 
-            {/* Apply Button */}
-            <AnimatedTouchableOpacity
-              onPress={applyCustomRange}
-              className="bg-blue-600 rounded-lg py-3 mt-2"
-            >
-              <Text className="text-white text-center font-semibold">Aplicar rango</Text>
-            </AnimatedTouchableOpacity>
-          </View>
-
-          {/* Native Date Pickers */}
-          {state.showStartPicker && (
-            <DateTimePicker
-              value={state.customStartDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={(event, date) => handleCustomDateChange(event, date, true)}
-              maximumDate={state.customEndDate}
-            />
-          )}
-
-          {state.showEndPicker && (
-            <DateTimePicker
-              value={state.customEndDate}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={(event, date) => handleCustomDateChange(event, date, false)}
-              minimumDate={state.customStartDate}
-              maximumDate={new Date()}
-            />
-          )}
-        </BottomSheetView>
-      </BottomSheetModal>
+            {state.showEndPicker && (
+              <DateTimePicker
+                value={state.customEndDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={(event, date) => handleCustomDateChange(event, date, false)}
+                minimumDate={state.customStartDate}
+                maximumDate={new Date()}
+              />
+            )}
+          </BottomSheetView>
+        </BottomSheetModal>
+      </Portal>
     </>
   );
 }

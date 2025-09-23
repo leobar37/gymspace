@@ -83,7 +83,7 @@ export interface ISubscription {
 }
 
 export interface IRequestContext {
-  user: IUser;
+  user?: IUser;
   gym?: IGym;
   organization?: IOrganization;
   subscription?: ISubscription;
@@ -92,7 +92,7 @@ export interface IRequestContext {
   canAccess(resource: string, action: string): boolean;
   getGymId(): UUID | undefined;
   getOrganizationId(): UUID | undefined;
-  getUserId(): UUID;
+  getUserId(): UUID | undefined;
   getTimezone(): string;
 }
 

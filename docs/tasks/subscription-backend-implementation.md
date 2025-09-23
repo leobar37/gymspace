@@ -680,14 +680,331 @@ const plans = [
 
 ---
 
+## Subscription Lifecycle Handler Implementation
+
+After implementing the backend modules, we need to create an automated handler for subscription lifecycle management. This handler will run periodically to manage subscription expirations, renewals, and notifications.
+
+### Required Handler: `SubscriptionLifecycleHandler`
+
+**Location**: `/packages/api/src/handlers/subscription-lifecycle.handler.ts`
+
+Following the pattern from `contract-lifecycle.handler.ts`, this handler should:
+
+#### Core Functionality
+1. **Expiration Detection**: Identify subscriptions nearing expiration (7 days warning)
+2. **Expired Subscription Processing**: Mark expired subscriptions and update organization status
+3. **Grace Period Management**: Handle post-expiration grace periods
+4. **Notification Preparation**: Prepare data for renewal notifications (email integration later)
+5. **Statistics Tracking**: Monitor subscription health across all organizations
+
+#### Handler Configuration
+```typescript
+export const subscriptionLifecycleHandler = createCronHandler(
+  {
+    id: 'subscription-lifecycle-management',
+    name: 'Subscription Lifecycle Management',
+    retries: 2,
+  },
+  '0 9 * * *', // Runs daily at 9:00 AM
+  async ({ step, logger, injector }: IngestHandlerContext<EventPayload>) => {
+    // Implementation steps
+  }
+);
+```
+
+#### Required Helper Service: `SubscriptionStatusHelper`
+
+**Location**: `/packages/api/src/modules/subscriptions/helpers/subscription-status.helper.ts`
+
+This helper should provide methods for:
+
+1. **getSubscriptionStatusStats()**: Return overall subscription statistics
+   ```typescript
+   interface SubscriptionStats {
+     total: number;
+     active: number;
+     expiringSoon: number; // Within 7 days
+     expired: number;
+     needsUpdate: {
+       expiringSoon: number;
+       expired: number;
+       total: number;
+     };
+   }
+   ```
+
+2. **updateExpiringSoonSubscriptions()**: Mark subscriptions expiring within 7 days
+   - Update metadata with expiration warning flags
+   - Return count of updated subscriptions
+
+3. **processExpiredSubscriptions()**: Handle expired subscriptions
+   ```typescript
+   interface ExpiredProcessingResult {
+     expiredCount: number;
+     gracePeriodExtended: number;
+     organizationsNotified: number;
+     errors: Array<{ organizationId: string; error: string }>;
+   }
+   ```
+
+4. **processGracePeriodSubscriptions()**: Handle subscriptions in grace period
+   - Check if grace period has ended
+   - Suspend access if grace period expired
+   - Return processing statistics
+
+#### Handler Steps Implementation
+
+**Step 1: Log Start and Initial Statistics**
+```typescript
+await step.run('log-start', async () => {
+  logger.log('Starting subscription lifecycle management process');
+  const stats = await subscriptionStatusHelper.getSubscriptionStatusStats();
+
+  logger.log('Initial subscription statistics', {
+    active: stats.active,
+    expiringSoon: stats.expiringSoon,
+    expired: stats.expired,
+    needsUpdate: stats.needsUpdate,
+  });
+
+  return stats;
+});
+```
+
+**Step 2: Process Expiring Soon Subscriptions**
+```typescript
+const expiringSoonResult = await step.run('process-expiring-soon', async () => {
+  try {
+    const count = await subscriptionStatusHelper.updateExpiringSoonSubscriptions();
+
+    logger.log(`Updated ${count} subscriptions to expiring_soon status`);
+
+    return {
+      success: true,
+      count,
+      description: 'Subscriptions approaching expiration (within 7 days) marked with warning flags',
+    };
+  } catch (error) {
+    logger.error('Failed to process expiring soon subscriptions', error);
+    return {
+      success: false,
+      count: 0,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+```
+
+**Step 3: Process Expired Subscriptions**
+```typescript
+const expiredResult = await step.run('process-expired-subscriptions', async () => {
+  try {
+    const result = await subscriptionStatusHelper.processExpiredSubscriptions();
+
+    logger.log('Expired subscriptions processing completed', {
+      expiredCount: result.expiredCount,
+      gracePeriodExtended: result.gracePeriodExtended,
+      errorsCount: result.errors.length,
+    });
+
+    return {
+      success: true,
+      ...result,
+      description: 'Expired subscriptions processed and grace periods initiated',
+    };
+  } catch (error) {
+    logger.error('Failed to process expired subscriptions', error);
+    return {
+      success: false,
+      expiredCount: 0,
+      gracePeriodExtended: 0,
+      organizationsNotified: 0,
+      errors: [],
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+```
+
+**Step 4: Process Grace Period Subscriptions**
+```typescript
+const gracePeriodResult = await step.run('process-grace-period', async () => {
+  try {
+    const result = await subscriptionStatusHelper.processGracePeriodSubscriptions();
+
+    logger.log('Grace period processing completed', {
+      gracePeriodEnded: result.gracePeriodEnded,
+      accessSuspended: result.accessSuspended,
+      errorsCount: result.errors.length,
+    });
+
+    return {
+      success: true,
+      ...result,
+      description: 'Grace period subscriptions evaluated and access managed',
+    };
+  } catch (error) {
+    logger.error('Failed to process grace period subscriptions', error);
+    return {
+      success: false,
+      gracePeriodEnded: 0,
+      accessSuspended: 0,
+      errors: [],
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+```
+
+**Step 5: Final Statistics and Summary**
+```typescript
+const finalStats = await step.run('get-final-stats', async () => {
+  const stats = await subscriptionStatusHelper.getSubscriptionStatusStats();
+
+  logger.log('Final subscription statistics', {
+    active: stats.active,
+    expiringSoon: stats.expiringSoon,
+    expired: stats.expired,
+    total: stats.total,
+  });
+
+  return stats;
+});
+
+// Return comprehensive result
+const result = {
+  success: true,
+  timestamp: new Date().toISOString(),
+  expiringSoon: {
+    processed: expiringSoonResult.success,
+    count: expiringSoonResult.count,
+  },
+  expired: {
+    processed: expiredResult.success,
+    expiredCount: expiredResult.expiredCount,
+    gracePeriodExtended: expiredResult.gracePeriodExtended,
+    errors: expiredResult.errors,
+  },
+  gracePeriod: {
+    processed: gracePeriodResult.success,
+    gracePeriodEnded: gracePeriodResult.gracePeriodEnded,
+    accessSuspended: gracePeriodResult.accessSuspended,
+    errors: gracePeriodResult.errors,
+  },
+  finalStats: finalStats,
+};
+```
+
+#### Business Rules for Handler
+
+1. **Expiring Soon Logic**:
+   - Mark subscriptions expiring within 7 days
+   - Add metadata flags: `{ expirationWarning: true, warningDate: Date }`
+   - Do not change subscription status yet
+
+2. **Expired Subscription Logic**:
+   - Mark subscriptions as `expired` status when endDate < now
+   - Initiate 3-day grace period
+   - Add metadata: `{ gracePeriodStart: Date, gracePeriodEnd: Date }`
+   - Prepare notification data for organization owners
+
+3. **Grace Period Logic**:
+   - Check subscriptions in grace period (status: expired, gracePeriodEnd not reached)
+   - If grace period ended, change status to `inactive`
+   - Suspend organization access (implement later with feature flags)
+
+4. **Error Handling**:
+   - Continue processing even if individual subscriptions fail
+   - Log detailed errors for troubleshooting
+   - Return comprehensive error reports
+
+#### Integration Requirements
+
+1. **Service Integration**:
+   - Helper must use existing `SubscriptionsService` methods where possible
+   - Follow RequestContext pattern (use system context for background tasks)
+   - Use proper transaction handling for multi-step operations
+
+2. **Handler Registration**:
+   - Add to `/packages/api/src/handlers/index.ts`
+   - Include in `composeHandlers()` call
+   - Export for individual usage
+
+3. **Testing Support**:
+   - Handler should be manually triggerable via CLI command
+   - Helper methods should be testable independently
+   - Provide comprehensive logging for verification
+
+#### Expected Output Structure
+
+```json
+{
+  "success": true,
+  "timestamp": "2025-09-22T14:00:00.000Z",
+  "expiringSoon": {
+    "processed": true,
+    "count": 5
+  },
+  "expired": {
+    "processed": true,
+    "expiredCount": 3,
+    "gracePeriodExtended": 3,
+    "organizationsNotified": 3,
+    "errors": []
+  },
+  "gracePeriod": {
+    "processed": true,
+    "gracePeriodEnded": 1,
+    "accessSuspended": 1,
+    "errors": []
+  },
+  "finalStats": {
+    "active": 45,
+    "expiringSoon": 8,
+    "expired": 2,
+    "inactive": 1,
+    "needsUpdate": {
+      "expiringSoon": 0,
+      "expired": 0,
+      "total": 0
+    },
+    "total": 56
+  }
+}
+```
+
+#### CLI Commands for Testing
+
+The handler should support manual triggering for testing:
+```bash
+# Manual trigger for testing
+pnpm run cli trigger:subscription:lifecycle
+
+# Create test scenarios (optional)
+pnpm run cli seed:subscriptions:test
+```
+
+#### Implementation Priority
+
+1. **Phase 1**: Create SubscriptionStatusHelper with basic statistics
+2. **Phase 2**: Implement expiration detection and status updates
+3. **Phase 3**: Add grace period management
+4. **Phase 4**: Create the handler with all steps
+5. **Phase 5**: Add CLI commands and testing support
+
+This handler ensures that subscription lifecycle management is automated and consistent across all organizations, providing the foundation for future billing integration and automated renewal processes.
+
+---
+
 ## Next Steps
 
-1. **Create New Modules**: Set up subscription-plans and admin-subscription-management modules
-2. **Implement DTOs**: Create all required DTOs with proper validation
-3. **Service Implementation**: Implement business logic following patterns
-4. **Controller Implementation**: Create controllers with proper documentation
-5. **Testing**: Implement comprehensive test suite
-6. **Documentation**: Update API documentation and create deployment guides
+1. **✅ Create New Modules**: Set up subscription-plans and admin-subscription-management modules
+2. **✅ Implement DTOs**: Create all required DTOs with proper validation
+3. **✅ Service Implementation**: Implement business logic following patterns
+4. **✅ Controller Implementation**: Create controllers with proper documentation
+5. **🔄 Handler Implementation**: Create subscription lifecycle handler and helper
+6. **⏳ Testing**: Implement comprehensive test suite
+7. **⏳ Documentation**: Update API documentation and create deployment guides
 
 ---
 

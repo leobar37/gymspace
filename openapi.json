@@ -1036,6 +1036,41 @@
         ]
       }
     },
+    "/api/v1/organizations/admin/{id}": {
+      "get": {
+        "operationId": "OrganizationsController_getOrganizationForAdmin",
+        "summary": "Get organization details with full subscription data for super admin",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization details with full subscription information"
+          },
+          "403": {
+            "description": "Forbidden - Super admin access required"
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        },
+        "tags": [
+          "Organizations"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/gyms": {
       "post": {
         "operationId": "GymsController_createGym",
@@ -6366,6 +6401,434 @@
           }
         ]
       }
+    },
+    "/api/v1/admin/subscription-plans": {
+      "get": {
+        "operationId": "SubscriptionPlansController_listPlans",
+        "summary": "List all subscription plans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of subscription plans",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionPlanDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin - Subscription Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "SubscriptionPlansController_createPlan",
+        "summary": "Create new subscription plan",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriptionPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Subscription plan created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionPlanDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - validation error or duplicate name"
+          }
+        },
+        "tags": [
+          "Admin - Subscription Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/subscription-plans/{id}": {
+      "get": {
+        "operationId": "SubscriptionPlansController_getPlan",
+        "summary": "Get subscription plan details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription plan details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionPlanDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Subscription plan not found"
+          }
+        },
+        "tags": [
+          "Admin - Subscription Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "SubscriptionPlansController_updatePlan",
+        "summary": "Update subscription plan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubscriptionPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription plan updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionPlanDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - validation error or duplicate name"
+          },
+          "404": {
+            "description": "Subscription plan not found"
+          }
+        },
+        "tags": [
+          "Admin - Subscription Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "SubscriptionPlansController_deletePlan",
+        "summary": "Soft delete subscription plan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription plan deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Cannot delete plan with active subscriptions"
+          },
+          "404": {
+            "description": "Subscription plan not found"
+          }
+        },
+        "tags": [
+          "Admin - Subscription Plans"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/organizations/{organizationId}/subscriptions/activate-renewal": {
+      "post": {
+        "operationId": "AdminSubscriptionManagementController_activateRenewal",
+        "summary": "Activate subscription renewal",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivateRenewalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription renewal activated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionStatusDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - validation error"
+          },
+          "404": {
+            "description": "Organization or subscription not found"
+          }
+        },
+        "tags": [
+          "Admin - Subscription Management"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/organizations/{organizationId}/subscriptions/cancel": {
+      "post": {
+        "operationId": "AdminSubscriptionManagementController_cancelSubscription",
+        "summary": "Cancel subscription with reason",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelSubscriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription cancelled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionStatusDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - validation error"
+          },
+          "404": {
+            "description": "Organization or subscription not found"
+          }
+        },
+        "tags": [
+          "Admin - Subscription Management"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/organizations/{organizationId}/subscriptions/upgrade": {
+      "post": {
+        "operationId": "AdminSubscriptionManagementController_upgradeSubscription",
+        "summary": "Upgrade subscription plan",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpgradeSubscriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription upgraded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionStatusDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - validation error or organization exceeds new plan limits"
+          },
+          "404": {
+            "description": "Organization, subscription, or plan not found"
+          }
+        },
+        "tags": [
+          "Admin - Subscription Management"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/organizations/{organizationId}/subscriptions/history": {
+      "get": {
+        "operationId": "AdminSubscriptionManagementController_getSubscriptionHistory",
+        "summary": "Get subscription history",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription history retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionHistoryDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organization not found"
+          }
+        },
+        "tags": [
+          "Admin - Subscription Management"
+        ],
+        "security": [
+          {
+            "gym-id": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "info": {
@@ -6555,18 +7018,24 @@
       "SubscriptionStatusDto": {
         "type": "object",
         "properties": {
-          "organizationId": {
+          "id": {
             "type": "string",
-            "description": "Organization ID",
             "example": "123e4567-e89b-12d3-a456-426614174000"
           },
-          "subscriptionPlan": {
-            "type": "object",
-            "description": "Current subscription plan"
+          "organizationId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "subscriptionPlanId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "planName": {
+            "type": "string",
+            "example": "Premium"
           },
           "status": {
             "type": "string",
-            "description": "Subscription status",
             "enum": [
               "active",
               "inactive",
@@ -6576,51 +7045,59 @@
             ],
             "example": "active"
           },
-          "subscriptionStart": {
+          "startDate": {
             "format": "date-time",
             "type": "string",
-            "description": "Subscription start date"
+            "example": "2024-01-01T00:00:00Z"
           },
-          "subscriptionEnd": {
+          "endDate": {
             "format": "date-time",
             "type": "string",
-            "description": "Subscription end date"
+            "example": "2024-12-31T23:59:59Z"
           },
-          "daysRemaining": {
-            "type": "number",
-            "description": "Days remaining in subscription",
-            "example": 25
+          "isActive": {
+            "type": "boolean",
+            "example": true
           },
           "isExpired": {
             "type": "boolean",
-            "description": "Whether the subscription is expired",
             "example": false
           },
-          "isFreePlan": {
-            "type": "boolean",
-            "description": "Whether this is a free plan",
-            "example": true
+          "daysRemaining": {
+            "type": "number",
+            "example": 30
           },
-          "usage": {
+          "metadata": {
             "type": "object",
-            "description": "Current usage statistics"
+            "example": {
+              "cancellationReason": "Customer requested"
+            },
+            "description": "Additional metadata"
           },
-          "limits": {
-            "type": "object",
-            "description": "Usage limits based on plan"
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00Z"
           }
         },
         "required": [
+          "id",
           "organizationId",
-          "subscriptionPlan",
+          "subscriptionPlanId",
+          "planName",
           "status",
-          "subscriptionStart",
-          "subscriptionEnd",
-          "daysRemaining",
+          "startDate",
+          "endDate",
+          "isActive",
           "isExpired",
-          "isFreePlan",
-          "usage",
-          "limits"
+          "daysRemaining",
+          "createdAt",
+          "updatedAt"
         ]
       },
       "AffiliateOrganizationDto": {
@@ -9663,6 +10140,389 @@
             "description": "Additional metadata for the payment method"
           }
         }
+      },
+      "SubscriptionPlanDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "name": {
+            "type": "string",
+            "example": "Premium"
+          },
+          "price": {
+            "type": "object",
+            "example": {
+              "PEN": {
+                "currency": "PEN",
+                "value": 295
+              }
+            },
+            "description": "Multi-currency pricing object"
+          },
+          "billingFrequency": {
+            "type": "string",
+            "example": "monthly"
+          },
+          "duration": {
+            "type": "number",
+            "example": 30
+          },
+          "durationPeriod": {
+            "type": "string",
+            "example": "DAY"
+          },
+          "maxGyms": {
+            "type": "number",
+            "example": 3
+          },
+          "maxClientsPerGym": {
+            "type": "number",
+            "example": 500
+          },
+          "maxUsersPerGym": {
+            "type": "number",
+            "example": 10
+          },
+          "features": {
+            "type": "object",
+            "example": {
+              "prioritySupport": true,
+              "advancedReports": true
+            },
+            "description": "Feature configuration for the plan"
+          },
+          "description": {
+            "type": "string",
+            "example": "Plan for growing gyms"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "activeSubscriptions": {
+            "type": "number",
+            "example": 5,
+            "description": "Number of active subscriptions"
+          },
+          "totalOrganizations": {
+            "type": "number",
+            "example": 10,
+            "description": "Total organizations using this plan"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "price",
+          "billingFrequency",
+          "maxGyms",
+          "maxClientsPerGym",
+          "maxUsersPerGym",
+          "features",
+          "isActive",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PriceDto": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "example": "PEN"
+          },
+          "value": {
+            "type": "number",
+            "example": 110
+          }
+        },
+        "required": [
+          "currency",
+          "value"
+        ]
+      },
+      "PricingDto": {
+        "type": "object",
+        "properties": {
+          "PEN": {
+            "description": "Peru pricing",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PriceDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "PEN"
+        ]
+      },
+      "CreateSubscriptionPlanDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Premium"
+          },
+          "price": {
+            "$ref": "#/components/schemas/PricingDto"
+          },
+          "billingFrequency": {
+            "type": "string",
+            "example": "monthly"
+          },
+          "duration": {
+            "type": "number",
+            "example": 30
+          },
+          "durationPeriod": {
+            "type": "string",
+            "enum": [
+              "DAY",
+              "MONTH"
+            ]
+          },
+          "maxGyms": {
+            "type": "number",
+            "example": 3
+          },
+          "maxClientsPerGym": {
+            "type": "number",
+            "example": 500
+          },
+          "maxUsersPerGym": {
+            "type": "number",
+            "example": 10
+          },
+          "features": {
+            "type": "object",
+            "example": {
+              "prioritySupport": true,
+              "advancedReports": true
+            },
+            "description": "Feature flags for the plan"
+          },
+          "description": {
+            "type": "string",
+            "example": "Plan for growing gyms"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "name",
+          "price",
+          "billingFrequency",
+          "maxGyms",
+          "maxClientsPerGym",
+          "maxUsersPerGym",
+          "features"
+        ]
+      },
+      "UpdateSubscriptionPlanDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Premium"
+          },
+          "price": {
+            "$ref": "#/components/schemas/PricingDto"
+          },
+          "billingFrequency": {
+            "type": "string",
+            "example": "monthly"
+          },
+          "duration": {
+            "type": "number",
+            "example": 30
+          },
+          "durationPeriod": {
+            "type": "string",
+            "enum": [
+              "DAY",
+              "MONTH"
+            ]
+          },
+          "maxGyms": {
+            "type": "number",
+            "example": 3
+          },
+          "maxClientsPerGym": {
+            "type": "number",
+            "example": 500
+          },
+          "maxUsersPerGym": {
+            "type": "number",
+            "example": 10
+          },
+          "features": {
+            "type": "object",
+            "example": {
+              "prioritySupport": true,
+              "advancedReports": true
+            },
+            "description": "Feature flags for the plan"
+          },
+          "description": {
+            "type": "string",
+            "example": "Plan for growing gyms"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "ActivateRenewalDto": {
+        "type": "object",
+        "properties": {
+          "subscriptionPlanId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "New subscription plan ID (optional, uses current plan if not provided)"
+          },
+          "durationMonths": {
+            "type": "number",
+            "example": 3,
+            "description": "Custom duration in months (optional)"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Renewal requested by customer support",
+            "description": "Notes about the renewal"
+          }
+        }
+      },
+      "CancelSubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Customer requested cancellation",
+            "description": "Reason for cancellation"
+          },
+          "immediateTermination": {
+            "type": "boolean",
+            "example": false,
+            "description": "Whether to terminate immediately or at end of billing period (default: false)"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Additional context about the cancellation",
+            "description": "Additional notes"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "UpgradeSubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "newSubscriptionPlanId": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "description": "ID of the new subscription plan"
+          },
+          "immediateUpgrade": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether to upgrade immediately or at end of billing period (default: true)"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Customer requested upgrade to premium",
+            "description": "Additional notes about the upgrade"
+          }
+        },
+        "required": [
+          "newSubscriptionPlanId"
+        ]
+      },
+      "SubscriptionHistoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "planName": {
+            "type": "string",
+            "example": "Premium"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive",
+              "expired",
+              "paused",
+              "pending_upgrade"
+            ],
+            "example": "active"
+          },
+          "startDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "endDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-12-31T23:59:59Z"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "cancellationReason": "Upgraded to Enterprise plan"
+            },
+            "description": "Additional metadata"
+          },
+          "createdBy": {
+            "type": "object",
+            "example": {
+              "id": "123e4567-e89b-12d3-a456-426614174000",
+              "name": "John Doe",
+              "email": "john@example.com"
+            },
+            "description": "User who created this subscription"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "planName",
+          "status",
+          "startDate",
+          "endDate",
+          "isActive",
+          "createdBy",
+          "createdAt"
+        ]
       }
     }
   }

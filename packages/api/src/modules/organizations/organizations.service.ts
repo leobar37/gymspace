@@ -342,6 +342,164 @@ export class OrganizationsService {
   }
 
   /**
+   * Get organization details for super admin with full subscription data
+   */
+  async getOrganizationForAdmin(
+    context: RequestContext,
+    organizationId: string,
+  ): Promise<any> {
+    const organization = await this.prismaService.organization.findUnique({
+      where: {
+        id: organizationId,
+        deletedAt: null,
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            createdAt: true,
+          },
+        },
+        gyms: {
+          where: {
+            deletedAt: null,
+          },
+          include: {
+            _count: {
+              select: {
+                gymClients: true,
+                collaborators: true,
+                contracts: true,
+              },
+            },
+          },
+        },
+        subscriptionOrganizations: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          include: {
+            subscriptionPlan: true,
+          },
+          take: 1,
+        },
+        _count: {
+          select: {
+            gyms: true,
+          },
+        },
+      },
+    });
+
+    if (!organization) {
+      throw new ResourceNotFoundException('Organization', organizationId);
+    }
+
+    const activeSubscription = organization.subscriptionOrganizations[0];
+    const now = new Date();
+
+    const totalClients = organization.gyms.reduce((sum, gym) => sum + gym._count.gymClients, 0);
+    const totalCollaborators = organization.gyms.reduce((sum, gym) => sum + gym._count.collaborators, 0);
+    const activeContracts = organization.gyms.reduce((sum, gym) => sum + gym._count.contracts, 0);
+
+    return {
+      id: organization.id,
+      name: organization.name,
+      country: organization.country,
+      currency: organization.currency,
+      timezone: organization.timezone,
+      hasUsedFreeTrial: organization.hasUsedFreeTrial,
+      owner: organization.owner,
+      gyms: organization.gyms.map(gym => ({
+        id: gym.id,
+        name: gym.name,
+        address: gym.address,
+        phone: gym.phone,
+        email: gym.email,
+        stats: {
+          clients: gym._count.gymClients,
+          collaborators: gym._count.collaborators,
+          contracts: gym._count.contracts,
+        },
+        createdAt: gym.createdAt,
+      })),
+      subscription: activeSubscription
+        ? {
+            id: activeSubscription.id,
+            planId: activeSubscription.subscriptionPlanId,
+            planName: activeSubscription.subscriptionPlan.name,
+            status: activeSubscription.status,
+            startDate: activeSubscription.startDate,
+            endDate: activeSubscription.endDate,
+            isActive: activeSubscription.isActive,
+            isExpired: now > activeSubscription.endDate,
+            daysRemaining: Math.max(
+              0,
+              Math.ceil((activeSubscription.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+            ),
+            price: activeSubscription.subscriptionPlan.price,
+            limits: {
+              maxGyms: activeSubscription.subscriptionPlan.maxGyms,
+              maxClientsPerGym: activeSubscription.subscriptionPlan.maxClientsPerGym,
+              maxUsersPerGym: activeSubscription.subscriptionPlan.maxUsersPerGym,
+            },
+            features: activeSubscription.subscriptionPlan.features,
+            metadata: activeSubscription.metadata,
+          }
+        : null,
+      usage: {
+        gyms: {
+          current: organization.gyms.length,
+          limit: activeSubscription?.subscriptionPlan.maxGyms || 0,
+          percentage: activeSubscription
+            ? Math.round((organization.gyms.length / activeSubscription.subscriptionPlan.maxGyms) * 100)
+            : 0,
+        },
+        totalClients: {
+          current: totalClients,
+          limit: activeSubscription
+            ? activeSubscription.subscriptionPlan.maxClientsPerGym * activeSubscription.subscriptionPlan.maxGyms
+            : 0,
+          percentage: activeSubscription
+            ? Math.round(
+                (totalClients /
+                  (activeSubscription.subscriptionPlan.maxClientsPerGym *
+                    activeSubscription.subscriptionPlan.maxGyms)) *
+                  100,
+              )
+            : 0,
+        },
+        totalCollaborators: {
+          current: totalCollaborators,
+          limit: activeSubscription
+            ? activeSubscription.subscriptionPlan.maxUsersPerGym * activeSubscription.subscriptionPlan.maxGyms
+            : 0,
+          percentage: activeSubscription
+            ? Math.round(
+                (totalCollaborators /
+                  (activeSubscription.subscriptionPlan.maxUsersPerGym *
+                    activeSubscription.subscriptionPlan.maxGyms)) *
+                  100,
+              )
+            : 0,
+        },
+      },
+      metrics: {
+        totalClients,
+        activeContracts,
+        totalCollaborators,
+        gymsCount: organization.gyms.length,
+      },
+      createdAt: organization.createdAt,
+      updatedAt: organization.updatedAt,
+    };
+  }
+
+  /**
    * List all organizations (SUPER_ADMIN only)
    */
   async listOrganizations(_context: IRequestContext): Promise<ListOrganizationsResponseDto[]> {
@@ -369,26 +527,54 @@ export class OrganizationsService {
             address: true,
           },
         },
+        subscriptionOrganizations: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
+          include: {
+            subscriptionPlan: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          take: 1,
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    return organizations.map((org) => ({
-      id: org.id,
-      name: org.name,
-      owner: {
-        id: org.owner.id,
-        email: org.owner.email,
-        fullName: org.owner.name || '',
-      },
-      gyms: org.gyms.map((gym) => ({
-        id: gym.id,
-        name: gym.name,
-        address: gym.address || '',
-      })),
-      createdAt: org.createdAt,
-    }));
+    return organizations.map((org) => {
+      const activeSubscription = org.subscriptionOrganizations[0];
+      const now = new Date();
+
+      return {
+        id: org.id,
+        name: org.name,
+        owner: {
+          id: org.owner.id,
+          email: org.owner.email,
+          fullName: org.owner.name || '',
+        },
+        gyms: org.gyms.map((gym) => ({
+          id: gym.id,
+          name: gym.name,
+          address: gym.address || '',
+        })),
+        subscription: activeSubscription
+          ? {
+              planName: activeSubscription.subscriptionPlan.name,
+              status: activeSubscription.status as any,
+              startDate: activeSubscription.startDate,
+              endDate: activeSubscription.endDate,
+              isExpired: now > activeSubscription.endDate,
+            }
+          : undefined,
+        createdAt: org.createdAt,
+      };
+    });
   }
 }

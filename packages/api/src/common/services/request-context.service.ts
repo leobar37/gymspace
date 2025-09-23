@@ -10,13 +10,13 @@ import {
 import { FastifyRequest } from 'fastify';
 
 export class RequestContext implements IRequestContext {
-  private _user: IUser;
+  private _user?: IUser;
   private _gym?: IGym;
   private _organization?: IOrganization;
   private _subscription?: ISubscription;
   private _permissions: Permission[] = [];
 
-  get user(): IUser {
+  get user(): IUser | undefined {
     return this._user;
   }
 
@@ -53,8 +53,8 @@ export class RequestContext implements IRequestContext {
     return this._organization?.id;
   }
 
-  getUserId(): UUID {
-    return this._user.id;
+  getUserId(): UUID | undefined {
+    return this._user?.id;
   }
 
   getTimezone(): string {

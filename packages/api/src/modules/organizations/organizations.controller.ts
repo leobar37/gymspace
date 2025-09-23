@@ -52,4 +52,14 @@ export class OrganizationsController {
   async getOrganizationStats(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
     return await this.organizationsService.getOrganizationStats(ctx, id);
   }
+
+  @Get('admin/:id')
+  @Allow(PERMISSIONS.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get organization details with full subscription data for super admin' })
+  @ApiResponse({ status: 200, description: 'Organization details with full subscription information' })
+  @ApiResponse({ status: 404, description: 'Organization not found' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Super admin access required' })
+  async getOrganizationForAdmin(@Param('id') id: string, @AppCtxt() ctx: RequestContext) {
+    return await this.organizationsService.getOrganizationForAdmin(ctx, id);
+  }
 }

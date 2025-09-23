@@ -22,6 +22,8 @@ import {
   SuppliersResource,
   UsersResource,
   SubscriptionsResource,
+  SubscriptionPlansResource,
+  AdminSubscriptionManagementResource,
   PaymentMethodsResource,
 } from './resources';
 
@@ -50,6 +52,8 @@ export class GymSpaceSdk {
   public suppliers: SuppliersResource;
   public users: UsersResource;
   public subscriptions: SubscriptionsResource;
+  public subscriptionPlans: SubscriptionPlansResource;
+  public adminSubscriptionManagement: AdminSubscriptionManagementResource;
   public paymentMethods: PaymentMethodsResource;
 
   constructor(config: GymSpaceConfig) {
@@ -77,6 +81,8 @@ export class GymSpaceSdk {
     this.suppliers = new SuppliersResource(this.client);
     this.users = new UsersResource(this.client);
     this.subscriptions = new SubscriptionsResource(this.client);
+    this.subscriptionPlans = new SubscriptionPlansResource(this.client);
+    this.adminSubscriptionManagement = new AdminSubscriptionManagementResource(this.client);
     this.paymentMethods = new PaymentMethodsResource(this.client);
   }
 

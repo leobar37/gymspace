@@ -1,3 +1,5 @@
+import { SubscriptionStatus } from '@gymspace/shared';
+
 export class ListOrganizationsResponseDto {
   id: string;
   name: string;
@@ -11,5 +13,12 @@ export class ListOrganizationsResponseDto {
     name: string;
     address: string;
   }>;
+  subscription?: {
+    planName: string;
+    status: SubscriptionStatus;
+    startDate: Date;
+    endDate: Date;
+    isExpired: boolean;
+  };
   createdAt: Date;
 }
