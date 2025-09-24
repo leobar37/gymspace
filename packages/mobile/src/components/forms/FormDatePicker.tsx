@@ -112,7 +112,7 @@ export const FormDatePicker = <TFieldValues extends FieldValues = FieldValues>({
 
         <Pressable
           onPress={() => setOpen(true)}
-          className="bg-white border border-gray-300 rounded-xl px-4 py-3"
+          className="bg-gray-50 border border-gray-300 rounded-xl px-4 py-3"
         >
           <HStack className="items-center justify-between">
             <Text className={field.value ? 'text-gray-900' : 'text-gray-400'}>

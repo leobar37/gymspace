@@ -13,6 +13,7 @@ import { UserIcon, PhoneIcon, CalendarIcon, EditIcon, XIcon, LockIcon } from 'lu
 import { FormProvider, FormInput, FormDatePicker, useForm, zodResolver } from '@/components/forms';
 import { z } from 'zod';
 import { BackButton } from '@/shared/components';
+import { useSession } from '@/contexts/SessionContext';
 
 // Validation schema
 const profileSchema = z.object({
@@ -21,7 +22,7 @@ const profileSchema = z.object({
     .string()
     .optional()
     .refine((val) => !val || /^\+?[\d\s\-()]+$/.test(val), 'Número de teléfono inválido'),
-  birthDate: z.string().optional(),
+  birthDate: z.date().optional().nullable(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -29,6 +30,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export default function EditProfileScreen() {
   const { profile, isLoadingProfile, updateProfile, isUpdatingProfile, isUpdateSuccess } =
     useProfileController();
+  const { refreshSession } = useSession();
 
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -51,25 +53,27 @@ export default function EditProfileScreen() {
         phone: profile.phone || '',
         birthDate: profile.birthDate
           ? typeof profile.birthDate === 'string'
-            ? profile.birthDate
-            : format(profile.birthDate, 'yyyy-MM-dd')
-          : undefined,
+            ? parseISO(profile.birthDate)
+            : profile.birthDate
+          : null,
       });
     }
   }, [profile, methods]);
 
-  // Navigate back on successful update
+  // Navigate back on successful update and refresh session
   useEffect(() => {
     if (isUpdateSuccess) {
       setIsEditMode(false);
+      // Refresh session to get updated user data
+      refreshSession();
     }
-  }, [isUpdateSuccess]);
+  }, [isUpdateSuccess, refreshSession]);
 
   const handleSubmit = (data: ProfileFormData) => {
     const updateData: UpdateProfileDto = {
       name: data.name,
       phone: data.phone || undefined,
-      birthDate: data.birthDate || undefined,
+      birthDate: data.birthDate ? format(data.birthDate, 'yyyy-MM-dd') : undefined,
     };
     updateProfile(updateData);
   };
@@ -82,9 +86,9 @@ export default function EditProfileScreen() {
         phone: profile.phone || '',
         birthDate: profile.birthDate
           ? typeof profile.birthDate === 'string'
-            ? profile.birthDate
-            : format(profile.birthDate, 'yyyy-MM-dd')
-          : undefined,
+            ? parseISO(profile.birthDate)
+            : profile.birthDate
+          : null,
       });
     }
     setIsEditMode(false);
@@ -321,7 +325,7 @@ export default function EditProfileScreen() {
                 <VStack className="gap-3 mt-4 pb-safe">
                   <Button
                     onPress={methods.handleSubmit(handleSubmit)}
-                    isDisabled={isUpdatingProfile || !methods.formState.isValid}
+                    isDisabled={isUpdatingProfile || !methods.formState.isValid || !methods.formState.isDirty}
                     className="w-full"
                     variant="solid"
                   >

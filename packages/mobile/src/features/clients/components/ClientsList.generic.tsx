@@ -101,9 +101,9 @@ export const ClientsListGeneric: React.FC<ClientsListProps> = ({
       limit: 1000,
       page: 1,
       activeOnly,
-      includeContractStatus: showCheckInStatus,
+      includeContractStatus: true,
     }),
-    [activeOnly, showCheckInStatus],
+    [activeOnly],
   );
 
   const { data: clientsResponse, isLoading, refetch, isRefetching } = useClientsList(queryParams);

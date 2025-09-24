@@ -8,6 +8,7 @@ import type { Client } from '@gymspace/sdk';
 import { CheckCircleIcon, PhoneIcon, MoreHorizontalIcon } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, View } from 'react-native';
+import { ContractStatusBadge } from './ContractStatusBadge';
 
 interface ClientCardProps {
   client: Client;
@@ -149,14 +150,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({
                     </Badge>
                   )}
 
-                  {/* Active plan badge - only show if client has active contracts */}
-                  {client.contracts &&
-                    client.contracts.length > 0 &&
-                    client.status === 'active' && (
-                      <Badge variant="outline" action="info" className="px-2 py-1">
-                        <BadgeText className="text-xs font-medium">PLAN ACTIVO</BadgeText>
-                      </Badge>
-                    )}
+                  <ContractStatusBadge contracts={client.contracts} />
                 </VStack>
               </>
             )}
@@ -173,12 +167,7 @@ export const ClientCard: React.FC<ClientCardProps> = ({
                   </Badge>
                 )}
 
-                {/* Show active contracts badge for non-complete variants */}
-                {client.contracts && client.contracts.length > 0 && client.status === 'active' && (
-                  <Badge variant="outline" action="info">
-                    <BadgeText className="text-xs">Plan activo</BadgeText>
-                  </Badge>
-                )}
+                <ContractStatusBadge contracts={client.contracts} />
               </VStack>
             )}
 

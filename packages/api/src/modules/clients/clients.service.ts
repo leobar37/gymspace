@@ -87,7 +87,6 @@ export class ClientsService {
         clientNumber,
         name: dto.name.trim(),
         status: 'active',
-        // Registration date is handled by createdAt
         createdByUserId: userId,
       },
       include: {
@@ -160,8 +159,6 @@ export class ClientsService {
       customData,
       ...validClientData
     } = dto;
-
-    console.log('client', JSON.stringify(validClientData, null, 3));
 
     const updated = await this.prismaService.gymClient.update({
       where: { id: clientId },
@@ -287,7 +284,7 @@ export class ClientsService {
     // Apply check-in filters (mutually exclusive)
     let todayStart: Date | undefined;
     let todayEnd: Date | undefined;
-    
+
     if (dto.notCheckedInToday || dto.checkedInToday) {
       // Get today's date range in the gym's timezone
       const nowInTimezone = TimezoneUtil.nowInTimezone(gymTimezone);
@@ -362,7 +359,8 @@ export class ClientsService {
     }
 
     // Include check-in data if any check-in filter is applied or contract status is requested
-    const needCheckInData = dto.notCheckedInToday || dto.checkedInToday || dto.includeContractStatus;
+    const needCheckInData =
+      dto.notCheckedInToday || dto.checkedInToday || dto.includeContractStatus;
     if (needCheckInData) {
       // Calculate today's range if not already calculated
       if (!todayStart || !todayEnd) {
@@ -370,7 +368,7 @@ export class ClientsService {
         todayStart = TimezoneUtil.startOfDayUtc(nowInTimezone, gymTimezone);
         todayEnd = TimezoneUtil.endOfDayUtc(nowInTimezone, gymTimezone);
       }
-      
+
       includeOptions.checkIns = {
         where: {
           timestamp: {

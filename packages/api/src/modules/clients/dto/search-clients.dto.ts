@@ -65,7 +65,10 @@ export class SearchClientsDto extends PartialType(PaginationQueryDto) {
   })
   @IsOptional()
   @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ obj, key }) => {
+    const value = obj[key];
+    return value === 'true' || value === true;
+  })
   includeContractStatus?: boolean;
 
   @ApiProperty({

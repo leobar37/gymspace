@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGymSdk } from '@/providers/GymSdkProvider';
 import { useToast, Toast, ToastTitle, ToastDescription } from '@/components/ui/toast';
 import { UpdateProfileDto, UserProfileDto } from '@gymspace/sdk';
+import { sessionKeys } from '@/contexts/SessionContext';
 
 // Query keys factory pattern for better type safety and organization
 export const profileKeys = {
@@ -86,6 +87,8 @@ export const useProfileController = () => {
     onSettled: () => {
       // Always refetch after error or success to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: profileKeys.current() });
+      // Also invalidate session to get updated user info
+      queryClient.invalidateQueries({ queryKey: sessionKeys.current() });
     },
   });
 

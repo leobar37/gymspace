@@ -6,7 +6,8 @@ export default function ProfileLayout() {
     <Stack
       screenOptions={{
         headerShown: true,
-        headerBackTitle: 'Volver',
+        headerBackTitle: '',
+        title: 'Mi perfil',
         headerLeft: () => <BackButton />,
       }}
     />

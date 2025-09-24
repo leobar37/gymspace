@@ -1,14 +1,23 @@
 import { AnimatedTouchableOpacity } from '@/components/ui/animated-touchable-opacity';
 import { cn } from '@/lib/utils';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
 import { Calendar, CalendarClock, CalendarDays, CalendarRange, X } from 'lucide-react-native';
-import React, { useEffect, useReducer, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { Platform, Text, View } from 'react-native';
 import BottomSheetModal, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Portal } from '@gorhom/portal';
 import { renderBackdrop } from "@gymspace/sheet";
 type TimeRangeOption = 'day' | 'week' | 'month' | 'custom';
+
+// Constants
+const SNAP_POINTS = ['40%'] ;
+const ICON_SIZE = 16;
+const DATE_FORMAT = 'DD/MM/YYYY';
+const COLORS = {
+  primary: '#3b82f6',
+  secondary: '#6b7280',
+} as const;
 
 interface TimeRangeProps {
   onRangeChange?: (startDate: Date, endDate: Date) => void;
@@ -141,65 +150,43 @@ export function TimeRange({
   const [state, dispatch] = useReducer(timeRangeReducer, initialState);
   const customRangeSheetRef = useRef<BottomSheetModal>(null);
 
-  const options: { value: TimeRangeOption; label: string; icon: React.ReactNode }[] = [
+  // Memoize options to prevent unnecessary re-renders
+  const options = useMemo(() => [
     {
-      value: 'day',
+      value: 'day' as const,
       label: 'Día',
-      icon: <Calendar size={16} color={state.selectedOption === 'day' ? '#3b82f6' : '#6b7280'} />,
+      icon: <Calendar size={ICON_SIZE} color={state.selectedOption === 'day' ? COLORS.primary : COLORS.secondary} />,
     },
     {
-      value: 'week',
+      value: 'week' as const,
       label: 'Semana',
-      icon: (
-        <CalendarDays size={16} color={state.selectedOption === 'week' ? '#3b82f6' : '#6b7280'} />
-      ),
+      icon: <CalendarDays size={ICON_SIZE} color={state.selectedOption === 'week' ? COLORS.primary : COLORS.secondary} />,
     },
     {
-      value: 'month',
+      value: 'month' as const,
       label: 'Mes',
-      icon: (
-        <CalendarRange size={16} color={state.selectedOption === 'month' ? '#3b82f6' : '#6b7280'} />
-      ),
+      icon: <CalendarRange size={ICON_SIZE} color={state.selectedOption === 'month' ? COLORS.primary : COLORS.secondary} />,
     },
     {
-      value: 'custom',
+      value: 'custom' as const,
       label: 'Per..',
-      icon: (
-        <CalendarClock
-          size={16}
-          color={state.selectedOption === 'custom' ? '#3b82f6' : '#6b7280'}
-        />
-      ),
+      icon: <CalendarClock size={ICON_SIZE} color={state.selectedOption === 'custom' ? COLORS.primary : COLORS.secondary} />,
     },
-  ];
+  ], [state.selectedOption]);
 
-  // Initialize with day range
-  useEffect(() => {
-    const range = calculateDateRange('day');
-    dispatch({ type: 'UPDATE_DATE_RANGE', payload: range });
-    onRangeChange?.(range.start, range.end);
-  }, []);
-
-  // Notify parent when date range changes
-  useEffect(() => {
-    if (state.selectedOption === 'custom' && (state.customStartDate || state.customEndDate)) {
-      onRangeChange?.(state.currentStartDate, state.currentEndDate);
-    }
-  }, [state.currentStartDate, state.currentEndDate, state.selectedOption]);
-
-  const handleOptionSelect = (option: TimeRangeOption) => {
+  // Memoized handlers to prevent unnecessary re-renders
+  const handleOptionSelect = useCallback((option: TimeRangeOption) => {
     if (option === 'custom') {
-      console.log('custom option selected', customRangeSheetRef.current);
-      customRangeSheetRef.current?.expand?.();
+      customRangeSheetRef.current?.expand();
     } else {
       dispatch({ type: 'SELECT_OPTION', payload: option });
       const range = calculateDateRange(option);
       onRangeChange?.(range.start, range.end);
     }
-  };
+  }, [onRangeChange]);
 
-  const handleCustomDateChange = (
-    _event: any,
+  const handleCustomDateChange = useCallback((
+    _event: DateTimePickerEvent,
     selectedDate: Date | undefined,
     isStart: boolean,
   ) => {
@@ -215,21 +202,41 @@ export function TimeRange({
         dispatch({ type: 'SET_CUSTOM_END_DATE', payload: selectedDate });
       }
     }
-  };
+  }, []);
 
-  const applyCustomRange = () => {
+  const applyCustomRange = useCallback(() => {
     dispatch({ type: 'SELECT_OPTION', payload: 'custom' });
-    onRangeChange?.(state.customStartDate, state.customEndDate);
-    customRangeSheetRef.current?.close();
-  };
+    const startDate = state.customStartDate;
+    const endDate = state.customEndDate;
+    customRangeSheetRef.current?.dismiss();
+    // Delay the callback to avoid re-render issues
+    setTimeout(() => {
+      onRangeChange?.(startDate, endDate);
+    }, 0);
+  }, [onRangeChange, state.customStartDate, state.customEndDate]);
 
-  const formatDate = (date: Date) => {
-    return dayjs(date).format('DD/MM/YYYY');
-  };
+  const formatDate = useCallback((date: Date) => {
+    return dayjs(date).format(DATE_FORMAT);
+  }, []);
 
-  const getDaysDifference = () => {
+  const getDaysDifference = useCallback(() => {
     return dayjs(state.customEndDate).diff(dayjs(state.customStartDate), 'day') + 1;
-  };
+  }, [state.customEndDate, state.customStartDate]);
+
+  // Initialize with day range - only run once on mount
+  useEffect(() => {
+    const range = calculateDateRange('day');
+    dispatch({ type: 'UPDATE_DATE_RANGE', payload: range });
+    onRangeChange?.(range.start, range.end);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run on mount
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      customRangeSheetRef.current?.close();
+    };
+  }, []);
 
   return (
     <>
@@ -251,6 +258,9 @@ export function TimeRange({
               <AnimatedTouchableOpacity
                 key={option.value}
                 onPress={() => handleOptionSelect(option.value)}
+                accessibilityLabel={`Select ${option.label} time range`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: state.selectedOption === option.value }}
                 className={cn(
                   'flex-1 py-2.5 px-2 rounded-lg transition-all',
                   state.selectedOption === option.value
@@ -282,14 +292,22 @@ export function TimeRange({
 
       {/* Custom Date Range Sheet */}
       <Portal>
-        <BottomSheetModal backdropComponent={renderBackdrop()} enablePanDownToClose ref={customRangeSheetRef} snapPoints={['40%']}>
+        <BottomSheetModal
+          backdropComponent={renderBackdrop()}
+          enablePanDownToClose
+          ref={customRangeSheetRef}
+          snapPoints={SNAP_POINTS}
+          accessibilityLabel="Custom date range selector"
+        >
           <BottomSheetView className="p-4">
             {/* Header */}
             <View className="flex-row items-center justify-between mb-4">
               <Text className="text-lg font-bold text-gray-900">Rango personalizado</Text>
               <AnimatedTouchableOpacity
-                onPress={() => customRangeSheetRef.current.close()}
+                onPress={() => customRangeSheetRef.current?.close()}
                 className="p-2"
+                accessibilityLabel="Close custom date range selector"
+                accessibilityRole="button"
               >
                 <X size={24} color="#6b7280" />
               </AnimatedTouchableOpacity>
@@ -303,6 +321,8 @@ export function TimeRange({
                 <AnimatedTouchableOpacity
                   onPress={() => dispatch({ type: 'SHOW_START_PICKER', payload: true })}
                   className="bg-gray-50 rounded-lg p-4 flex-row items-center justify-between"
+                  accessibilityLabel={`Select start date, currently ${formatDate(state.customStartDate)}`}
+                  accessibilityRole="button"
                 >
                   <View className="flex-row items-center">
                     <Calendar size={20} color="#3b82f6" />
@@ -320,6 +340,8 @@ export function TimeRange({
                 <AnimatedTouchableOpacity
                   onPress={() => dispatch({ type: 'SHOW_END_PICKER', payload: true })}
                   className="bg-gray-50 rounded-lg p-4 flex-row items-center justify-between"
+                  accessibilityLabel={`Select end date, currently ${formatDate(state.customEndDate)}`}
+                  accessibilityRole="button"
                 >
                   <View className="flex-row items-center">
                     <Calendar size={20} color="#3b82f6" />
@@ -345,6 +367,8 @@ export function TimeRange({
               <AnimatedTouchableOpacity
                 onPress={applyCustomRange}
                 className="bg-blue-600 rounded-lg py-3 mt-2"
+                accessibilityLabel="Apply custom date range"
+                accessibilityRole="button"
               >
                 <Text className="text-white text-center font-semibold">Aplicar rango</Text>
               </AnimatedTouchableOpacity>
@@ -358,6 +382,7 @@ export function TimeRange({
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={(event, date) => handleCustomDateChange(event, date, true)}
                 maximumDate={state.customEndDate}
+                accessibilityLabel="Select start date"
               />
             )}
 
@@ -369,6 +394,7 @@ export function TimeRange({
                 onChange={(event, date) => handleCustomDateChange(event, date, false)}
                 minimumDate={state.customStartDate}
                 maximumDate={new Date()}
+                accessibilityLabel="Select end date"
               />
             )}
           </BottomSheetView>
