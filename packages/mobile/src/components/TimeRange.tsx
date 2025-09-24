@@ -208,7 +208,7 @@ export function TimeRange({
     dispatch({ type: 'SELECT_OPTION', payload: 'custom' });
     const startDate = state.customStartDate;
     const endDate = state.customEndDate;
-    customRangeSheetRef.current?.dismiss();
+    customRangeSheetRef.current?.close();
     // Delay the callback to avoid re-render issues
     setTimeout(() => {
       onRangeChange?.(startDate, endDate);
@@ -296,6 +296,7 @@ export function TimeRange({
           backdropComponent={renderBackdrop()}
           enablePanDownToClose
           ref={customRangeSheetRef}
+          index={-1}
           snapPoints={SNAP_POINTS}
           accessibilityLabel="Custom date range selector"
         >
