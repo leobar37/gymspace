@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 const navigationItems = [
   {
     title: 'Dashboard',
-    href: '/',
+    href: '/admin',
   },
   {
     title: 'Organizations',

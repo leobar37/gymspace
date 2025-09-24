@@ -1,12 +1,8 @@
-import { Metadata } from 'next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { ArrowRightIcon, BuildingIcon, CreditCardIcon, PackageIcon } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Admin Dashboard | GymSpace',
-  description: 'Manage your GymSpace platform administration',
-};
+
 
 export default function AdminDashboardPage() {
   const adminSections = [

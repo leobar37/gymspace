@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AppProviders } from '@/providers/AppProviders'
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description: 'La plataforma todo-en-uno para gestionar tu gimnasio. Control de miembros, contratos, evaluaciones y más. Transforma tu gimnasio con tecnología de vanguardia.',
   keywords: 'gimnasio, gestión, software, miembros, contratos, evaluaciones, fitness, administración',
   authors: [{ name: 'GymSpace' }],
+  metadataBase: new URL('https://gymspace.io'),
   openGraph: {
     title: 'GymSpace - Sistema de Gestión de Gimnasios del Futuro',
     description: 'La plataforma todo-en-uno para gestionar tu gimnasio. Control de miembros, contratos, evaluaciones y más.',
@@ -43,7 +44,11 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
   themeColor: '#F57E24',
 }
 
